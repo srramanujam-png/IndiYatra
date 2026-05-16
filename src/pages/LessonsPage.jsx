@@ -6,13 +6,18 @@ import PageHeader from "../components/PageHeader";
 const styles = `
   .module-banner { max-width: 860px; margin: 0 auto 24px; padding: 0 1.5rem; }
   .module-banner-inner {
-    border-radius: 16px; padding: 16px 22px;
+    border-radius: 16px; padding: 14px 20px;
     background: linear-gradient(135deg, ${SAFFRON}0d, ${HERITAGE}0a);
     border: 1px solid ${SAFFRON}2a; display: flex; align-items: center; gap: 16px;
   }
   .module-banner-accent  { width: 5px; height: 40px; border-radius: 3px; background: ${HERITAGE}; flex-shrink: 0; }
+  .module-banner-body    { flex: 1; min-width: 0; }
   .module-banner-number  { font-size: 11px; color: #aaa; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 2px; }
   .module-banner-title   { font-family: 'Alumni Sans', sans-serif; font-size: 19px; font-weight: 700; color: ${HERITAGE}; }
+  .module-banner-count   {
+    flex-shrink: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
+    padding: 3px 10px; border-radius: 999px; background: ${HERITAGE}12; color: ${HERITAGE};
+  }
 
   .lessons-content { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 80px; }
   .lesson-row {
@@ -22,18 +27,20 @@ const styles = `
     transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
     animation: fadeUp 0.35s ease both; box-shadow: 0 2px 10px rgba(255,142,0,0.05);
   }
-  .lesson-row.completed { border-color: ${GREEN}44; background: #F6FBF8; }
-  .lesson-row.completed:hover { border-color: ${GREEN}88; }
-  .lesson-num { font-family: 'Alumni Sans', sans-serif; font-size: 22px; font-weight: 800; color: ${SAFFRON}; min-width: 36px; text-align: center; flex-shrink: 0; }
+  .lesson-row:hover { transform: translateX(4px); box-shadow: 0 6px 24px rgba(255,142,0,0.12); border-color: ${SAFFRON}66; }
+  .lesson-row.completed { border-color: ${GREEN}44; background: #F6FBF8; border-left: 3px solid ${GREEN}; }
+  .lesson-row.completed:hover { border-color: ${GREEN}88; transform: translateX(4px); }
+  .lesson-num {
+    flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Alumni Sans', sans-serif; font-size: 17px; font-weight: 800;
+    color: white; background: ${SAFFRON};
+  }
+  .lesson-num.done { background: ${GREEN}; }
   .lesson-divider { width: 1px; height: 36px; background: #e8d5b0; flex-shrink: 0; }
   .lesson-info { flex: 1; min-width: 0; }
   .lesson-title { font-family: 'Alumni Sans', sans-serif; font-size: 19px; font-weight: 700; color: #1a1a2e; margin-bottom: 3px; line-height: 1.2; }
   .lesson-meta  { font-size: 12px; color: #aaa; }
-  .lesson-play  {
-    flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    background: ${SAFFRON}18; color: ${SAFFRON}; border: 1.5px solid ${SAFFRON}44; font-size: 12px;
-  }
   .lesson-cta {
     flex-shrink: 0; border: 1.5px solid ${SAFFRON}; color: ${SAFFRON}; border-radius: 999px;
     padding: 6px 16px; font-family: 'Alumni Sans', sans-serif; font-size: 13px;
@@ -41,6 +48,8 @@ const styles = `
     transition: background 0.2s, color 0.2s; white-space: nowrap;
   }
   .lesson-cta:hover { background: ${SAFFRON}; color: white; }
+  .lesson-cta.done { border-color: ${GREEN}; color: ${GREEN}; }
+  .lesson-cta.done:hover { background: ${GREEN}; color: white; }
 
   @media (max-width: 768px) {
     .lessons-content { padding: 0 1rem 60px; }
@@ -97,10 +106,13 @@ export default function LessonsPage({ course, theme, module, levelId, settings, 
       <div className="module-banner">
         <div className="module-banner-inner">
           <div className="module-banner-accent" />
-          <div>
+          <div className="module-banner-body">
             <div className="module-banner-number">{module.module_number}</div>
             <div className="module-banner-title">{module.module_name}</div>
           </div>
+          {!loading && lessons.length > 0 && (
+            <div className="module-banner-count">{lessons.length} lesson{lessons.length !== 1 ? "s" : ""}</div>
+          )}
         </div>
       </div>
 
@@ -113,19 +125,17 @@ export default function LessonsPage({ course, theme, module, levelId, settings, 
           <div className={`lesson-row ${isComplete ? "completed" : ""}`}
             key={lesson.lesson_id} style={{ animationDelay: `${i * 0.05}s` }}
             onClick={() => onLessonClick(lesson)}>
-            <div className="lesson-num" style={{ color: isComplete ? GREEN : SAFFRON }}>
-              {isComplete ? "✓" : (lesson.lesson_number ?? i + 1)}
+            <div className={`lesson-num${isComplete ? " done" : ""}`}>
+              {isComplete ? "✓" : i + 1}
             </div>
             <div className="lesson-divider" />
             <div className="lesson-info">
               <div className="lesson-title">{lesson.lesson_name}</div>
-              <div className="lesson-meta">{lesson.lesson_description || ""}</div>
+              {lesson.lesson_description && (
+                <div className="lesson-meta">{lesson.lesson_description}</div>
+              )}
             </div>
-            <div className="lesson-play" style={isComplete ? { background: `${GREEN}18`, color: GREEN, borderColor: `${GREEN}44` } : {}}>
-              {isComplete ? "✓" : "▶"}
-            </div>
-            <button className="lesson-cta"
-              style={isComplete ? { borderColor: GREEN, color: GREEN } : {}}
+            <button className={`lesson-cta${isComplete ? " done" : ""}`}
               onClick={e => { e.stopPropagation(); onLessonClick(lesson); }}>
               {isComplete ? "Review" : "Start"}
             </button>

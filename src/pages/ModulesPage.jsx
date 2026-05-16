@@ -6,13 +6,18 @@ import PageHeader from "../components/PageHeader";
 const styles = `
   .theme-banner { max-width: 1200px; margin: 0 auto 28px; padding: 0 1.5rem; }
   .theme-banner-inner {
-    border-radius: 16px; padding: 18px 24px;
+    border-radius: 16px; padding: 14px 20px;
     background: linear-gradient(135deg, ${HERITAGE}11, ${SAFFRON}0d);
     border: 1px solid ${SAFFRON}2a; display: flex; align-items: center; gap: 16px;
   }
-  .theme-banner-accent { width: 5px; height: 44px; border-radius: 3px; background: ${SAFFRON}; flex-shrink: 0; }
+  .theme-banner-accent { width: 5px; height: 40px; border-radius: 3px; background: ${SAFFRON}; flex-shrink: 0; }
+  .theme-banner-body   { flex: 1; min-width: 0; }
   .theme-banner-title  { font-family: 'Alumni Sans', sans-serif; font-size: 20px; font-weight: 700; color: ${HERITAGE}; }
   .theme-banner-desc   { font-size: 13px; color: #777; margin-top: 2px; }
+  .theme-banner-count  {
+    flex-shrink: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
+    padding: 3px 10px; border-radius: 999px; background: ${SAFFRON}15; color: ${SAFFRON};
+  }
 
   .modules-content { max-width: 720px; margin: 0 auto; padding: 0 1.5rem 80px; }
 
@@ -38,7 +43,10 @@ const styles = `
 
   .module-row-info { flex: 1; min-width: 0; }
   .module-row-number { font-size: 11px; color: #bbb; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 3px; }
-  .module-row-name   { font-family: 'Alumni Sans', sans-serif; font-size: 19px; font-weight: 700; color: #1a1a2e; line-height: 1.2; margin-bottom: 6px; }
+  .module-row-name   { font-family: 'Alumni Sans', sans-serif; font-size: 19px; font-weight: 700; color: #1a1a2e; line-height: 1.2; margin-bottom: 4px; }
+  .module-row-desc   { font-size: 12px; color: #999; line-height: 1.4; margin-bottom: 5px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
+  .module-row-right  { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .vis-badge-right   { border-radius: 999px; padding: 2px 9px; font-size: 10px; font-weight: 700; white-space: nowrap; }
 
   .module-row-progress { height: 4px; background: #f0e8d8; border-radius: 2px; margin-bottom: 4px; overflow: hidden; max-width: 160px; }
   .module-row-progress-fill { height: 100%; border-radius: 2px; }
@@ -56,15 +64,17 @@ const styles = `
   .module-cta-review  { border: 1.5px solid ${GREEN}; color: ${GREEN}; background: transparent; }
   .module-cta-review:hover { background: ${GREEN}; color: white; }
 
-  .vis-badge-inline {
-    display: inline-block; border-radius: 999px; padding: 2px 8px;
-    font-size: 10px; font-weight: 700; margin-right: 6px;
+  .modules-section-label {
+    max-width: 720px; margin: 0 auto 12px; padding: 0 1.5rem;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
   }
 
   @media (max-width: 768px) {
     .modules-content { padding: 0 1rem 60px; }
     .theme-banner { padding: 0 1rem; margin-bottom: 20px; }
     .module-row { padding: 12px 14px; gap: 12px; }
+    .modules-section-label { padding: 0 1rem; }
+    .theme-banner-count { display: none; }
   }
   @media (max-width: 480px) {
     .module-row-thumb { width: 48px; height: 48px; border-radius: 8px; }
@@ -146,12 +156,21 @@ export default function ModulesPage({ course, theme, levelId, settings, complete
       <div className="theme-banner">
         <div className="theme-banner-inner">
           <div className="theme-banner-accent" />
-          <div>
+          <div className="theme-banner-body">
             <div className="theme-banner-title">{theme.title}</div>
             <div className="theme-banner-desc">{theme.description || "Explore the modules below."}</div>
           </div>
+          {!loading && modules.length > 0 && (
+            <div className="theme-banner-count">{modules.length} module{modules.length !== 1 ? "s" : ""}</div>
+          )}
         </div>
       </div>
+
+      {!loading && modules.length > 0 && (
+        <div className="modules-section-label" style={{ color: levelMeta.color }}>
+          {modules.length} Module{modules.length !== 1 ? "s" : ""} · {theme.title}
+        </div>
+      )}
 
       <div className="modules-content">
         {loading ? <div className="loading">Loading modules…</div>
@@ -186,11 +205,11 @@ export default function ModulesPage({ course, theme, levelId, settings, complete
 
                   {/* Info */}
                   <div className="module-row-info">
-                    <div className="module-row-number">
-                      <span className="vis-badge-inline" style={{ background: vis.bg, color: vis.color }}>{vis.label}</span>
-                      {mod.module_number}
-                    </div>
+                    <div className="module-row-number">{mod.module_number}</div>
                     <div className="module-row-name">{mod.module_name}</div>
+                    {mod.description && (
+                      <div className="module-row-desc">{mod.description}</div>
+                    )}
                     {state !== "none" && total > 0 && (
                       <div className="module-row-progress">
                         <div className="module-row-progress-fill"
@@ -202,13 +221,16 @@ export default function ModulesPage({ course, theme, levelId, settings, complete
                     </div>
                   </div>
 
-                  {/* CTA */}
-                  <button
-                    className={`module-row-cta module-cta-${ctaClass}`}
-                    onClick={e => { e.stopPropagation(); onModuleClick(mod); }}
-                  >
-                    {ctaLabel}
-                  </button>
+                  {/* Right: vis badge + CTA stacked */}
+                  <div className="module-row-right">
+                    <span className="vis-badge-right" style={{ background: vis.bg, color: vis.color }}>{vis.label}</span>
+                    <button
+                      className={`module-row-cta module-cta-${ctaClass}`}
+                      onClick={e => { e.stopPropagation(); onModuleClick(mod); }}
+                    >
+                      {ctaLabel}
+                    </button>
+                  </div>
                 </div>
               );
             })}

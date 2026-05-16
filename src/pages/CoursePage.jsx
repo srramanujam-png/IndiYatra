@@ -5,8 +5,9 @@ import PageHeader from "../components/PageHeader";
 
 const styles = `
   .level-tabs {
-    max-width: 720px; margin: 0 auto; padding: 0 1.5rem 32px;
+    max-width: 720px; margin: 0 auto; padding: 0 1.5rem 24px;
     display: flex; gap: 12px; flex-wrap: wrap;
+    border-bottom: 1px solid #f0e8d8;
   }
   .level-tab {
     display: flex; flex-direction: column; align-items: flex-start;
@@ -22,6 +23,7 @@ const styles = `
     padding: 2px 10px; border-radius: 999px; background: #f5f5f5; color: #666;
   }
   .level-tab.active .level-tab-count { color: white; }
+  .level-tab:not(.active):hover .level-tab-count { background: #eee4d4; color: #555; }
 
   .content { max-width: 720px; margin: 0 auto; padding: 0 1.5rem 80px; }
 
@@ -47,9 +49,9 @@ const styles = `
 
   .theme-row-info { flex: 1; min-width: 0; }
   .theme-row-title { font-family: 'Alumni Sans', sans-serif; font-size: 20px; font-weight: 700; color: #1a1a2e; line-height: 1.2; margin-bottom: 4px; }
-  .theme-row-desc  { font-size: 13px; color: #888; line-height: 1.4; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .theme-row-desc  { font-size: 13px; color: #888; line-height: 1.4; margin-bottom: 6px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 
-  .theme-row-progress { height: 4px; background: #f0e8d8; border-radius: 2px; margin-bottom: 4px; overflow: hidden; max-width: 180px; }
+  .theme-row-progress { height: 4px; background: #f0e8d8; border-radius: 2px; margin-bottom: 4px; overflow: hidden; }
   .theme-row-progress-fill { height: 100%; border-radius: 2px; }
   .theme-row-count { font-size: 12px; color: #aaa; font-weight: 600; }
 
@@ -65,12 +67,18 @@ const styles = `
   .theme-cta-review  { border: 1.5px solid ${GREEN}; color: ${GREEN}; background: transparent; }
   .theme-cta-review:hover { background: ${GREEN}; color: white; }
 
+  .theme-section-label {
+    max-width: 720px; margin: 16px auto 12px; padding: 0 1.5rem;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+
   @media (max-width: 768px) {
-    .level-tabs { padding: 0 1rem 24px; gap: 10px; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+    .level-tabs { padding: 0 1rem 20px; gap: 10px; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
     .level-tab  { min-width: 150px; padding: 10px 16px; flex-shrink: 0; }
     .content { padding: 0 1rem 60px; }
     .theme-row { padding: 12px 14px; gap: 12px; }
     .theme-row-thumb { width: 56px; height: 56px; }
+    .theme-section-label { padding: 0 1rem; margin: 12px auto 10px; }
   }
   @media (max-width: 480px) {
     .level-tab  { min-width: 130px; }
@@ -196,7 +204,7 @@ export default function CoursePage({ course, settings, completedLessons = new Se
                   className={`level-tab ${isActive ? "active" : ""} ${lState === "complete" ? "complete" : ""}`}
                   style={{
                     borderColor: lState === "complete" ? GREEN : isActive ? meta.color : "#e0d4bc",
-                    boxShadow: isActive ? `0 4px 16px ${meta.color}22` : "none",
+                    boxShadow: isActive ? `inset 4px 0 0 ${meta.color}, 0 4px 16px ${meta.color}22` : "none",
                   }}
                   onClick={() => setSelectedLevel(level.level_id)}
                 >
@@ -211,6 +219,13 @@ export default function CoursePage({ course, settings, completedLessons = new Se
               );
             })}
           </div>
+
+          {/* Theme Section Label */}
+          {selectedLevel && (
+            <div className="theme-section-label" style={{ color: levelMeta.color }}>
+              {activeThemes.length} Theme{activeThemes.length !== 1 ? "s" : ""} · {levelMeta.label}
+            </div>
+          )}
 
           {/* Theme List */}
           <div className="content">
