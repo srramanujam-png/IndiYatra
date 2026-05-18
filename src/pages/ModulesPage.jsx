@@ -12,10 +12,10 @@ const styles = `
   }
   .theme-banner-accent { width: 5px; height: 40px; border-radius: 3px; background: ${SAFFRON}; flex-shrink: 0; }
   .theme-banner-body   { flex: 1; min-width: 0; }
-  .theme-banner-title  { font-family: 'Alumni Sans', sans-serif; font-size: 20px; font-weight: 700; color: ${HERITAGE}; }
-  .theme-banner-desc   { font-size: 13px; color: #777; margin-top: 2px; }
+  .theme-banner-title  { font-family: 'Alumni Sans', sans-serif; font-size: 1.25rem; font-weight: 700; color: ${HERITAGE}; }
+  .theme-banner-desc   { font-size: 0.8125rem; color: #777; margin-top: 2px; }
   .theme-banner-count  {
-    flex-shrink: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
+    flex-shrink: 0; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em;
     padding: 3px 10px; border-radius: 999px; background: ${SAFFRON}15; color: ${SAFFRON};
   }
 
@@ -42,19 +42,19 @@ const styles = `
   .module-row-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
   .module-row-info { flex: 1; min-width: 0; }
-  .module-row-number { font-size: 11px; color: #bbb; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 3px; }
-  .module-row-name   { font-family: 'Alumni Sans', sans-serif; font-size: 19px; font-weight: 700; color: #1a1a2e; line-height: 1.2; margin-bottom: 4px; }
-  .module-row-desc   { font-size: 12px; color: #999; line-height: 1.4; margin-bottom: 5px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
+  .module-row-number { font-size: 0.6875rem; color: #bbb; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 3px; }
+  .module-row-name   { font-family: 'Alumni Sans', sans-serif; font-size: 1.1875rem; font-weight: 700; color: #1a1a2e; line-height: 1.2; margin-bottom: 4px; }
+  .module-row-desc   { font-size: 0.75rem; color: #999; line-height: 1.4; margin-bottom: 5px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
   .module-row-right  { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
-  .vis-badge-right   { border-radius: 999px; padding: 2px 9px; font-size: 10px; font-weight: 700; white-space: nowrap; }
+  .vis-badge-right   { border-radius: 999px; padding: 2px 9px; font-size: 0.625rem; font-weight: 700; white-space: nowrap; }
 
   .module-row-progress { height: 4px; background: #f0e8d8; border-radius: 2px; margin-bottom: 4px; overflow: hidden; max-width: 160px; }
   .module-row-progress-fill { height: 100%; border-radius: 2px; }
-  .module-row-count { font-size: 12px; color: #aaa; }
+  .module-row-count { font-size: 0.75rem; color: #aaa; }
 
   .module-row-cta {
     flex-shrink: 0; border-radius: 999px; padding: 7px 16px;
-    font-family: 'Alumni Sans', sans-serif; font-size: 13px;
+    font-family: 'Alumni Sans', sans-serif; font-size: 0.8125rem;
     font-weight: 700; cursor: pointer; transition: all 0.2s; white-space: nowrap;
   }
   .module-cta-explore { border: 1.5px solid ${SAFFRON}; color: ${SAFFRON}; background: transparent; }
@@ -63,10 +63,21 @@ const styles = `
   .module-cta-resume:hover { box-shadow: 0 4px 12px rgba(255,142,0,0.3); }
   .module-cta-review  { border: 1.5px solid ${GREEN}; color: ${GREEN}; background: transparent; }
   .module-cta-review:hover { background: ${GREEN}; color: white; }
+  .module-row.locked {
+    opacity: 0.45; cursor: not-allowed;
+    background: #f5f4f1; border-color: #e8e4dc;
+  }
+  .module-row.locked:hover {
+    transform: none !important; box-shadow: none !important;
+    border-color: #e8e4dc !important;
+  }
+  .module-lock-badge {
+    font-size: 0.8125rem; color: #bbb; white-space: nowrap; flex-shrink: 0;
+  }
 
   .modules-section-label {
     max-width: 720px; margin: 0 auto 12px; padding: 0 1.5rem;
-    font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
   }
 
   @media (max-width: 768px) {
@@ -78,8 +89,8 @@ const styles = `
   }
   @media (max-width: 480px) {
     .module-row-thumb { width: 48px; height: 48px; border-radius: 8px; }
-    .module-row-name { font-size: 16px; }
-    .module-row-cta { padding: 6px 12px; font-size: 12px; }
+    .module-row-name { font-size: 1rem; }
+    .module-row-cta { padding: 6px 12px; font-size: 0.75rem; }
   }
 `;
 
@@ -90,7 +101,7 @@ function getState(done, total) {
   return "none";
 }
 
-export default function ModulesPage({ course, theme, levelId, settings, completedLessons = new Set(), onModuleClick, onBack, onBackToCourse, onOpenSettings }) {
+export default function ModulesPage({ course, theme, levelId, settings, completedLessons = new Set(), onModuleClick, onBack, onBackToCourse, onOpenSettings, onDashboard, onLikes }) {
   const [modules, setModules]       = useState([]);
   const [assets, setAssets]         = useState({});
   const [lessonsByModule, setLessonsByModule] = useState({});
@@ -135,7 +146,7 @@ export default function ModulesPage({ course, theme, levelId, settings, complete
       <PageHeader
         onHome={onBack}
         onOpenSettings={onOpenSettings}
-        navLinks={[{ label: "Home", onClick: onBack }, { label: "Discover", onClick: () => {} }]}
+        navLinks={[{ label: "Home", onClick: onBack }, { label: "Discover", onClick: () => {} }, { label: "Dashboard", onClick: onDashboard }, { label: "Likes", onClick: onLikes }]}
       />
 
       <div className="breadcrumb">
@@ -187,13 +198,17 @@ export default function ModulesPage({ course, theme, levelId, settings, complete
               const pct     = total > 0 ? Math.round((done / total) * 100) : 0;
               const ctaClass = state === "complete" ? "review" : state === "progress" ? "resume" : "explore";
               const ctaLabel = state === "complete" ? "Review ✓" : state === "progress" ? "Resume →" : "Explore →";
+              const prevLessons = i > 0 ? (lessonsByModule[modules[i - 1].module_id] || []) : [];
+              const isLocked = course?.sequential_unlock && i > 0
+                && prevLessons.length > 0
+                && !prevLessons.every(id => completedLessons.has(id));
 
               return (
                 <div
-                  className={`module-row ${state}`}
+                  className={`module-row ${state} ${isLocked ? "locked" : ""}`}
                   key={mod.module_id}
                   style={{ animationDelay: `${i * 0.05}s` }}
-                  onClick={() => onModuleClick(mod)}
+                  onClick={isLocked ? undefined : () => onModuleClick(mod)}
                 >
                   {/* Thumbnail */}
                   <div className="module-row-thumb">
@@ -224,12 +239,15 @@ export default function ModulesPage({ course, theme, levelId, settings, complete
                   {/* Right: vis badge + CTA stacked */}
                   <div className="module-row-right">
                     <span className="vis-badge-right" style={{ background: vis.bg, color: vis.color }}>{vis.label}</span>
-                    <button
-                      className={`module-row-cta module-cta-${ctaClass}`}
-                      onClick={e => { e.stopPropagation(); onModuleClick(mod); }}
-                    >
-                      {ctaLabel}
-                    </button>
+                    {isLocked
+                      ? <span className="module-lock-badge">🔒 Locked</span>
+                      : <button
+                          className={`module-row-cta module-cta-${ctaClass}`}
+                          onClick={e => { e.stopPropagation(); onModuleClick(mod); }}
+                        >
+                          {ctaLabel}
+                        </button>
+                    }
                   </div>
                 </div>
               );

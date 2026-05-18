@@ -7,7 +7,7 @@ export function loadSettings() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch {}
-  return { languageId: DEFAULT_LANG_ID, languageCode: DEFAULT_LANG_CODE, fontSize: "md" };
+  return { languageId: DEFAULT_LANG_ID, languageCode: DEFAULT_LANG_CODE, languageName: 'English', fontSize: "md" };
 }
 
 export function saveSettings(s) {

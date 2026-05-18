@@ -26,7 +26,7 @@ export default function SettingsDrawer({ settings, languages, onSave, onClose })
                 <button
                   key={l.language_id}
                   className={`lang-option ${draft.languageId === l.language_id ? "active" : ""}`}
-                  onClick={() => apply({ languageId: l.language_id, languageCode: l.language_code })}
+                  onClick={() => apply({ languageId: l.language_id, languageCode: l.language_code, languageName: l.language })}
                 >
                   {l.language}
                 </button>

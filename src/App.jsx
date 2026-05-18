@@ -1,4 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useAuth } from "./hooks/useAuth";
+import { signOut, loadCompletions, saveCompletion, updateLastVisited, loadLessonProgress, upsertLessonProgress, deleteLessonProgress } from "./lib/auth";
+import { AuthContext } from "./contexts/AuthContext";
+import AuthModal     from "./components/AuthModal";
+import ProfileModal  from "./components/ProfileModal";
 import { supabase, LEVEL_LABELS } from "./lib/supabase";
 import { loadSettings, saveSettings } from "./hooks/useSettings";
 import SettingsDrawer from "./components/SettingsDrawer";
@@ -6,7 +11,9 @@ import HomePage      from "./pages/HomePage";
 import CoursePage    from "./pages/CoursePage";
 import ModulesPage   from "./pages/ModulesPage";
 import LessonsPage   from "./pages/LessonsPage";
-import SnippetPlayer from "./pages/SnippetPlayer";
+import SnippetPlayer  from "./pages/SnippetPlayer";
+import DashboardPage  from "./pages/DashboardPage";
+import LikesPage      from "./pages/LikesPage";
 
 const transitionStyles = `
   @keyframes pageSlideInRight {
@@ -30,12 +37,20 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [languages, setLanguages]       = useState([]);
   const [completedLessons, setCompletedLessons] = useState(new Set());
+  const [lessonProgress,   setLessonProgress]   = useState(new Map());
   const [moduleLessons, setModuleLessons]       = useState([]);
   const [earnedBadges, setEarnedBadges]         = useState([]);
   const [navDirection, setNavDirection]         = useState("none");
+  const snippetAdvanceTimer = useRef(null);
+
+  const { user, profile, authLoading, refreshProfile } = useAuth();
+  const [showAuthModal,    setShowAuthModal]    = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   const [page, setPage]                         = useState("home");
   const [selectedCourse, setSelectedCourse]     = useState(null);
+  const [playlistSnippetIds, setPlaylistSnippetIds] = useState(null);
+  const [playlistStartIndex, setPlaylistStartIndex] = useState(0);
   const [selectedTheme, setSelectedTheme]       = useState(null);
   const [selectedLevelId, setSelectedLevelId]   = useState(null);
   const [selectedModule, setSelectedModule]     = useState(null);
@@ -55,7 +70,9 @@ export default function App() {
 
   // Apply font size on mount and whenever it changes
   useEffect(() => {
+    const sizes = { sm: '13px', md: '16px', lg: '19px' };
     document.body.dataset.fs = settings.fontSize;
+    document.documentElement.style.fontSize = sizes[settings.fontSize] || '16px';
   }, [settings.fontSize]);
 
   // Scroll to top on every page change
@@ -63,14 +80,76 @@ export default function App() {
     window.scrollTo(0, 0);
   }, [page]);
 
+  // Auto-close AuthModal when sign-in succeeds (any provider)
+  useEffect(() => {
+    if (user) setShowAuthModal(false);
+  }, [user]);
+
+  // Load saved completions from Supabase when a real (non-anonymous) user signs in.
+  // Clears local state on sign-out so a new user starts fresh.
+  useEffect(() => {
+    if (!user) {
+      setCompletedLessons(new Set());
+      setLessonProgress(new Map());
+      return;
+    }
+    if (user.is_anonymous) return; // guests keep local-only state
+    loadCompletions(user.id).then(({ data }) => {
+      if (data && data.length > 0) {
+        setCompletedLessons(new Set(data.map(c => c.lesson_id)));
+      }
+    });
+    loadLessonProgress(user.id).then(({ data }) => {
+      if (data && data.length > 0) {
+        setLessonProgress(new Map(data.map(p => [p.lesson_id, p.snippet_index])));
+      }
+    });
+  }, [user?.id]);
+
+  // Redirect returning users (those with a saved route) to Dashboard on login.
+  // Fires only when profile first loads (profile?.id dependency), not on page changes.
+  useEffect(() => {
+    if (profile?.last_visited_route && page === "home") {
+      goForward("dashboard");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.id]);
+
   // Load language list once
   useEffect(() => {
     supabase("languages", "?select=*&order=language").then(data => setLanguages(data || []));
   }, []);
 
-  async function handleLessonComplete(lessonId, points) {
+  function handleSnippetAdvance(lessonId, index) {
+    if (!user || user.is_anonymous) return;
+    // Update local Map immediately so dashboard stat is accurate
+    setLessonProgress(prev => new Map(prev).set(lessonId, index));
+    // Debounced write — collapses rapid taps into a single DB round-trip
+    clearTimeout(snippetAdvanceTimer.current);
+    snippetAdvanceTimer.current = setTimeout(() => {
+      upsertLessonProgress(user.id, lessonId, index)
+        .catch(e => console.warn("upsertLessonProgress:", e));
+    }, 400);
+  }
+
+  async function handleLessonComplete(lessonId, points, snippetCount) {
     const newCompleted = new Set([...completedLessons, lessonId]);
     setCompletedLessons(newCompleted);
+
+    // Persist to Supabase for authenticated (non-anonymous) users — fire-and-forget
+    if (user && !user.is_anonymous) {
+      saveCompletion(
+        user.id,
+        lessonId,
+        selectedCourse?.course_id ?? "",
+        points || 0,
+        snippetCount || null
+      ).catch(e => console.warn("saveCompletion:", e));
+      // Lesson complete — remove in-progress resume record
+      deleteLessonProgress(user.id, lessonId)
+        .catch(e => console.warn("deleteLessonProgress:", e));
+      setLessonProgress(prev => { const m = new Map(prev); m.delete(lessonId); return m; });
+    }
 
     const badges = [{ type: "lesson", name: selectedLesson.lesson_name }];
 
@@ -129,14 +208,53 @@ export default function App() {
     setEarnedBadges(badges);
   }
 
+  async function handleResume() {
+    if (!profile?.last_visited_route) { goForward("course"); return; }
+    try {
+      const route = JSON.parse(profile.last_visited_route);
+      if (!route.module_id) { goForward("course"); return; }
+      const mods = await supabase("modules", `?module_id=eq.${route.module_id}&select=*`);
+      if (!mods || mods.length === 0) { goForward("course"); return; }
+      setSelectedModule(mods[0]);
+      if (route.level_id)    setSelectedLevelId(route.level_id);
+      if (route.course_name) setSelectedCourse(c => c ?? { course_name: route.course_name });
+      if (route.theme_title) setSelectedTheme(t => t ?? { title: route.theme_title });
+      goForward("lessons");
+    } catch (e) {
+      console.warn("handleResume:", e);
+      goForward("course");
+    }
+  }
+
   function handleSaveSettings(next) {
     setSettings(next);
     saveSettings(next);
   }
 
+  async function handlePlayFromLikes(snippetIds, startIndex) {
+    setPlaylistSnippetIds(snippetIds);
+    setPlaylistStartIndex(startIndex);
+    goForward("player");
+  }
+
+  async function handleSignOut() {
+    try { await signOut(); } catch (e) { console.warn("signOut:", e); }
+    setPage("home");
+  }
+
+  const authContextValue = {
+    user,
+    profile,
+    onSignIn:  () => setShowAuthModal(true),
+    onSignOut: handleSignOut,
+    onProfile: () => setShowProfileModal(true),
+  };
+
   const commonProps = {
     settings,
     onOpenSettings: () => setShowSettings(true),
+    onDashboard: () => goForward("dashboard"),
+    onLikes:     () => goForward("likes"),
   };
 
   const renderPage = () => {
@@ -152,13 +270,16 @@ export default function App() {
             levelId={selectedLevelId}
             allLessons={moduleLessons}
             earnedBadges={earnedBadges}
+            initialSnippetIndex={playlistSnippetIds ? playlistStartIndex : (lessonProgress.get(selectedLesson?.lesson_id) ?? 0)}
+            playlistSnippetIds={playlistSnippetIds}
+            onSnippetAdvance={handleSnippetAdvance}
             onComplete={handleLessonComplete}
             onNextLesson={lesson => {
               setEarnedBadges([]);
               setSelectedLesson(lesson);
             }}
-            onDashboard={() => alert("Dashboard coming soon!")}
-            onBackToLessons={() => { setEarnedBadges([]); goBack("lessons"); }}
+            onBackToLessons={() => { setEarnedBadges([]); setPlaylistSnippetIds(null); goBack("lessons"); }}
+            onBackToLikes={() => { setPlaylistSnippetIds(null); goBack("likes"); }}
           />
         );
       case "lessons":
@@ -174,6 +295,15 @@ export default function App() {
             onLessonClick={lesson => {
               setSelectedLesson(lesson);
               setEarnedBadges([]);
+              // Save last visited context for Resume Yatra (fire-and-forget)
+              if (user && !user.is_anonymous) {
+                updateLastVisited(user.id, JSON.stringify({
+                  module_id:   selectedModule?.module_id  ?? null,
+                  level_id:    selectedLevelId            ?? null,
+                  course_name: selectedCourse?.course_name ?? null,
+                  theme_title: selectedTheme?.title        ?? null,
+                })).catch(e => console.warn("updateLastVisited:", e));
+              }
               goForward("player");
             }}
             onBack={() => goBack("home")}
@@ -208,6 +338,26 @@ export default function App() {
             onBack={() => goBack("home")}
           />
         );
+      case "dashboard":
+        return (
+          <DashboardPage
+            {...commonProps}
+            course={selectedCourse}
+            completedLessons={completedLessons}
+            onResume={handleResume}
+            onBack={() => goBack("home")}
+            languages={languages}
+            onSaveSettings={handleSaveSettings}
+          />
+        );
+      case "likes":
+        return (
+          <LikesPage
+            {...commonProps}
+            onBack={() => goBack("home")}
+            onPlaySnippet={(snippetIds, startIndex) => handlePlayFromLikes(snippetIds, startIndex)}
+          />
+        );
       default:
         return (
           <HomePage
@@ -219,7 +369,7 @@ export default function App() {
   };
 
   return (
-    <>
+    <AuthContext.Provider value={authContextValue}>
       <style>{transitionStyles}</style>
       <div key={page} className={`page-enter-${navDirection}`} style={{ display: "block", width: "100%" }}>
         {renderPage()}
@@ -232,6 +382,15 @@ export default function App() {
           onClose={() => setShowSettings(false)}
         />
       )}
-    </>
+      {showAuthModal && (
+        <AuthModal onClose={() => setShowAuthModal(false)} />
+      )}
+      {showProfileModal && (
+        <ProfileModal
+          onClose={() => setShowProfileModal(false)}
+          onSaved={() => refreshProfile()}
+        />
+      )}
+    </AuthContext.Provider>
   );
 }

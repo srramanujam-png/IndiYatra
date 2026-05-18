@@ -16,7 +16,7 @@ const styles = `
     display: inline-flex; align-items: center; gap: 8px;
     background: linear-gradient(135deg, ${SAFFRON}22, ${SAFFRON}11);
     border: 1px solid ${SAFFRON}44; border-radius: 999px;
-    padding: 6px 20px; font-size: 14px; font-weight: 600;
+    padding: 6px 20px; font-size: 0.875rem; font-weight: 600;
     color: #b86000; letter-spacing: 0.05em; text-transform: uppercase;
     margin-bottom: 20px; animation: fadeUp 0.6s ease both;
   }
@@ -29,11 +29,11 @@ const styles = `
   .wordmark .indi  { color: ${SAFFRON}; }
   .wordmark .yatra { color: ${HERITAGE}; }
   .subtitle {
-    font-size: 18px; font-style: italic; color: #666;
+    font-size: 1.125rem; font-style: italic; color: #666;
     margin-bottom: 40px; animation: fadeUp 0.6s 0.2s ease both;
   }
   .section-heading {
-    font-family: 'Alumni Sans', sans-serif; font-size: 28px; font-weight: 700;
+    font-family: 'Alumni Sans', sans-serif; font-size: 1.75rem; font-weight: 700;
     color: ${HERITAGE}; text-align: center; margin-bottom: 32px;
     display: flex; align-items: center; justify-content: center; gap: 16px;
   }
@@ -64,29 +64,29 @@ const styles = `
   .card-lang-badge {
     position: absolute; top: 12px; right: 12px;
     border-radius: 999px; padding: 3px 10px;
-    font-size: 11px; font-weight: 700; letter-spacing: 0.03em;
+    font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.03em;
   }
   .card-lang-badge.available { background: ${GREEN}22; color: ${GREEN}; border: 1px solid ${GREEN}44; }
   .card-lang-badge.fallback  { background: #fff3; color: #ffffffcc; border: 1px solid #ffffff44; backdrop-filter: blur(4px); }
   .card-num-pill {
     position: absolute; top: 12px; left: 12px;
     background: ${SAFFRON}; color: white; border-radius: 999px;
-    padding: 4px 14px; font-family: 'Alumni Sans', sans-serif; font-size: 14px; font-weight: 700;
+    padding: 4px 14px; font-family: 'Alumni Sans', sans-serif; font-size: 0.875rem; font-weight: 700;
   }
   .card-body  { padding: 18px 20px 20px; text-align: left; }
-  .card-title { font-family: 'Alumni Sans', sans-serif; font-size: 22px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
-  .card-desc  { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 12px; }
+  .card-title { font-family: 'Alumni Sans', sans-serif; font-size: 1.375rem; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
+  .card-desc  { font-size: 0.875rem; color: #666; line-height: 1.6; margin-bottom: 12px; }
   .card-stats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
   .card-stat  {
     display: inline-flex; align-items: center; gap: 4px;
     background: #F7F3EC; border: 1px solid #E8D5B0;
     border-radius: 999px; padding: 4px 10px;
-    font-size: 12px; font-weight: 600; color: #888;
+    font-size: 0.75rem; font-weight: 600; color: #888;
   }
   .card-cta {
     display: inline-flex; align-items: center; gap: 6px;
     border: 1.5px solid ${SAFFRON}; color: ${SAFFRON}; border-radius: 999px;
-    padding: 6px 18px; font-family: 'Alumni Sans', sans-serif; font-size: 15px;
+    padding: 6px 18px; font-family: 'Alumni Sans', sans-serif; font-size: 0.9375rem;
     font-weight: 700; cursor: pointer; background: transparent; transition: background 0.2s, color 0.2s;
   }
   .card-cta:hover { background: ${SAFFRON}; color: white; }
@@ -101,20 +101,22 @@ const styles = `
   }
 `;
 
-export default function HomePage({ settings, onCourseClick, onOpenSettings }) {
+export default function HomePage({ settings, onCourseClick, onOpenSettings, onDashboard, onLikes }) {
   const [courses, setCourses]       = useState([]);
   const [assets, setAssets]         = useState({});
   const [siteSettings, setSiteSettings] = useState({});
   const [availableLangs, setAvailableLangs] = useState(new Set());
+  const [learnersByCourse, setLearnersByCourse] = useState(new Map());
   const [loading, setLoading]       = useState(true);
 
   useEffect(() => {
     async function load() {
-      const [courseData, assetData, settingsData, transData] = await Promise.all([
+      const [courseData, assetData, settingsData, transData, learnerData] = await Promise.all([
         supabase("courses", "?select=*&order=course_number"),
         supabase("asset_library", "?select=*"),
         supabase("site_settings", "?select=*"),
         supabase("snippet_translations", "?select=language"),
+        supabase("rpc/get_course_learner_counts", ""),
       ]);
       const assetMap = {};
       (assetData || []).forEach(a => { assetMap[a.asset_id] = a; });
@@ -125,6 +127,8 @@ export default function HomePage({ settings, onCourseClick, onOpenSettings }) {
       setAssets(assetMap);
       setSiteSettings(settingsMap);
       setAvailableLangs(langSet);
+      const learnersMap = new Map((learnerData || []).map(r => [r.course_id, r.learner_count]));
+      setLearnersByCourse(learnersMap);
       setLoading(false);
     }
     load();
@@ -142,8 +146,10 @@ export default function HomePage({ settings, onCourseClick, onOpenSettings }) {
         onHome={() => {}}
         onOpenSettings={onOpenSettings}
         navLinks={[
-          { label: "Courses",  onClick: () => {} },
-          { label: "Discover", onClick: () => {} },
+          { label: "Courses",   onClick: () => {} },
+          { label: "Discover",  onClick: () => {} },
+          { label: "Dashboard", onClick: onDashboard },
+          { label: "Likes",     onClick: onLikes },
         ]}
       />
 
@@ -186,9 +192,9 @@ export default function HomePage({ settings, onCourseClick, onOpenSettings }) {
                     <div className="card-title">{course.course_name}</div>
                     <div className="card-desc">{course.description || "Explore the rich heritage of Bharat through stories, art, and wisdom."}</div>
                     <div className="card-stats">
-                      <span className="card-stat">📖 48 stories</span>
-                      <span className="card-stat">🌐 In 14 languages</span>
-                      <span className="card-stat">👥 1,240 learners</span>
+                      <span className="card-stat">📖 {course.snippet_count ?? '—'} stories</span>
+                      <span className="card-stat">🌐 In {course.language_count ?? '—'} languages</span>
+                      <span className="card-stat">👥 {(learnersByCourse.get(course.course_id) ?? '—').toLocaleString()} learners</span>
                     </div>
                     <button className="card-cta" onClick={e => { e.stopPropagation(); onCourseClick(course); }}>
                       Explore →

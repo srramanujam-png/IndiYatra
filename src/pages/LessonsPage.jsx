@@ -12,10 +12,10 @@ const styles = `
   }
   .module-banner-accent  { width: 5px; height: 40px; border-radius: 3px; background: ${HERITAGE}; flex-shrink: 0; }
   .module-banner-body    { flex: 1; min-width: 0; }
-  .module-banner-number  { font-size: 11px; color: #aaa; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 2px; }
-  .module-banner-title   { font-family: 'Alumni Sans', sans-serif; font-size: 19px; font-weight: 700; color: ${HERITAGE}; }
+  .module-banner-number  { font-size: 0.6875rem; color: #aaa; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 2px; }
+  .module-banner-title   { font-family: 'Alumni Sans', sans-serif; font-size: 1.1875rem; font-weight: 700; color: ${HERITAGE}; }
   .module-banner-count   {
-    flex-shrink: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
+    flex-shrink: 0; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em;
     padding: 3px 10px; border-radius: 999px; background: ${HERITAGE}12; color: ${HERITAGE};
   }
 
@@ -33,23 +33,32 @@ const styles = `
   .lesson-num {
     flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-family: 'Alumni Sans', sans-serif; font-size: 17px; font-weight: 800;
+    font-family: 'Alumni Sans', sans-serif; font-size: 1.0625rem; font-weight: 800;
     color: white; background: ${SAFFRON};
   }
   .lesson-num.done { background: ${GREEN}; }
   .lesson-divider { width: 1px; height: 36px; background: #e8d5b0; flex-shrink: 0; }
   .lesson-info { flex: 1; min-width: 0; }
-  .lesson-title { font-family: 'Alumni Sans', sans-serif; font-size: 19px; font-weight: 700; color: #1a1a2e; margin-bottom: 3px; line-height: 1.2; }
-  .lesson-meta  { font-size: 12px; color: #aaa; }
+  .lesson-title { font-family: 'Alumni Sans', sans-serif; font-size: 1.1875rem; font-weight: 700; color: #1a1a2e; margin-bottom: 3px; line-height: 1.2; }
+  .lesson-meta  { font-size: 0.75rem; color: #aaa; }
   .lesson-cta {
     flex-shrink: 0; border: 1.5px solid ${SAFFRON}; color: ${SAFFRON}; border-radius: 999px;
-    padding: 6px 16px; font-family: 'Alumni Sans', sans-serif; font-size: 13px;
+    padding: 6px 16px; font-family: 'Alumni Sans', sans-serif; font-size: 0.8125rem;
     font-weight: 700; cursor: pointer; background: transparent;
     transition: background 0.2s, color 0.2s; white-space: nowrap;
   }
   .lesson-cta:hover { background: ${SAFFRON}; color: white; }
   .lesson-cta.done { border-color: ${GREEN}; color: ${GREEN}; }
   .lesson-cta.done:hover { background: ${GREEN}; color: white; }
+  .lesson-row.locked {
+    opacity: 0.45; cursor: not-allowed;
+    background: #f5f4f1; border-color: #e8e4dc;
+  }
+  .lesson-row.locked:hover {
+    transform: none !important; box-shadow: none !important;
+    border-color: #e8e4dc !important;
+  }
+  .lesson-lock { flex-shrink: 0; font-size: 0.9rem; color: #ccc; }
 
   @media (max-width: 768px) {
     .lessons-content { padding: 0 1rem 60px; }
@@ -58,12 +67,12 @@ const styles = `
   }
   @media (max-width: 480px) {
     .lesson-divider { display: none; }
-    .lesson-title { font-size: 16px; }
-    .lesson-cta { padding: 5px 12px; font-size: 12px; }
+    .lesson-title { font-size: 1rem; }
+    .lesson-cta { padding: 5px 12px; font-size: 0.75rem; }
   }
 `;
 
-export default function LessonsPage({ course, theme, module, levelId, settings, completedLessons = new Set(), onLessonClick, onBack, onBackToCourse, onBackToModules, onOpenSettings, onLessonsLoaded }) {
+export default function LessonsPage({ course, theme, module, levelId, settings, completedLessons = new Set(), onLessonClick, onBack, onBackToCourse, onBackToModules, onOpenSettings, onLessonsLoaded, onDashboard, onLikes }) {
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
   const levelMeta = LEVEL_LABELS[levelId] || { label: "All Levels", color: SAFFRON };
@@ -84,7 +93,7 @@ export default function LessonsPage({ course, theme, module, levelId, settings, 
       <PageHeader
         onHome={onBack}
         onOpenSettings={onOpenSettings}
-        navLinks={[{ label: "Home", onClick: onBack }, { label: "Discover", onClick: () => {} }]}
+        navLinks={[{ label: "Home", onClick: onBack }, { label: "Discover", onClick: () => {} }, { label: "Dashboard", onClick: onDashboard }, { label: "Likes", onClick: onLikes }]}
       />
 
       <div className="breadcrumb">
@@ -121,10 +130,11 @@ export default function LessonsPage({ course, theme, module, levelId, settings, 
         : lessons.length === 0 ? <div className="empty">No lessons found for this module yet.</div>
         : lessons.map((lesson, i) => {
           const isComplete = completedLessons.has(lesson.lesson_id);
+          const isLocked = course?.sequential_unlock && i > 0 && !completedLessons.has(lessons[i - 1].lesson_id);
           return (
-          <div className={`lesson-row ${isComplete ? "completed" : ""}`}
+          <div className={`lesson-row ${isComplete ? "completed" : ""} ${isLocked ? "locked" : ""}`}
             key={lesson.lesson_id} style={{ animationDelay: `${i * 0.05}s` }}
-            onClick={() => onLessonClick(lesson)}>
+            onClick={isLocked ? undefined : () => onLessonClick(lesson)}>
             <div className={`lesson-num${isComplete ? " done" : ""}`}>
               {isComplete ? "✓" : i + 1}
             </div>
@@ -135,10 +145,13 @@ export default function LessonsPage({ course, theme, module, levelId, settings, 
                 <div className="lesson-meta">{lesson.lesson_description}</div>
               )}
             </div>
-            <button className={`lesson-cta${isComplete ? " done" : ""}`}
-              onClick={e => { e.stopPropagation(); onLessonClick(lesson); }}>
-              {isComplete ? "Review" : "Start"}
-            </button>
+            {isLocked
+              ? <span className="lesson-lock">🔒</span>
+              : <button className={`lesson-cta${isComplete ? " done" : ""}`}
+                  onClick={e => { e.stopPropagation(); onLessonClick(lesson); }}>
+                  {isComplete ? "Review" : "Start"}
+                </button>
+            }
           </div>
         );})}
       </div>
