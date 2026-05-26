@@ -2,77 +2,82 @@ import { useState, useEffect } from "react";
 import { supabase, SAFFRON, HERITAGE, GREEN, logoUrl, LEVEL_LABELS } from "../lib/supabase";
 import { globalStyles } from "../styles/global";
 import PageHeader from "../components/PageHeader";
+import { SkeletonCourseThemes } from "../components/Skeletons";
 
 const styles = `
   .level-tabs {
     max-width: 720px; margin: 0 auto; padding: 0 1.5rem 24px;
     display: flex; gap: 12px; flex-wrap: wrap;
-    border-bottom: 1px solid #f0e8d8;
+    border-bottom: 1px solid rgba(0,0,0,0.07);
   }
   .level-tab {
     display: flex; flex-direction: column; align-items: flex-start;
-    padding: 14px 24px; border-radius: 16px; border: 2px solid #e0d4bc;
+    padding: 14px 24px; border-radius: 16px; border: 2px solid rgba(0,0,0,0.08);
     background: white; cursor: pointer; transition: all 0.2s; min-width: 170px;
   }
   .level-tab:hover { border-color: ${SAFFRON}; transform: translateY(-2px); }
   .level-tab.locked {
-    opacity: 0.45; cursor: not-allowed;
-    background: #f5f4f1; border-color: #e8e4dc !important;
+    opacity: 0.4; cursor: not-allowed;
   }
-  .level-tab.locked:hover { transform: none !important; border-color: #e8e4dc !important; }
+  .level-tab.locked:hover { transform: none !important; }
   .theme-row.locked {
-    opacity: 0.45; cursor: not-allowed;
-    background: #f5f4f1; border-color: #e8e4dc;
+    opacity: 0.4; cursor: not-allowed;
   }
   .theme-row.locked:hover {
     transform: none !important; box-shadow: none !important;
-    border-color: #e8e4dc !important;
   }
   .theme-lock-badge {
-    flex-shrink: 0; font-size: 0.8125rem; color: #bbb; white-space: nowrap;
+    flex-shrink: 0; font-size: 0.8125rem; color: #9CA3AF; white-space: nowrap;
   }
-  .level-tab.complete { border-color: ${GREEN}55 !important; background: #F6FBF8; }
+  .bm-btn {
+    flex-shrink: 0; background: none; border: none; cursor: pointer;
+    font-size: 1.125rem; line-height: 1; padding: 4px 6px; border-radius: 8px;
+    color: #9CA3AF; transition: color 0.15s, transform 0.15s;
+  }
+  .bm-btn:hover { color: #FF8E00; transform: scale(1.15); }
+  .bm-btn.saved { color: #FF8E00; }
+  .level-tab.complete { border-color: ${GREEN}55 !important; background: #F0FBF5; }
   .level-tab-name    { font-family: 'Alumni Sans', sans-serif; font-size: 1.25rem; font-weight: 700; line-height: 1; }
-  .level-tab-classes { font-size: 0.8125rem; color: #888; margin-top: 4px; }
+  .level-tab-classes { font-size: 0.8125rem; color: #6B7280; margin-top: 4px; }
   .level-tab-count   {
     font-size: 0.75rem; font-weight: 600; margin-top: 8px;
-    padding: 2px 10px; border-radius: 999px; background: #f5f5f5; color: #666;
+    padding: 2px 10px; border-radius: 999px; background: #f5f5f5; color: #374151;
   }
   .level-tab.active .level-tab-count { color: white; }
-  .level-tab:not(.active):hover .level-tab-count { background: #eee4d4; color: #555; }
+  .level-tab:not(.active):hover .level-tab-count { background: #EBEBEA; color: #374151; }
 
   .content { max-width: 720px; margin: 0 auto; padding: 0 1.5rem 80px; }
 
   .theme-row {
     display: flex; align-items: center; gap: 16px;
-    background: white; border-radius: 14px; border: 1px solid #E8D5B0;
+    background: white; border-radius: 14px; border: 1px solid rgba(0,0,0,0.08);
     padding: 16px 20px; margin-bottom: 12px; cursor: pointer;
     transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
     animation: fadeUp 0.35s ease both; box-shadow: 0 2px 10px rgba(255,142,0,0.05);
     overflow: hidden;
   }
   .theme-row:hover { transform: translateX(4px); box-shadow: 0 6px 24px rgba(255,142,0,0.12); border-color: ${SAFFRON}66; }
-  .theme-row.complete { border-color: ${GREEN}44; background: #F6FBF8; }
+  .theme-row.complete { border-color: ${GREEN}44; background: rgba(0,146,74,0.04); }
   .theme-row.complete:hover { border-color: ${GREEN}88; }
   .theme-row.progress { border-color: ${SAFFRON}44; }
 
   .theme-row-thumb {
     width: 72px; height: 72px; border-radius: 12px; overflow: hidden;
-    background: #f0e8d8; flex-shrink: 0;
+    background: #EBEBEA; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
   }
   .theme-row-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; }
 
   .theme-row-info { flex: 1; min-width: 0; }
   .theme-row-title { font-family: 'Alumni Sans', sans-serif; font-size: 1.25rem; font-weight: 700; color: #1a1a2e; line-height: 1.2; margin-bottom: 4px; }
-  .theme-row-desc  { font-size: 0.8125rem; color: #888; line-height: 1.4; margin-bottom: 6px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .theme-row-desc  { font-size: 0.8125rem; color: #6B7280; line-height: 1.4; margin-bottom: 6px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 
-  .theme-row-progress { height: 4px; background: #f0e8d8; border-radius: 2px; margin-bottom: 4px; overflow: hidden; }
+  .theme-row-progress { height: 4px; background: rgba(0,0,0,0.06); border-radius: 2px; margin-bottom: 4px; overflow: hidden; }
   .theme-row-progress-fill { height: 100%; border-radius: 2px; }
-  .theme-row-count { font-size: 0.75rem; color: #aaa; font-weight: 600; }
+  .theme-row-count { font-size: 0.75rem; color: #9CA3AF; font-weight: 600; }
 
   .theme-row-cta {
-    flex-shrink: 0; border-radius: 999px; padding: 7px 16px;
+    flex-shrink: 0; border-radius: 8px; padding: 7px 16px;
     font-family: 'Alumni Sans', sans-serif; font-size: 0.8125rem;
     font-weight: 700; cursor: pointer; transition: all 0.2s; white-space: nowrap;
   }
@@ -111,7 +116,7 @@ function getState(done, total) {
   return "none";
 }
 
-export default function CoursePage({ course, settings, completedLessons = new Set(), onThemeClick, onBack, onOpenSettings, onDashboard, onLikes }) {
+export default function CoursePage({ course, settings, completedLessons = new Set(), onThemeClick, onBack, onOpenSettings, onDashboard, onLikes, onBookmarks, onDiscover, onResume, bookmarks = new Set(), onToggleBookmark, userEditorialRole, onEditor, activePage, onSaveSettings, languages = [] }) {
   const [levels, setLevels]       = useState([]);
   const [themes, setThemes]       = useState([]);
   const [modules, setModules]     = useState([]);
@@ -122,10 +127,11 @@ export default function CoursePage({ course, settings, completedLessons = new Se
 
   useEffect(() => {
     async function load() {
+      const courseFilter = course?.course_id ? `&course_id=eq.${course.course_id}` : "";
       const [lvls, thms, mods, assetData] = await Promise.all([
         supabase("levels", "?select=*&order=level_number"),
         supabase("themes", "?select=*&order=theme_id"),
-        supabase("modules", "?select=*&order=module_name"),
+        supabase("modules", `?select=*&order=module_name${courseFilter}`),
         supabase("asset_library", "?select=*"),
       ]);
       const assetMap = {};
@@ -184,7 +190,14 @@ export default function CoursePage({ course, settings, completedLessons = new Se
       <PageHeader
         onHome={onBack}
         onOpenSettings={onOpenSettings}
-        navLinks={[{ label: "Home", onClick: onBack }, { label: "Discover", onClick: () => {} }, { label: "Dashboard", onClick: onDashboard }, { label: "Likes", onClick: onLikes }]}
+        onResume={onResume}
+        userEditorialRole={userEditorialRole}
+        onEditor={onEditor}
+        activePage={activePage}
+        settings={settings}
+        onSaveSettings={onSaveSettings}
+        languages={languages}
+        navLinks={[{ label: "Home", onClick: onBack }, { label: "Discover", onClick: onDiscover }, { label: "Dashboard", onClick: onDashboard }, { label: "Likes", onClick: onLikes }, { label: "Bookmarks", onClick: onBookmarks }]}
       />
 
       <div className="breadcrumb">
@@ -204,7 +217,7 @@ export default function CoursePage({ course, settings, completedLessons = new Se
         <div className="page-subtitle">Pick a level, then choose a theme to explore</div>
       </div>
 
-      {loading ? <div className="loading">Loading…</div> : (
+      {loading ? <SkeletonCourseThemes /> : (
         <>
           {/* Level Tabs */}
           <div className="level-tabs">
@@ -222,7 +235,7 @@ export default function CoursePage({ course, settings, completedLessons = new Se
                   key={level.level_id}
                   className={`level-tab ${isActive ? "active" : ""} ${lState === "complete" ? "complete" : ""} ${isLocked ? "locked" : ""}`}
                   style={{
-                    borderColor: isLocked ? "#e8e4dc" : lState === "complete" ? GREEN : isActive ? meta.color : "#e0d4bc",
+                    borderColor: lState === "complete" ? GREEN : isActive ? meta.color : "rgba(0,0,0,0.08)",
                     boxShadow: isActive && !isLocked ? `inset 4px 0 0 ${meta.color}, 0 4px 16px ${meta.color}22` : "none",
                   }}
                   onClick={isLocked ? undefined : () => setSelectedLevel(level.level_id)}
@@ -301,12 +314,21 @@ export default function CoursePage({ course, settings, completedLessons = new Se
                         {/* CTA */}
                         {isLocked
                           ? <span className="theme-lock-badge">🔒 Locked</span>
-                          : <button
-                              className={`theme-row-cta theme-cta-${ctaClass}`}
-                              onClick={e => { e.stopPropagation(); onThemeClick({ theme, levelId: selectedLevel }); }}
-                            >
-                              {ctaLabel}
-                            </button>
+                          : (
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                              <button
+                                className={"bm-btn" + (bookmarks.has("theme:" + theme.theme_id) ? " saved" : "")}
+                                title={bookmarks.has("theme:" + theme.theme_id) ? "Remove bookmark" : "Bookmark theme"}
+                                onClick={e => { e.stopPropagation(); onToggleBookmark && onToggleBookmark("theme", theme.theme_id, theme.title); }}
+                              ><svg width="20" height="20" viewBox="0 0 24 24" fill={bookmarks.has("theme:" + theme.theme_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+                              <button
+                                className={`theme-row-cta theme-cta-${ctaClass}`}
+                                onClick={e => { e.stopPropagation(); onThemeClick({ theme, levelId: selectedLevel }); }}
+                              >
+                                {ctaLabel}
+                              </button>
+                            </div>
+                          )
                         }
                       </div>
                     );

@@ -2,17 +2,18 @@ import { useState, useEffect } from "react";
 import { supabase, SAFFRON, HERITAGE, GREEN, logoUrl, LEVEL_LABELS } from "../lib/supabase";
 import { globalStyles } from "../styles/global";
 import PageHeader from "../components/PageHeader";
+import { SkeletonLessonList } from "../components/Skeletons";
 
 const styles = `
   .module-banner { max-width: 860px; margin: 0 auto 24px; padding: 0 1.5rem; }
   .module-banner-inner {
     border-radius: 16px; padding: 14px 20px;
-    background: linear-gradient(135deg, ${SAFFRON}0d, ${HERITAGE}0a);
-    border: 1px solid ${SAFFRON}2a; display: flex; align-items: center; gap: 16px;
+    background: rgba(255,142,0,0.05);
+    border: 1px solid rgba(255,142,0,0.15); display: flex; align-items: center; gap: 16px;
   }
   .module-banner-accent  { width: 5px; height: 40px; border-radius: 3px; background: ${HERITAGE}; flex-shrink: 0; }
   .module-banner-body    { flex: 1; min-width: 0; }
-  .module-banner-number  { font-size: 0.6875rem; color: #aaa; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 2px; }
+  .module-banner-number  { font-size: 0.6875rem; color: #9CA3AF; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 2px; }
   .module-banner-title   { font-family: 'Alumni Sans', sans-serif; font-size: 1.1875rem; font-weight: 700; color: ${HERITAGE}; }
   .module-banner-count   {
     flex-shrink: 0; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em;
@@ -22,13 +23,13 @@ const styles = `
   .lessons-content { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 80px; }
   .lesson-row {
     display: flex; align-items: center; gap: 16px;
-    background: white; border-radius: 14px; border: 1px solid #E8D5B0;
+    background: white; border-radius: 14px; border: 1px solid rgba(0,0,0,0.08);
     padding: 16px 20px; margin-bottom: 12px; cursor: pointer;
     transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
     animation: fadeUp 0.35s ease both; box-shadow: 0 2px 10px rgba(255,142,0,0.05);
   }
   .lesson-row:hover { transform: translateX(4px); box-shadow: 0 6px 24px rgba(255,142,0,0.12); border-color: ${SAFFRON}66; }
-  .lesson-row.completed { border-color: ${GREEN}44; background: #F6FBF8; border-left: 3px solid ${GREEN}; }
+  .lesson-row.completed { border-color: ${GREEN}44; background: rgba(0,146,74,0.04); border-left: 3px solid ${GREEN}; }
   .lesson-row.completed:hover { border-color: ${GREEN}88; transform: translateX(4px); }
   .lesson-num {
     flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
@@ -37,10 +38,10 @@ const styles = `
     color: white; background: ${SAFFRON};
   }
   .lesson-num.done { background: ${GREEN}; }
-  .lesson-divider { width: 1px; height: 36px; background: #e8d5b0; flex-shrink: 0; }
+  .lesson-divider { width: 1px; height: 36px; background: rgba(0,0,0,0.10); flex-shrink: 0; }
   .lesson-info { flex: 1; min-width: 0; }
-  .lesson-title { font-family: 'Alumni Sans', sans-serif; font-size: 1.1875rem; font-weight: 700; color: #1a1a2e; margin-bottom: 3px; line-height: 1.2; }
-  .lesson-meta  { font-size: 0.75rem; color: #aaa; }
+  .lesson-title { font-family: 'Alumni Sans', sans-serif; font-size: 1.1875rem; font-weight: 700; color: #111827; margin-bottom: 3px; line-height: 1.2; }
+  .lesson-meta  { font-size: 0.75rem; color: #9CA3AF; }
   .lesson-cta {
     flex-shrink: 0; border: 1.5px solid ${SAFFRON}; color: ${SAFFRON}; border-radius: 999px;
     padding: 6px 16px; font-family: 'Alumni Sans', sans-serif; font-size: 0.8125rem;
@@ -51,14 +52,19 @@ const styles = `
   .lesson-cta.done { border-color: ${GREEN}; color: ${GREEN}; }
   .lesson-cta.done:hover { background: ${GREEN}; color: white; }
   .lesson-row.locked {
-    opacity: 0.45; cursor: not-allowed;
-    background: #f5f4f1; border-color: #e8e4dc;
+    opacity: 0.4; cursor: not-allowed;
   }
   .lesson-row.locked:hover {
     transform: none !important; box-shadow: none !important;
-    border-color: #e8e4dc !important;
   }
-  .lesson-lock { flex-shrink: 0; font-size: 0.9rem; color: #ccc; }
+  .lesson-lock { flex-shrink: 0; font-size: 0.9rem; color: #9CA3AF; }
+  .bm-btn {
+    flex-shrink: 0; background: none; border: none; cursor: pointer;
+    font-size: 1.125rem; line-height: 1; padding: 4px 6px; border-radius: 8px;
+    color: #9CA3AF; transition: color 0.15s, transform 0.15s;
+  }
+  .bm-btn:hover { color: #FF8E00; transform: scale(1.15); }
+  .bm-btn.saved { color: #FF8E00; }
 
   @media (max-width: 768px) {
     .lessons-content { padding: 0 1rem 60px; }
@@ -72,7 +78,7 @@ const styles = `
   }
 `;
 
-export default function LessonsPage({ course, theme, module, levelId, settings, completedLessons = new Set(), onLessonClick, onBack, onBackToCourse, onBackToModules, onOpenSettings, onLessonsLoaded, onDashboard, onLikes }) {
+export default function LessonsPage({ course, theme, module, levelId, settings, completedLessons = new Set(), onLessonClick, onBack, onBackToCourse, onBackToModules, onOpenSettings, onLessonsLoaded, onDashboard, onLikes, onBookmarks, onDiscover, onResume, bookmarks = new Set(), onToggleBookmark, userEditorialRole, onEditor, activePage, onSaveSettings, languages = [] }) {
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
   const levelMeta = LEVEL_LABELS[levelId] || { label: "All Levels", color: SAFFRON };
@@ -93,7 +99,14 @@ export default function LessonsPage({ course, theme, module, levelId, settings, 
       <PageHeader
         onHome={onBack}
         onOpenSettings={onOpenSettings}
-        navLinks={[{ label: "Home", onClick: onBack }, { label: "Discover", onClick: () => {} }, { label: "Dashboard", onClick: onDashboard }, { label: "Likes", onClick: onLikes }]}
+        onResume={onResume}
+        userEditorialRole={userEditorialRole}
+        onEditor={onEditor}
+        activePage={activePage}
+        settings={settings}
+        onSaveSettings={onSaveSettings}
+        languages={languages}
+        navLinks={[{ label: "Home", onClick: onBack }, { label: "Discover", onClick: onDiscover }, { label: "Dashboard", onClick: onDashboard }, { label: "Likes", onClick: onLikes }, { label: "Bookmarks", onClick: onBookmarks }]}
       />
 
       <div className="breadcrumb">
@@ -126,7 +139,7 @@ export default function LessonsPage({ course, theme, module, levelId, settings, 
       </div>
 
       <div className="lessons-content">
-        {loading ? <div className="loading">Loading lessons…</div>
+        {loading ? <SkeletonLessonList count={5} />
         : lessons.length === 0 ? <div className="empty">No lessons found for this module yet.</div>
         : lessons.map((lesson, i) => {
           const isComplete = completedLessons.has(lesson.lesson_id);
@@ -147,10 +160,19 @@ export default function LessonsPage({ course, theme, module, levelId, settings, 
             </div>
             {isLocked
               ? <span className="lesson-lock">🔒</span>
-              : <button className={`lesson-cta${isComplete ? " done" : ""}`}
-                  onClick={e => { e.stopPropagation(); onLessonClick(lesson); }}>
-                  {isComplete ? "Review" : "Start"}
-                </button>
+              : (
+                <>
+                  <button
+                    className={"bm-btn" + (bookmarks.has("lesson:" + lesson.lesson_id) ? " saved" : "")}
+                    title={bookmarks.has("lesson:" + lesson.lesson_id) ? "Remove bookmark" : "Bookmark lesson"}
+                    onClick={e => { e.stopPropagation(); onToggleBookmark && onToggleBookmark("lesson", lesson.lesson_id, lesson.lesson_name); }}
+                  ><svg width="20" height="20" viewBox="0 0 24 24" fill={bookmarks.has("lesson:" + lesson.lesson_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+                  <button className={`lesson-cta${isComplete ? " done" : ""}`}
+                    onClick={e => { e.stopPropagation(); onLessonClick(lesson); }}>
+                    {isComplete ? "Review" : "Start"}
+                  </button>
+                </>
+              )
             }
           </div>
         );})}

@@ -51,6 +51,27 @@ export async function updateDisplayName(userId, displayName) {
   return { data, error };
 }
 
+
+export async function updateShareMessage(userId, message) {
+  const { data, error } = await supabaseClient
+    .from("profiles")
+    .update({ share_message: message.trim(), updated_at: new Date().toISOString() })
+    .eq("id", userId)
+    .select()
+    .single();
+  return { data, error };
+}
+
+export async function updateSnippetShareMessage(userId, message) {
+  const { data, error } = await supabaseClient
+    .from("profiles")
+    .update({ snippet_share_message: message.trim(), updated_at: new Date().toISOString() })
+    .eq("id", userId)
+    .select()
+    .single();
+  return { data, error };
+}
+
 // ─── Progress persistence ─────────────────────────────────────────────────────
 
 export async function loadCompletions(userId) {
@@ -72,6 +93,10 @@ export async function saveCompletion(userId, lessonId, courseId, pointsEarned = 
       snippet_count: snippetCount,
       completed_at: new Date().toISOString(),
     });
+  if (error) {
+    console.error("[saveCompletion] INSERT failed:", JSON.stringify(error),
+      { userId, lessonId, courseId, pointsEarned, snippetCount });
+  }
   return { data, error };
 }
 
@@ -92,6 +117,10 @@ export async function upsertLessonProgress(userId, lessonId, snippetIndex) {
       { profile_id: userId, lesson_id: lessonId, snippet_index: snippetIndex, updated_at: new Date().toISOString() },
       { onConflict: "profile_id,lesson_id" }
     );
+  if (error) {
+    console.error("[upsertLessonProgress] UPSERT failed:", JSON.stringify(error),
+      { userId, lessonId, snippetIndex });
+  }
   return { data, error };
 }
 
@@ -101,6 +130,10 @@ export async function deleteLessonProgress(userId, lessonId) {
     .delete()
     .eq("profile_id", userId)
     .eq("lesson_id", lessonId);
+  if (error) {
+    console.error("[deleteLessonProgress] DELETE failed:", JSON.stringify(error),
+      { userId, lessonId });
+  }
   return { data, error };
 }
 
@@ -145,4 +178,1208 @@ export async function updateLastVisited(userId, routeJson) {
     .update({ last_visited_route: routeJson, updated_at: new Date().toISOString() })
     .eq("id", userId);
   return { data, error };
+}
+
+// ─── Bookmarks ───────────────────────────────────────────────────────────────
+
+export async function loadUserBookmarks(userId) {
+  const { data, error } = await supabaseClient
+    .from("bookmarks")
+    .select("content_type, content_id")
+    .eq("profile_id", userId);
+  return { data, error };
+}
+
+export async function insertBookmark(userId, contentType, contentId) {
+  const { data, error } = await supabaseClient
+    .from("bookmarks")
+    .upsert(
+      { profile_id: userId, content_type: contentType, content_id: contentId, saved_at: new Date().toISOString() },
+      { onConflict: "profile_id,content_type,content_id" }
+    );
+  if (error) {
+    console.error("[insertBookmark] UPSERT failed:", JSON.stringify(error), { userId, contentType, contentId });
+  }
+  return { data, error };
+}
+
+export async function deleteBookmark(userId, contentType, contentId) {
+  const { data, error } = await supabaseClient
+    .from("bookmarks")
+    .delete()
+    .eq("profile_id", userId)
+    .eq("content_type", contentType)
+    .eq("content_id", contentId);
+  if (error) {
+    console.error("[deleteBookmark] DELETE failed:", JSON.stringify(error), { userId, contentType, contentId });
+  }
+  return { data, error };
+}
+
+export async function loadUserBookmarksRich() {
+  const { data, error } = await supabaseClient.rpc("get_user_bookmarks");
+  if (error) {
+    console.error("[loadUserBookmarksRich] RPC failed:", JSON.stringify(error));
+  }
+  return { data, error };
+}
+
+// ─── Admin helpers ───────────────────────────────────────────────────────────
+
+export async function loadUserRole(userId) {
+  const { data, error } = await supabaseClient
+    .from("user_roles_mapping")
+    .select("role_id")
+    .eq("profile_id", userId);
+  return { data, error };
+}
+
+export async function adminGetUsers() {
+  const { data, error } = await supabaseClient.rpc("admin_get_users");
+  if (error) console.error("[adminGetUsers] RPC failed:", JSON.stringify(error));
+  return { data, error };
+}
+
+export async function adminGetBadgeCounts() {
+  const { data, error } = await supabaseClient.rpc("admin_get_badge_counts");
+  if (error) console.error("[adminGetBadgeCounts] RPC failed:", JSON.stringify(error));
+  return { data, error };
+}
+
+export async function adminToggleBadge(badgeId, isActive) {
+  const { data, error } = await supabaseClient
+    .from("badges")
+    .update({ is_active: isActive })
+    .eq("badge_id", badgeId);
+  if (error) console.error("[adminToggleBadge] failed:", JSON.stringify(error));
+  return { data, error };
+}
+
+export async function adminAddTerm(termId, name, type) {
+  const { data, error } = await supabaseClient
+    .from("taxonomy_terms")
+    .insert({ term_id: termId, name, type });
+  if (error) console.error("[adminAddTerm] failed:", JSON.stringify(error));
+  return { data, error };
+}
+
+export async function adminUpdateTerm(termId, name) {
+  const { data, error } = await supabaseClient
+    .from("taxonomy_terms")
+    .update({ name })
+    .eq("term_id", termId);
+  if (error) console.error("[adminUpdateTerm] failed:", JSON.stringify(error));
+  return { data, error };
+}
+
+export async function adminDeleteTerm(termId) {
+  const { data, error } = await supabaseClient
+    .from("taxonomy_terms")
+    .delete()
+    .eq("term_id", termId);
+  if (error) console.error("[adminDeleteTerm] failed:", JSON.stringify(error));
+  return { data, error };
+}
+
+export async function adminUpsertTranslation(termId, languageId, name) {
+  const { data, error } = await supabaseClient
+    .from("taxonomy_term_translations")
+    .upsert({ term_id: termId, language_id: languageId, name },
+             { onConflict: "term_id,language_id" });
+  if (error) console.error("[adminUpsertTranslation] failed:", JSON.stringify(error));
+  return { data, error };
+}
+
+export async function adminDeleteTranslation(termId, languageId) {
+  const { data, error } = await supabaseClient
+    .from("taxonomy_term_translations")
+    .delete()
+    .eq("term_id", termId)
+    .eq("language_id", languageId);
+  if (error) console.error("[adminDeleteTranslation] failed:", JSON.stringify(error));
+  return { data, error };
+}
+
+export async function adminGetTokens() {
+  const { data, error } = await supabaseClient.rpc("admin_get_tokens");
+  if (error) console.error("[adminGetTokens] RPC failed:", JSON.stringify(error));
+  return { data, error };
+}
+
+// ─── Editorial Workflow helpers ──────────────────────────────────────────────
+
+export async function getEditorialRole() {
+  const { data, error } = await supabaseClient.rpc("get_editorial_role");
+  if (error) console.error("[getEditorialRole] RPC failed:", JSON.stringify(error));
+  return { data, error };
+}
+
+export async function getEditorialStaff() {
+  const { data, error } = await supabaseClient.rpc("get_editorial_staff");
+  if (error) console.error("[getEditorialStaff] RPC failed:", JSON.stringify(error));
+  return { data, error };
+}
+
+export async function loadAllDrafts() {
+  const { data, error } = await supabaseClient.rpc("get_all_drafts");
+  if (error) console.error("[loadAllDrafts] RPC failed:", JSON.stringify(error));
+  return { data, error };
+}
+
+export async function loadMyDrafts() {
+  const { data, error } = await supabaseClient.rpc("get_my_drafts");
+  if (error) console.error("[loadMyDrafts] RPC failed:", JSON.stringify(error));
+  return { data, error };
+}
+
+export async function loadReviewQueue() {
+  const { data, error } = await supabaseClient.rpc("get_review_queue");
+  if (error) console.error("[loadReviewQueue] RPC failed:", JSON.stringify(error));
+  return { data, error };
+}
+
+export async function assignDraft({ contentType, contentId, languageId, assignedTo, dueDate, notes }) {
+  const { data, error } = await supabaseClient
+    .from("content_drafts")
+    .insert({
+      content_type: contentType,
+      content_id:   contentId,
+      language_id:  languageId || null,
+      assigned_to:  assignedTo,
+      assigned_by:  (await supabaseClient.auth.getUser()).data?.user?.id,
+      due_date:     dueDate || null,
+      notes:        notes   || null,
+      status:       "assigned",
+    })
+    .select()
+    .single();
+  if (error) console.error("[assignDraft] INSERT failed:", JSON.stringify(error));
+  return { data, error };
+}
+
+export async function updateDraftStatus(draftId, status, comment) {
+  // 1. Update the draft row
+  const { data, error } = await supabaseClient
+    .from("content_drafts")
+    .update({ status })
+    .eq("id", draftId)
+    .select()
+    .single();
+  if (error) { console.error("[updateDraftStatus] UPDATE failed:", JSON.stringify(error)); return { data, error }; }
+
+  // 2. Log a workflow event (fire-and-forget)
+  const actorId = (await supabaseClient.auth.getUser()).data?.user?.id;
+  supabaseClient
+    .from("content_workflow_events")
+    .insert({ draft_id: draftId, action: status, actor_id: actorId, comment: comment || null })
+    .then(({ error: e }) => { if (e) console.warn("[updateDraftStatus] event insert:", e); });
+
+  return { data, error };
+}
+
+export async function addWorkflowEvent(draftId, action, comment) {
+  const actorId = (await supabaseClient.auth.getUser()).data?.user?.id;
+  const { data, error } = await supabaseClient
+    .from("content_workflow_events")
+    .insert({ draft_id: draftId, action, actor_id: actorId, comment: comment || null });
+  if (error) console.error("[addWorkflowEvent] INSERT failed:", JSON.stringify(error));
+  return { data, error };
+}
+
+export async function loadDraftEvents(draftId) {
+  const { data, error } = await supabaseClient
+    .from("content_workflow_events")
+    .select("*")
+    .eq("draft_id", draftId)
+    .order("created_at", { ascending: true });
+  if (error) console.error("[loadDraftEvents] SELECT failed:", JSON.stringify(error));
+  return { data, error };
+}
+
+// ─── Editorial Phase B helpers ───────────────────────────────────────────────
+
+// Load current live content for pre-filling the edit form.
+// For snippet_translation: fetches the row matching snippet_id + language.
+// For lesson:             fetches the row matching lesson_id.
+// Uses the anon read client since these are public-read tables.
+export async function loadDraftContent(contentType, contentId, languageId) {
+  const { supabase: anonFetch } = await import("./supabase");
+  if (contentType === "snippet_translation") {
+    const lang = languageId || "";
+    const rows = await anonFetch(
+      "snippet_translations",
+      `?snippet_id=eq.${encodeURIComponent(contentId)}&language=eq.${encodeURIComponent(lang)}&limit=1`
+    );
+    return { data: rows?.[0] || null };
+  } else if (contentType === "lesson") {
+    const rows = await anonFetch(
+      "lessons",
+      `?lesson_id=eq.${encodeURIComponent(contentId)}&limit=1`
+    );
+    return { data: rows?.[0] || null };
+  }
+  return { data: null };
+}
+
+// Load taxonomy terms already tagged against a piece of content.
+export async function loadExistingTaxonomy(entityId, entityType) {
+  const { supabase: anonFetch } = await import("./supabase");
+  const rows = await anonFetch(
+    "content_taxonomy_mapping",
+    `?entity_id=eq.${encodeURIComponent(entityId)}&entity_type=eq.${encodeURIComponent(entityType)}&select=term_id`
+  );
+  return { data: (rows || []).map(r => r.term_id) };
+}
+
+// Load all taxonomy terms (for the term picker in the edit form).
+export async function loadTaxonomyTerms() {
+  const { supabase: anonFetch } = await import("./supabase");
+  const rows = await anonFetch("taxonomy_terms", "?select=*&order=type,name");
+  return { data: rows || [] };
+}
+
+// Save draft_data without changing the draft status.
+export async function saveDraftData(draftId, draftData) {
+  const { data, error } = await supabaseClient
+    .from("content_drafts")
+    .update({ draft_data: draftData })
+    .eq("id", draftId)
+    .select()
+    .single();
+  if (error) console.error("[saveDraftData] failed:", JSON.stringify(error));
+  return { data, error };
+}
+
+// Save draft_data AND move status to 'submitted' for verifier review.
+export async function submitDraft(draftId, draftData) {
+  const { data, error } = await supabaseClient
+    .from("content_drafts")
+    .update({ draft_data: draftData, status: "submitted" })
+    .eq("id", draftId)
+    .select()
+    .single();
+  if (error) { console.error("[submitDraft] failed:", JSON.stringify(error)); return { data, error }; }
+
+  // Log workflow event (fire-and-forget)
+  const actorId = (await supabaseClient.auth.getUser()).data?.user?.id;
+  supabaseClient
+    .from("content_workflow_events")
+    .insert({ draft_id: draftId, action: "submitted", actor_id: actorId, comment: "Editor submitted for review" })
+    .then(({ error: e }) => { if (e) console.warn("[submitDraft] event:", e); });
+
+  return { data, error };
+}
+
+// Call the publish_draft() Supabase RPC to write draft to live tables.
+export async function publishDraft(draftId) {
+  const { data, error } = await supabaseClient.rpc("publish_draft", { p_draft_id: draftId });
+  if (error) console.error("[publishDraft] RPC failed:", JSON.stringify(error));
+  return { data, error };
+}
+
+// ── Editorial content browser helpers ──────────────────────────────────────
+
+// loadSnippetsForAssignment(languageId)
+// Returns all snippets with per-language content status + English preview hook.
+// content_status: 'full' | 'partial' | 'none'
+// total_fields = 7 (hook, explanation, key_term, key_term_meaning, life_connection, quiz_recap, source_citation)
+export async function loadSnippetsForAssignment(languageId) {
+  const FIELDS = ["hook","explanation","key_term","key_term_meaning","life_connection","quiz_recap","source_citation"];
+  const TOTAL = FIELDS.length;
+
+  const { data: snippets, error } = await supabaseClient
+    .from("snippet_core")
+    .select("snippet_id")
+    .order("snippet_id")
+    .limit(300);
+  if (error) { console.error("[loadSnippetsForAssignment]", error); return { data: [], error }; }
+
+  // English preview hooks
+  const { data: enRows } = await supabaseClient
+    .from("snippet_translations")
+    .select("snippet_id, hook")
+    .eq("language", "LANG_01");
+
+  // Target-language translations (for content status check)
+  let langRows = [];
+  if (languageId) {
+    const { data } = await supabaseClient
+      .from("snippet_translations")
+      .select("snippet_id, hook, explanation, key_term, key_term_meaning, life_connection, quiz_recap, source_citation")
+      .eq("language", languageId);
+    langRows = data || [];
+  }
+
+  const enMap = {};
+  (enRows || []).forEach(r => { enMap[r.snippet_id] = r.hook || ""; });
+  const langMap = {};
+  langRows.forEach(r => { langMap[r.snippet_id] = r; });
+
+  const result = (snippets || []).map(s => {
+    const tr = langMap[s.snippet_id];
+    const filled = tr ? FIELDS.filter(f => tr[f] && tr[f].trim() !== "").length : 0;
+    return {
+      snippet_id:     s.snippet_id,
+      preview_hook:   enMap[s.snippet_id] || "",
+      content_status: !tr ? "none" : filled === TOTAL ? "full" : "partial",
+      filled_count:   filled,
+      total_fields:   TOTAL,
+    };
+  });
+
+  return { data: result, error: null };
+}
+
+// loadLessonsForAssignment()
+// Returns all lessons with a simple content status (full/partial/none) for the assignment browser.
+export async function loadLessonsForAssignment() {
+  const { data, error } = await supabaseClient
+    .from("lessons")
+    .select("lesson_id, lesson_name, lesson_description")
+    .order("lesson_id")
+    .limit(300);
+  if (error) { console.error("[loadLessonsForAssignment]", error); return { data: [], error }; }
+
+  const result = (data || []).map(l => ({
+    lesson_id:      l.lesson_id,
+    preview_hook:   l.lesson_name || "",
+    lesson_name:    l.lesson_name || "",
+    content_status: (l.lesson_name && l.lesson_description) ? "full" : l.lesson_name ? "partial" : "none",
+    filled_count:   [l.lesson_name, l.lesson_description].filter(Boolean).length,
+    total_fields:   2,
+  }));
+
+  return { data: result, error: null };
+}
+
+// checkActiveDrafts(contentIds, contentType, languageId)
+// Returns active (non-terminal) drafts for the given content items.
+// languageId is required for snippet_translation — conflicts are per-language,
+// so an Assamese draft must not block a Bengali assignment for the same snippet.
+export async function checkActiveDrafts(contentIds, contentType, languageId) {
+  if (!contentIds || contentIds.length === 0) return { data: [], error: null };
+  let q = supabaseClient
+    .from("content_drafts")
+    .select("content_id, language_id, status, assigned_to")
+    .eq("content_type", contentType)
+    .in("content_id", contentIds)
+    .not("status", "in", "(published,rejected)");
+  if (languageId) q = q.eq("language_id", languageId);
+  const { data, error } = await q;
+  if (error) console.error("[checkActiveDrafts]", error);
+  return { data: data || [], error };
+}
+
+// grantEditorialRole(profileId, roleId)
+// Idempotent: inserts (profile_id, role_id) into user_roles_mapping.
+// roleId must be a canonical ROLE_XX value (ROLE_02, ROLE_05, ROLE_06).
+export async function grantEditorialRole(profileId, roleId) {
+  const { data, error } = await supabaseClient
+    .from("user_roles_mapping")
+    .upsert({ profile_id: profileId, role_id: roleId }, { onConflict: "profile_id,role_id" });
+  if (error) console.error("[grantEditorialRole]", error);
+  return { data, error };
+}
+
+// revokeEditorialRole(profileId, roleId)
+// Removes (profile_id, role_id) from user_roles_mapping.
+export async function revokeEditorialRole(profileId, roleId) {
+  const { data, error } = await supabaseClient
+    .from("user_roles_mapping")
+    .delete()
+    .eq("profile_id", profileId)
+    .eq("role_id", roleId);
+  if (error) console.error("[revokeEditorialRole]", error);
+  return { data, error };
+}
+
+// ─── Content-role helpers (content_role_assignments) ─────────────────────────
+
+// loadContentRoles(contentId, contentType, languageId)
+// Returns all sub_role rows for a given piece of content.
+// languageId may be null for lessons.
+export async function loadContentRoles(contentId, contentType, languageId) {
+  let q = supabaseClient
+    .from("content_role_assignments")
+    .select("id, profile_id, sub_role, assigned_at, assigned_by")
+    .eq("content_id", contentId)
+    .eq("content_type", contentType);
+  if (languageId) q = q.eq("language_id", languageId);
+  else            q = q.is("language_id", null);
+  const { data, error } = await q;
+  if (error) console.error("[loadContentRoles]", error);
+  return { data: data || [], error };
+}
+
+// assignContentRole(profileId, contentType, contentId, languageId, subRole)
+// Upserts a sub_role for a user on a specific piece of content.
+// subRole must be 'editor' | 'verifier' | 'supervisor'.
+export async function assignContentRole(profileId, contentType, contentId, languageId, subRole) {
+  // Uses a SECURITY DEFINER RPC to bypass RLS on content_role_assignments.
+  // Direct table INSERT/upsert returned 403 because Supabase evaluates RLS
+  // UPDATE policies even for pure inserts with onConflict. The RPC runs as
+  // DB owner and checks is_supervisor_or_admin() internally.
+  const { data, error } = await supabaseClient.rpc("assign_content_role", {
+    p_profile_id:   profileId,
+    p_content_type: contentType,
+    p_content_id:   contentId,
+    p_language_id:  languageId || null,
+    p_sub_role:     subRole,
+  });
+  if (error) console.error("[assignContentRole]", error);
+  return { data, error };
+}
+
+// revokeContentRole(profileId, contentType, contentId, languageId, subRole)
+// Removes a sub_role from a user for a specific piece of content.
+export async function revokeContentRole(profileId, contentType, contentId, languageId, subRole) {
+  let q = supabaseClient
+    .from("content_role_assignments")
+    .delete()
+    .eq("profile_id", profileId)
+    .eq("content_type", contentType)
+    .eq("content_id", contentId)
+    .eq("sub_role", subRole);
+  if (languageId) q = q.eq("language_id", languageId);
+  else            q = q.is("language_id", null);
+  const { data, error } = await q;
+  if (error) console.error("[revokeContentRole]", error);
+  return { data, error };
+}
+
+// loadAllContentRoleAssignments()
+// Returns every row in content_role_assignments visible to the current user.
+// Supervisor/admin sees all rows (via RLS policy); others see only their own.
+export async function loadAllContentRoleAssignments() {
+  const { data, error } = await supabaseClient
+    .from("content_role_assignments")
+    .select("id, profile_id, content_type, content_id, language_id, sub_role, assigned_at");
+  if (error) console.error("[loadAllContentRoleAssignments]", error);
+  return { data: data || [], error };
+}
+
+// deleteAssignment(draft)
+// Removes a content_draft (events cascade) and its associated content_role_assignment.
+// draft must have: id, assigned_to, content_type, content_id, language_id.
+export async function deleteAssignment(draft) {
+  // 1. Delete the draft (workflow events cascade via FK ON DELETE CASCADE)
+  const { error: draftErr } = await supabaseClient
+    .from("content_drafts")
+    .delete()
+    .eq("id", draft.id);
+  if (draftErr) { console.error("[deleteAssignment] draft", draftErr); return { error: draftErr }; }
+
+  // 2. Delete the content role assignment for the same (user, content, language)
+  let q = supabaseClient
+    .from("content_role_assignments")
+    .delete()
+    .eq("profile_id",   draft.assigned_to)
+    .eq("content_type", draft.content_type)
+    .eq("content_id",   draft.content_id);
+  if (draft.language_id) q = q.eq("language_id", draft.language_id);
+  else                   q = q.is("language_id", null);
+  const { error: roleErr } = await q;
+  if (roleErr) console.warn("[deleteAssignment] role cleanup", roleErr); // non-fatal
+  return { error: null };
+}
+
+// ─── Snippet image helpers ────────────────────────────────────────────────────
+
+// uploadSnippetImage(blob, snippetId)
+// Uploads a resized image Blob to the "snippet-images" Supabase Storage bucket.
+// Returns { url: publicUrl, error }.
+export async function uploadSnippetImage(blob, snippetId) {
+  const filename = `${snippetId}/${Date.now()}.jpg`;
+  const { error: upErr } = await supabaseClient.storage
+    .from("snippet-images")
+    .upload(filename, blob, { contentType: "image/jpeg", upsert: true });
+  if (upErr) { console.error("[uploadSnippetImage]", upErr); return { url: null, error: upErr }; }
+  const { data: { publicUrl } } = supabaseClient.storage
+    .from("snippet-images")
+    .getPublicUrl(filename);
+  return { url: publicUrl, error: null };
+}
+
+// loadSnippetAsset(snippetId)
+// Returns the current asset row for a snippet (for pre-fill in the edit form).
+// Returns { data: { asset_id, file_path, alt_text, attribution } | null, error }.
+export async function loadSnippetAsset(snippetId) {
+  const { data: core, error: coreErr } = await supabaseClient
+    .from("snippet_core")
+    .select("asset_id")
+    .eq("snippet_id", snippetId)
+    .maybeSingle();
+  if (coreErr || !core?.asset_id) return { data: null, error: coreErr };
+
+  const { data: asset, error: assetErr } = await supabaseClient
+    .from("asset_library")
+    .select("asset_id, file_path, alt_text, attribution")
+    .eq("asset_id", core.asset_id)
+    .maybeSingle();
+  return { data: asset || null, error: assetErr };
+}
+
+// ─── Badge admin helpers ──────────────────────────────────────────────────────
+
+export async function adminUpdateBadge(badgeId, fields) {
+  const { data, error } = await supabaseClient
+    .from("badges")
+    .update(fields)
+    .eq("badge_id", badgeId);
+  if (error) console.error("[adminUpdateBadge]", error);
+  return { data, error };
+}
+
+export async function adminAddBadge(fields) {
+  const { data, error } = await supabaseClient
+    .from("badges")
+    .insert(fields);
+  if (error) console.error("[adminAddBadge]", error);
+  return { data, error };
+}
+
+export async function adminDeleteBadge(badgeId) {
+  const { data, error } = await supabaseClient
+    .from("badges")
+    .delete()
+    .eq("badge_id", badgeId);
+  if (error) console.error("[adminDeleteBadge]", error);
+  return { data, error };
+}
+
+// ─── Token admin helpers ──────────────────────────────────────────────────────
+
+export async function adminAwardToken(profileId, tokenType, quantity) {
+  const { data, error } = await supabaseClient
+    .from("user_tokens")
+    .insert({
+      profile_id:  profileId,
+      token_type:  tokenType,
+      quantity:    parseInt(quantity, 10),
+      source_type: "manual_admin",
+      source_id:   "admin",
+    });
+  if (error) console.error("[adminAwardToken]", error);
+  return { data, error };
+}
+
+// ─── Bulk import helpers (Excel import tab) ─────────────────────────────────
+//
+// ── Import string-similarity helpers ─────────────────────────────────────────
+
+function _lev(a, b) {
+  const m = a.length, n = b.length;
+  if (!m) return n; if (!n) return m;
+  const row = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    let prev = i;
+    for (let j = 1; j <= n; j++) {
+      const val = a[i - 1] === b[j - 1]
+        ? row[j - 1]
+        : 1 + Math.min(prev, row[j], row[j - 1]);
+      row[j - 1] = prev; prev = val;
+    }
+    row[n] = prev;
+  }
+  return row[n];
+}
+
+function _sim(a, b) {
+  if (a === b) return 1;
+  const mx = Math.max(a.length, b.length);
+  return mx === 0 ? 1 : 1 - _lev(a, b) / mx;
+}
+
+// Returns { id, matchedNorm, score, type:"exact"|"fuzzy" } or null
+// Caches fuzzy hits back into normMap so repeated lookups are O(1).
+function _fuzzyLookup(needle, normMap, threshold = 0.8) {
+  if (!needle) return null;
+  if (normMap[needle] !== undefined)
+    return { id: normMap[needle], matchedNorm: needle, score: 1, type: "exact" };
+  let bestId = null, bestNorm = null, bestScore = 0;
+  for (const [k, id] of Object.entries(normMap)) {
+    const s = _sim(needle, k);
+    if (s > bestScore) { bestScore = s; bestId = id; bestNorm = k; }
+  }
+  if (bestId !== null && bestScore >= threshold) {
+    normMap[needle] = bestId;   // cache so next identical typo is instant
+    return { id: bestId, matchedNorm: bestNorm, score: bestScore, type: "fuzzy" };
+  }
+  return null;
+}
+
+// adminImportSnippetsFull(rows)
+//
+// Single-sheet, text-only import. Each row = one snippet × one language.
+// No IDs in the spreadsheet — matching is done by normalized text.
+// This function INSERT-only: existing rows for a (snippet, language) pair
+// are silently skipped. Upsert will be handled by a separate template later.
+//
+// Required columns:  english_hook, language
+// Optional columns:  difficulty_level, snippet_value,
+//                    picture_url, picture_alt, picture_attribution,
+//                    hook, explanation, key_term, key_term_meaning,
+//                    life_connection, refresher_question, source_reference,
+//                    lesson, module, theme, level, course, order_index
+//
+// Tables written:    snippet_core  (new snippets only)
+//                    snippet_translations (new language rows only)
+//                    asset_library (new image URLs only)
+//                    lesson_snippet_mapping (new pairs only)
+//                    lessons / modules / themes / levels / courses (as needed)
+
+export async function adminImportSnippetsFull(rows) {
+  const normalize = s => String(s || "").trim().replace(/\s+/g, " ").toLowerCase();
+
+  // ── 1. Load all lookup data upfront ──────────────────────────────────────
+  const [
+    langRes, enTransRes, allTransRes, snipCoreRes,
+    lessonRes, moduleRes, themeRes, levelRes, courseRes, assetRes, mappingRes,
+  ] = await Promise.all([
+    supabaseClient.from("languages").select("language_id, language"),
+    supabaseClient.from("snippet_translations").select("snippet_id, hook").eq("language", "LANG_01"),
+    supabaseClient.from("snippet_translations").select("snippet_id, language"),
+    supabaseClient.from("snippet_core").select("snippet_id"),
+    supabaseClient.from("lessons").select("lesson_id, lesson_name"),
+    supabaseClient.from("modules").select("module_id, module_name, course_id, level_id, theme_id"),
+    supabaseClient.from("themes").select("theme_id, title"),
+    supabaseClient.from("levels").select("level_id, title"),
+    supabaseClient.from("courses").select("course_id, course_name"),
+    supabaseClient.from("asset_library").select("asset_id, file_path"),
+    supabaseClient.from("lesson_snippet_mapping").select("lesson_id, snippet_id"),
+  ]);
+
+  // ── 2. Lookup maps (normalized text → id) ────────────────────────────────
+  const langMap    = {};   // e.g. "tamil" → "LANG_13"
+  const hookMap    = {};   // normalized EN hook → snippet_id
+  const transSet   = new Set();   // "snip_id:lang_id" already exists
+  const lessonMap  = {};
+  const moduleMap  = {};
+  const themeMap   = {};
+  const levelMap   = {};
+  const courseMap  = {};
+  const assetMap   = {};
+  const mappingSet = new Set();   // "lesson_id:snippet_id" already exists
+
+  (langRes.data    || []).forEach(r => { langMap[normalize(r.language)]    = r.language_id; });
+  (enTransRes.data || []).forEach(r => { if (r.hook) hookMap[normalize(r.hook)] = r.snippet_id; });
+  (allTransRes.data|| []).forEach(r => { transSet.add(r.snippet_id + ":" + r.language); });
+  (lessonRes.data  || []).forEach(r => { lessonMap[normalize(r.lesson_name)] = r.lesson_id; });
+  (moduleRes.data  || []).forEach(r => { moduleMap[normalize(r.module_name)] = r.module_id; });
+  (themeRes.data   || []).forEach(r => { themeMap[normalize(r.title)]       = r.theme_id; });
+  (levelRes.data   || []).forEach(r => { levelMap[normalize(r.title)]       = r.level_id; });
+  (courseRes.data  || []).forEach(r => { courseMap[normalize(r.course_name)]= r.course_id; });
+  (assetRes.data   || []).forEach(r => { assetMap[normalize(r.file_path)]   = r.asset_id; });
+  (mappingRes.data || []).forEach(r => { mappingSet.add(r.lesson_id + ":" + r.snippet_id); });
+
+  // ── 3. ID generators — detect prefix & pad-length from existing IDs ──────
+  function makeIdGen(existingIds, fallbackPrefix, fallbackPad) {
+    const ids = (existingIds || []).filter(Boolean);
+    let prefix = fallbackPrefix;
+    let pad    = fallbackPad;
+    if (ids.length) {
+      const m = ids[0].match(/^([A-Za-z_]+)(\d+)$/);
+      if (m) { prefix = m[1]; pad = m[2].length; }
+    }
+    const nums = ids
+      .map(id => parseInt(id.slice(prefix.length), 10))
+      .filter(n => !isNaN(n));
+    let next = (nums.length ? Math.max(...nums) : 0) + 1;
+    return () => prefix + String(next++).padStart(pad, "0");
+  }
+
+  const nextSnipId   = makeIdGen((snipCoreRes.data || []).map(r => r.snippet_id),   "SNIP_",   5);
+  const nextLessonId = makeIdGen((lessonRes.data   || []).map(r => r.lesson_id),     "LES_",    5);
+  const nextModuleId = makeIdGen((moduleRes.data   || []).map(r => r.module_id),     "MOD_",    5);
+  const nextThemeId  = makeIdGen((themeRes.data    || []).map(r => r.theme_id),      "THEME_",  5);
+  const nextLevelId  = makeIdGen((levelRes.data    || []).map(r => r.level_id),      "LEVEL_",  5);
+  const nextCourseId = makeIdGen((courseRes.data   || []).map(r => r.course_id),     "COURSE_", 5);
+  const nextAssetId  = makeIdGen((assetRes.data    || []).map(r => r.asset_id),      "ASSET_",  5);
+
+  // ── 4. Process rows ───────────────────────────────────────────────────────
+  const stats = {
+    snippetsCreated:      0,
+    translationsCreated:  0,
+    translationsSkipped:  0,
+    assetsCreated:        0,
+    lessonsCreated:       0,
+    modulesCreated:       0,
+    themesCreated:        0,
+    levelsCreated:        0,
+    coursesCreated:       0,
+    mappingsCreated:      0,
+    fuzzyMatches:         0,
+    errors:               [],
+  };
+
+  for (const row of rows) {
+    try {
+      // ── Required field check ────────────────────────────────────────────
+      const englishHook = String(row.english_hook || "").trim();
+      if (!englishHook) {
+        stats.errors.push("Row skipped — english_hook is blank");
+        continue;
+      }
+      const langName  = normalize(row.language || "English");
+      const langMatch = _fuzzyLookup(langName, langMap);
+      if (!langMatch) {
+        stats.errors.push('Unknown language "' + (row.language || "") + '" — row skipped. Add it to the languages table first.');
+        continue;
+      }
+      const langId = langMatch.id;
+      if (langMatch.type === "fuzzy") stats.fuzzyMatches++;
+
+      // ── Find or create snippet_core ─────────────────────────────────────
+      let snippetId = hookMap[normalize(englishHook)];
+      if (!snippetId) {
+        snippetId = nextSnipId();
+        const coreRow = { snippet_id: snippetId };
+        const dv = v => v !== undefined && String(v).trim() !== "" ? Number(v) : undefined;
+        if (dv(row.difficulty_level) !== undefined) coreRow.difficulty_level = dv(row.difficulty_level);
+        if (dv(row.snippet_value)    !== undefined) coreRow.snippet_value    = dv(row.snippet_value);
+        const { error: coreErr } = await supabaseClient.from("snippet_core").insert(coreRow);
+        if (coreErr) {
+          stats.errors.push("Create snippet (" + snippetId + "): " + coreErr.message);
+          continue;
+        }
+        hookMap[normalize(englishHook)] = snippetId;
+        stats.snippetsCreated++;
+      }
+
+      // ── Find or create asset, then link to snippet ──────────────────────
+      const picUrl = String(row.picture_url || "").trim();
+      if (picUrl) {
+        let assetId = assetMap[normalize(picUrl)];
+        if (!assetId) {
+          assetId = nextAssetId();
+          const { error: assetErr } = await supabaseClient.from("asset_library").insert({
+            asset_id:    assetId,
+            file_path:   picUrl,
+            asset_type:  "IMAGE",
+            alt_text:    String(row.picture_alt         || "").trim(),
+            attribution: String(row.picture_attribution || "").trim(),
+          });
+          if (!assetErr) {
+            assetMap[normalize(picUrl)] = assetId;
+            stats.assetsCreated++;
+          } else {
+            stats.errors.push("Asset create (" + picUrl + "): " + assetErr.message);
+          }
+        }
+        if (assetId) {
+          // Link only if snippet_core.asset_id is currently null
+          await supabaseClient
+            .from("snippet_core")
+            .update({ asset_id: assetId })
+            .eq("snippet_id", snippetId)
+            .is("asset_id", null);
+        }
+      }
+
+      // ── Insert translation (skip if already exists for this lang) ────────
+      const transKey = snippetId + ":" + langId;
+      if (transSet.has(transKey)) {
+        stats.translationsSkipped++;
+      } else {
+        const hookVal = String(row.hook || "").trim() || (langId === "LANG_01" ? englishHook : "");
+        const transRow = { snippet_id: snippetId, language: langId };
+        if (hookVal)                              transRow.hook              = hookVal;
+        if (String(row.explanation       || "").trim()) transRow.explanation       = String(row.explanation).trim();
+        if (String(row.key_term          || "").trim()) transRow.key_term          = String(row.key_term).trim();
+        if (String(row.key_term_meaning  || "").trim()) transRow.key_term_meaning  = String(row.key_term_meaning).trim();
+        if (String(row.life_connection   || "").trim()) transRow.life_connection   = String(row.life_connection).trim();
+        if (String(row.refresher_question|| "").trim()) transRow.quiz_recap        = String(row.refresher_question).trim();
+        if (String(row.source_reference  || "").trim()) transRow.source_citation   = String(row.source_reference).trim();
+
+        const { error: transErr } = await supabaseClient.from("snippet_translations").insert(transRow);
+        if (transErr) {
+          stats.errors.push("Translation (" + snippetId + "/" + langId + "): " + transErr.message);
+        } else {
+          transSet.add(transKey);
+          stats.translationsCreated++;
+        }
+      }
+
+      // ── Find or create lesson hierarchy → create mapping ────────────────
+      const lessonName = String(row.lesson || "").trim();
+      if (!lessonName) continue;
+
+      const _lesM = _fuzzyLookup(normalize(lessonName), lessonMap);
+      let lessonId = _lesM ? _lesM.id : null;
+      if (_lesM && _lesM.type === "fuzzy") stats.fuzzyMatches++;
+      if (!lessonId) {
+        // Find or create course
+        let courseId = null;
+        const courseName = String(row.course || "").trim();
+        if (courseName) {
+          const _cm = _fuzzyLookup(normalize(courseName), courseMap);
+          if (_cm) {
+            courseId = _cm.id;
+            if (_cm.type === "fuzzy") stats.fuzzyMatches++;
+          } else {
+            courseId = nextCourseId();
+            const { error: e } = await supabaseClient.from("courses").insert({ course_id: courseId, course_name: courseName });
+            if (!e) { courseMap[normalize(courseName)] = courseId; stats.coursesCreated++; }
+            else    { stats.errors.push("Create course (" + courseName + "): " + e.message); courseId = null; }
+          }
+        }
+
+        // Find or create level
+        let levelId = null;
+        const levelName = String(row.level || "").trim();
+        if (levelName) {
+          const _lm = _fuzzyLookup(normalize(levelName), levelMap);
+          if (_lm) {
+            levelId = _lm.id;
+            if (_lm.type === "fuzzy") stats.fuzzyMatches++;
+          } else {
+            levelId = nextLevelId();
+            const { error: e } = await supabaseClient.from("levels").insert({ level_id: levelId, title: levelName });
+            if (!e) { levelMap[normalize(levelName)] = levelId; stats.levelsCreated++; }
+            else    { stats.errors.push("Create level (" + levelName + "): " + e.message); levelId = null; }
+          }
+        }
+
+        // Find or create theme
+        let themeId = null;
+        const themeName = String(row.theme || "").trim();
+        if (themeName) {
+          const _tm = _fuzzyLookup(normalize(themeName), themeMap);
+          if (_tm) {
+            themeId = _tm.id;
+            if (_tm.type === "fuzzy") stats.fuzzyMatches++;
+          } else {
+            themeId = nextThemeId();
+            const { error: e } = await supabaseClient.from("themes").insert({ theme_id: themeId, title: themeName });
+            if (!e) { themeMap[normalize(themeName)] = themeId; stats.themesCreated++; }
+            else    { stats.errors.push("Create theme (" + themeName + "): " + e.message); themeId = null; }
+          }
+        }
+
+        // Find or create module
+        let moduleId = null;
+        const moduleName = String(row.module || "").trim();
+        if (moduleName) {
+          const _mm = _fuzzyLookup(normalize(moduleName), moduleMap);
+          if (_mm) {
+            moduleId = _mm.id;
+            if (_mm.type === "fuzzy") stats.fuzzyMatches++;
+          } else {
+            moduleId = nextModuleId();
+            const modRow = { module_id: moduleId, module_name: moduleName, visibility: "public" };
+            if (courseId) modRow.course_id = courseId;
+            if (levelId)  modRow.level_id  = levelId;
+            if (themeId)  modRow.theme_id  = themeId;
+            const { error: e } = await supabaseClient.from("modules").insert(modRow);
+            if (!e) { moduleMap[normalize(moduleName)] = moduleId; stats.modulesCreated++; }
+            else    { stats.errors.push("Create module (" + moduleName + "): " + e.message); moduleId = null; }
+          }
+        }
+
+        // Create lesson
+        lessonId = nextLessonId();
+        const lesRow = { lesson_id: lessonId, lesson_name: lessonName };
+        if (moduleId) lesRow.module_id = moduleId;
+        const { error: lesErr } = await supabaseClient.from("lessons").insert(lesRow);
+        if (lesErr) {
+          stats.errors.push("Create lesson (" + lessonName + "): " + lesErr.message);
+          lessonId = null;
+        } else {
+          lessonMap[normalize(lessonName)] = lessonId;
+          stats.lessonsCreated++;
+        }
+      }
+
+      // Create lesson↔snippet mapping
+      if (lessonId) {
+        const mapKey = lessonId + ":" + snippetId;
+        if (!mappingSet.has(mapKey)) {
+          const mapRow = { lesson_id: lessonId, snippet_id: snippetId };
+          const oi = String(row.order_index || "").trim();
+          if (oi !== "") mapRow.order_index = Number(oi);
+          const { error: mapErr } = await supabaseClient.from("lesson_snippet_mapping").insert(mapRow);
+          if (mapErr) {
+            stats.errors.push("Mapping (" + lessonId + "→" + snippetId + "): " + mapErr.message);
+          } else {
+            mappingSet.add(mapKey);
+            stats.mappingsCreated++;
+          }
+        }
+      }
+
+    } catch (e) {
+      stats.errors.push("Unexpected error on row: " + (e.message || String(e)));
+    }
+  }
+
+  return stats;
+}
+
+
+// adminDryRunImport(rows)
+//
+// Dry-run pass: resolves every unique text value in each lookup column
+// WITHOUT writing anything to the database.
+// Returns:
+//   {
+//     resolutions: { language, course, level, theme, module, lesson }
+//       each field map: { [originalValue]: { type, id, resolvedTo, score } }
+//         type: "exact" | "fuzzy" | "create" | "error"
+//     rowIssues: [ { rowNum, englishHook, status:"ok"|"warn"|"error", issues[] } ]
+//     counts: { total, ok, warn, error }
+//   }
+
+export async function adminDryRunImport(rows) {
+  const normalize = s => String(s || "").trim().replace(/\s+/g, " ").toLowerCase();
+
+  const [langRes, lessonRes, moduleRes, themeRes, levelRes, courseRes] = await Promise.all([
+    supabaseClient.from("languages").select("language_id, language"),
+    supabaseClient.from("lessons").select("lesson_id, lesson_name"),
+    supabaseClient.from("modules").select("module_id, module_name"),
+    supabaseClient.from("themes").select("theme_id, title"),
+    supabaseClient.from("levels").select("level_id, title"),
+    supabaseClient.from("courses").select("course_id, course_name"),
+  ]);
+
+  const langMap = {}, lessonMap = {}, moduleMap = {}, themeMap = {}, levelMap = {}, courseMap = {};
+  const langDisp = {}, lessonDisp = {}, moduleDisp = {}, themeDisp = {}, levelDisp = {}, courseDisp = {};
+
+  (langRes.data   || []).forEach(r => { const n = normalize(r.language);    langMap[n]   = r.language_id; langDisp[n]   = r.language; });
+  (lessonRes.data || []).forEach(r => { const n = normalize(r.lesson_name); lessonMap[n] = r.lesson_id;   lessonDisp[n] = r.lesson_name; });
+  (moduleRes.data || []).forEach(r => { const n = normalize(r.module_name); moduleMap[n] = r.module_id;   moduleDisp[n] = r.module_name; });
+  (themeRes.data  || []).forEach(r => { const n = normalize(r.title);       themeMap[n]  = r.theme_id;    themeDisp[n]  = r.title; });
+  (levelRes.data  || []).forEach(r => { const n = normalize(r.title);       levelMap[n]  = r.level_id;    levelDisp[n]  = r.title; });
+  (courseRes.data || []).forEach(r => { const n = normalize(r.course_name); courseMap[n] = r.course_id;   courseDisp[n] = r.course_name; });
+
+  const LOOKUP_MAPS = { language: langMap, course: courseMap, level: levelMap, theme: themeMap, module: moduleMap, lesson: lessonMap };
+  const DISP_MAPS   = { language: langDisp, course: courseDisp, level: levelDisp, theme: themeDisp, module: moduleDisp, lesson: lessonDisp };
+  const CAN_CREATE  = { language: false, course: true, level: true, theme: true, module: true, lesson: true };
+  const FIELDS      = ["language", "course", "level", "theme", "module", "lesson"];
+
+  // Collect unique values per field from the rows
+  const uniqueVals = {};
+  for (const f of FIELDS) uniqueVals[f] = new Set();
+  for (const row of rows) {
+    for (const f of FIELDS) {
+      const v = String(row[f] || "").trim();
+      if (v) uniqueVals[f].add(v);
+    }
+  }
+
+  // Resolve each unique value
+  const resolutions = {};
+  for (const f of FIELDS) {
+    resolutions[f] = {};
+    for (const val of uniqueVals[f]) {
+      const n = normalize(val);
+      const match = _fuzzyLookup(n, LOOKUP_MAPS[f]);
+      if (match) {
+        const resolvedName = DISP_MAPS[f][match.matchedNorm] || match.matchedNorm;
+        resolutions[f][val] = { type: match.type, id: match.id, resolvedTo: resolvedName, score: match.score };
+      } else if (CAN_CREATE[f]) {
+        resolutions[f][val] = { type: "create", id: null, resolvedTo: val };
+      } else {
+        resolutions[f][val] = { type: "error", id: null, resolvedTo: null };
+      }
+    }
+  }
+
+  // Per-row analysis
+  let okCount = 0, warnCount = 0, errorCount = 0;
+  const rowIssues = [];
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const issues = [];
+    let hasError = false, hasWarn = false;
+
+    const englishHook = String(row.english_hook || "").trim();
+    if (!englishHook) {
+      issues.push("english_hook is blank");
+      hasError = true;
+    }
+
+    const langVal = String(row.language || "").trim();
+    if (!langVal) {
+      issues.push("language is blank — will default to English");
+    } else {
+      const res = resolutions.language[langVal];
+      if (res && res.type === "error") {
+        issues.push("Language \"" + langVal + "\" not found — add it to the languages table first");
+        hasError = true;
+      } else if (res && res.type === "fuzzy") {
+        issues.push("Language \"" + langVal + "\" → fuzzy match \"" + res.resolvedTo + "\" (" + Math.round(res.score * 100) + "%)");
+        hasWarn = true;
+      }
+    }
+
+    for (const f of ["course", "level", "theme", "module", "lesson"]) {
+      const v = String(row[f] || "").trim();
+      if (!v) continue;
+      const res = resolutions[f] && resolutions[f][v];
+      if (res && res.type === "fuzzy") {
+        issues.push(f.charAt(0).toUpperCase() + f.slice(1) + " \"" + v + "\" → fuzzy match \"" + res.resolvedTo + "\" (" + Math.round(res.score * 100) + "%)");
+        hasWarn = true;
+      }
+    }
+
+    const status = hasError ? "error" : hasWarn ? "warn" : "ok";
+    if (status === "error") errorCount++;
+    else if (status === "warn") warnCount++;
+    else okCount++;
+
+    if (status !== "ok") {
+      rowIssues.push({ rowNum: i + 1, englishHook: englishHook || "(blank)", status, issues });
+    }
+  }
+
+  return {
+    resolutions,
+    rowIssues,
+    counts: { total: rows.length, ok: okCount, warn: warnCount, error: errorCount },
+  };
+}
+
+
+// ── Admin token raw access ────────────────────────────────────────────────────
+
+export async function adminGetTokensRaw() {
+  return supabaseClient
+    .from("user_tokens")
+    .select("id, profile_id, token_type, quantity, source_type, source_id, awarded_at, profiles(display_name)")
+    .order("awarded_at", { ascending: false });
+}
+
+export async function adminUpdateTokenRow(id, fields) {
+  return supabaseClient.from("user_tokens").update(fields).eq("id", id);
+}
+
+export async function adminDeleteTokenRow(id) {
+  return supabaseClient.from("user_tokens").delete().eq("id", id);
+}
+
+// adminSaveOrder(type, items, auxId?)
+// type "modules"  → items [{ module_id, module_number }]
+// type "lessons"  → items [{ lesson_id, lesson_number }]
+// type "snippets" → items [{ snippet_id, order_index }], auxId = lesson_id
+
+export async function adminSaveOrder(type, items, auxId) {
+  const errs = [];
+  if (type === "modules") {
+    for (const { module_id, module_number } of items) {
+      const { error } = await supabaseClient.from("modules")
+        .update({ module_number }).eq("module_id", module_id);
+      if (error) errs.push(error.message);
+    }
+  } else if (type === "lessons") {
+    for (const { lesson_id, lesson_number } of items) {
+      const { error } = await supabaseClient.from("lessons")
+        .update({ lesson_number }).eq("lesson_id", lesson_id);
+      if (error) errs.push(error.message);
+    }
+  } else if (type === "snippets") {
+    for (const { snippet_id, order_index } of items) {
+      const { error } = await supabaseClient.from("lesson_snippet_mapping")
+        .update({ order_index })
+        .eq("lesson_id", auxId)
+        .eq("snippet_id", snippet_id);
+      if (error) errs.push(error.message);
+    }
+  }
+  return { errors: errs };
+}
+
+// ── Token Catalogue CRUD ─────────────────────────────────────────────────────
+
+/**
+ * Fetches all rows from the tokens catalogue table.
+ * Returns { data, error }
+ */
+export async function adminGetTokenCatalogue() {
+  return supabaseClient
+    .from("tokens")
+    .select("token_type, token_name, token_icon, description, earn_trigger, sort_order, is_active")
+    .order("sort_order", { ascending: true });
+}
+
+/**
+ * Inserts a new token type into the catalogue.
+ * @param {Object} fields  { token_type, token_name, token_icon, description, earn_trigger, sort_order, is_active }
+ * Returns { data, error }
+ */
+export async function adminAddTokenType(fields) {
+  return supabaseClient.from("tokens").insert([fields]);
+}
+
+/**
+ * Updates an existing token type.
+ * @param {string} tokenType  Primary key value to match
+ * @param {Object} fields     Fields to update (any subset of columns)
+ * Returns { data, error }
+ */
+export async function adminUpdateTokenType(tokenType, fields) {
+  return supabaseClient.from("tokens").update(fields).eq("token_type", tokenType);
+}
+
+/**
+ * Deletes a token type from the catalogue.
+ * Will fail if user_tokens rows reference this type and FK is active.
+ * @param {string} tokenType  Primary key value to delete
+ * Returns { data, error }
+ */
+export async function adminDeleteTokenType(tokenType) {
+  return supabaseClient.from("tokens").delete().eq("token_type", tokenType);
+}
+
+// ─── Snippet Comments ─────────────────────────────────────────────────────────
+
+/**
+ * Posts a new comment on a snippet.
+ * @param {string} userId     The poster's profile_id (auth.uid())
+ * @param {string} snippetId  The snippet being commented on
+ * @param {string} body       Comment text (1–500 chars)
+ * @param {string} userName   Display name to store alongside the comment
+ * Returns { data, error }
+ */
+export async function postComment(userId, snippetId, body, userName) {
+  return supabaseClient.from("snippet_comments").insert({
+    snippet_id: snippetId,
+    profile_id: userId,
+    user_name:  userName || "Learner",
+    body:       body.trim(),
+  }).select().single();
+}
+
+/**
+ * Deletes a comment by its id. RLS ensures only the owner can delete.
+ * @param {string} commentId  The uuid of the comment row
+ * Returns { data, error }
+ */
+export async function deleteComment(commentId) {
+  return supabaseClient.from("snippet_comments").delete().eq("id", commentId);
+}
+
+/**
+ * Admin-only: deletes any comment for moderation purposes.
+ * Relies on the comments_delete_admin RLS policy (ROLE_01 check in DB).
+ * @param {string} commentId  The uuid of the comment row
+ * Returns { data, error }
+ */
+export async function adminDeleteComment(commentId) {
+  return supabaseClient.from("snippet_comments").delete().eq("id", commentId);
+}
+
+/**
+ * Updates the body of an existing comment (own comment only — enforced by RLS).
+ * @param {string} commentId  The uuid of the comment row
+ * @param {string} newBody    Replacement text (1–500 chars)
+ * Returns { data, error }
+ */
+export async function editComment(commentId, newBody) {
+  return supabaseClient
+    .from("snippet_comments")
+    .update({ body: newBody.trim() })
+    .eq("id", commentId)
+    .select()
+    .single();
 }

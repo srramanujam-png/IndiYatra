@@ -17,7 +17,7 @@ export async function supabase(table, query = "") {
 export const SAFFRON   = "#FF8E00";
 export const HERITAGE  = "#00509E";
 export const GREEN     = "#00924A";
-export const PARCHMENT = "#FFFDF5";
+export const PARCHMENT = "#F8F8F6"; // brand-compliant bright off-white
 
 export const DEFAULT_LANG_ID   = "LANG_03";
 export const DEFAULT_LANG_CODE = "eng";
@@ -25,9 +25,9 @@ export const DEFAULT_LANG_CODE = "eng";
 export const logoUrl = "https://indiyatra.in/wp-content/uploads/2023/02/My-project.png";
 
 export const LEVEL_LABELS = {
-  LEVEL_001: { label: "Preparatory", classes: "Classes 3–5",  color: GREEN },
+  LEVEL_001: { label: "Preparatory", classes: "Classes 3–5",  color: SAFFRON },
   LEVEL_003: { label: "Middle",      classes: "Classes 6–8",  color: HERITAGE },
-  LEVEL_005: { label: "Secondary",   classes: "Classes 9–12", color: "#7B2D8B" },
+  LEVEL_005: { label: "Secondary",   classes: "Classes 9–12", color: GREEN },
 };
 
 export const VISIBILITY_BADGE = {

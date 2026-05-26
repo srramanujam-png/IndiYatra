@@ -2,18 +2,19 @@ import { useState, useEffect } from "react";
 import { supabase, SAFFRON, HERITAGE, GREEN, logoUrl, LEVEL_LABELS, VISIBILITY_BADGE } from "../lib/supabase";
 import { globalStyles } from "../styles/global";
 import PageHeader from "../components/PageHeader";
+import { SkeletonModuleList } from "../components/Skeletons";
 
 const styles = `
   .theme-banner { max-width: 1200px; margin: 0 auto 28px; padding: 0 1.5rem; }
   .theme-banner-inner {
     border-radius: 16px; padding: 14px 20px;
-    background: linear-gradient(135deg, ${HERITAGE}11, ${SAFFRON}0d);
-    border: 1px solid ${SAFFRON}2a; display: flex; align-items: center; gap: 16px;
+    background: rgba(0,80,158,0.05);
+    border: 1px solid rgba(0,80,158,0.12); display: flex; align-items: center; gap: 16px;
   }
   .theme-banner-accent { width: 5px; height: 40px; border-radius: 3px; background: ${SAFFRON}; flex-shrink: 0; }
   .theme-banner-body   { flex: 1; min-width: 0; }
   .theme-banner-title  { font-family: 'Alumni Sans', sans-serif; font-size: 1.25rem; font-weight: 700; color: ${HERITAGE}; }
-  .theme-banner-desc   { font-size: 0.8125rem; color: #777; margin-top: 2px; }
+  .theme-banner-desc   { font-size: 0.8125rem; color: #374151; margin-top: 2px; }
   .theme-banner-count  {
     flex-shrink: 0; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em;
     padding: 3px 10px; border-radius: 999px; background: ${SAFFRON}15; color: ${SAFFRON};
@@ -23,34 +24,34 @@ const styles = `
 
   .module-row {
     display: flex; align-items: center; gap: 16px;
-    background: white; border-radius: 14px; border: 1px solid #E8D5B0;
+    background: white; border-radius: 14px; border: 1px solid rgba(0,0,0,0.08);
     padding: 16px 20px; margin-bottom: 12px; cursor: pointer;
     transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
     animation: fadeUp 0.35s ease both; box-shadow: 0 2px 10px rgba(255,142,0,0.05);
     overflow: hidden;
   }
   .module-row:hover { transform: translateX(4px); box-shadow: 0 6px 24px rgba(255,142,0,0.12); border-color: ${SAFFRON}66; }
-  .module-row.complete { border-color: ${GREEN}44; background: #F6FBF8; }
+  .module-row.complete { border-color: ${GREEN}44; background: rgba(0,146,74,0.04); }
   .module-row.complete:hover { border-color: ${GREEN}88; transform: translateX(4px); }
   .module-row.progress { border-color: ${SAFFRON}44; }
 
   .module-row-thumb {
     width: 64px; height: 64px; border-radius: 12px; overflow: hidden;
-    background: #f0e8d8; flex-shrink: 0;
+    background: #EBEBEA; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
   }
   .module-row-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
   .module-row-info { flex: 1; min-width: 0; }
-  .module-row-number { font-size: 0.6875rem; color: #bbb; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 3px; }
-  .module-row-name   { font-family: 'Alumni Sans', sans-serif; font-size: 1.1875rem; font-weight: 700; color: #1a1a2e; line-height: 1.2; margin-bottom: 4px; }
-  .module-row-desc   { font-size: 0.75rem; color: #999; line-height: 1.4; margin-bottom: 5px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
+  .module-row-number { font-size: 0.6875rem; color: #9CA3AF; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 3px; }
+  .module-row-name   { font-family: 'Alumni Sans', sans-serif; font-size: 1.1875rem; font-weight: 700; color: #111827; line-height: 1.2; margin-bottom: 4px; }
+  .module-row-desc   { font-size: 0.75rem; color: #6B7280; line-height: 1.4; margin-bottom: 5px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
   .module-row-right  { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
   .vis-badge-right   { border-radius: 999px; padding: 2px 9px; font-size: 0.625rem; font-weight: 700; white-space: nowrap; }
 
-  .module-row-progress { height: 4px; background: #f0e8d8; border-radius: 2px; margin-bottom: 4px; overflow: hidden; max-width: 160px; }
+  .module-row-progress { height: 4px; background: rgba(0,0,0,0.06); border-radius: 2px; margin-bottom: 4px; overflow: hidden; max-width: 160px; }
   .module-row-progress-fill { height: 100%; border-radius: 2px; }
-  .module-row-count { font-size: 0.75rem; color: #aaa; }
+  .module-row-count { font-size: 0.75rem; color: #9CA3AF; }
 
   .module-row-cta {
     flex-shrink: 0; border-radius: 999px; padding: 7px 16px;
@@ -64,16 +65,21 @@ const styles = `
   .module-cta-review  { border: 1.5px solid ${GREEN}; color: ${GREEN}; background: transparent; }
   .module-cta-review:hover { background: ${GREEN}; color: white; }
   .module-row.locked {
-    opacity: 0.45; cursor: not-allowed;
-    background: #f5f4f1; border-color: #e8e4dc;
+    opacity: 0.4; cursor: not-allowed;
   }
   .module-row.locked:hover {
     transform: none !important; box-shadow: none !important;
-    border-color: #e8e4dc !important;
   }
   .module-lock-badge {
-    font-size: 0.8125rem; color: #bbb; white-space: nowrap; flex-shrink: 0;
+    font-size: 0.8125rem; color: #9CA3AF; white-space: nowrap; flex-shrink: 0;
   }
+  .bm-btn {
+    flex-shrink: 0; background: none; border: none; cursor: pointer;
+    font-size: 1.125rem; line-height: 1; padding: 4px 6px; border-radius: 8px;
+    color: #9CA3AF; transition: color 0.15s, transform 0.15s;
+  }
+  .bm-btn:hover { color: #FF8E00; transform: scale(1.15); }
+  .bm-btn.saved { color: #FF8E00; }
 
   .modules-section-label {
     max-width: 720px; margin: 0 auto 12px; padding: 0 1.5rem;
@@ -101,7 +107,7 @@ function getState(done, total) {
   return "none";
 }
 
-export default function ModulesPage({ course, theme, levelId, settings, completedLessons = new Set(), onModuleClick, onBack, onBackToCourse, onOpenSettings, onDashboard, onLikes }) {
+export default function ModulesPage({ course, theme, levelId, settings, completedLessons = new Set(), onModuleClick, onBack, onBackToCourse, onOpenSettings, onDashboard, onLikes, onBookmarks, onDiscover, onResume, bookmarks = new Set(), onToggleBookmark, userEditorialRole, onEditor, activePage, onSaveSettings, languages = [] }) {
   const [modules, setModules]       = useState([]);
   const [assets, setAssets]         = useState({});
   const [lessonsByModule, setLessonsByModule] = useState({});
@@ -146,7 +152,14 @@ export default function ModulesPage({ course, theme, levelId, settings, complete
       <PageHeader
         onHome={onBack}
         onOpenSettings={onOpenSettings}
-        navLinks={[{ label: "Home", onClick: onBack }, { label: "Discover", onClick: () => {} }, { label: "Dashboard", onClick: onDashboard }, { label: "Likes", onClick: onLikes }]}
+        onResume={onResume}
+        userEditorialRole={userEditorialRole}
+        onEditor={onEditor}
+        activePage={activePage}
+        settings={settings}
+        onSaveSettings={onSaveSettings}
+        languages={languages}
+        navLinks={[{ label: "Home", onClick: onBack }, { label: "Discover", onClick: onDiscover }, { label: "Dashboard", onClick: onDashboard }, { label: "Likes", onClick: onLikes }, { label: "Bookmarks", onClick: onBookmarks }]}
       />
 
       <div className="breadcrumb">
@@ -184,7 +197,7 @@ export default function ModulesPage({ course, theme, levelId, settings, complete
       )}
 
       <div className="modules-content">
-        {loading ? <div className="loading">Loading modules…</div>
+        {loading ? <SkeletonModuleList count={4} />
         : modules.length === 0 ? <div className="empty">No modules found for this theme and level.</div>
         : (
           <div>
@@ -241,12 +254,21 @@ export default function ModulesPage({ course, theme, levelId, settings, complete
                     <span className="vis-badge-right" style={{ background: vis.bg, color: vis.color }}>{vis.label}</span>
                     {isLocked
                       ? <span className="module-lock-badge">🔒 Locked</span>
-                      : <button
-                          className={`module-row-cta module-cta-${ctaClass}`}
-                          onClick={e => { e.stopPropagation(); onModuleClick(mod); }}
-                        >
-                          {ctaLabel}
-                        </button>
+                      : (
+                        <>
+                          <button
+                            className={"bm-btn" + (bookmarks.has("module:" + mod.module_id) ? " saved" : "")}
+                            title={bookmarks.has("module:" + mod.module_id) ? "Remove bookmark" : "Bookmark module"}
+                            onClick={e => { e.stopPropagation(); onToggleBookmark && onToggleBookmark("module", mod.module_id, mod.module_name); }}
+                          ><svg width="20" height="20" viewBox="0 0 24 24" fill={bookmarks.has("module:" + mod.module_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+                          <button
+                            className={`module-row-cta module-cta-${ctaClass}`}
+                            onClick={e => { e.stopPropagation(); onModuleClick(mod); }}
+                          >
+                            {ctaLabel}
+                          </button>
+                        </>
+                      )
                     }
                   </div>
                 </div>

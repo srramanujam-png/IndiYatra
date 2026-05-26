@@ -1,29 +1,30 @@
 import { useState, useEffect } from "react";
 import { supabaseClient } from "../lib/auth";
-import { supabase, SAFFRON, HERITAGE, GREEN, PARCHMENT } from "../lib/supabase";
+import { supabase, SAFFRON, HERITAGE, GREEN } from "../lib/supabase";
 import { globalStyles } from "../styles/global";
 import { useAuthContext } from "../contexts/AuthContext";
 import PageHeader from "../components/PageHeader";
+import { SkeletonLikeGrid } from "../components/Skeletons";
 
 const styles = `
   .likes-hero {
     text-align: center; padding: 40px 1.5rem 28px;
-    border-bottom: 1px solid #f0e8d8;
+    border-bottom: 1px solid rgba(0,0,0,0.07);
   }
   .likes-hero h1 {
     font-family: 'Alumni Sans', sans-serif; font-size: 2rem; font-weight: 800;
     color: ${HERITAGE}; margin-bottom: 6px;
   }
-  .likes-hero p { color: #888; font-size: 0.9375rem; }
+  .likes-hero p { color: #374151; font-size: 0.9375rem; }
 
   .likes-filters {
-    max-width: 900px; margin: 0 auto; padding: 20px 1.5rem 0;
+    max-width: 1100px; margin: 0 auto; padding: 20px 1.5rem 0;
     display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
   }
-  .likes-filter-label { font-size: 0.8125rem; font-weight: 600; color: #aaa; }
+  .likes-filter-label { font-size: 0.8125rem; font-weight: 600; color: #9CA3AF; }
   .likes-filter-select {
-    padding: 6px 12px; border-radius: 999px; border: 1.5px solid #e0d4bc;
-    background: white; font-size: 0.8125rem; font-weight: 600; color: #555;
+    padding: 6px 12px; border-radius: 999px; border: 1.5px solid rgba(0,0,0,0.10);
+    background: white; font-size: 0.8125rem; font-weight: 600; color: #374151;
     cursor: pointer; outline: none; appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23aaa'/%3E%3C/svg%3E");
     background-repeat: no-repeat; background-position: right 10px center;
@@ -32,43 +33,43 @@ const styles = `
   .likes-filter-select:focus { border-color: ${SAFFRON}; }
   .likes-clear { font-size: 0.8125rem; color: ${SAFFRON}; cursor: pointer; font-weight: 600; margin-left: 4px; }
   .likes-clear:hover { text-decoration: underline; }
-  .likes-count { font-size: 0.8125rem; color: #aaa; margin-left: auto; }
+  .likes-count { font-size: 0.8125rem; color: #9CA3AF; margin-left: auto; }
 
   .likes-grid {
-    max-width: 900px; margin: 0 auto; padding: 24px 1.5rem 80px;
+    max-width: 1100px; margin: 0 auto; padding: 24px 1.5rem 80px;
     display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px;
   }
   .like-card {
-    background: white; border-radius: 16px; border: 1px solid #E8D5B0;
-    box-shadow: 0 2px 12px rgba(255,142,0,0.07); overflow: hidden;
+    background: white; border-radius: 18px; border: 1px solid rgba(0,0,0,0.08);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06); overflow: hidden;
     cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
     animation: fadeUp 0.4s ease both;
   }
-  .like-card:hover { transform: translateY(-4px); box-shadow: 0 8px 28px rgba(255,142,0,0.15); }
-  .like-card-img { position: relative; height: 140px; overflow: hidden; background: #f5f0e8; }
+  .like-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+  .like-card-img { position: relative; height: 140px; overflow: hidden; background: #EBEBEA; }
   .like-card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
   .like-card:hover .like-card-img img { transform: scale(1.05); }
   .like-card-img-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.55)); }
   .like-card-body { padding: 14px 16px 16px; }
   .like-card-hook {
-    font-size: 0.875rem; font-weight: 600; color: #1a1a2e;
+    font-size: 0.875rem; font-weight: 600; color: #111827;
     line-height: 1.45; margin-bottom: 10px;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   }
   .like-card-breadcrumb {
-    font-size: 0.75rem; color: #aaa; line-height: 1.5; margin-bottom: 10px;
+    font-size: 0.75rem; color: #9CA3AF; line-height: 1.5; margin-bottom: 10px;
   }
   .like-card-breadcrumb span { color: ${HERITAGE}; font-weight: 600; }
   .like-card-footer { display: flex; align-items: center; justify-content: space-between; }
-  .like-card-count { font-size: 0.8125rem; color: #888; display: flex; align-items: center; gap: 4px; }
-  .like-card-date { font-size: 0.75rem; color: #ccc; }
+  .like-card-count { font-size: 0.8125rem; color: #6B7280; display: flex; align-items: center; gap: 4px; }
+  .like-card-date { font-size: 0.75rem; color: #9CA3AF; }
 
   .likes-empty {
-    text-align: center; padding: 80px 24px; color: #bbb;
+    text-align: center; padding: 80px 24px; color: #9CA3AF;
     max-width: 400px; margin: 0 auto;
   }
   .likes-empty .empty-icon { font-size: 3rem; margin-bottom: 16px; }
-  .likes-empty h3 { font-family: 'Alumni Sans', sans-serif; font-size: 1.375rem; color: #aaa; margin-bottom: 8px; }
+  .likes-empty h3 { font-family: 'Alumni Sans', sans-serif; font-size: 1.375rem; color: #6B7280; margin-bottom: 8px; }
   .likes-empty p { font-size: 0.9375rem; line-height: 1.6; }
 
   .likes-signin {
@@ -76,15 +77,26 @@ const styles = `
   }
   .likes-signin .empty-icon { font-size: 3rem; margin-bottom: 16px; }
   .likes-signin h3 { font-family: 'Alumni Sans', sans-serif; font-size: 1.375rem; color: ${HERITAGE}; margin-bottom: 8px; }
-  .likes-signin p { font-size: 0.9375rem; color: #888; margin-bottom: 24px; }
+  .likes-signin p { font-size: 0.9375rem; color: #374151; margin-bottom: 24px; }
+  @media (max-width: 768px) {
+    .likes-grid { padding: 16px 1rem 80px; gap: 14px; }
+    .likes-filters { padding: 16px 1rem 0; }
+  }
+  @media (max-width: 600px) {
+    .likes-grid { grid-template-columns: 1fr; }
+    .likes-signin-btn { width: 100%; }
+  }
   .likes-signin-btn {
-    display: inline-block; padding: 10px 28px; border-radius: 999px;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 12px 28px; border-radius: 10px; min-height: 44px;
     background: ${SAFFRON}; color: white; font-family: 'Alumni Sans', sans-serif;
     font-size: 1rem; font-weight: 700; cursor: pointer; border: none;
+    letter-spacing: 0.02em; transition: box-shadow 0.2s;
   }
+  .likes-signin-btn:hover { box-shadow: 0 4px 16px ${SAFFRON}55; }
 `;
 
-export default function LikesPage({ settings, onBack, onOpenSettings, onDashboard, onLikes, onPlaySnippet }) {
+export default function LikesPage({ settings, onBack, onOpenSettings, onResume, onDashboard, onLikes, onBookmarks, onDiscover, onPlaySnippet, isAdmin, onAdmin, userEditorialRole, onEditor, activePage, onSaveSettings, languages = [] }) {
   const { user, onSignIn } = useAuthContext();
   const [likes,    setLikes]    = useState([]);
   const [assets,   setAssets]   = useState({});
@@ -102,6 +114,7 @@ export default function LikesPage({ settings, onBack, onOpenSettings, onDashboar
       try {
         const { data } = await supabaseClient.rpc("get_user_likes");
         const rows = data || [];
+
         setLikes(rows);
 
         // Fetch assets for all snippet images
@@ -149,16 +162,27 @@ export default function LikesPage({ settings, onBack, onOpenSettings, onDashboar
       <PageHeader
         onHome={onBack}
         onOpenSettings={onOpenSettings}
+        onResume={onResume}
+        isAdmin={isAdmin}
+        onAdmin={onAdmin}
+        userEditorialRole={userEditorialRole}
+        onEditor={onEditor}
+        activePage={activePage}
+        settings={settings}
+        onSaveSettings={onSaveSettings}
+        languages={languages}
         navLinks={[
           { label: "Home",      onClick: onBack },
+          { label: "Discover",  onClick: onDiscover },
           { label: "Dashboard", onClick: onDashboard },
-          { label: "Likes",     onClick: onLikes },
+          { label: "Likes",      onClick: onLikes },
+          { label: "Bookmarks", onClick: onBookmarks },
         ]}
       />
 
       <div className="likes-hero">
         <h1>♥ My Likes</h1>
-        <p>{isGuest ? "Sign in to see your liked snippets" : loading ? "Loading…" : `${likes.length} snippet${likes.length !== 1 ? "s" : ""} liked`}</p>
+        <p>{isGuest ? "Sign in to see your liked snippets" : loading ? "" : `${likes.length} snippet${likes.length !== 1 ? "s" : ""} liked`}</p>
       </div>
 
       {isGuest ? (
@@ -169,7 +193,7 @@ export default function LikesPage({ settings, onBack, onOpenSettings, onDashboar
           <button className="likes-signin-btn" onClick={onSignIn}>Sign in</button>
         </div>
       ) : loading ? (
-        <div className="loading" style={{ padding: "60px", textAlign: "center" }}>Loading your likes…</div>
+        <SkeletonLikeGrid count={6} />
       ) : likes.length === 0 ? (
         <div className="likes-empty">
           <div className="empty-icon">♡</div>

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase, SAFFRON, HERITAGE, GREEN, logoUrl, DEFAULT_LANG_CODE, DIFFICULTY_STARS } from "../lib/supabase";
 import { useAuthContext } from "../contexts/AuthContext";
-import { loadUserLikes, insertLike, deleteLike } from "../lib/auth";
+import { loadUserLikes, insertLike, deleteLike, postComment, deleteComment, adminDeleteComment, editComment } from "../lib/auth";
 import { globalStyles } from "../styles/global";
 
 const BLUE = "#00509E";
@@ -36,6 +36,13 @@ const styles = `
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .player-count { font-size: 0.875rem; color: #aaa; font-weight: 600; flex-shrink: 0; }
+  .player-nav-links { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+  .player-nav-link {
+    background: none; border: none; cursor: pointer; padding: 0;
+    font-size: 0.75rem; font-weight: 700; color: #bbb;
+    letter-spacing: 0.03em; transition: color 0.15s; white-space: nowrap;
+  }
+  .player-nav-link:hover { color: #FF8E00; }
   .player-progress { height: 3px; background: #f0e8d8; }
   .player-progress-fill { height: 100%; background: ${SAFFRON}; transition: width 0.4s ease; }
 
@@ -147,7 +154,7 @@ const styles = `
   /* Bottom nav */
   .player-nav {
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
-    background: rgba(255,253,245,0.97); backdrop-filter: blur(12px);
+    background: #FFFDF5;
     border-top: 1px solid #e8d5b0; padding: 14px 1.5rem;
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
   }
@@ -175,7 +182,7 @@ const styles = `
   .completion-overlay {
     position: fixed; inset: 0; z-index: 200;
     background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
-    display: flex; align-items: center; justify-content: center; padding: 1rem;
+    display: flex; align-items: flex-start; justify-content: center; padding: 5vh 1rem 2rem;
     animation: fadeIn 0.2s ease;
     overflow-y: auto;
   }
@@ -184,7 +191,7 @@ const styles = `
     text-align: center; max-width: 380px; width: 100%;
     animation: fadeUp 0.35s ease both;
     box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-    margin: auto;
+    margin: 0 auto;
   }
   .comp-emoji    { font-size: 3rem; margin-bottom: 12px; }
   .comp-title    { font-family: 'Alumni Sans', sans-serif; font-size: 1.75rem; font-weight: 800; color: ${HERITAGE}; margin-bottom: 6px; }
@@ -239,10 +246,63 @@ const styles = `
   .snip-like-btn:hover    { color: #FF8E00; }
   .snip-like-btn.active   { color: #FF8E00; }
   .snip-like-btn.disabled { cursor: not-allowed; opacity: 0.5; }
-  .snip-comment-btn  { cursor: not-allowed; opacity: 0.5; }
-  .snip-share-btn    { cursor: not-allowed; opacity: 0.4; }
+  .snip-bm-btn         { cursor: pointer; }
+  .snip-bm-btn:hover   { color: #FF8E00; }
+  .snip-bm-btn.active  { color: #FF8E00; background: #FF8E0018; border-radius: 8px; }
+  .snip-bm-btn.disabled { cursor: not-allowed; opacity: 0.5; }
+  .snip-comment-btn  { cursor: pointer; opacity: 1; }
+  .snip-comment-btn:hover { color: #FF8E00; }
+  .snip-share-btn    { cursor: pointer; opacity: 1; }
+  .snip-share-btn:hover { color: #FF8E00; }
   .snip-social-icon  { font-size: 1.125rem; line-height: 1; display: flex; align-items: center; }
   .snip-social-sep   { color: #e0d4bc; font-size: 1rem; }
+
+  /* Share popover */
+  .share-popover-overlay {
+    position: fixed; inset: 0; z-index: 160;
+    background: rgba(0,0,0,0.35); backdrop-filter: blur(2px);
+    display: flex; align-items: flex-end;
+    animation: fadeIn 0.15s ease;
+  }
+  .share-popover {
+    background: white; border-radius: 24px 24px 0 0; width: 100%;
+    padding: 20px 24px 32px;
+    animation: slideUp 0.25s cubic-bezier(0.25,0.46,0.45,0.94) both;
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.12);
+  }
+  .share-popover-handle {
+    width: 40px; height: 4px; background: #e0d4bc; border-radius: 2px;
+    margin: 0 auto 16px;
+  }
+  .share-popover-title {
+    font-family: 'Alumni Sans', sans-serif; font-size: 1.125rem; font-weight: 700;
+    color: #1a1a2e; margin-bottom: 6px;
+  }
+  .share-popover-hook {
+    font-size: 0.8125rem; color: #888; margin-bottom: 18px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .share-popover-btns { display: flex; flex-direction: column; gap: 10px; }
+  .share-pop-btn {
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 18px; border-radius: 12px; border: 1.5px solid;
+    background: white; cursor: pointer; font-family: 'Alumni Sans', sans-serif;
+    font-size: 1rem; font-weight: 700; letter-spacing: 0.02em;
+    transition: opacity 0.15s; text-decoration: none;
+    min-height: 48px;
+  }
+  .share-pop-btn:hover { opacity: 0.82; }
+  .share-pop-btn-wa   { border-color: #25D366; color: #25D366; }
+  .share-pop-btn-tw   { border-color: #1a1a2e; color: #1a1a2e; }
+  .share-pop-btn-copy { border-color: #00509E; color: #00509E; }
+  .share-pop-btn-copy.copied { border-color: #00924A; color: #00924A; }
+  .share-pop-cancel {
+    margin-top: 8px; padding: 12px; border-radius: 12px; border: none;
+    background: #f5f0e8; color: #888; cursor: pointer;
+    font-family: 'Alumni Sans', sans-serif; font-size: 0.9375rem; font-weight: 700;
+    width: 100%; transition: background 0.15s; min-height: 44px;
+  }
+  .share-pop-cancel:hover { background: #ede5d8; }
 
   /* Comments sheet */
   .comments-overlay {
@@ -291,6 +351,39 @@ const styles = `
   .comment-author { font-size: 0.8125rem; font-weight: 700; color: #333; margin-bottom: 2px; }
   .comment-text { font-size: 0.875rem; color: #555; line-height: 1.5; }
   .comment-time { font-size: 0.6875rem; color: #bbb; margin-top: 3px; }
+  .comment-author-row { display: flex; align-items: center; gap: 4px; margin-bottom: 2px; }
+  .comment-actions { display: flex; align-items: center; gap: 2px; margin-left: 4px; }
+  .comment-delete-btn { background: none; border: none; cursor: pointer; color: #ccc; font-size: 0.75rem; padding: 0 2px; line-height: 1; }
+  .comment-delete-btn:hover { color: #e55; }
+  .comment-edit-btn { background: none; border: none; cursor: pointer; color: #ccc; font-size: 0.75rem; padding: 0 2px; line-height: 1; }
+  .comment-edit-btn:hover { color: #FF8E00; }
+  .comment-edit-form { margin-top: 4px; }
+  .comment-edit-actions { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  .comment-edit-cancel-btn { background: none; border: 1px solid #ddd; border-radius: 6px; padding: 4px 12px; font-size: 0.875rem; cursor: pointer; color: #666; }
+  .comment-edit-cancel-btn:hover { background: #f5f0e8; }
+  .comments-count { font-size: 0.875rem; color: #aaa; font-weight: 400; }
+  /* Comments footer */
+  .comments-footer { border-top: 1px solid #f0ebe0; padding: 12px 16px; background: #fff; }
+  .comment-input {
+    width: 100%; box-sizing: border-box;
+    border: 1px solid #ddd; border-radius: 10px;
+    padding: 10px 12px; font-size: 0.9375rem;
+    font-family: 'Source Sans 3', sans-serif;
+    resize: none; outline: none;
+    background: #faf8f4; color: #1a1a2e;
+    transition: border-color 0.15s;
+  }
+  .comment-input:focus { border-color: #FF8E00; }
+  .comment-footer-row { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+  .comment-char-count { font-size: 0.75rem; color: #bbb; }
+  .comment-post-btn {
+    background: #FF8E00; color: #fff; border: none;
+    border-radius: 8px; padding: 7px 18px;
+    font-size: 0.9375rem; font-weight: 600;
+    cursor: pointer; transition: opacity 0.15s;
+  }
+  .comment-post-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .comment-post-btn:not(:disabled):hover { opacity: 0.88; }
 
   @media (max-width: 480px) {
     .player-body { padding: 16px 1rem 115px; }
@@ -298,7 +391,8 @@ const styles = `
     .snip-explanation { font-size: 0.9375rem; }
     .snip-body { padding: 18px 16px 14px; }
     .pnav-btn  { padding: 10px 18px; font-size: 0.9375rem; }
-    .player-nav { padding: 10px 1rem; }
+    .player-nav { padding: 10px 1rem; bottom: 0; }
+    .player-nav-links { display: none !important; }
     .snip-img { max-height: 300px; }
     .snip-img img { max-height: 300px; }
   }
@@ -310,10 +404,15 @@ export default function SnippetPlayer({
   initialSnippetIndex = 0,
   playlistSnippetIds = null,
   onSnippetAdvance,
-  onBackToLessons, onBackToLikes, onDashboard, onComplete, onNextLesson
+  onBackToLessons, onBackToLikes, onBackToDiscover = null, playlistLabel = "", onHome, onDashboard, onLikes, onBookmarks, onDiscover, onComplete, onNextLesson,
+  bookmarks = new Set(), onToggleBookmark,
+  isAdmin = false,
+  snippetShareMsg = "I found this story. It is very exciting. You can read this and more at indiyatra.in. It has an amazing collection."
 }) {
-  const playlistMode = !!(playlistSnippetIds && playlistSnippetIds.length > 0);
-  const { user }        = useAuthContext();
+  const playlistMode       = !!(playlistSnippetIds && playlistSnippetIds.length > 0);
+  const backToPlaylist      = onBackToDiscover || onBackToLikes;
+  const isDiscoverPlaylist  = !!onBackToDiscover;
+  const { user, profile, onSignIn } = useAuthContext();
   const [snippets,     setSnippets]     = useState([]);
   const [translations, setTranslations] = useState({});
   const [assets,       setAssets]       = useState({});
@@ -329,6 +428,12 @@ export default function SnippetPlayer({
   const [commentsData,    setCommentsData]    = useState([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentsSnipId,  setCommentsSnipId]  = useState(null);
+  const [sharePopoverId,  setSharePopoverId]  = useState(null); // snippet_id or null
+  const [shareCopied,     setShareCopied]     = useState(false);
+  const [commentDraft,    setCommentDraft]    = useState("");
+  const [commentPosting,  setCommentPosting]  = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editDraft,        setEditDraft]        = useState("");
 
   // Swipe tracking
   const touchStartX  = useRef(null);
@@ -406,7 +511,7 @@ export default function SnippetPlayer({
           const idList = ids.join(",");
           const commentsRaw = await supabase("snippet_comments", "?select=snippet_id&snippet_id=in.(" + idList + ")");
           const cc = {};
-          (commentsRaw || []).forEach(r => { cc[r.snippet_id] = (cc[r.snippet_id] || 0) + 1; });
+          (Array.isArray(commentsRaw) ? commentsRaw : []).forEach(r => { cc[r.snippet_id] = (cc[r.snippet_id] || 0) + 1; });
           setCommentCounts(cc);
         } catch (e) {
           console.log("Comments unavailable:", e.message);
@@ -523,7 +628,7 @@ export default function SnippetPlayer({
     try {
       const data = await supabase(
         "snippet_comments",
-        "?select=*&snippet_id=eq." + snippetId + "&order=created_at.desc"
+        "?select=*&snippet_id=eq." + snippetId + "&order=created_at.asc"
       );
       setCommentsData(data || []);
     } catch (e) {
@@ -537,6 +642,20 @@ export default function SnippetPlayer({
     setShowComments(false);
     setCommentsData([]);
     setCommentsSnipId(null);
+    setCommentDraft("");
+  }
+
+  async function postCommentHandler() {
+    if (!user || !commentDraft.trim() || commentPosting) return;
+    setCommentPosting(true);
+    const userName = profile?.display_name || (user.is_anonymous ? "Guest" : (user.email?.split("@")[0] || "Learner"));
+    const { data, error } = await postComment(user.id, commentsSnipId, commentDraft.trim(), userName);
+    if (!error && data) {
+      setCommentsData(prev => [data, ...prev]);
+      setCommentCounts(prev => ({ ...prev, [commentsSnipId]: (prev[commentsSnipId] || 0) + 1 }));
+      setCommentDraft("");
+    }
+    setCommentPosting(false);
   }
 
   // ── Keyboard shortcuts ──────────────────────────────────────────────────────
@@ -545,7 +664,7 @@ export default function SnippetPlayer({
       if (done) return;
       if (e.key === "ArrowRight") goNext();
       if (e.key === "ArrowLeft")  goPrev();
-      if (e.key === "Escape")     (playlistMode ? onBackToLikes : onBackToLessons)?.();
+      if (e.key === "Escape")     (playlistMode ? backToPlaylist : onBackToLessons)?.();
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
@@ -591,9 +710,15 @@ export default function SnippetPlayer({
 
         {/* Top bar */}
         <div className="player-top-bar">
-          <button className="player-back" onClick={playlistMode ? onBackToLikes : onBackToLessons}>← Back</button>
-          <div className="player-lesson-name">{playlistMode ? "♥ Likes Playlist" : lesson?.lesson_name}</div>
-          <div className="player-count">{total > 0 ? `${current + 1} / ${total}` : ""}</div>
+          <button className="player-back" onClick={playlistMode ? backToPlaylist : onBackToLessons}>← Back</button>
+          <div className="player-lesson-name">{playlistMode ? (playlistLabel || "♥ Likes Playlist") : lesson?.lesson_name}</div>
+          <div className="player-nav-links">
+            <button className="player-nav-link" onClick={onHome}>Home</button>
+            <button className="player-nav-link" onClick={onDiscover}>Discover</button>
+            <button className="player-nav-link" onClick={onDashboard}>Dashboard</button>
+            <button className="player-nav-link" onClick={onLikes}>Likes</button>
+            <button className="player-nav-link" onClick={onBookmarks}>Bookmarks</button>
+          </div>
         </div>
         <div className="player-progress">
           <div className="player-progress-fill" style={{ width: `${progress}%` }} />
@@ -701,15 +826,26 @@ export default function SnippetPlayer({
                       <span className="snip-social-sep">&#183;</span>
                       <button
                         className="snip-social-btn snip-comment-btn"
-                        disabled
-                        title="Comments unlock after sign-in"
+                        onClick={e => { e.stopPropagation(); openComments(snip.snippet_id); }}
+                        title="Comments"
                       >
                         <span className="snip-social-icon">&#128172;</span>
                         <span>{commentCounts[snip.snippet_id] || 0}</span>
                       </button>
                     </div>
                     <div className="snip-social-right">
-                      <button className="snip-social-btn snip-share-btn" disabled title="Sharing unlocks after sign-in">
+                      <button
+                        className={"snip-social-btn snip-bm-btn" + (bookmarks.has("snippet:" + snip.snippet_id) ? " active" : "") + (!user || user.is_anonymous ? " disabled" : "")}
+                        title={!user || user.is_anonymous ? "Sign in to bookmark" : bookmarks.has("snippet:" + snip.snippet_id) ? "Remove bookmark" : "Bookmark this snippet"}
+                        onClick={() => { if (onToggleBookmark) onToggleBookmark("snippet", String(snip.snippet_id), snip.hook || "Snippet"); }}
+                      >
+                        <span className="snip-social-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill={bookmarks.has("snippet:" + snip.snippet_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span>
+                      </button>
+                      <button
+                        className="snip-social-btn snip-share-btn"
+                        title="Share this snippet"
+                        onClick={e => { e.stopPropagation(); setShareCopied(false); setSharePopoverId(snip.snippet_id); }}
+                      >
                         <span className="snip-social-icon">
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <circle cx="18" cy="5" r="3"/>
@@ -763,41 +899,159 @@ export default function SnippetPlayer({
           </div>
         )}
 
+        {/* Share popover */}
+        {sharePopoverId && (() => {
+          const shareSnip = snippets.find(s => s.snippet_id === sharePopoverId);
+          const trans = shareSnip ? (translations[shareSnip.snippet_id] || {}) : {};
+          const hook = trans.hook || shareSnip?.hook || "";
+          const shareText = (hook ? hook + "\n\n" : "") + snippetShareMsg;
+          const shareUrl  = "https://indiyatra.in";
+          const waHref  = "https://wa.me/?text=" + encodeURIComponent(shareText + "\n" + shareUrl);
+          const twHref  = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(shareText) + "&url=" + encodeURIComponent(shareUrl);
+          return (
+            <div className="share-popover-overlay" onClick={() => setSharePopoverId(null)}>
+              <div className="share-popover" onClick={e => e.stopPropagation()}>
+                <div className="share-popover-handle" />
+                <div className="share-popover-title">Share Snippet</div>
+                {hook && <div className="share-popover-hook">{hook}</div>}
+                <div className="share-popover-btns">
+                  <a
+                    className="share-pop-btn share-pop-btn-wa"
+                    href={waHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setSharePopoverId(null)}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.122 1.532 5.854L.057 23.75a.5.5 0 0 0 .614.612l5.96-1.46A11.942 11.942 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 0 1-5.028-1.385l-.36-.214-3.732.914.944-3.635-.234-.374A9.817 9.817 0 0 1 2.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
+                    WhatsApp
+                  </a>
+                  <a
+                    className="share-pop-btn share-pop-btn-tw"
+                    href={twHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setSharePopoverId(null)}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    Post on X
+                  </a>
+                  <button
+                    className={"share-pop-btn share-pop-btn-copy" + (shareCopied ? " copied" : "")}
+                    onClick={() => {
+                      navigator.clipboard.writeText(shareText + "\n" + shareUrl).then(() => {
+                        setShareCopied(true);
+                        setTimeout(() => { setShareCopied(false); setSharePopoverId(null); }, 1800);
+                      });
+                    }}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    {shareCopied ? "Copied!" : "Copy Link"}
+                  </button>
+                </div>
+                <button className="share-pop-cancel" onClick={() => setSharePopoverId(null)}>Cancel</button>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Comments sheet */}
         {showComments && (
           <div className="comments-overlay" onClick={closeComments}>
             <div className="comments-sheet" onClick={e => e.stopPropagation()}>
               <div className="comments-header">
-                <div className="comments-title">Comments</div>
+                <div className="comments-title">Comments {commentsData.length > 0 && <span className="comments-count">({commentsData.length})</span>}</div>
                 <button className="comments-close" onClick={closeComments}>&#x2715;</button>
               </div>
               <div className="comments-body">
                 {commentsLoading ? (
                   <div className="comments-empty">Loading&#8230;</div>
                 ) : commentsData.length === 0 ? (
+                  <div className="comments-empty">No comments yet. Be the first!</div>
+                ) : (
+                  commentsData.map((c, i) => (
+                    <div className="comment-row" key={c.id || i}>
+                      <div className="comment-avatar">&#128100;</div>
+                      <div className="comment-content">
+                        <div className="comment-author-row">
+                          <span className="comment-author">{c.user_name || "Learner"}</span>
+                          <span className="comment-actions">
+                            {user && c.profile_id === user.id && editingCommentId !== c.id && (
+                              <button className="comment-edit-btn" title="Edit comment" onClick={() => { setEditingCommentId(c.id); setEditDraft(c.body); }}>✏</button>
+                            )}
+                            {user && (c.profile_id === user.id || isAdmin) && (
+                              <button className="comment-delete-btn" title="Delete comment" onClick={async () => {
+                                const fn = isAdmin && c.profile_id !== user.id ? adminDeleteComment : deleteComment;
+                                await fn(c.id);
+                                setCommentsData(prev => prev.filter(x => x.id !== c.id));
+                                setCommentCounts(prev => ({ ...prev, [commentsSnipId]: Math.max(0, (prev[commentsSnipId] || 1) - 1) }));
+                                if (editingCommentId === c.id) setEditingCommentId(null);
+                              }}>&#x2715;</button>
+                            )}
+                          </span>
+                        </div>
+                        {editingCommentId === c.id ? (
+                          <div className="comment-edit-form">
+                            <textarea
+                              className="comment-input"
+                              maxLength={500}
+                              rows={2}
+                              value={editDraft}
+                              onChange={e => setEditDraft(e.target.value)}
+                              autoFocus
+                            />
+                            <div className="comment-edit-actions">
+                              <span className="comment-char-count">{editDraft.length}/500</span>
+                              <button className="comment-edit-cancel-btn" onClick={() => setEditingCommentId(null)}>Cancel</button>
+                              <button
+                                className="comment-post-btn"
+                                style={{ padding: "5px 14px", fontSize: "0.875rem" }}
+                                disabled={!editDraft.trim() || editDraft.trim() === c.body}
+                                onClick={async () => {
+                                  const { data, error } = await editComment(c.id, editDraft.trim());
+                                  if (!error && data) {
+                                    setCommentsData(prev => prev.map(x => x.id === c.id ? { ...x, body: data.body } : x));
+                                  }
+                                  setEditingCommentId(null);
+                                }}
+                              >Save</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="comment-text">{c.body}</div>
+                        )}
+                        <div className="comment-time">{c.created_at ? new Date(c.created_at).toLocaleDateString() : ""}</div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              {/* Comment input footer */}
+              <div className="comments-footer">
+                {user ? (
                   <>
-                    <div className="comments-empty">No comments yet. Be the first!</div>
-                    <div className="comments-signin">
-                      <div className="comments-signin-text">Sign in to leave a comment</div>
-                      <button className="comments-signin-btn" disabled>Sign in to comment</button>
+                    <textarea
+                      className="comment-input"
+                      placeholder="Add a comment…"
+                      maxLength={500}
+                      rows={2}
+                      value={commentDraft}
+                      onChange={e => setCommentDraft(e.target.value)}
+                      onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); postCommentHandler(); } }}
+                    />
+                    <div className="comment-footer-row">
+                      <span className="comment-char-count">{commentDraft.length}/500</span>
+                      <button
+                        className="comment-post-btn"
+                        onClick={postCommentHandler}
+                        disabled={!commentDraft.trim() || commentPosting}
+                      >{commentPosting ? "Posting…" : "Post"}</button>
                     </div>
                   </>
                 ) : (
-                  <>
-                    {commentsData.map((c, i) => (
-                      <div className="comment-row" key={i}>
-                        <div className="comment-avatar">&#128100;</div>
-                        <div className="comment-content">
-                          <div className="comment-author">{c.user_name || "Learner"}</div>
-                          <div className="comment-text">{c.body}</div>
-                          <div className="comment-time">{c.created_at ? new Date(c.created_at).toLocaleDateString() : ""}</div>
-                        </div>
-                      </div>
-                    ))}
-                    <div className="comments-signin">
-                      <button className="comments-signin-btn" disabled>Sign in to comment</button>
-                    </div>
-                  </>
+                  <div className="comments-signin">
+                    <div className="comments-signin-text">Sign in or continue as Guest to comment</div>
+                    <button className="comments-signin-btn" onClick={() => { closeComments(); onSignIn?.(); }}>Sign in</button>
+                  </div>
                 )}
               </div>
             </div>
@@ -810,10 +1064,10 @@ export default function SnippetPlayer({
             <div className="completion-card">
               {playlistMode ? (
                 <>
-                  <div className="comp-emoji">♥</div>
-                  <div className="comp-title">End of Likes Playlist</div>
-                  <div className="comp-subtitle">You've reviewed all <strong>{snippets.length}</strong> liked snippet{snippets.length !== 1 ? "s" : ""}.</div>
-                  <button className="comp-btn comp-primary" onClick={onBackToLikes}>Back to Likes</button>
+                  <div className="comp-emoji">{isDiscoverPlaylist ? "\u{1F9ED}" : "\u2665"}</div>
+                  <div className="comp-title">{isDiscoverPlaylist ? "Discover Playlist Complete" : "End of Likes Playlist"}</div>
+                  <div className="comp-subtitle">You've reviewed all <strong>{snippets.length}</strong> snippet{snippets.length !== 1 ? "s" : ""} in <strong>{playlistLabel || "this playlist"}</strong>.</div>
+                  <button className="comp-btn comp-primary" onClick={backToPlaylist}>{isDiscoverPlaylist ? "Back to Discover" : "Back to Likes"}</button>
                   <button className="comp-btn comp-secondary" onClick={() => { setCurrent(0); setDone(false); }}>Review Again</button>
                   <button className="comp-btn comp-dashboard" onClick={onDashboard}>Go to Dashboard</button>
                 </>

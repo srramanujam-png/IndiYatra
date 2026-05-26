@@ -1,16 +1,23 @@
 import { useState, useEffect } from "react";
-import { SAFFRON, HERITAGE, GREEN } from "../lib/supabase";
+import { supabase, SAFFRON, HERITAGE, GREEN } from "../lib/supabase";
 import { globalStyles } from "../styles/global";
 import PageHeader from "../components/PageHeader";
+import { SkeletonBadges } from "../components/Skeletons";
 import { supabaseClient } from "../lib/auth";
 import { useAuthContext } from "../contexts/AuthContext";
+import { DEFAULT_SHARE_MSG, FOREST_TOKENS as FOREST_TOKEN_DEFS } from "../config/appStrings";
 
-const PURPLE = "#7B2D8B";
-const GOLD   = "#D4A017";
+// Off-brand colours removed — using brand constants only
 
 const styles = `
   /* ── Layout ── */
-  .dash-wrap { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 100px; }
+
+  /* ── Welcome Hero Band ── */
+  .dash-hero {
+    background: white; border: 1px solid rgba(0,0,0,0.08); border-radius: 18px;
+    padding: 24px 20px; margin-bottom: 24px;
+    box-shadow: 0 2px 14px rgba(0,0,0,0.06);
+  }
 
   /* ── Course chip ── */
   .dash-course-chip {
@@ -20,45 +27,45 @@ const styles = `
   }
 
   /* ── Welcome title ── */
+  .dash-subtitle {
+    font-size: 0.9375rem; color: #6B7280; margin-top: 2px; margin-bottom: 0;
+    font-family: 'Source Sans 3', sans-serif; font-weight: 400;
+  }
   .dash-title {
     font-family: 'Alumni Sans', sans-serif; font-size: 2.125rem; font-weight: 800;
-    color: #1a1a2e; margin-bottom: 18px; line-height: 1.1;
+    color: #111827; margin-bottom: 18px; line-height: 1.1;
   }
 
-  /* ── Action bar ── */
-  .dash-action-bar {
-    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-    background: white; border: 1px solid #E8D5B0; border-radius: 14px;
-    padding: 12px 18px; margin-bottom: 28px;
+  /* ── Scope pill (Option C) ── */
+  .dash-scope-wrap {
+    position: relative; display: inline-block; margin-top: 14px;
   }
-  .dash-resume-btn {
-    display: flex; align-items: center; gap: 8px;
-    background: ${SAFFRON}; color: white; border: none; border-radius: 999px;
-    padding: 9px 22px; font-family: 'Alumni Sans', sans-serif;
-    font-size: 0.9375rem; font-weight: 700; cursor: pointer;
-    transition: box-shadow 0.2s; flex-shrink: 0;
+  .dash-scope-pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 7px 14px; border-radius: 10px; cursor: pointer;
+    font-size: 0.8125rem; font-weight: 600; white-space: nowrap;
+    color: #374151; background: white;
+    border: 1.5px solid rgba(0,0,0,0.10);
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+    min-height: 36px;
   }
-  .dash-resume-btn:hover { box-shadow: 0 4px 16px ${SAFFRON}55; }
-  .dash-action-sep { width: 1px; height: 28px; background: #e8d5b0; flex-shrink: 0; }
-  .dash-quick-pills { display: flex; gap: 8px; flex-wrap: wrap; }
-  .dash-pill-wrap { position: relative; }
-  .dash-pill {
-    display: flex; align-items: center; gap: 6px;
-    border: 1px solid #e0d4bc; border-radius: 999px; padding: 5px 12px;
-    font-size: 0.75rem; color: #666; background: #fafaf8; cursor: pointer;
-    transition: border-color 0.2s, color 0.2s; white-space: nowrap;
+  .dash-scope-pill:hover, .dash-scope-pill.open {
+    border-color: ${SAFFRON}; color: ${SAFFRON}; background: ${SAFFRON}08;
   }
-  .dash-pill:hover, .dash-pill.open { border-color: ${SAFFRON}; color: ${SAFFRON}; }
+  .dash-scope-pill-icon { font-size: 1rem; line-height: 1; }
+  .dash-scope-pill-chevron { font-size: 0.6875rem; color: #9CA3AF; margin-left: 2px; }
+  .dash-scope-pill.open .dash-scope-pill-chevron { color: ${SAFFRON}; }
   .dash-dropdown-backdrop { position: fixed; inset: 0; z-index: 199; }
   .dash-dropdown {
     position: absolute; top: calc(100% + 6px); left: 0; z-index: 200;
-    background: white; border: 1px solid #E8D5B0; border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12); min-width: 150px;
+    background: white; border: 1px solid rgba(0,0,0,0.08); border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12); min-width: 160px;
     overflow: hidden; padding: 4px 0;
   }
   .dash-dropdown-item {
-    padding: 9px 16px; font-size: 0.8125rem; color: #444; cursor: pointer;
+    padding: 11px 16px; font-size: 0.875rem; color: #374151; cursor: pointer;
     transition: background 0.15s; display: flex; align-items: center; gap: 8px;
+    min-height: 44px;
   }
   .dash-dropdown-item:hover { background: ${SAFFRON}12; }
   .dash-dropdown-item.active { color: ${SAFFRON}; font-weight: 700; }
@@ -66,93 +73,94 @@ const styles = `
   /* ── Stat cards grid ── */
   .dash-stats {
     display: grid; grid-template-columns: repeat(5, 1fr);
-    gap: 12px; margin-bottom: 20px;
+    gap: 12px; margin-bottom: 24px;
   }
   .stat-card {
-    background: white; border-radius: 14px; border: 1px solid #E8D5B0;
-    padding: 16px 14px; position: relative; overflow: hidden;
+    background: white; border-radius: 16px; border: 1px solid rgba(0,0,0,0.08);
+    padding: 18px 14px; position: relative; overflow: hidden;
     transition: transform 0.18s, box-shadow 0.18s;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
   }
-  .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
-  .stat-card-accent { position: absolute; top: 0; left: 0; right: 0; height: 3px; }
-  .stat-icon { font-size: 1.25rem; margin-bottom: 8px; line-height: 1; }
+  .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.09); }
+  .stat-ghost { background: transparent; border: 1px dashed rgba(0,0,0,0.06) !important; box-shadow: none !important; pointer-events: none; }
+  .stat-ghost:hover { transform: none !important; box-shadow: none !important; }
+  .stat-card-accent { position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+  .stat-icon { font-size: 1.375rem; margin-bottom: 10px; line-height: 1; }
   .stat-label {
     font-size: 0.625rem; font-weight: 700; letter-spacing: 0.07em;
-    text-transform: uppercase; color: #bbb; margin-bottom: 5px;
+    text-transform: uppercase; color: #9CA3AF; margin-bottom: 5px;
   }
   .stat-value {
-    font-family: 'Alumni Sans', sans-serif; font-size: 1.625rem;
+    font-family: 'Alumni Sans', sans-serif; font-size: 1.75rem;
     font-weight: 800; line-height: 1; margin-bottom: 4px;
   }
-  .stat-sub  { font-size: 0.6875rem; color: #aaa; line-height: 1.3; }
+  .stat-sub  { font-size: 0.6875rem; color: #9CA3AF; line-height: 1.3; }
   .stat-link { font-size: 0.6875rem; color: ${HERITAGE}; cursor: pointer; }
   .stat-link:hover { text-decoration: underline; }
 
   /* ── Section card ── */
   .dash-section {
-    background: white; border-radius: 16px; border: 1px solid #E8D5B0;
-    padding: 22px 24px; margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(255,142,0,0.04);
+    background: white; border-radius: 18px; border: 1px solid rgba(0,0,0,0.08);
+    padding: 22px 22px; margin-bottom: 24px;
+    box-shadow: 0 2px 14px rgba(0,0,0,0.06);
   }
   .dash-section-head {
     display: flex; align-items: center; justify-content: space-between;
     margin-bottom: 18px;
   }
-  .dash-section-title {
-    font-family: 'Alumni Sans', sans-serif; font-size: 1.3125rem;
-    font-weight: 700; color: ${HERITAGE};
-  }
-  .dash-section-meta { font-size: 0.75rem; color: #aaa; font-weight: 600; }
+  .dash-section-meta { font-size: 0.75rem; color: #9CA3AF; font-weight: 600; }
 
   /* ── Streak heatmap ── */
   .streak-grid { display: flex; gap: 3px; flex-wrap: wrap; }
   .streak-cell { width: 13px; height: 13px; border-radius: 3px; flex-shrink: 0; }
   .streak-legend {
     display: flex; align-items: center; gap: 6px;
-    margin-top: 10px; font-size: 0.6875rem; color: #bbb;
+    margin-top: 10px; font-size: 0.6875rem; color: #9CA3AF;
   }
   .streak-legend-cell { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
-  .streak-summary { font-size: 0.8125rem; color: #777; margin-top: 8px; }
-  .streak-summary strong { color: #1a1a2e; }
+  .streak-summary { font-size: 0.875rem; color: #374151; margin-top: 10px; }
+  .streak-summary strong { color: #111827; }
 
   /* ── Course progress table ── */
+  .prog-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .prog-table { width: 100%; border-collapse: collapse; }
   .prog-table th {
     font-size: 0.6875rem; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.06em; color: #bbb; padding: 0 0 10px; text-align: left;
+    letter-spacing: 0.06em; color: #9CA3AF; padding: 0 0 10px; text-align: left;
   }
   .prog-table th:not(:first-child) { text-align: center; }
-  .prog-table td { padding: 10px 0; border-top: 1px solid #f5ede0; vertical-align: middle; }
-  .prog-theme-name { font-size: 0.875rem; font-weight: 700; color: ${SAFFRON}; }
+  .prog-table td { padding: 12px 0; border-top: 1px solid rgba(0,0,0,0.07); vertical-align: middle; }
+  .prog-theme-name { font-size: 0.9375rem; font-weight: 700; color: ${SAFFRON}; text-align: left; }
   .prog-bar-wrap { display: flex; align-items: center; gap: 6px; justify-content: center; }
-  .prog-bar { height: 5px; width: 80px; background: #f0e8d8; border-radius: 3px; overflow: hidden; flex-shrink: 0; }
+  .prog-bar { height: 6px; width: 80px; background: rgba(0,0,0,0.06); border-radius: 3px; overflow: hidden; flex-shrink: 0; }
   .prog-bar-fill { height: 100%; border-radius: 3px; }
   .prog-pct { font-size: 0.6875rem; font-weight: 700; min-width: 28px; text-align: right; }
-  .prog-counts { font-size: 0.625rem; color: #ccc; text-align: right; }
+  .prog-counts { font-size: 0.625rem; color: #9CA3AF; text-align: right; }
 
   /* ── Activity table ── */
+  .act-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .act-table { width: 100%; border-collapse: collapse; }
   .act-table th {
     font-size: 0.6875rem; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.06em; color: #bbb; padding: 0 0 10px;
+    letter-spacing: 0.06em; color: #9CA3AF; padding: 0 0 10px;
     text-align: right;
   }
   .act-table th:first-child { text-align: left; }
   .act-table td {
-    padding: 9px 0; border-top: 1px solid #f5ede0;
-    font-size: 0.8125rem; text-align: right; color: #777;
+    padding: 11px 0; border-top: 1px solid rgba(0,0,0,0.07);
+    font-size: 0.875rem; text-align: right; color: #374151;
   }
   .act-table td:first-child { text-align: left; }
-  .act-day   { font-weight: 700; color: #1a1a2e; }
+  .act-day   { font-weight: 700; color: #111827; font-size: 0.9375rem; }
   .act-today { color: ${SAFFRON}; }
-  .act-date  { font-size: 0.6875rem; color: #bbb; margin-left: 5px; }
-  .act-total td { font-weight: 700; color: #1a1a2e; border-top: 2px solid #e8d5b0 !important; }
+  .act-date  { font-size: 0.75rem; color: #9CA3AF; margin-left: 5px; }
+  .act-total td { font-weight: 700; color: #111827; border-top: 2px solid rgba(0,0,0,0.12) !important; }
   .act-nonzero { font-weight: 700; color: ${HERITAGE} !important; }
 
   /* ── Badges ── */
   .badge-level-label {
     font-size: 0.625rem; font-weight: 700; letter-spacing: 0.08em;
-    text-transform: uppercase; color: #bbb; margin-bottom: 10px;
+    text-transform: uppercase; color: #9CA3AF; margin-bottom: 10px;
   }
   .badge-theme-group { margin-bottom: 16px; }
   .badge-theme-label {
@@ -171,9 +179,9 @@ const styles = `
   }
   .badge-circle.earned:hover { transform: scale(1.12); }
   .badge-circle.locked {
-    border: 2px solid #e0d4bc; background: #fafaf8; opacity: 0.45;
+    border: 2px solid rgba(0,0,0,0.08); background: white; opacity: 0.4;
   }
-  .badge-name { font-size: 0.5625rem; color: #aaa; text-align: center; line-height: 1.3; }
+  .badge-name { font-size: 0.5625rem; color: #9CA3AF; text-align: center; line-height: 1.3; }
 
   /* ── Share card ── */
   .share-inner { display: flex; gap: 24px; align-items: flex-start; }
@@ -192,63 +200,208 @@ const styles = `
     font-family: 'Alumni Sans', sans-serif; font-size: 1.625rem;
     font-weight: 800; line-height: 1;
   }
-  .share-stat-lbl { font-size: 0.625rem; color: #aaa; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
-  .share-footer-txt { font-size: 0.6875rem; color: #bbb; margin-top: 4px; }
+  .share-stat-lbl { font-size: 0.625rem; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+  .share-footer-txt { font-size: 0.6875rem; color: #9CA3AF; margin-top: 4px; }
   .share-actions { display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; min-width: 140px; }
   .share-btn {
     display: flex; align-items: center; justify-content: center; gap: 7px;
-    border-radius: 999px; padding: 9px 18px;
-    font-family: 'Alumni Sans', sans-serif; font-size: 0.8125rem; font-weight: 700;
-    cursor: not-allowed; opacity: 0.55; white-space: nowrap;
+    border-radius: 10px; padding: 11px 18px; min-height: 44px;
+    font-family: 'Alumni Sans', sans-serif; font-size: 0.875rem; font-weight: 700;
+    cursor: not-allowed; opacity: 0.45; white-space: nowrap;
     border: 1.5px solid; background: transparent; transition: opacity 0.2s;
   }
+  .share-btn.active { cursor: pointer; opacity: 1; }
+  .share-btn.active:hover { opacity: 0.82; }
   .share-btn-wa   { border-color: #25D366; color: #25D366; }
   .share-btn-tw   { border-color: #1DA1F2; color: #1DA1F2; }
   .share-btn-copy { border-color: ${HERITAGE}; color: ${HERITAGE}; }
-  .share-coming { font-size: 0.625rem; color: #bbb; text-align: center; font-style: italic; margin-top: 2px; }
+  .share-btn-copy.copied { border-color: ${GREEN}; color: ${GREEN}; }
+  .share-coming { font-size: 0.625rem; color: #9CA3AF; text-align: center; font-style: italic; margin-top: 2px; }
+
+  /* ── Share settings panel ── */
+  .share-settings {
+    background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.07); border-radius: 12px;
+    padding: 14px 16px; margin-bottom: 16px;
+  }
+  .share-settings-label {
+    font-size: 0.6875rem; font-weight: 700; color: #9CA3AF;
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px;
+  }
+  .share-textarea {
+    width: 100%; min-height: 68px; border: 1px solid rgba(0,0,0,0.10); border-radius: 8px;
+    padding: 9px 12px; font-family: 'Source Sans 3', sans-serif; font-size: 0.875rem;
+    color: #374151; background: white; resize: vertical; line-height: 1.5;
+    box-sizing: border-box;
+  }
+  .share-textarea:focus { outline: none; border-color: ${SAFFRON}; }
+  .share-tokens { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0 10px; }
+  .share-token {
+    font-size: 0.6875rem; background: ${SAFFRON}12; color: ${SAFFRON};
+    border: 1px solid ${SAFFRON}33; border-radius: 999px; padding: 2px 10px;
+    cursor: pointer; font-weight: 700; user-select: none;
+  }
+  .share-token:hover { background: ${SAFFRON}22; }
+  .share-settings-row { display: flex; justify-content: flex-end; gap: 8px; }
+  .share-save-btn {
+    background: ${SAFFRON}; color: white; border: none; border-radius: 999px;
+    padding: 6px 18px; font-size: 0.8125rem; font-weight: 700; cursor: pointer;
+  }
+  .share-save-btn:hover { opacity: 0.9; }
+  .share-reset-btn {
+    background: transparent; color: #9CA3AF; border: 1px solid rgba(0,0,0,0.10);
+    border-radius: 999px; padding: 6px 14px; font-size: 0.8125rem; cursor: pointer;
+  }
+  .share-reset-btn:hover { color: #374151; border-color: rgba(0,0,0,0.20); }
+  .share-gear {
+    background: none; border: none; cursor: pointer; font-size: 0.9375rem;
+    color: #9CA3AF; padding: 2px 4px; border-radius: 6px; transition: color 0.2s; line-height: 1;
+  }
+  .share-gear:hover, .share-gear.open { color: ${SAFFRON}; }
+  .share-msg-text {
+    font-size: 0.8125rem; color: #374151; line-height: 1.5; margin-top: 4px;
+    font-style: italic;
+  }
 
 
-  /* ── Languages ── */
-  .lang-chips { display: flex; gap: 10px; flex-wrap: wrap; }
-  .lang-chip {
-    display: flex; align-items: center; gap: 12px;
-    background: #fafaf8; border: 1px solid #E8D5B0;
-    border-radius: 12px; padding: 10px 18px;
+
+  /* ── Forest tokens ── */
+  .forest-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    gap: 12px; margin-bottom: 14px;
+  }
+  .forest-token {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    background: white; border: 1px solid rgba(0,0,0,0.08); border-radius: 14px;
+    padding: 16px 8px; transition: border-color 0.2s, transform 0.18s;
+  }
+  .forest-token:hover { border-color: rgba(0,0,0,0.18); transform: translateY(-2px); }
+  .forest-token-icon  { font-size: 1.75rem; line-height: 1; }
+  .forest-token-count {
+    font-family: 'Alumni Sans', sans-serif; font-size: 1.75rem;
+    font-weight: 800; color: #111827; line-height: 1;
+  }
+  .forest-token-count.zero { color: #9CA3AF; }
+  .forest-token-label { font-size: 0.75rem; font-weight: 700; color: #374151; }
+  .forest-token-sub   { font-size: 0.5625rem; color: #9CA3AF; text-align: center; }
+  .forest-dharma {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,142,0,0.10); border: 1px solid rgba(255,142,0,0.30);
+    border-radius: 999px; padding: 6px 16px; width: fit-content;
+    font-size: 0.8125rem; font-weight: 700; color: ${SAFFRON};
+  }
+  .forest-empty {
+    font-size: 0.8125rem; color: #9CA3AF; font-style: italic; padding: 8px 0;
+  }
+
+  /* ── Badge cards ── */
+  .badge-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 14px; }
+  .badge-card {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    background: white; border: 1px solid rgba(0,0,0,0.08); border-radius: 16px;
+    padding: 20px 14px;
     transition: border-color 0.2s, transform 0.18s;
   }
-  .lang-chip:hover { border-color: ${HERITAGE}; transform: translateY(-2px); }
-  .lang-chip-flag { font-size: 1.25rem; line-height: 1; }
-  .lang-chip-name {
-    font-family: 'Alumni Sans', sans-serif; font-size: 1.0625rem;
-    font-weight: 700; color: #1a1a2e;
+  .badge-card.earned {
+    border-color: ${SAFFRON}; background: rgba(255,142,0,0.06);
+    box-shadow: 0 2px 12px rgba(255,142,0,0.13);
   }
-  .lang-chip-count {
-    font-size: 0.6875rem; font-weight: 700; padding: 2px 9px;
-    border-radius: 999px; background: ${HERITAGE}15;
-    color: ${HERITAGE}; white-space: nowrap;
+  .badge-card.earned:hover { transform: translateY(-3px); }
+  .badge-card.locked { opacity: 0.45; }
+  .badge-card-icon { font-size: 2.25rem; line-height: 1; }
+  .badge-card-name {
+    font-family: 'Alumni Sans', sans-serif; font-size: 1rem;
+    font-weight: 700; color: #111827; text-align: center;
   }
-  .lang-zero { opacity: 0.38; }
-  .lang-note { font-size: 0.75rem; color: #bbb; margin-top: 12px; font-style: italic; }
+  .badge-card-desc {
+    font-size: 0.5625rem; color: #9CA3AF; text-align: center; line-height: 1.4;
+  }
+  .badge-card-earned-tag {
+    font-size: 0.5rem; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: ${SAFFRON}; background: rgba(255,142,0,0.12);
+    border-radius: 999px; padding: 2px 8px;
+  }
+  .badge-card-locked-tag {
+    font-size: 0.5rem; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #9CA3AF;
+  }
   /* ── Responsive ── */
   @media (max-width: 768px) {
-    .dash-wrap   { padding: 0 1rem 80px; }
-    .dash-section { padding: 16px; }
-    .dash-stats  { grid-template-columns: repeat(3, 1fr); }
-    .share-inner { flex-direction: column; }
-    .prog-bar    { width: 56px; }
+    .dash-section { padding: 18px 16px; }
+    .dash-stats   { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .share-inner  { flex-direction: column; }
+    .prog-bar     { width: 56px; }
+    .forest-grid  { grid-template-columns: repeat(3, 1fr); }
+    .badge-cards  { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+  }
+  @media (max-width: 600px) {
+    /* Hero stacks on mobile */
+    .dash-hero { padding: 18px 16px; border-radius: 14px; }
+    /* Progress table → stacked bars */
+    .prog-table-wrap { display: none; }
+    .prog-stack      { display: block; }
+    /* Activity table → stacked pills */
+    .act-table-wrap  { display: none; }
+    .act-stack       { display: block; }
+    /* Forest sub-labels illegible at this size */
+    .forest-token-sub { display: none; }
+    /* Share message text slightly smaller */
+    .share-msg-text  { font-size: 0.8125rem; }
   }
   @media (max-width: 480px) {
-    .dash-stats  { grid-template-columns: repeat(2, 1fr); }
-    .dash-title  { font-size: 1.75rem; }
-    .stat-value  { font-size: 1.375rem; }
+    .dash-title  { font-size: 1.5rem; }
+    .dash-stats  { grid-template-columns: repeat(3, 1fr); }
+    .stat-value  { font-size: 1.5rem; }
+    /* Streak — smaller cells so all 60 fit in one row */
+    .streak-cell { width: 11px; height: 11px; }
+    /* Activity table: also hide Snippets column at tiny screens */
+    .act-table th:nth-child(4), .act-table td:nth-child(4) { display: none; }
+    /* Forest — 3 col */
+    .forest-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .forest-token { padding: 14px 6px; }
+    .forest-token-icon  { font-size: 1.5rem; }
+    .forest-token-count { font-size: 1.5rem; }
+    /* Share buttons full-width */
+    .share-actions { min-width: 0; width: 100%; }
+    .share-btn     { width: 100%; justify-content: center; }
   }
+
+  /* ── Activity stacked view (≤600px) ── */
+  .act-stack { display: none; }
+  .act-stack-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0; border-top: 1px solid rgba(0,0,0,0.07);
+    flex-wrap: wrap; gap: 6px;
+  }
+  .act-stack-day { font-weight: 700; color: #111827; font-size: 0.9375rem; }
+  .act-stack-day.today { color: ${SAFFRON}; }
+  .act-stack-date { font-size: 0.75rem; color: #9CA3AF; margin-left: 5px; }
+  .act-stack-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .act-pill {
+    font-size: 0.75rem; font-weight: 700; border-radius: 999px;
+    padding: 3px 10px; white-space: nowrap;
+  }
+  .act-pill-lesson { background: rgba(0,146,74,0.10); color: #00924A; }
+  .act-pill-dharma { background: rgba(255,142,0,0.10); color: ${SAFFRON}; }
+  .act-pill-none   { background: rgba(0,0,0,0.05); color: #9CA3AF; }
+
+  /* ── Progress stacked view (≤600px) ── */
+  .prog-stack { display: none; }
+  .prog-stack-row { padding: 12px 0; border-top: 1px solid rgba(0,0,0,0.07); }
+  .prog-stack-name { font-size: 0.9375rem; font-weight: 700; color: #111827; margin-bottom: 6px; }
+  .prog-stack-bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .prog-stack-bar {
+    flex: 1; height: 7px; background: rgba(0,0,0,0.06);
+    border-radius: 4px; overflow: hidden;
+  }
+  .prog-stack-fill { height: 100%; border-radius: 4px; }
+  .prog-stack-pct { font-size: 0.75rem; font-weight: 700; min-width: 32px; text-align: right; }
 `;
 
 // ─── Data helpers ─────────────────────────────────────────────────────────────
 function pct(done, total) { return total > 0 ? Math.round((done / total) * 100) : 0; }
 
 function streakColor(level) {
-  if (level === 0) return "#f0e8d8";
+  if (level === 0) return "#EBEBEA";
   if (level === 1) return SAFFRON + "55";
   if (level === 2) return SAFFRON + "99";
   return SAFFRON;
@@ -278,8 +431,8 @@ function buildStreakFromCompletions(completions) {
   });
 }
 
-/** Returns last-7-days activity rows derived from lesson_completions. */
-function buildActivityFromCompletions(completions) {
+/** Returns last-7-days activity rows derived from lesson_completions, lesson_progress, and user_tokens. */
+function buildActivityFromCompletions(completions, lessonProgress, rawTokensData) {
   const now = new Date();
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(now);
@@ -288,20 +441,29 @@ function buildActivityFromCompletions(completions) {
     const rows    = completions.filter(
       c => c.completed_at && c.completed_at.slice(0, 10) === dateStr
     );
+    const progRows = (lessonProgress || []).filter(
+      p => p.updated_at && p.updated_at.slice(0, 10) === dateStr
+    );
+    const plantRows = (rawTokensData || []).filter(
+      t => t.token_type !== "dharma" && t.awarded_at && t.awarded_at.slice(0, 10) === dateStr
+    );
     const label = i === 0 ? "Today"
       : ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d.getDay()];
     return {
-      day:     label,
-      date:    d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-      lessons: rows.length,
-      dharma:  rows.reduce((s, c) => s + (c.points_earned || 0), 0),
-      today:   i === 0,
+      day:      label,
+      date:     d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      lessons:  rows.length,
+      dharma:   rows.reduce((s, c) => s + (c.points_earned || 0), 0),
+      snippets: rows.reduce((s, c) => s + (c.snippet_count || 0), 0)
+                + progRows.reduce((s, p) => s + (p.snippet_index + 1), 0),
+      plants:   plantRows.length,
+      today:    i === 0,
     };
   });
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function DashboardPage({ course, settings, onBack, onOpenSettings, onResume, languages = [], onSaveSettings, onLikes }) {
+export default function DashboardPage({ course, settings, onBack, onOpenSettings, onResume, languages = [], onSaveSettings, onLikes, onBookmarks, onDiscover, isAdmin, onAdmin, userEditorialRole, onEditor, activePage }) {
   const auth    = useAuthContext();
   const user    = auth?.user;
   const profile = auth?.profile;
@@ -310,36 +472,80 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
   const [lessonProgress, setLessonProgress] = useState([]);
   const [totalLessons,   setTotalLessons]   = useState(0);
   const [activeDropdown, setActiveDropdown] = useState(null);
-  const [likesCount,     setLikesCount]     = useState(null);
+  const [rawLikes,       setRawLikes]       = useState([]);
+  const [scope,          setScope]          = useState("all"); // "all" | course_id string
+  const [rawThemes,      setRawThemes]      = useState([]);
+  const [rawModules,     setRawModules]     = useState([]);
+  const [rawLessons,     setRawLessons]     = useState([]);
+  const [rawLevels,      setRawLevels]      = useState([]);
+  const [rawCourses,     setRawCourses]     = useState([]);
+  const [rawMapping,     setRawMapping]     = useState([]); // {lesson_id, snippet_id}
+  const [forestTokens,   setForestTokens]   = useState({});
+  const [earnedBadgeIds, setEarnedBadgeIds] = useState(new Set());
+  const [allBadges,      setAllBadges]      = useState([]);
+  const [rawTokensData,  setRawTokensData]  = useState([]);
+  // DEFAULT_SHARE_MSG imported from appStrings
+  const [shareMessage,    setShareMessage]   = useState(() => localStorage.getItem("indiyatra_share_message") || DEFAULT_SHARE_MSG);
+  const [shareMsgDraft,   setShareMsgDraft]  = useState(shareMessage);
+  const [showShareSettings, setShowShareSettings] = useState(false);
+  const [copyDone,        setCopyDone]        = useState(false);
 
   useEffect(() => {
     async function fetchData() {
       try {
         // Fetch this user's completions + in-progress lesson positions
         if (user && !user.is_anonymous) {
-          const [{ data: compData }, { data: progData }, { count: likesTotal }] = await Promise.all([
+          const [{ data: compData }, { data: progData }, { data: likesData }, { data: tokenData }, { data: earnedData }] = await Promise.all([
             supabaseClient
               .from("lesson_completions")
-              .select("lesson_id, points_earned, completed_at, snippet_count")
+              .select("lesson_id, course_id, points_earned, completed_at, snippet_count")
               .eq("profile_id", user.id),
             supabaseClient
               .from("lesson_progress")
-              .select("lesson_id, snippet_index")
+              .select("lesson_id, snippet_index, updated_at")
               .eq("profile_id", user.id),
             supabaseClient
               .from("snippet_likes")
-              .select("*", { count: "exact", head: true })
+              .select("lesson_id")
+              .eq("profile_id", user.id),
+            supabaseClient
+              .from("user_tokens")
+              .select("token_type, quantity, awarded_at")
+              .eq("profile_id", user.id),
+            supabaseClient
+              .from("user_badges")
+              .select("badge_id")
               .eq("profile_id", user.id),
           ]);
           setCompletions(compData || []);
           setLessonProgress(progData || []);
-          setLikesCount(likesTotal || 0);
+          setRawLikes(likesData || []);
+          const tmap = {};
+          (tokenData || []).forEach(r => { tmap[r.token_type] = (tmap[r.token_type] || 0) + (r.quantity || 1); });
+          setForestTokens(tmap);
+          setRawTokensData(tokenData || []);
+          setEarnedBadgeIds(new Set((earnedData || []).map(b => b.badge_id)));
         }
-        // Fetch total lesson count (public table)
-        const { count } = await supabaseClient
-          .from("lessons")
-          .select("*", { count: "exact", head: true });
-        setTotalLessons(count || 0);
+        // Fetch all public structural data in parallel
+        // Public structural data — use anon supabase() helper (matches CoursePage pattern)
+        const [lessonCount, themesData, modulesData, lessonsData, coursesData, mappingData, badgesData] = await Promise.all([
+          supabase("lessons", "?select=lesson_id"),
+          supabase("themes",  "?select=*&order=theme_id"),
+          supabase("modules",  "?select=module_id,theme_id,level_id,course_id"),
+          supabase("lessons",  "?select=lesson_id,module_id"),
+          supabase("courses",  "?select=course_id,course_name,snippet_count&order=course_id"),
+          supabase("lesson_snippet_mapping", "?select=lesson_id"),
+          supabase("badges", "?select=*&is_active=eq.true&order=sort_order"),
+        ]);
+        // safeArray: supabase() returns error objects on failure (truthy but not arrays)
+        const sa = v => Array.isArray(v) ? v : [];
+        setTotalLessons(sa(lessonCount).length);
+        setRawThemes(sa(themesData));
+        setRawModules(sa(modulesData));
+        setRawLessons(sa(lessonsData));
+        setRawCourses(sa(coursesData));
+        setRawMapping(sa(mappingData));
+        setAllBadges(sa(badgesData));
       } catch (e) {
         console.warn("DashboardPage fetchData:", e);
       }
@@ -348,51 +554,276 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
   }, [user?.id]);
 
   // ── Derived values ──────────────────────────────────────────────────────────
-  const displayName      = profile?.display_name
-    || (user?.email ? user.email.split("@")[0] : "Traveller");
-  const totalDharma      = completions.reduce((s, c) => s + (c.points_earned || 0), 0);
-  const lessonsCompleted = completions.length;
-  // Snippets from fully completed lessons + snippets viewed in any in-progress lesson
-  const snippetsViewed   = completions.reduce((s, c) => s + (c.snippet_count || 0), 0)
-                         + lessonProgress.reduce((s, p) => s + (p.snippet_index + 1), 0);
-  const streakData       = buildStreakFromCompletions(completions);
-  const activityData     = buildActivityFromCompletions(completions);
+  const displayName = profile?.display_name
+    || (user?.email
+        ? (() => {
+            const alpha = user.email.split("@")[0].split(/[^a-zA-Z]/)[0] || user.email.split("@")[0];
+            const short = alpha.slice(0, 5);
+            return short.charAt(0).toUpperCase() + short.slice(1).toLowerCase();
+          })()
+        : "Traveller");
+
+  // ── Progress helpers ────────────────────────────────────────────────────────
+
+  // Build lookup maps from raw structural data
+  const snippetSet      = new Set(rawMapping.map(m => m.lesson_id)); // lessons that have snippets
+  const moduleByLesson  = {};  // lesson_id → module_id
+  rawLessons.forEach(l => { moduleByLesson[l.lesson_id] = l.module_id; });
+  const themeByModule   = {};  // module_id → theme_id
+  const courseByModule  = {};  // module_id → course_id  (direct — course_id now on modules)
+  const themeTitleMap   = {};  // theme_id → theme_title (from rawThemes)
+  rawModules.forEach(m => {
+    themeByModule[m.module_id]  = m.theme_id;
+    courseByModule[m.module_id] = m.course_id;
+  });
+  rawThemes.forEach(t => { if (t.theme_id && t.title) themeTitleMap[t.theme_id] = t.title; });
+
+  // lesson_id → { themeId, courseId }  (only lessons with snippets)
+  const lessonMeta = {};
+  rawLessons.forEach(l => {
+    if (!snippetSet.has(l.lesson_id)) return;
+    const modId   = l.module_id;
+    lessonMeta[l.lesson_id] = {
+      themeId:  themeByModule[modId],
+      courseId: courseByModule[modId],
+    };
+  });
+
+  // snippets per lesson
+  const snippetsPerLesson = {};
+  rawMapping.forEach(m => {
+    snippetsPerLesson[m.lesson_id] = (snippetsPerLesson[m.lesson_id] || 0) + 1;
+  });
+
+  // completed lesson set + completions by courseId
+  const completedSet   = new Set(completions.map(c => c.lesson_id));
+  // snippets viewed: completed lessons (snippet_count) + in-progress (snippet_index+1)
+  const inProgSnippets = {};  // lesson_id → viewed count
+  lessonProgress.forEach(p => { inProgSnippets[p.lesson_id] = p.snippet_index + 1; });
+
+  // ── "This Course" view: Progress by Theme ────────────────────────────────
+  // modules.course_id is now populated — filter directly.
+  // Iterates lessonMeta (not rawThemes) so it works even if rawThemes fetch fails.
+  function buildThemeProgress() {
+    const courseId = _courseId; // set by scope selector; null means "all courses"
+    // Seed tmap from rawModules — captures ALL themes in this course,
+    // including those whose lessons have no snippets yet (will show 0% progress)
+    const tmap = {};
+    rawModules.forEach(m => {
+      if (courseId && m.course_id !== courseId) return;
+      if (!m.theme_id || tmap[m.theme_id]) return;
+      tmap[m.theme_id] = {
+        label: rawThemes.find(t => t.theme_id === m.theme_id)?.title || themeTitleMap[m.theme_id] || m.theme_id,
+        modTotal: 0, modDone: 0,
+        lesTotal: 0, lesDone: 0,
+        snpTotal: 0, snpDone: 0,
+      };
+    });
+
+    // Modules per theme — filtered to this course
+    rawModules.forEach(m => {
+      if (courseId && m.course_id !== courseId) return;
+      const t = tmap[m.theme_id];
+      if (!t) return;
+      t.modTotal++;
+      const modLessons = rawLessons.filter(l => l.module_id === m.module_id && snippetSet.has(l.lesson_id));
+      const modComplete = modLessons.length > 0 && modLessons.every(l => completedSet.has(l.lesson_id));
+      if (modComplete) t.modDone++;
+    });
+
+    // Lessons + snippets per theme
+    Object.entries(lessonMeta).forEach(([lesId, meta]) => {
+      if (courseId && meta.courseId !== courseId) return;
+      const t = tmap[meta.themeId];
+      if (!t) return;
+      t.lesTotal++;
+      t.snpTotal += snippetsPerLesson[lesId] || 0;
+      if (completedSet.has(lesId)) {
+        t.lesDone++;
+        t.snpDone += completions.find(c => c.lesson_id === lesId)?.snippet_count || 0;
+      } else if (inProgSnippets[lesId]) {
+        t.snpDone += inProgSnippets[lesId];
+      }
+    });
+
+    // Sort by theme_id order from rawThemes if available, else by theme_id string
+    const order = rawThemes.length > 0 ? rawThemes.map(t => t.theme_id) : Object.keys(tmap).sort();
+    return Object.entries(tmap)
+      .map(([themeId, data]) => ({ id: themeId, ...data }))
+      .filter(t => t.modTotal > 0)  // show all themes that have modules
+      .sort((a, b) => {
+        const ai = order.indexOf(a.id), bi = order.indexOf(b.id);
+        if (ai === -1 && bi === -1) return a.label.localeCompare(b.label);
+        if (ai === -1) return 1;
+        if (bi === -1) return -1;
+        return ai - bi;
+      });
+  }
+
+  // ── "All Courses" view: Progress by Course ────────────────────────────────
+  // modules.course_id is now reliable — all totals and done counts use it directly.
+  function buildCourseProgress() {
+    if (rawCourses.length === 0) return [];
+    const cmap = {};
+    rawCourses.forEach(c => {
+      cmap[c.course_id] = {
+        label: c.course_name,
+        themTotal: 0, themDone: 0,
+        lesTotal: 0,  lesDone: 0,
+        snpTotal: c.snippet_count || 0, snpDone: 0,
+      };
+    });
+    // Total themes per course — themes that have at least one module in this course
+    const themesByCourse = {};
+    rawModules.forEach(m => {
+      if (!m.course_id || !cmap[m.course_id]) return;
+      if (!themesByCourse[m.course_id]) themesByCourse[m.course_id] = new Set();
+      themesByCourse[m.course_id].add(m.theme_id);
+    });
+    Object.entries(themesByCourse).forEach(([cId, themes]) => {
+      if (cmap[cId]) cmap[cId].themTotal = themes.size;
+    });
+    // Total + done lessons per course — via lessonMeta.courseId (now accurate)
+    Object.entries(lessonMeta).forEach(([lesId, meta]) => {
+      const row = cmap[meta.courseId];
+      if (!row) return;
+      row.lesTotal++;
+      row.snpTotal += snippetsPerLesson[lesId] || 0;
+      if (completedSet.has(lesId)) {
+        row.lesDone++;
+        row.snpDone += completions.find(c => c.lesson_id === lesId)?.snippet_count || 0;
+      } else if (inProgSnippets[lesId]) {
+        row.snpDone += inProgSnippets[lesId];
+      }
+    });
+    // Explored themes per course
+    const exploredThemesByCourse = {};
+    Object.entries(lessonMeta).forEach(([lesId, meta]) => {
+      if (!completedSet.has(lesId) || !meta.courseId || !meta.themeId) return;
+      if (!exploredThemesByCourse[meta.courseId]) exploredThemesByCourse[meta.courseId] = new Set();
+      exploredThemesByCourse[meta.courseId].add(meta.themeId);
+    });
+    Object.entries(exploredThemesByCourse).forEach(([cId, themes]) => {
+      if (cmap[cId]) cmap[cId].themDone = themes.size;
+    });
+    return rawCourses
+      .map(c => ({ id: c.course_id, ...cmap[c.course_id] }))
+      .filter(c => c && c.lesTotal > 0);
+  }
+
+  // ── Scope-aware derived values ──────────────────────────────────────────────
+  const _courseId = scope !== "all" ? scope : null; // null means show all courses
+
+  // _courseLessonIds: built from rawModules + rawLessons. May be empty on initial
+  // render because public data (rawModules) loads after user data (completions) —
+  // two sequential awaits in fetchData. Guard all uses with _hasLessonIds.
+  const _courseModuleIds = new Set(
+    rawModules
+      .filter(m => !_courseId || !m.course_id || m.course_id === _courseId)
+      .map(m => m.module_id)
+  );
+  const _courseLessonIds = new Set(
+    rawLessons
+      .filter(l => _courseModuleIds.has(l.module_id))
+      .map(l => l.lesson_id)
+  );
+  const _hasLessonIds = _courseLessonIds.size > 0;
+
+  // completions carry course_id on each row — filter directly, no rawModules dependency.
+  // Rows with null course_id (saved before the column existed) count as "this course".
+  const scopedCompletions = scope !== "all" && _courseId
+    ? completions.filter(c => !c.course_id || c.course_id === _courseId)
+    : completions;
+
+  // lesson_progress and likes have no course_id column — use _courseLessonIds.
+  // Fall back to unfiltered until rawModules loads (_hasLessonIds guard).
+  const scopedProgress = scope !== "all" && _courseId && _hasLessonIds
+    ? lessonProgress.filter(p => _courseLessonIds.has(p.lesson_id))
+    : lessonProgress;
+  const scopedLikesCount = (user && !user.is_anonymous)
+    ? (scope !== "all" && _courseId && _hasLessonIds
+        ? rawLikes.filter(l => _courseLessonIds.has(l.lesson_id)).length
+        : rawLikes.length)
+    : null;
+  const courseLessonTotal = scope !== "all" && _hasLessonIds
+    ? _courseLessonIds.size : totalLessons;
+
+  const totalDharma      = scopedCompletions.reduce((s, c) => s + (c.points_earned || 0), 0);
+  const lessonsCompleted = scopedCompletions.length;
+  const snippetsViewed   = scopedCompletions.reduce((s, c) => s + (c.snippet_count || 0), 0)
+                         + scopedProgress.reduce((s, p) => s + (p.snippet_index + 1), 0);
+  const streakData       = buildStreakFromCompletions(scopedCompletions);
+  const activityData     = buildActivityFromCompletions(scopedCompletions, scopedProgress, rawTokensData);
 
   const activeDays = streakData.filter(l => l > 0).length;
   let bestStreak = 0, cur = 0;
   for (const l of streakData) {
     if (l > 0) { cur++; if (cur > bestStreak) bestStreak = cur; } else { cur = 0; }
   }
+  let currentStreak = 0;
+  const streakStart = streakData[59] > 0 ? 59 : 58;
+  for (let i = streakStart; i >= 0; i--) {
+    if (streakData[i] > 0) currentStreak++;
+    else break;
+  }
+  const subtitleText = currentStreak >= 2
+    ? `🔥 ${currentStreak}-day streak — keep it going!`
+    : currentStreak === 1
+    ? `🔥 Streak started — come back tomorrow!`
+    : activeDays > 0
+    ? `You've been active ${activeDays} day${activeDays === 1 ? '' : 's'} this month`
+    : 'Continue your learning journey';
+
+  const progressRows = scope !== "all" ? buildThemeProgress() : buildCourseProgress();
+  const overallLesDone  = progressRows.reduce((s, r) => s + r.lesDone,  0);
+  const overallLesTotal = progressRows.reduce((s, r) => s + r.lesTotal, 0);
+  const overallPct      = pct(overallLesDone, overallLesTotal);
 
   const STATS = [
     {
-      key: "dharma",  icon: "✦",  label: "Dharma Points",
+      key: "dharma",  icon: <i className="ti ti-diamond" style={{color: SAFFRON}} />,  label: "Dharma Points",
       value: String(totalDharma), sub: null, accent: SAFFRON,
     },
     {
-      key: "lessons", icon: "📖", label: "Lessons Completed",
-      value: totalLessons ? `${lessonsCompleted}/${totalLessons}` : String(lessonsCompleted),
+      key: "lessons", icon: <i className="ti ti-book-2" style={{color: GREEN}} />, label: "Lessons Completed",
+      value: courseLessonTotal ? `${lessonsCompleted}/${courseLessonTotal}` : String(lessonsCompleted),
       sub: null, accent: GREEN,
     },
-    { key: "badges",    icon: "🏆", label: "Badges Earned",   value: "—", sub: "Coming soon", accent: GOLD    },
-    { key: "snippets",  icon: "📚", label: "Snippets Viewed", value: String(snippetsViewed), sub: null, accent: HERITAGE },
-    { key: "bookmarks", icon: "♥",  label: "Snippets Liked",  value: likesCount !== null ? likesCount.toLocaleString() : "—", sub: likesCount !== null ? "snippets liked" : "—", accent: PURPLE },
+    {
+      key: "badges", icon: <i className="ti ti-trophy" style={{color: SAFFRON}} />, label: "Badges Earned",
+      value: allBadges.length > 0 ? `${earnedBadgeIds.size}/${allBadges.length}` : "—",
+      sub: null, accent: SAFFRON,
+    },
+    { key: "snippets",  icon: <i className="ti ti-book-2" style={{color: HERITAGE}} />, label: "Snippets Viewed", value: String(snippetsViewed), sub: null, accent: HERITAGE },
+    { key: "bookmarks", icon: <i className="ti ti-heart" style={{color: HERITAGE}} />, label: "Snippets Liked",  value: scopedLikesCount !== null ? scopedLikesCount.toLocaleString() : "—", sub: null, accent: HERITAGE, onClick: onLikes },
   ];
 
-  const FONT_OPTIONS = [
-    { key: 'sm', label: 'Small' },
-    { key: 'md', label: 'Medium' },
-    { key: 'lg', label: 'Large' },
-  ];
-  function applySettings(patch) {
-    if (!onSaveSettings) return;
-    const next = { ...settings, ...patch };
-    const sizes = { sm: '13px', md: '16px', lg: '19px' };
-    document.body.dataset.fs = next.fontSize;
-    document.documentElement.style.fontSize = sizes[next.fontSize] || '16px';
-    onSaveSettings(next);
-    setActiveDropdown(null);
+  const FOREST_TOKENS = FOREST_TOKEN_DEFS.filter(t => t.type !== "dharma");
+  const totalPlants = FOREST_TOKENS.reduce((s, t) => s + (forestTokens[t.type] || 0), 0);
+  const dharmaTokens = forestTokens["dharma"] || 0;
+
+  function renderShareText(tmpl) {
+    return (tmpl || DEFAULT_SHARE_MSG)
+      .replace("{dharma}",  String(totalDharma))
+      .replace("{lessons}", String(lessonsCompleted))
+      .replace("{name}",    displayName);
   }
+  function handleShareSave() {
+    localStorage.setItem("indiyatra_share_message", shareMsgDraft);
+    setShareMessage(shareMsgDraft);
+    setShowShareSettings(false);
+  }
+  function handleShareReset() {
+    setShareMsgDraft(DEFAULT_SHARE_MSG);
+  }
+  function handleCopyLink() {
+    navigator.clipboard.writeText("https://indiyatra.in").then(() => {
+      setCopyDone(true);
+      setTimeout(() => setCopyDone(false), 2000);
+    });
+  }
+  const shareText = renderShareText(shareMessage);
+  const canShare  = !!(user && !user.is_anonymous);
 
   return (
     <>
@@ -400,90 +831,90 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
       <PageHeader
         onHome={onBack}
         onOpenSettings={onOpenSettings}
+        onResume={onResume}
+        isAdmin={isAdmin}
+        onAdmin={onAdmin}
+        userEditorialRole={userEditorialRole}
+        onEditor={onEditor}
+        activePage={activePage}
+        settings={settings}
+        onSaveSettings={onSaveSettings}
+        languages={languages}
         navLinks={[
           { label: "Home",      onClick: onBack },
-          { label: "Discover",  onClick: () => {} },
+          { label: "Discover",  onClick: onDiscover },
           { label: "Dashboard", onClick: () => {} },
-          { label: "Likes",     onClick: onLikes },
+          { label: "Likes",      onClick: onLikes },
+          { label: "Bookmarks", onClick: onBookmarks },
         ]}
       />
 
       <div className="breadcrumb">
         <a onClick={onBack}>Home</a>
         <span className="sep">›</span>
-        <a onClick={onBack}>{course?.course_name || "Heritage of Bharat"}</a>
-        <span className="sep">›</span>
         <span className="current">Dashboard</span>
       </div>
 
-      <div className="dash-wrap">
+      <div className="page-wrap">
 
-        {/* ── Welcome ── */}
-        <div className="dash-course-chip">{course?.course_name || "Heritage of Bharat"}</div>
-        <div className="dash-title">Welcome back, {displayName} 👋</div>
-        <div className="dash-action-bar">
-          <button className="dash-resume-btn" onClick={onResume}>
-            ⟳ Resume Yatra
-          </button>
-          <div className="dash-action-sep" />
-          <div className="dash-quick-pills">
-            {activeDropdown && <div className="dash-dropdown-backdrop" onClick={() => setActiveDropdown(null)} />}
-
-            <div className="dash-pill-wrap">
-              <div className={`dash-pill${activeDropdown === 'lang' ? ' open' : ''}`}
-                onClick={() => setActiveDropdown(activeDropdown === 'lang' ? null : 'lang')}>
-                🌐 {settings.languageName || 'English'}
-              </div>
-              {activeDropdown === 'lang' && (
-                <div className="dash-dropdown">
-                  {languages.map(l => (
-                    <div key={l.language_id}
-                      className={`dash-dropdown-item${settings.languageId === l.language_id ? ' active' : ''}`}
-                      onClick={() => applySettings({ languageId: l.language_id, languageCode: l.language_code, languageName: l.language })}>
-                      {settings.languageId === l.language_id ? '✓ ' : ''}{l.language}
-                    </div>
-                  ))}
-                </div>
-              )}
+        {/* ── Welcome Hero ── */}
+        <div className="dash-hero">
+          <div className="dash-title">Welcome back, {displayName} 👋</div>
+          <div className="dash-subtitle">{subtitleText}</div>
+          {activeDropdown && <div className="dash-dropdown-backdrop" onClick={() => setActiveDropdown(null)} />}
+          <div className="dash-scope-wrap">
+            <div className={`dash-scope-pill${activeDropdown === 'scope' ? ' open' : ''}`}
+              onClick={() => setActiveDropdown(activeDropdown === 'scope' ? null : 'scope')}>
+              <i className="ti ti-books dash-scope-pill-icon" />
+              {scope === "all"
+                ? "All Courses"
+                : (rawCourses.find(c => c.course_id === scope)?.course_name || "All Courses")}
+              <span className="dash-scope-pill-chevron">▾</span>
             </div>
-
-            <div className="dash-pill-wrap">
-              <div className={`dash-pill${activeDropdown === 'font' ? ' open' : ''}`}
-                onClick={() => setActiveDropdown(activeDropdown === 'font' ? null : 'font')}>
-                T {settings.fontSize === 'sm' ? 'Small' : settings.fontSize === 'lg' ? 'Large' : 'Medium'}
-              </div>
-              {activeDropdown === 'font' && (
-                <div className="dash-dropdown">
-                  {FONT_OPTIONS.map(f => (
-                    <div key={f.key}
-                      className={`dash-dropdown-item${settings.fontSize === f.key ? ' active' : ''}`}
-                      onClick={() => applySettings({ fontSize: f.key })}>
-                      {f.label}
-                    </div>
-                  ))}
+            {activeDropdown === 'scope' && (
+              <div className="dash-dropdown">
+                <div
+                  className={`dash-dropdown-item${scope === "all" ? " active" : ""}`}
+                  onClick={() => { setScope("all"); setActiveDropdown(null); }}>
+                  {scope === "all" ? "✓ " : ""}All Courses
                 </div>
-              )}
-            </div>
+                {rawCourses.map(c => (
+                  <div key={c.course_id}
+                    className={`dash-dropdown-item${scope === c.course_id ? " active" : ""}`}
+                    onClick={() => { setScope(c.course_id); setActiveDropdown(null); }}>
+                    {scope === c.course_id ? "✓ " : ""}{c.course_name}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
+        </div>{/* end .dash-hero */}
 
         {/* ── Stat cards ── */}
         <div className="dash-stats">
           {STATS.map(s => (
-            <div className="stat-card" key={s.key}>
+            <div
+              className="stat-card"
+              key={s.key}
+              onClick={s.onClick}
+              style={s.onClick ? { cursor: "pointer" } : undefined}
+            >
               <div className="stat-card-accent" style={{ background: s.accent }} />
               <div className="stat-icon">{s.icon}</div>
               <div className="stat-label">{s.label}</div>
               <div className="stat-value" style={{ color: s.accent }}>{s.value}</div>
               {s.sub && <div className="stat-sub">{s.sub}</div>}
+              {s.onClick && <div className="stat-link">View all →</div>}
             </div>
           ))}
+          {/* Ghost card — balances the 3-column grid on mobile (2 rows of 3) */}
+          <div className="stat-card stat-ghost" aria-hidden="true" />
         </div>
 
         {/* ── Streak Heatmap ── */}
         <div className="dash-section">
           <div className="dash-section-head">
-            <div className="dash-section-title">🔥 Learning Streak</div>
+            <div className="page-section-title"><i className="ti ti-flame" style={{color: "#FF8E00", marginRight: 6}} />Learning Streak</div>
             <div className="dash-section-meta">Last 60 days</div>
           </div>
           <div className="streak-grid">
@@ -514,29 +945,111 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
           </div>
         </div>
 
-        {/* ── Course Progress by Theme — coming soon ── */}
+        {/* ── Course Progress (scope-aware) ── */}
         <div className="dash-section">
           <div className="dash-section-head">
-            <div className="dash-section-title">Course Progress by Theme</div>
-            <div className="dash-section-meta" style={{ fontStyle: "italic" }}>Coming soon</div>
+            <div className="page-section-title">
+              {scope !== "all" ? "Course Progress by Theme" : "Progress by Course"}
+            </div>
+            <div className="dash-section-meta">{overallPct}% explored</div>
           </div>
-          <div style={{ padding: "10px 0 4px", color: "#bbb", fontSize: "14px", fontStyle: "italic" }}>
-            Theme-level progress breakdown is coming soon.
-          </div>
+
+          {progressRows.length === 0 ? (
+            <div style={{ color: "#bbb", fontSize: "0.8125rem", padding: "8px 0", fontStyle: "italic" }}>
+              No progress data yet — complete a lesson to see your stats here.
+            </div>
+          ) : (
+            <div className="prog-table-wrap"><table className="prog-table">
+              <thead>
+                <tr>
+                  <th style={{ textAlign: "left" }}>
+                    {scope !== "all" ? "Theme" : "Course"}
+                  </th>
+                  <th>{scope !== "all" ? "Modules" : "Themes"}</th>
+                  <th>Lessons</th>
+                  <th>Snippets</th>
+                </tr>
+              </thead>
+              <tbody>
+                {progressRows.map(row => {
+                  const col1Done  = scope !== "all" ? row.modDone  : row.themDone;
+                  const col1Total = scope !== "all" ? row.modTotal : row.themTotal;
+                  const col1Pct   = pct(col1Done, col1Total);
+                  const lesPct    = pct(row.lesDone,  row.lesTotal);
+                  const snpPct    = pct(row.snpDone,  row.snpTotal);
+                  const barColor  = (p) => p === 100 ? GREEN : SAFFRON;
+                  return (
+                    <tr key={row.id}>
+                      <td className="prog-theme-name">{row.label}</td>
+                      <td>
+                        <div className="prog-bar-wrap">
+                          <div className="prog-bar">
+                            <div className="prog-bar-fill" style={{ width: col1Pct + "%", background: barColor(col1Pct) }} />
+                          </div>
+                          <span className="prog-pct" style={{ color: barColor(col1Pct) }}>{col1Pct}%</span>
+                          <span className="prog-counts">({col1Done}/{col1Total})</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="prog-bar-wrap">
+                          <div className="prog-bar">
+                            <div className="prog-bar-fill" style={{ width: lesPct + "%", background: barColor(lesPct) }} />
+                          </div>
+                          <span className="prog-pct" style={{ color: barColor(lesPct) }}>{lesPct}%</span>
+                          <span className="prog-counts">({row.lesDone}/{row.lesTotal})</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="prog-bar-wrap">
+                          <div className="prog-bar">
+                            <div className="prog-bar-fill" style={{ width: snpPct + "%", background: barColor(snpPct) }} />
+                          </div>
+                          <span className="prog-pct" style={{ color: barColor(snpPct) }}>{snpPct}%</span>
+                          <span className="prog-counts">({row.snpDone}/{row.snpTotal})</span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table></div>
+          )}
+          {/* Stacked view — shown at ≤600px via CSS */}
+          {progressRows.length > 0 && (
+            <div className="prog-stack">
+              {progressRows.map(row => {
+                const lesPct   = pct(row.lesDone, row.lesTotal);
+                const barColor = lesPct === 100 ? GREEN : SAFFRON;
+                return (
+                  <div className="prog-stack-row" key={row.id}>
+                    <div className="prog-stack-name">{row.label}</div>
+                    <div className="prog-stack-bar-wrap">
+                      <div className="prog-stack-bar">
+                        <div className="prog-stack-fill" style={{ width: lesPct + "%", background: barColor }} />
+                      </div>
+                      <span className="prog-stack-pct" style={{ color: barColor }}>{lesPct}%</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* ── Recent Activity ── */}
         <div className="dash-section">
           <div className="dash-section-head">
-            <div className="dash-section-title">Recent Activity</div>
+            <div className="page-section-title">Recent Activity</div>
             <div className="dash-section-meta">Last 7 days</div>
           </div>
-          <table className="act-table">
+          <div className="act-table-wrap"><table className="act-table">
             <thead>
               <tr>
                 <th style={{ textAlign: "left" }}>Day</th>
-                <th>Lessons Completed</th>
-                <th>Dharma Earned</th>
+                <th>Lessons</th>
+                <th>Dharma</th>
+                <th>Snippets Viewed</th>
+                <th>Plants Sown 🌿</th>
               </tr>
             </thead>
             <tbody>
@@ -546,47 +1059,139 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
                     <span className={"act-day" + (a.today ? " act-today" : "")}>{a.day}</span>
                     <span className="act-date">{a.date}</span>
                   </td>
-                  <td className={a.lessons > 0 ? "act-nonzero" : ""}>{a.lessons}</td>
-                  <td className={a.dharma  > 0 ? "act-nonzero" : ""}>{a.dharma}</td>
+                  <td className={a.lessons  > 0 ? "act-nonzero" : ""}>{a.lessons}</td>
+                  <td className={a.dharma   > 0 ? "act-nonzero" : ""}>{a.dharma}</td>
+                  <td className={a.snippets > 0 ? "act-nonzero" : ""}>{a.snippets}</td>
+                  <td className={a.plants   > 0 ? "act-nonzero" : ""}>{a.plants}</td>
                 </tr>
               ))}
               <tr className="act-total">
                 <td>7-day total</td>
-                <td>{activityData.reduce((s, a) => s + a.lessons, 0)}</td>
-                <td>{activityData.reduce((s, a) => s + a.dharma,  0)}</td>
+                <td>{activityData.reduce((s, a) => s + a.lessons,  0)}</td>
+                <td>{activityData.reduce((s, a) => s + a.dharma,   0)}</td>
+                <td>{activityData.reduce((s, a) => s + a.snippets, 0)}</td>
+                <td>{activityData.reduce((s, a) => s + a.plants,   0)}</td>
               </tr>
             </tbody>
-          </table>
+          </table></div>
+          {/* Stacked view — shown at ≤600px via CSS */}
+          <div className="act-stack">
+            {activityData.map(a => (
+              <div className="act-stack-row" key={a.date}>
+                <div>
+                  <span className={"act-stack-day" + (a.today ? " today" : "")}>{a.day}</span>
+                  <span className="act-stack-date">{a.date}</span>
+                </div>
+                <div className="act-stack-pills">
+                  {a.lessons === 0 && a.dharma === 0 ? (
+                    <span className="act-pill act-pill-none">No activity</span>
+                  ) : (
+                    <>
+                      {a.lessons > 0 && <span className="act-pill act-pill-lesson">{a.lessons} lesson{a.lessons !== 1 ? "s" : ""}</span>}
+                      {a.dharma  > 0 && <span className="act-pill act-pill-dharma">{a.dharma} pts</span>}
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* ── Earned Badges — coming soon ── */}
+        {/* ── Your Forest ── */}
         <div className="dash-section">
           <div className="dash-section-head">
-            <div className="dash-section-title">🏆 Earned Badges</div>
-            <div className="dash-section-meta" style={{ fontStyle: "italic" }}>Coming soon</div>
+            <div className="page-section-title"><i className="ti ti-trees" style={{color: "#00924A", marginRight: 6}} />Your Forest</div>
+            <div className="dash-section-meta">{totalPlants} plant{totalPlants !== 1 ? "s" : ""} grown</div>
           </div>
-          <div style={{ padding: "10px 0 4px", color: "#bbb", fontSize: "14px", fontStyle: "italic" }}>
-            Badge tracking is coming soon.
-          </div>
+          {totalPlants === 0 && dharmaTokens === 0 ? (
+            <div className="forest-empty">Complete your first lesson to start growing your forest.</div>
+          ) : (
+            <>
+              <div className="forest-grid">
+                {FOREST_TOKENS.map(t => {
+                  const count = forestTokens[t.type] || 0;
+                  return (
+                    <div className="forest-token" key={t.type}>
+                      <div className="forest-token-icon">{t.icon}</div>
+                      <div className={"forest-token-count" + (count === 0 ? " zero" : "")}>{count}</div>
+                      <div className="forest-token-label">{t.label}</div>
+                      <div className="forest-token-sub">{t.sub}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              {dharmaTokens > 0 && (
+                <div className="forest-dharma">✦ {dharmaTokens.toLocaleString()} dharma seeds gathered</div>
+              )}
+            </>
+          )}
         </div>
 
-        {/* ── Languages Explored — coming soon ── */}
+        {/* ── Earned Badges ── */}
         <div className="dash-section">
           <div className="dash-section-head">
-            <div className="dash-section-title">🌐 Languages Explored</div>
-            <div className="dash-section-meta" style={{ fontStyle: "italic" }}>Coming soon</div>
+            <div className="page-section-title"><i className="ti ti-trophy" style={{color: "#FF8E00", marginRight: 6}} />Earned Badges</div>
+            <div className="dash-section-meta">{earnedBadgeIds.size}/{allBadges.length} earned</div>
           </div>
-          <div style={{ padding: "10px 0 4px", color: "#bbb", fontSize: "14px", fontStyle: "italic" }}>
-            Language exploration tracking is coming soon.
-          </div>
+          {allBadges.length === 0 ? (
+            <SkeletonBadges count={3} />
+          ) : (
+            <div className="badge-cards">
+              {allBadges.map(badge => {
+                const isEarned = earnedBadgeIds.has(badge.badge_id);
+                return (
+                  <div key={badge.badge_id} className={"badge-card" + (isEarned ? " earned" : " locked")} title={badge.description || ""}>
+                    <div className="badge-card-icon">{badge.badge_icon}</div>
+                    <div className="badge-card-name">{badge.badge_name}</div>
+                    <div className="badge-card-desc">{badge.description}</div>
+                    {isEarned
+                      ? <div className="badge-card-earned-tag">✓ Earned</div>
+                      : <div className="badge-card-locked-tag">Locked</div>
+                    }
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* ── Share Your Yatra ── */}
+{/* ── Share Your Yatra ── */}
         <div className="dash-section">
           <div className="dash-section-head">
-            <div className="dash-section-title">📤 Share Your Yatra</div>
-            <div className="dash-section-meta">Coming soon</div>
+            <div className="page-section-title"><i className="ti ti-share" style={{color: "#00509E", marginRight: 6}} />Share Your Yatra</div>
+            <button
+              className={"share-gear" + (showShareSettings ? " open" : "")}
+              title="Customise share message"
+              onClick={() => { setShareMsgDraft(shareMessage); setShowShareSettings(v => !v); }}>
+              ⚙
+            </button>
           </div>
+
+          {/* Settings panel */}
+          {showShareSettings && (
+            <div className="share-settings">
+              <div className="share-settings-label">Customise your message</div>
+              <textarea
+                className="share-textarea"
+                value={shareMsgDraft}
+                onChange={e => setShareMsgDraft(e.target.value)}
+              />
+              <div className="share-tokens">
+                <span>Insert:</span>
+                {["{dharma}", "{lessons}", "{name}"].map(tok => (
+                  <span key={tok} className="share-token"
+                    onClick={() => setShareMsgDraft(d => d + " " + tok)}>
+                    {tok}
+                  </span>
+                ))}
+              </div>
+              <div className="share-settings-row">
+                <button className="share-reset-btn" onClick={handleShareReset}>Reset</button>
+                <button className="share-save-btn" onClick={handleShareSave}>Save</button>
+              </div>
+            </div>
+          )}
+
           <div className="share-inner">
             <div className="share-preview">
               <div className="share-preview-logo">🪔 IndiYatra · Heritage of Bharat</div>
@@ -600,19 +1205,28 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
                   <div className="share-stat-lbl">Lessons</div>
                 </div>
               </div>
-              <div className="share-footer-txt">indiyatra.in · Join my heritage learning journey!</div>
+              <div className="share-msg-text">{shareText}</div>
             </div>
             <div className="share-actions">
-              <button className="share-btn share-btn-wa" disabled title="Coming soon">
+              <button
+                className={"share-btn share-btn-wa" + (canShare ? " active" : "")}
+                disabled={!canShare}
+                onClick={canShare ? () => window.open("https://wa.me/?text=" + encodeURIComponent(shareText), "_blank") : undefined}>
                 💬 WhatsApp
               </button>
-              <button className="share-btn share-btn-tw" disabled title="Coming soon">
+              <button
+                className={"share-btn share-btn-tw" + (canShare ? " active" : "")}
+                disabled={!canShare}
+                onClick={canShare ? () => window.open("https://twitter.com/intent/tweet?text=" + encodeURIComponent(shareText), "_blank") : undefined}>
                 𝕏 Twitter / X
               </button>
-              <button className="share-btn share-btn-copy" disabled title="Coming soon">
-                🔗 Copy Link
+              <button
+                className={"share-btn share-btn-copy" + (canShare ? " active" : "") + (copyDone ? " copied" : "")}
+                disabled={!canShare}
+                onClick={canShare ? handleCopyLink : undefined}>
+                {copyDone ? "✓ Copied!" : "🔗 Copy Link"}
               </button>
-              <div className="share-coming">Sharing unlocks after sign-in</div>
+              {!canShare && <div className="share-coming">Sign in to share</div>}
             </div>
           </div>
         </div>

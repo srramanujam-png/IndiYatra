@@ -8,28 +8,16 @@ export const globalStyles = `
   /* Shared header */
   .app-header {
     position: sticky; top: 0; z-index: 100;
-    background: rgba(255,253,245,0.97); backdrop-filter: blur(12px);
+    background: rgba(255,255,255,0.97); backdrop-filter: blur(12px);
     border-bottom: 2.5px solid ${SAFFRON};
     padding: 0 1.5rem; height: 64px;
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
   }
-  .header-logo img { height: 36px; cursor: pointer; }
+  .header-logo img { max-height: 36px; max-width: 140px; width: auto; height: auto; cursor: pointer; }
   .header-nav { display: flex; gap: 1.5rem; align-items: center; }
-  .header-nav a {
-    font-family: 'Alumni Sans', sans-serif; font-size: 1.125rem; font-weight: 700;
-    color: #1a1a2e; text-decoration: none; position: relative; padding-bottom: 2px;
-    transition: color 0.2s; cursor: pointer;
-  }
-  .header-nav a::after { content:''; position:absolute; bottom:0; left:0; width:0; height:2px; background:${SAFFRON}; transition:width 0.25s; }
-  .header-nav a:hover { color: ${SAFFRON}; }
-  .header-nav a:hover::after { width: 100%; }
+  /* Desktop nav link styles now in PageHeader.jsx (.hdr-nav-link) */
   .header-right { display: flex; align-items: center; gap: 10px; }
-  .header-settings-btn {
-    background: none; border: 1.5px solid #e0d4bc; border-radius: 50%;
-    width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: border-color 0.2s, background 0.2s; font-size: 1rem; color: #888;
-  }
-  .header-settings-btn:hover { border-color: ${SAFFRON}; color: ${SAFFRON}; background: ${SAFFRON}11; }
+
   .register-btn {
     background: ${SAFFRON}; color: white; border: none; border-radius: 999px;
     padding: 7px 18px; font-family: 'Alumni Sans', sans-serif; font-size: 1rem;
@@ -44,7 +32,7 @@ export const globalStyles = `
   }
   .breadcrumb a { color: #999; text-decoration: none; cursor: pointer; transition: color 0.2s; }
   .breadcrumb a:hover { color: ${SAFFRON}; }
-  .breadcrumb .sep { color: #ccc; }
+  .breadcrumb .sep { color: #D1D5DB; }
   .breadcrumb .current { color: ${HERITAGE}; font-weight: 700; }
 
   /* Page hero */
@@ -66,7 +54,7 @@ export const globalStyles = `
     animation: slideInRight 0.25s ease;
   }
   .settings-drawer-header {
-    padding: 20px 24px; border-bottom: 1px solid #f0e8d8;
+    padding: 20px 24px; border-bottom: 1px solid rgba(0,0,0,0.07);
     display: flex; align-items: center; justify-content: space-between;
   }
   .settings-drawer-title { font-family: 'Alumni Sans', sans-serif; font-size: 1.375rem; font-weight: 800; color: ${HERITAGE}; }
@@ -84,7 +72,7 @@ export const globalStyles = `
   }
   .lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .lang-option {
-    padding: 9px 12px; border-radius: 10px; border: 1.5px solid #e8d5b0;
+    padding: 9px 12px; border-radius: 10px; border: 1.5px solid rgba(0,0,0,0.10);
     background: white; cursor: pointer; font-size: 0.8125rem; font-weight: 600; color: #555;
     transition: all 0.15s; text-align: left;
   }
@@ -92,7 +80,7 @@ export const globalStyles = `
   .lang-option.active { border-color: ${SAFFRON}; background: ${SAFFRON}11; color: ${SAFFRON}; font-weight: 700; }
   .font-size-row { display: flex; gap: 8px; }
   .fs-option {
-    flex: 1; padding: 10px; border-radius: 10px; border: 1.5px solid #e8d5b0;
+    flex: 1; padding: 10px; border-radius: 10px; border: 1.5px solid rgba(0,0,0,0.10);
     background: white; cursor: pointer; font-weight: 700; color: #555;
     transition: all 0.15s; text-align: center;
   }
@@ -104,16 +92,99 @@ export const globalStyles = `
   .empty   { text-align: center; padding: 40px 1rem; font-size: 0.9375rem; color: #999; }
   .footer  { text-align: center; padding: 24px 1rem; font-size: 0.8125rem; color: #999; border-top: 1px solid #eee; }
 
+  /* ── Skeleton shimmer ─────────────────────────────────────────────────── */
+  @keyframes shimmer {
+    0%   { background-position: -600px 0; }
+    100% { background-position:  600px 0; }
+  }
+  .skel {
+    background: linear-gradient(90deg, #EBEBEA 25%, #F5F5F4 50%, #EBEBEA 75%);
+    background-size: 1200px 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+    border-radius: 6px;
+    display: block;
+  }
+  .skel-wrap {
+    max-width: 900px; margin: 0 auto; padding: 20px 1.5rem 60px;
+  }
+
   @keyframes fadeUp       { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
   @keyframes fadeIn       { from { opacity:0; } to { opacity:1; } }
   @keyframes slideInRight { from { transform:translateX(100%); } to { transform:translateX(0); } }
 
-  @media (max-width: 768px) { .header-nav { display: none; } }
+  /* -- Header layout breakpoint (1024px) -------------------------------- */
+  /* hdr-desktop shown >1024px only; hdr-mobile shown <=1024px only       */
+  @media (max-width: 1024px) { .hdr-desktop { display: none !important; } }
+  @media (min-width: 1025px) { .hdr-mobile  { display: none !important; } }
+
   @media (max-width: 480px) {
     .app-header { padding: 0 1rem; height: 56px; }
-    .header-logo img { height: 28px; }
     .register-btn { padding: 6px 14px; font-size: 0.875rem; }
     .page-title { font-size: 1.625rem; }
     .breadcrumb { padding: 10px 1rem 0; font-size: 0.75rem; }
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     SHARED DESIGN SYSTEM — v2 (Session 11)
+     Used across all page types. Import globalStyles to get these.
+  ═══════════════════════════════════════════════════════════ */
+
+  /* Page-level container */
+  .page-wrap { max-width: 1100px; margin: 0 auto; padding: 0 1.25rem 100px; }
+
+  /* Section card */
+  .page-section {
+    background: white; border-radius: 18px; border: 1px solid rgba(0,0,0,0.08);
+    padding: 22px; margin-bottom: 24px;
+    box-shadow: 0 2px 14px rgba(0,0,0,0.06);
+  }
+  .page-section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .page-section-title {
+    font-family: 'Alumni Sans', sans-serif; font-size: 1.25rem;
+    font-weight: 700; color: #1a1a2e; letter-spacing: 0.02em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .page-section-title::before {
+    content: ''; display: inline-block; width: 4px; height: 20px;
+    background: ${SAFFRON}; border-radius: 2px; flex-shrink: 0;
+  }
+  .page-section-meta { font-size: 0.75rem; color: #aaa; font-weight: 600; }
+
+  /* Primary button — heritage blue, 44px touch target */
+  .btn-primary {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    background: ${HERITAGE}; color: white; border: none; border-radius: 10px;
+    padding: 12px 22px; font-family: 'Alumni Sans', sans-serif;
+    font-size: 1rem; font-weight: 700; cursor: pointer; min-height: 44px;
+    text-decoration: none; transition: box-shadow 0.2s, opacity 0.2s;
+    letter-spacing: 0.02em; white-space: nowrap;
+  }
+  .btn-primary:hover { box-shadow: 0 4px 16px ${HERITAGE}44; opacity: 0.92; }
+  .btn-saffron { background: ${SAFFRON} !important; }
+  .btn-saffron:hover { box-shadow: 0 4px 16px ${SAFFRON}55 !important; opacity: 1 !important; }
+
+  /* Outline button */
+  .btn-outline {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    background: transparent; color: ${HERITAGE}; border: 1.5px solid ${HERITAGE};
+    border-radius: 10px; padding: 11px 22px; font-family: 'Alumni Sans', sans-serif;
+    font-size: 1rem; font-weight: 700; cursor: pointer; min-height: 44px;
+    text-decoration: none; transition: background 0.2s; white-space: nowrap;
+  }
+  .btn-outline:hover { background: ${HERITAGE}0A; }
+
+  /* Shared responsive */
+  @media (max-width: 768px) {
+    .page-wrap { padding: 0 1rem 80px; }
+    .page-section { padding: 18px 16px; }
+  }
+  @media (max-width: 480px) {
+    .page-wrap { padding: 0 0.875rem 80px; }
+    .page-section { border-radius: 14px; margin-bottom: 16px; }
+    .page-section-title { font-size: 1.125rem; }
+    .btn-primary, .btn-outline { font-size: 0.9375rem; padding: 11px 18px; }
   }
 `;

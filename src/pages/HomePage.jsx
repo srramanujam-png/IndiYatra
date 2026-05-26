@@ -2,19 +2,16 @@ import { useState, useEffect } from "react";
 import { supabase, SAFFRON, HERITAGE, GREEN, logoUrl, DEFAULT_LANG_CODE } from "../lib/supabase";
 import { globalStyles } from "../styles/global";
 import PageHeader from "../components/PageHeader";
+import { SkeletonCourseGrid } from "../components/Skeletons";
 
 const styles = `
   .hero {
     text-align: center; padding: 64px 1.5rem 48px;
     position: relative; overflow: hidden;
   }
-  .hero::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0;
-    height: 6px; background: linear-gradient(90deg, ${SAFFRON}, #FF6B00, ${SAFFRON});
-  }
   .tagline-pill {
     display: inline-flex; align-items: center; gap: 8px;
-    background: linear-gradient(135deg, ${SAFFRON}22, ${SAFFRON}11);
+    background: rgba(255,142,0,0.10);
     border: 1px solid ${SAFFRON}44; border-radius: 999px;
     padding: 6px 20px; font-size: 0.875rem; font-weight: 600;
     color: #b86000; letter-spacing: 0.05em; text-transform: uppercase;
@@ -29,34 +26,31 @@ const styles = `
   .wordmark .indi  { color: ${SAFFRON}; }
   .wordmark .yatra { color: ${HERITAGE}; }
   .subtitle {
-    font-size: 1.125rem; font-style: italic; color: #666;
+    font-size: 1.125rem; font-style: italic; color: #374151;
     margin-bottom: 40px; animation: fadeUp 0.6s 0.2s ease both;
   }
   .section-heading {
     font-family: 'Alumni Sans', sans-serif; font-size: 1.75rem; font-weight: 700;
-    color: ${HERITAGE}; text-align: center; margin-bottom: 32px;
-    display: flex; align-items: center; justify-content: center; gap: 16px;
+    color: #1a1a2e; margin-bottom: 32px;
+    display: flex; align-items: center; gap: 12px;
   }
-  .section-heading::before, .section-heading::after {
-    content: ''; flex: 1; max-width: 80px; height: 2px;
-    background: linear-gradient(90deg, transparent, ${SAFFRON});
+  .section-heading::before {
+    content: ''; display: inline-block; width: 4px; height: 24px;
+    background: ${SAFFRON}; border-radius: 2px; flex-shrink: 0;
   }
-  .section-heading::after { background: linear-gradient(90deg, ${SAFFRON}, transparent); }
-  .courses-section { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem 80px; }
   .courses-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 360px));
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 24px;
-    justify-content: center;
   }
   .course-card {
-    background: white; border-radius: 20px; overflow: hidden;
-    border: 1px solid #E8D5B0; box-shadow: 0 4px 24px rgba(255,142,0,0.08);
+    background: white; border-radius: 18px; overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 2px 14px rgba(0,0,0,0.07);
     transition: transform 0.25s ease, box-shadow 0.25s ease;
     animation: fadeUp 0.6s ease both; cursor: pointer;
     width: 100%;
   }
-  .course-card:hover { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(255,142,0,0.18); }
+  .course-card:hover { transform: translateY(-5px); box-shadow: 0 10px 32px rgba(0,0,0,0.13); }
   .card-image { position: relative; height: 200px; overflow: hidden; }
   .card-image img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; transition: transform 0.4s; }
   .course-card:hover .card-image img { transform: scale(1.05); }
@@ -66,7 +60,7 @@ const styles = `
     border-radius: 999px; padding: 3px 10px;
     font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.03em;
   }
-  .card-lang-badge.available { background: ${GREEN}22; color: ${GREEN}; border: 1px solid ${GREEN}44; }
+  .card-lang-badge.available { background: ${SAFFRON}18; color: ${SAFFRON}; border: 1px solid ${SAFFRON}44; }
   .card-lang-badge.fallback  { background: #fff3; color: #ffffffcc; border: 1px solid #ffffff44; backdrop-filter: blur(4px); }
   .card-num-pill {
     position: absolute; top: 12px; left: 12px;
@@ -75,33 +69,42 @@ const styles = `
   }
   .card-body  { padding: 18px 20px 20px; text-align: left; }
   .card-title { font-family: 'Alumni Sans', sans-serif; font-size: 1.375rem; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
-  .card-desc  { font-size: 0.875rem; color: #666; line-height: 1.6; margin-bottom: 12px; }
+  .card-desc  { font-size: 0.875rem; color: #374151; line-height: 1.6; margin-bottom: 12px; }
   .card-stats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
   .card-stat  {
     display: inline-flex; align-items: center; gap: 4px;
-    background: #F7F3EC; border: 1px solid #E8D5B0;
+    background: rgba(255,142,0,0.08); border: 1px solid rgba(255,142,0,0.20);
     border-radius: 999px; padding: 4px 10px;
-    font-size: 0.75rem; font-weight: 600; color: #888;
+    font-size: 0.75rem; font-weight: 600; color: ${SAFFRON};
   }
-  .card-cta {
-    display: inline-flex; align-items: center; gap: 6px;
-    border: 1.5px solid ${SAFFRON}; color: ${SAFFRON}; border-radius: 999px;
-    padding: 6px 18px; font-family: 'Alumni Sans', sans-serif; font-size: 0.9375rem;
-    font-weight: 700; cursor: pointer; background: transparent; transition: background 0.2s, color 0.2s;
+
+  .card-bm-btn {
+    position: absolute; top: 10px; right: 10px; z-index: 2;
+    background: rgba(255,255,255,0.92); border: none; cursor: pointer;
+    width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #9CA3AF; transition: color 0.15s, transform 0.15s, background 0.15s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
   }
-  .card-cta:hover { background: ${SAFFRON}; color: white; }
+  .card-bm-btn:hover { color: #FF8E00; transform: scale(1.12); }
+  .card-bm-btn.saved { color: #FF8E00; background: white; }
   @media (max-width: 768px) {
     .courses-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; justify-content: start; }
     .hero { padding: 40px 1rem 32px; }
-    .courses-section { padding: 0 1rem 60px; }
+
+  }
+  @media (max-width: 600px) {
+    .courses-grid { grid-template-columns: 1fr; gap: 14px; }
+    .card-body { padding: 16px; }
+    .card-cta { width: 100%; justify-content: center; }
   }
   @media (max-width: 480px) {
-    .courses-grid { grid-template-columns: 1fr; }
     .card-image { height: 160px; }
+    .card-title { font-size: 1.25rem; }
   }
 `;
 
-export default function HomePage({ settings, onCourseClick, onOpenSettings, onDashboard, onLikes }) {
+export default function HomePage({ settings, onCourseClick, onOpenSettings, onDashboard, onLikes, onBookmarks, onDiscover, onResume, bookmarks = new Set(), onToggleBookmark, isAdmin, onAdmin, userEditorialRole, onEditor, activePage, onSaveSettings, languages = [] }) {
   const [courses, setCourses]       = useState([]);
   const [assets, setAssets]         = useState({});
   const [siteSettings, setSiteSettings] = useState({});
@@ -145,11 +148,21 @@ export default function HomePage({ settings, onCourseClick, onOpenSettings, onDa
       <PageHeader
         onHome={() => {}}
         onOpenSettings={onOpenSettings}
+        onResume={onResume}
+        isAdmin={isAdmin}
+        onAdmin={onAdmin}
+        userEditorialRole={userEditorialRole}
+        onEditor={onEditor}
+        activePage={activePage}
+        settings={settings}
+        onSaveSettings={onSaveSettings}
+        languages={languages}
         navLinks={[
-          { label: "Courses",   onClick: () => {} },
-          { label: "Discover",  onClick: () => {} },
+          { label: "Home",      onClick: () => {} },
+          { label: "Discover",  onClick: onDiscover },
           { label: "Dashboard", onClick: onDashboard },
-          { label: "Likes",     onClick: onLikes },
+          { label: "Likes",      onClick: onLikes },
+          { label: "Bookmarks", onClick: onBookmarks },
         ]}
       />
 
@@ -161,9 +174,9 @@ export default function HomePage({ settings, onCourseClick, onOpenSettings, onDa
         <p className="subtitle">{subtitle}</p>
       </section>
 
-      <section className="courses-section">
+      <section className="page-wrap">
         <h2 className="section-heading">Choose Your Course</h2>
-        {loading ? <div className="loading">Loading courses…</div> : (
+        {loading ? <SkeletonCourseGrid count={3} /> : (
           <div className="courses-grid">
             {courses.map((course, i) => {
               const asset   = assets[course.asset_id];
@@ -181,6 +194,16 @@ export default function HomePage({ settings, onCourseClick, onOpenSettings, onDa
                         onError={e => { e.target.src = logoUrl; }} />
                     )}
                     <div className="card-image-overlay" />
+                    <button
+                      className={"card-bm-btn" + (bookmarks.has("course:" + course.course_id) ? " saved" : "")}
+                      title={bookmarks.has("course:" + course.course_id) ? "Remove bookmark" : "Bookmark course"}
+                      onClick={e => { e.stopPropagation(); onToggleBookmark && onToggleBookmark("course", course.course_id, course.course_name); }}
+                    >
+                      {bookmarks.has("course:" + course.course_id)
+                        ? <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                        : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                      }
+                    </button>
                     <div className="card-num-pill">Course {course.course_number}</div>
                     {!isEnglish && (
                       <div className={`card-lang-badge ${hasLang ? "available" : "fallback"}`}>
@@ -196,7 +219,7 @@ export default function HomePage({ settings, onCourseClick, onOpenSettings, onDa
                       <span className="card-stat">🌐 In {course.language_count ?? '—'} languages</span>
                       <span className="card-stat">👥 {(learnersByCourse.get(course.course_id) ?? '—').toLocaleString()} learners</span>
                     </div>
-                    <button className="card-cta" onClick={e => { e.stopPropagation(); onCourseClick(course); }}>
+                    <button className="btn-primary btn-saffron" onClick={e => { e.stopPropagation(); onCourseClick(course); }}>
                       Explore →
                     </button>
                   </div>
