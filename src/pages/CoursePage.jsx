@@ -12,7 +12,7 @@ const styles = `
   }
   .level-tab {
     display: flex; flex-direction: column; align-items: flex-start;
-    padding: 14px 24px; border-radius: 16px; border: 2px solid rgba(0,0,0,0.08);
+    padding: 14px 24px; border-radius: 14px; border: 2px solid rgba(0,0,0,0.08);
     background: white; cursor: pointer; transition: all 0.2s; min-width: 170px;
   }
   .level-tab:hover { border-color: ${SAFFRON}; transform: translateY(-2px); }
@@ -27,30 +27,30 @@ const styles = `
     transform: none !important; box-shadow: none !important;
   }
   .theme-lock-badge {
-    flex-shrink: 0; font-size: 0.8125rem; color: #9CA3AF; white-space: nowrap;
+    flex-shrink: 0; font-size: 0.8125rem; color: #6B6B6B; white-space: nowrap;
   }
   .bm-btn {
     flex-shrink: 0; background: none; border: none; cursor: pointer;
     font-size: 1.125rem; line-height: 1; padding: 4px 6px; border-radius: 8px;
-    color: #9CA3AF; transition: color 0.15s, transform 0.15s;
+    color: #6B6B6B; transition: color 0.15s, transform 0.15s;
   }
   .bm-btn:hover { color: #FF8E00; transform: scale(1.15); }
   .bm-btn.saved { color: #FF8E00; }
   .level-tab.complete { border-color: ${GREEN}55 !important; background: #F0FBF5; }
   .level-tab-name    { font-family: 'Alumni Sans', sans-serif; font-size: 1.25rem; font-weight: 700; line-height: 1; }
-  .level-tab-classes { font-size: 0.8125rem; color: #6B7280; margin-top: 4px; }
+  .level-tab-classes { font-size: 0.8125rem; color: #6B6B6B; margin-top: 4px; }
   .level-tab-count   {
     font-size: 0.75rem; font-weight: 600; margin-top: 8px;
-    padding: 2px 10px; border-radius: 999px; background: #f5f5f5; color: #374151;
+    padding: 2px 10px; border-radius: 999px; background: #f5f5f5; color: #1F1F1F;
   }
   .level-tab.active .level-tab-count { color: white; }
-  .level-tab:not(.active):hover .level-tab-count { background: #EBEBEA; color: #374151; }
+  .level-tab:not(.active):hover .level-tab-count { background: #EBEBEA; color: #1F1F1F; }
 
   .content { max-width: 720px; margin: 0 auto; padding: 0 1.5rem 80px; }
 
   .theme-row {
     display: flex; align-items: center; gap: 16px;
-    background: white; border-radius: 14px; border: 1px solid rgba(0,0,0,0.08);
+    background: white; border-radius: 14px; border: 1px solid rgba(0,0,0,0.07);
     padding: 16px 20px; margin-bottom: 12px; cursor: pointer;
     transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
     animation: fadeUp 0.35s ease both; box-shadow: 0 2px 10px rgba(255,142,0,0.05);
@@ -69,12 +69,12 @@ const styles = `
   .theme-row-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; }
 
   .theme-row-info { flex: 1; min-width: 0; }
-  .theme-row-title { font-family: 'Alumni Sans', sans-serif; font-size: 1.25rem; font-weight: 700; color: #1a1a2e; line-height: 1.2; margin-bottom: 4px; }
-  .theme-row-desc  { font-size: 0.8125rem; color: #6B7280; line-height: 1.4; margin-bottom: 6px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .theme-row-title { font-family: 'Alumni Sans', sans-serif; font-size: 1.25rem; font-weight: 700; color: #0A0A0A; line-height: 1.2; margin-bottom: 4px; }
+  .theme-row-desc  { font-size: 0.8125rem; color: #6B6B6B; line-height: 1.4; margin-bottom: 6px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 
   .theme-row-progress { height: 4px; background: rgba(0,0,0,0.06); border-radius: 2px; margin-bottom: 4px; overflow: hidden; }
   .theme-row-progress-fill { height: 100%; border-radius: 2px; }
-  .theme-row-count { font-size: 0.75rem; color: #9CA3AF; font-weight: 600; }
+  .theme-row-count { font-size: 0.75rem; color: #6B6B6B; font-weight: 600; }
 
   .theme-row-cta {
     flex-shrink: 0; border-radius: 8px; padding: 7px 16px;

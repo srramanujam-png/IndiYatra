@@ -30,16 +30,16 @@ const styles = `
     font-family: 'Alumni Sans', sans-serif; font-size: 2rem; font-weight: 800;
     color: ${HERITAGE}; margin-bottom: 6px;
   }
-  .bmp-hero p { color: #374151; font-size: 0.9375rem; }
+  .bmp-hero p { color: #1F1F1F; font-size: 0.9375rem; }
 
   .bmp-filters {
     max-width: 1100px; margin: 0 auto; padding: 20px 1.5rem 0;
     display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
   }
-  .bmp-filter-label { font-size: 0.8125rem; font-weight: 600; color: #9CA3AF; }
+  .bmp-filter-label { font-size: 0.8125rem; font-weight: 600; color: #6B6B6B; }
   .bmp-filter-select {
     padding: 6px 12px; border-radius: 999px; border: 1.5px solid rgba(0,0,0,0.10);
-    background: white; font-size: 0.8125rem; font-weight: 600; color: #374151;
+    background: white; font-size: 0.8125rem; font-weight: 600; color: #1F1F1F;
     cursor: pointer; outline: none; appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23aaa'/%3E%3C/svg%3E");
     background-repeat: no-repeat; background-position: right 10px center;
@@ -48,7 +48,7 @@ const styles = `
   .bmp-filter-select:focus { border-color: ${SAFFRON}; }
   .bmp-clear  { font-size: 0.8125rem; color: ${SAFFRON}; cursor: pointer; font-weight: 600; margin-left: 4px; }
   .bmp-clear:hover { text-decoration: underline; }
-  .bmp-count  { font-size: 0.8125rem; color: #9CA3AF; margin-left: auto; }
+  .bmp-count  { font-size: 0.8125rem; color: #6B6B6B; margin-left: auto; }
 
   .bmp-list {
     max-width: 1100px; margin: 0 auto; padding: 24px 1.5rem 80px;
@@ -57,7 +57,7 @@ const styles = `
 
   .bmp-card { cursor: pointer; }
   .bmp-card {
-    background: white; border-radius: 16px; border: 1px solid rgba(0,0,0,0.08);
+    background: white; border-radius: 14px; border: 1px solid rgba(0,0,0,0.07);
     box-shadow: 0 2px 10px rgba(0,0,0,0.06);
     display: flex; align-items: center; gap: 0;
     overflow: hidden; animation: fadeUp 0.35s ease both;
@@ -70,11 +70,11 @@ const styles = `
   .bmp-card-body { flex: 1; min-width: 0; padding: 14px 0; }
   .bmp-card-name {
     font-family: 'Alumni Sans', sans-serif; font-size: 1.125rem; font-weight: 700;
-    color: #111827; line-height: 1.2; margin-bottom: 4px;
+    color: #0A0A0A; line-height: 1.2; margin-bottom: 4px;
   }
-  .bmp-card-breadcrumb { font-size: 0.75rem; color: #9CA3AF; line-height: 1.5; }
+  .bmp-card-breadcrumb { font-size: 0.75rem; color: #6B6B6B; line-height: 1.5; }
   .bmp-card-breadcrumb span { color: ${HERITAGE}; font-weight: 600; }
-  .bmp-card-meta { font-size: 0.6875rem; color: #9CA3AF; margin-top: 4px; }
+  .bmp-card-meta { font-size: 0.6875rem; color: #6B6B6B; margin-top: 4px; }
 
   .bmp-card-right { display: flex; align-items: center; gap: 8px; padding: 0 16px; flex-shrink: 0; }
   .bmp-type-badge {
@@ -83,7 +83,7 @@ const styles = `
   }
   .bmp-remove-btn {
     background: none; border: none; cursor: pointer; font-size: 1rem;
-    color: #9CA3AF; padding: 8px; border-radius: 8px;
+    color: #6B6B6B; padding: 8px; border-radius: 8px;
     transition: color 0.15s, background 0.15s;
     line-height: 1; min-width: 36px; min-height: 36px;
     display: flex; align-items: center; justify-content: center;
@@ -91,11 +91,11 @@ const styles = `
   .bmp-remove-btn:hover { color: #e05252; background: #e0525210; }
 
   .bmp-empty {
-    text-align: center; padding: 80px 24px; color: #9CA3AF;
+    text-align: center; padding: 80px 24px; color: #6B6B6B;
     max-width: 400px; margin: 0 auto;
   }
   .bmp-empty .empty-icon { font-size: 3rem; margin-bottom: 16px; }
-  .bmp-empty h3 { font-family: 'Alumni Sans', sans-serif; font-size: 1.375rem; color: #6B7280; margin-bottom: 8px; }
+  .bmp-empty h3 { font-family: 'Alumni Sans', sans-serif; font-size: 1.375rem; color: #6B6B6B; margin-bottom: 8px; }
   .bmp-empty p  { font-size: 0.9375rem; line-height: 1.6; }
 
   .bmp-signin {
@@ -103,7 +103,7 @@ const styles = `
   }
   .bmp-signin .empty-icon { font-size: 3rem; margin-bottom: 16px; }
   .bmp-signin h3 { font-family: 'Alumni Sans', sans-serif; font-size: 1.375rem; color: ${HERITAGE}; margin-bottom: 8px; }
-  .bmp-signin p  { font-size: 0.9375rem; color: #374151; margin-bottom: 24px; }
+  .bmp-signin p  { font-size: 0.9375rem; color: #1F1F1F; margin-bottom: 24px; }
   .bmp-signin-btn {
     display: inline-flex; align-items: center; justify-content: center;
     padding: 12px 28px; border-radius: 10px; min-height: 44px;

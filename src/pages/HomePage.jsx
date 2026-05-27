@@ -11,8 +11,8 @@ const styles = `
   }
   .tagline-pill {
     display: inline-flex; align-items: center; gap: 8px;
-    background: rgba(255,142,0,0.10);
-    border: 1px solid ${SAFFRON}44; border-radius: 999px;
+    background: white;
+    border: 1px solid ${SAFFRON}; border-radius: 999px;
     padding: 6px 20px; font-size: 0.875rem; font-weight: 600;
     color: #b86000; letter-spacing: 0.05em; text-transform: uppercase;
     margin-bottom: 20px; animation: fadeUp 0.6s ease both;
@@ -26,17 +26,15 @@ const styles = `
   .wordmark .indi  { color: ${SAFFRON}; }
   .wordmark .yatra { color: ${HERITAGE}; }
   .subtitle {
-    font-size: 1.125rem; font-style: italic; color: #374151;
+    font-size: 1.125rem; font-style: italic; color: #1F1F1F;
     margin-bottom: 40px; animation: fadeUp 0.6s 0.2s ease both;
   }
   .section-heading {
     font-family: 'Alumni Sans', sans-serif; font-size: 1.75rem; font-weight: 700;
-    color: #1a1a2e; margin-bottom: 32px;
+    color: #0A0A0A; margin-bottom: 32px;
     display: flex; align-items: center; gap: 12px;
-  }
-  .section-heading::before {
-    content: ''; display: inline-block; width: 4px; height: 24px;
-    background: ${SAFFRON}; border-radius: 2px; flex-shrink: 0;
+  padding-bottom: 4px; border-bottom: 2px solid ${SAFFRON}; align-self: flex-start; }
+  .section-heading::before { content: none; }; border-radius: 2px; flex-shrink: 0;
   }
   .courses-grid {
     display: grid;
@@ -44,17 +42,17 @@ const styles = `
     gap: 24px;
   }
   .course-card {
-    background: white; border-radius: 18px; overflow: hidden;
-    border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 2px 14px rgba(0,0,0,0.07);
+    background: white; border-radius: 14px; overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.07); box-shadow: 0 2px 14px rgba(0,0,0,0.07);
     transition: transform 0.25s ease, box-shadow 0.25s ease;
     animation: fadeUp 0.6s ease both; cursor: pointer;
     width: 100%;
   }
-  .course-card:hover { transform: translateY(-5px); box-shadow: 0 10px 32px rgba(0,0,0,0.13); }
+  .course-card:hover { transform: translateY(-5px); box-shadow: none; }
   .card-image { position: relative; height: 200px; overflow: hidden; }
   .card-image img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; transition: transform 0.4s; }
   .course-card:hover .card-image img { transform: scale(1.05); }
-  .card-image-overlay { position:absolute; inset:0; background: linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.72) 100%); }
+  .card-image-overlay { position:absolute; inset:0; background: linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.45) 100%); }
   .card-lang-badge {
     position: absolute; top: 12px; right: 12px;
     border-radius: 999px; padding: 3px 10px;
@@ -68,12 +66,12 @@ const styles = `
     padding: 4px 14px; font-family: 'Alumni Sans', sans-serif; font-size: 0.875rem; font-weight: 700;
   }
   .card-body  { padding: 18px 20px 20px; text-align: left; }
-  .card-title { font-family: 'Alumni Sans', sans-serif; font-size: 1.375rem; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
-  .card-desc  { font-size: 0.875rem; color: #374151; line-height: 1.6; margin-bottom: 12px; }
+  .card-title { font-family: 'Alumni Sans', sans-serif; font-size: 1.375rem; font-weight: 700; color: #0A0A0A; margin-bottom: 6px; }
+  .card-desc  { font-size: 0.875rem; color: #1F1F1F; line-height: 1.6; margin-bottom: 12px; }
   .card-stats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
   .card-stat  {
     display: inline-flex; align-items: center; gap: 4px;
-    background: rgba(255,142,0,0.08); border: 1px solid rgba(255,142,0,0.20);
+    background: white; border: 1px solid rgba(0,0,0,0.07);
     border-radius: 999px; padding: 4px 10px;
     font-size: 0.75rem; font-weight: 600; color: ${SAFFRON};
   }
@@ -83,8 +81,8 @@ const styles = `
     background: rgba(255,255,255,0.92); border: none; cursor: pointer;
     width: 34px; height: 34px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    color: #9CA3AF; transition: color 0.15s, transform 0.15s, background 0.15s;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    color: #6B6B6B; transition: color 0.15s, transform 0.15s, background 0.15s;
+    box-shadow: none;
   }
   .card-bm-btn:hover { color: #FF8E00; transform: scale(1.12); }
   .card-bm-btn.saved { color: #FF8E00; background: white; }

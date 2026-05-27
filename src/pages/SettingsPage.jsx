@@ -12,8 +12,8 @@ const styles = `
     max-width: 640px; margin: 0 auto; padding: 28px 1.5rem 80px;
   }
   .settings-card {
-    background: white; border-radius: 18px; padding: 22px;
-    margin-bottom: 24px; box-shadow: 0 2px 14px rgba(0,0,0,0.06);
+    background: white; border-radius: 14px; padding: 22px;
+    margin-bottom: 24px; box-shadow: none;
     border: 1px solid #EAD9BE;
   }
   .settings-card-label {
@@ -26,7 +26,7 @@ const styles = `
   .settings-input {
     width: 100%; border: 1.5px solid #e8d5b0; border-radius: 10px;
     padding: 10px 14px; font-family: 'Source Sans 3', sans-serif; font-size: 1rem;
-    color: #1a1a2e; outline: none; transition: border-color 0.2s; background: white;
+    color: #0A0A0A; outline: none; transition: border-color 0.2s; background: white;
     box-sizing: border-box;
   }
   .settings-input:focus { border-color: ${SAFFRON}; }
@@ -34,7 +34,7 @@ const styles = `
   .settings-textarea {
     width: 100%; border: 1.5px solid #e8d5b0; border-radius: 10px;
     padding: 10px 14px; font-family: 'Source Sans 3', sans-serif; font-size: 0.9375rem;
-    color: #1a1a2e; outline: none; transition: border-color 0.2s; background: white;
+    color: #0A0A0A; outline: none; transition: border-color 0.2s; background: white;
     resize: vertical; min-height: 80px; line-height: 1.5; box-sizing: border-box;
   }
   .settings-textarea:focus { border-color: ${SAFFRON}; }

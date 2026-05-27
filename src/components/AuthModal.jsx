@@ -28,7 +28,7 @@ const styles = `
   .auth-close {
     position: absolute; top: 16px; right: 16px;
     background: none; border: none; cursor: pointer;
-    font-size: 20px; color: #888; line-height: 1;
+    font-size: 20px; color: #6B6B6B; line-height: 1;
     width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
     border-radius: 50%; transition: background 0.15s;
   }
@@ -39,7 +39,7 @@ const styles = `
     margin-bottom: 4px; text-align: center;
   }
   .auth-subtitle {
-    font-size: 14px; color: #888; text-align: center; margin-bottom: 28px;
+    font-size: 14px; color: #6B6B6B; text-align: center; margin-bottom: 28px;
   }
   .auth-social-btn {
     width: 100%; padding: 12px 16px; border-radius: 10px;
@@ -83,7 +83,7 @@ const styles = `
     width: 100%; padding: 11px 16px; border-radius: 10px;
     border: 1.5px solid #e0e0e0; background: transparent; cursor: pointer;
     display: flex; align-items: center; justify-content: center; gap: 8px;
-    font-size: 14px; font-weight: 600; color: #888;
+    font-size: 14px; font-weight: 600; color: #6B6B6B;
     margin-top: 14px; transition: border-color 0.15s, color 0.15s;
   }
   .auth-guest-btn:hover { border-color: #bbb; color: #555; }

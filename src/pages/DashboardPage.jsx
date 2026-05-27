@@ -14,9 +14,9 @@ const styles = `
 
   /* ── Welcome Hero Band ── */
   .dash-hero {
-    background: white; border: 1px solid rgba(0,0,0,0.08); border-radius: 18px;
+    background: white; border: 1px solid rgba(0,0,0,0.07); border-radius: 14px;
     padding: 24px 20px; margin-bottom: 24px;
-    box-shadow: 0 2px 14px rgba(0,0,0,0.06);
+    box-shadow: none;
   }
 
   /* ── Course chip ── */
@@ -28,12 +28,12 @@ const styles = `
 
   /* ── Welcome title ── */
   .dash-subtitle {
-    font-size: 0.9375rem; color: #6B7280; margin-top: 2px; margin-bottom: 0;
+    font-size: 0.9375rem; color: #6B6B6B; margin-top: 2px; margin-bottom: 0;
     font-family: 'Source Sans 3', sans-serif; font-weight: 400;
   }
   .dash-title {
     font-family: 'Alumni Sans', sans-serif; font-size: 2.125rem; font-weight: 800;
-    color: #111827; margin-bottom: 18px; line-height: 1.1;
+    color: #0A0A0A; margin-bottom: 18px; line-height: 1.1;
   }
 
   /* ── Scope pill (Option C) ── */
@@ -44,7 +44,7 @@ const styles = `
     display: inline-flex; align-items: center; gap: 7px;
     padding: 7px 14px; border-radius: 10px; cursor: pointer;
     font-size: 0.8125rem; font-weight: 600; white-space: nowrap;
-    color: #374151; background: white;
+    color: #1F1F1F; background: white;
     border: 1.5px solid rgba(0,0,0,0.10);
     transition: border-color 0.2s, color 0.2s, background 0.2s;
     min-height: 36px;
@@ -53,17 +53,17 @@ const styles = `
     border-color: ${SAFFRON}; color: ${SAFFRON}; background: ${SAFFRON}08;
   }
   .dash-scope-pill-icon { font-size: 1rem; line-height: 1; }
-  .dash-scope-pill-chevron { font-size: 0.6875rem; color: #9CA3AF; margin-left: 2px; }
+  .dash-scope-pill-chevron { font-size: 0.6875rem; color: #6B6B6B; margin-left: 2px; }
   .dash-scope-pill.open .dash-scope-pill-chevron { color: ${SAFFRON}; }
   .dash-dropdown-backdrop { position: fixed; inset: 0; z-index: 199; }
   .dash-dropdown {
     position: absolute; top: calc(100% + 6px); left: 0; z-index: 200;
-    background: white; border: 1px solid rgba(0,0,0,0.08); border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12); min-width: 160px;
+    background: white; border: 1px solid rgba(0,0,0,0.07); border-radius: 12px;
+    box-shadow: none; min-width: 160px;
     overflow: hidden; padding: 4px 0;
   }
   .dash-dropdown-item {
-    padding: 11px 16px; font-size: 0.875rem; color: #374151; cursor: pointer;
+    padding: 11px 16px; font-size: 0.875rem; color: #1F1F1F; cursor: pointer;
     transition: background 0.15s; display: flex; align-items: center; gap: 8px;
     min-height: 44px;
   }
@@ -76,57 +76,57 @@ const styles = `
     gap: 12px; margin-bottom: 24px;
   }
   .stat-card {
-    background: white; border-radius: 16px; border: 1px solid rgba(0,0,0,0.08);
+    background: white; border-radius: 14px; border: 1px solid rgba(0,0,0,0.07);
     padding: 18px 14px; position: relative; overflow: hidden;
     transition: transform 0.18s, box-shadow 0.18s;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    box-shadow: none;
   }
-  .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.09); }
+  .stat-card:hover { box-shadow: none; border-color: rgba(0,0,0,0.12); }
   .stat-ghost { background: transparent; border: 1px dashed rgba(0,0,0,0.06) !important; box-shadow: none !important; pointer-events: none; }
   .stat-ghost:hover { transform: none !important; box-shadow: none !important; }
-  .stat-card-accent { position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+  .stat-card-accent { display: none; }
   .stat-icon { font-size: 1.375rem; margin-bottom: 10px; line-height: 1; }
   .stat-label {
     font-size: 0.625rem; font-weight: 700; letter-spacing: 0.07em;
-    text-transform: uppercase; color: #9CA3AF; margin-bottom: 5px;
+    text-transform: uppercase; color: #6B6B6B; margin-bottom: 5px;
   }
   .stat-value {
     font-family: 'Alumni Sans', sans-serif; font-size: 1.75rem;
     font-weight: 800; line-height: 1; margin-bottom: 4px;
   }
-  .stat-sub  { font-size: 0.6875rem; color: #9CA3AF; line-height: 1.3; }
+  .stat-sub  { font-size: 0.6875rem; color: #6B6B6B; line-height: 1.3; }
   .stat-link { font-size: 0.6875rem; color: ${HERITAGE}; cursor: pointer; }
   .stat-link:hover { text-decoration: underline; }
 
   /* ── Section card ── */
   .dash-section {
-    background: white; border-radius: 18px; border: 1px solid rgba(0,0,0,0.08);
+    background: white; border-radius: 14px; border: 1px solid rgba(0,0,0,0.07);
     padding: 22px 22px; margin-bottom: 24px;
-    box-shadow: 0 2px 14px rgba(0,0,0,0.06);
+    box-shadow: none;
   }
   .dash-section-head {
     display: flex; align-items: center; justify-content: space-between;
     margin-bottom: 18px;
   }
-  .dash-section-meta { font-size: 0.75rem; color: #9CA3AF; font-weight: 600; }
+  .dash-section-meta { font-size: 0.75rem; color: #6B6B6B; font-weight: 600; }
 
   /* ── Streak heatmap ── */
   .streak-grid { display: flex; gap: 3px; flex-wrap: wrap; }
   .streak-cell { width: 13px; height: 13px; border-radius: 3px; flex-shrink: 0; }
   .streak-legend {
     display: flex; align-items: center; gap: 6px;
-    margin-top: 10px; font-size: 0.6875rem; color: #9CA3AF;
+    margin-top: 10px; font-size: 0.6875rem; color: #6B6B6B;
   }
   .streak-legend-cell { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
-  .streak-summary { font-size: 0.875rem; color: #374151; margin-top: 10px; }
-  .streak-summary strong { color: #111827; }
+  .streak-summary { font-size: 0.875rem; color: #1F1F1F; margin-top: 10px; }
+  .streak-summary strong { color: #0A0A0A; }
 
   /* ── Course progress table ── */
   .prog-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .prog-table { width: 100%; border-collapse: collapse; }
   .prog-table th {
     font-size: 0.6875rem; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.06em; color: #9CA3AF; padding: 0 0 10px; text-align: left;
+    letter-spacing: 0.06em; color: #6B6B6B; padding: 0 0 10px; text-align: left;
   }
   .prog-table th:not(:first-child) { text-align: center; }
   .prog-table td { padding: 12px 0; border-top: 1px solid rgba(0,0,0,0.07); vertical-align: middle; }
@@ -135,32 +135,32 @@ const styles = `
   .prog-bar { height: 6px; width: 80px; background: rgba(0,0,0,0.06); border-radius: 3px; overflow: hidden; flex-shrink: 0; }
   .prog-bar-fill { height: 100%; border-radius: 3px; }
   .prog-pct { font-size: 0.6875rem; font-weight: 700; min-width: 28px; text-align: right; }
-  .prog-counts { font-size: 0.625rem; color: #9CA3AF; text-align: right; }
+  .prog-counts { font-size: 0.625rem; color: #6B6B6B; text-align: right; }
 
   /* ── Activity table ── */
   .act-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .act-table { width: 100%; border-collapse: collapse; }
   .act-table th {
     font-size: 0.6875rem; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.06em; color: #9CA3AF; padding: 0 0 10px;
+    letter-spacing: 0.06em; color: #6B6B6B; padding: 0 0 10px;
     text-align: right;
   }
   .act-table th:first-child { text-align: left; }
   .act-table td {
     padding: 11px 0; border-top: 1px solid rgba(0,0,0,0.07);
-    font-size: 0.875rem; text-align: right; color: #374151;
+    font-size: 0.875rem; text-align: right; color: #1F1F1F;
   }
   .act-table td:first-child { text-align: left; }
-  .act-day   { font-weight: 700; color: #111827; font-size: 0.9375rem; }
+  .act-day   { font-weight: 700; color: #0A0A0A; font-size: 0.9375rem; }
   .act-today { color: ${SAFFRON}; }
-  .act-date  { font-size: 0.75rem; color: #9CA3AF; margin-left: 5px; }
-  .act-total td { font-weight: 700; color: #111827; border-top: 2px solid rgba(0,0,0,0.12) !important; }
+  .act-date  { font-size: 0.75rem; color: #6B6B6B; margin-left: 5px; }
+  .act-total td { font-weight: 700; color: #0A0A0A; border-top: 2px solid rgba(0,0,0,0.12) !important; }
   .act-nonzero { font-weight: 700; color: ${HERITAGE} !important; }
 
   /* ── Badges ── */
   .badge-level-label {
     font-size: 0.625rem; font-weight: 700; letter-spacing: 0.08em;
-    text-transform: uppercase; color: #9CA3AF; margin-bottom: 10px;
+    text-transform: uppercase; color: #6B6B6B; margin-bottom: 10px;
   }
   .badge-theme-group { margin-bottom: 16px; }
   .badge-theme-label {
@@ -175,48 +175,49 @@ const styles = `
     font-size: 1.0625rem; transition: transform 0.18s; cursor: default;
   }
   .badge-circle.earned {
-    border: 2px solid ${SAFFRON}; background: ${SAFFRON}14;
+    border: 2px solid ${SAFFRON}; background: white;
   }
   .badge-circle.earned:hover { transform: scale(1.12); }
   .badge-circle.locked {
     border: 2px solid rgba(0,0,0,0.08); background: white; opacity: 0.4;
   }
-  .badge-name { font-size: 0.5625rem; color: #9CA3AF; text-align: center; line-height: 1.3; }
+  .badge-name { font-size: 0.5625rem; color: #6B6B6B; text-align: center; line-height: 1.3; }
 
   /* ── Share card ── */
   .share-inner { display: flex; gap: 24px; align-items: flex-start; }
   .share-preview {
     flex: 1; min-width: 0;
-    background: linear-gradient(135deg, ${SAFFRON}10, ${HERITAGE}08);
-    border: 1.5px dashed ${SAFFRON}44; border-radius: 14px; padding: 18px 22px;
+    background: white;
+    border: 1px solid rgba(0,0,0,0.07); border-radius: 14px; padding: 18px 22px;
   }
   .share-preview-logo {
     font-family: 'Alumni Sans', sans-serif; font-size: 1.125rem; font-weight: 800;
-    color: ${HERITAGE}; margin-bottom: 14px;
+    color: ${GREEN}; margin-bottom: 14px;
   }
   .share-stat-row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 12px; }
   .share-stat { text-align: center; }
   .share-stat-val {
     font-family: 'Alumni Sans', sans-serif; font-size: 1.625rem;
-    font-weight: 800; line-height: 1;
+    font-weight: 800; line-height: 1; color: ${GREEN};
   }
-  .share-stat-lbl { font-size: 0.625rem; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
-  .share-footer-txt { font-size: 0.6875rem; color: #9CA3AF; margin-top: 4px; }
-  .share-actions { display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; min-width: 140px; }
+  .share-stat-lbl { font-size: 0.625rem; color: #6B6B6B; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+  .share-footer-txt { font-size: 0.6875rem; color: #6B6B6B; margin-top: 4px; }
+  .share-actions { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; align-items: center; }
+  .share-btn-row { display: flex; gap: 10px; align-items: center; }
   .share-btn {
-    display: flex; align-items: center; justify-content: center; gap: 7px;
-    border-radius: 10px; padding: 11px 18px; min-height: 44px;
-    font-family: 'Alumni Sans', sans-serif; font-size: 0.875rem; font-weight: 700;
-    cursor: not-allowed; opacity: 0.45; white-space: nowrap;
-    border: 1.5px solid; background: transparent; transition: opacity 0.2s;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px; min-height: 44px; min-width: 44px;
+    border-radius: 50%; padding: 0;
+    font-size: 1.25rem; line-height: 1;
+    cursor: not-allowed; opacity: 0.45;
+    border: 1.5px solid ${GREEN}; color: ${GREEN};
+    background: white; transition: opacity 0.2s, background 0.2s, color 0.2s;
   }
+  .share-btn .ti { font-size: 1.25rem; line-height: 1; }
   .share-btn.active { cursor: pointer; opacity: 1; }
-  .share-btn.active:hover { opacity: 0.82; }
-  .share-btn-wa   { border-color: #25D366; color: #25D366; }
-  .share-btn-tw   { border-color: #1DA1F2; color: #1DA1F2; }
-  .share-btn-copy { border-color: ${HERITAGE}; color: ${HERITAGE}; }
-  .share-btn-copy.copied { border-color: ${GREEN}; color: ${GREEN}; }
-  .share-coming { font-size: 0.625rem; color: #9CA3AF; text-align: center; font-style: italic; margin-top: 2px; }
+  .share-btn.active:hover { background: ${GREEN}; color: white; }
+  .share-btn.copied { background: ${GREEN}; color: white; }
+  .share-coming { font-size: 0.6875rem; color: #6B6B6B; text-align: center; font-style: italic; margin-top: 2px; }
 
   /* ── Share settings panel ── */
   .share-settings {
@@ -224,13 +225,13 @@ const styles = `
     padding: 14px 16px; margin-bottom: 16px;
   }
   .share-settings-label {
-    font-size: 0.6875rem; font-weight: 700; color: #9CA3AF;
+    font-size: 0.6875rem; font-weight: 700; color: #6B6B6B;
     text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px;
   }
   .share-textarea {
     width: 100%; min-height: 68px; border: 1px solid rgba(0,0,0,0.10); border-radius: 8px;
     padding: 9px 12px; font-family: 'Source Sans 3', sans-serif; font-size: 0.875rem;
-    color: #374151; background: white; resize: vertical; line-height: 1.5;
+    color: #1F1F1F; background: white; resize: vertical; line-height: 1.5;
     box-sizing: border-box;
   }
   .share-textarea:focus { outline: none; border-color: ${SAFFRON}; }
@@ -248,17 +249,17 @@ const styles = `
   }
   .share-save-btn:hover { opacity: 0.9; }
   .share-reset-btn {
-    background: transparent; color: #9CA3AF; border: 1px solid rgba(0,0,0,0.10);
+    background: transparent; color: #6B6B6B; border: 1px solid rgba(0,0,0,0.10);
     border-radius: 999px; padding: 6px 14px; font-size: 0.8125rem; cursor: pointer;
   }
-  .share-reset-btn:hover { color: #374151; border-color: rgba(0,0,0,0.20); }
+  .share-reset-btn:hover { color: #1F1F1F; border-color: rgba(0,0,0,0.20); }
   .share-gear {
     background: none; border: none; cursor: pointer; font-size: 0.9375rem;
-    color: #9CA3AF; padding: 2px 4px; border-radius: 6px; transition: color 0.2s; line-height: 1;
+    color: #6B6B6B; padding: 2px 4px; border-radius: 6px; transition: color 0.2s; line-height: 1;
   }
   .share-gear:hover, .share-gear.open { color: ${SAFFRON}; }
   .share-msg-text {
-    font-size: 0.8125rem; color: #374151; line-height: 1.5; margin-top: 4px;
+    font-size: 0.8125rem; color: #1F1F1F; line-height: 1.5; margin-top: 4px;
     font-style: italic;
   }
 
@@ -271,33 +272,33 @@ const styles = `
   }
   .forest-token {
     display: flex; flex-direction: column; align-items: center; gap: 4px;
-    background: white; border: 1px solid rgba(0,0,0,0.08); border-radius: 14px;
+    background: white; border: 1px solid rgba(0,0,0,0.07); border-radius: 14px;
     padding: 16px 8px; transition: border-color 0.2s, transform 0.18s;
   }
   .forest-token:hover { border-color: rgba(0,0,0,0.18); transform: translateY(-2px); }
   .forest-token-icon  { font-size: 1.75rem; line-height: 1; }
   .forest-token-count {
     font-family: 'Alumni Sans', sans-serif; font-size: 1.75rem;
-    font-weight: 800; color: #111827; line-height: 1;
+    font-weight: 800; color: #0A0A0A; line-height: 1;
   }
-  .forest-token-count.zero { color: #9CA3AF; }
-  .forest-token-label { font-size: 0.75rem; font-weight: 700; color: #374151; }
-  .forest-token-sub   { font-size: 0.5625rem; color: #9CA3AF; text-align: center; }
+  .forest-token-count.zero { color: #6B6B6B; }
+  .forest-token-label { font-size: 0.75rem; font-weight: 700; color: #1F1F1F; }
+  .forest-token-sub   { font-size: 0.5625rem; color: #6B6B6B; text-align: center; }
   .forest-dharma {
     display: flex; align-items: center; gap: 8px;
-    background: rgba(255,142,0,0.10); border: 1px solid rgba(255,142,0,0.30);
+    background: white; border: 1px solid ${SAFFRON};
     border-radius: 999px; padding: 6px 16px; width: fit-content;
     font-size: 0.8125rem; font-weight: 700; color: ${SAFFRON};
   }
   .forest-empty {
-    font-size: 0.8125rem; color: #9CA3AF; font-style: italic; padding: 8px 0;
+    font-size: 0.8125rem; color: #6B6B6B; font-style: italic; padding: 8px 0;
   }
 
   /* ── Badge cards ── */
   .badge-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 14px; }
   .badge-card {
     display: flex; flex-direction: column; align-items: center; gap: 6px;
-    background: white; border: 1px solid rgba(0,0,0,0.08); border-radius: 16px;
+    background: white; border: 1px solid rgba(0,0,0,0.07); border-radius: 14px;
     padding: 20px 14px;
     transition: border-color 0.2s, transform 0.18s;
   }
@@ -310,10 +311,10 @@ const styles = `
   .badge-card-icon { font-size: 2.25rem; line-height: 1; }
   .badge-card-name {
     font-family: 'Alumni Sans', sans-serif; font-size: 1rem;
-    font-weight: 700; color: #111827; text-align: center;
+    font-weight: 700; color: #0A0A0A; text-align: center;
   }
   .badge-card-desc {
-    font-size: 0.5625rem; color: #9CA3AF; text-align: center; line-height: 1.4;
+    font-size: 0.5625rem; color: #6B6B6B; text-align: center; line-height: 1.4;
   }
   .badge-card-earned-tag {
     font-size: 0.5rem; font-weight: 700; letter-spacing: 0.08em;
@@ -322,7 +323,7 @@ const styles = `
   }
   .badge-card-locked-tag {
     font-size: 0.5rem; font-weight: 700; letter-spacing: 0.08em;
-    text-transform: uppercase; color: #9CA3AF;
+    text-transform: uppercase; color: #6B6B6B;
   }
   /* ── Responsive ── */
   @media (max-width: 768px) {
@@ -360,9 +361,8 @@ const styles = `
     .forest-token { padding: 14px 6px; }
     .forest-token-icon  { font-size: 1.5rem; }
     .forest-token-count { font-size: 1.5rem; }
-    /* Share buttons full-width */
-    .share-actions { min-width: 0; width: 100%; }
-    .share-btn     { width: 100%; justify-content: center; }
+    /* Share icon buttons stay as circles, centered */
+    .share-actions { min-width: 0; width: 100%; align-items: center; }
   }
 
   /* ── Activity stacked view (≤600px) ── */
@@ -372,9 +372,9 @@ const styles = `
     padding: 10px 0; border-top: 1px solid rgba(0,0,0,0.07);
     flex-wrap: wrap; gap: 6px;
   }
-  .act-stack-day { font-weight: 700; color: #111827; font-size: 0.9375rem; }
+  .act-stack-day { font-weight: 700; color: #0A0A0A; font-size: 0.9375rem; }
   .act-stack-day.today { color: ${SAFFRON}; }
-  .act-stack-date { font-size: 0.75rem; color: #9CA3AF; margin-left: 5px; }
+  .act-stack-date { font-size: 0.75rem; color: #6B6B6B; margin-left: 5px; }
   .act-stack-pills { display: flex; gap: 6px; flex-wrap: wrap; }
   .act-pill {
     font-size: 0.75rem; font-weight: 700; border-radius: 999px;
@@ -382,12 +382,12 @@ const styles = `
   }
   .act-pill-lesson { background: rgba(0,146,74,0.10); color: #00924A; }
   .act-pill-dharma { background: rgba(255,142,0,0.10); color: ${SAFFRON}; }
-  .act-pill-none   { background: rgba(0,0,0,0.05); color: #9CA3AF; }
+  .act-pill-none   { background: rgba(0,0,0,0.05); color: #6B6B6B; }
 
   /* ── Progress stacked view (≤600px) ── */
   .prog-stack { display: none; }
   .prog-stack-row { padding: 12px 0; border-top: 1px solid rgba(0,0,0,0.07); }
-  .prog-stack-name { font-size: 0.9375rem; font-weight: 700; color: #111827; margin-bottom: 6px; }
+  .prog-stack-name { font-size: 0.9375rem; font-weight: 700; color: #0A0A0A; margin-bottom: 6px; }
   .prog-stack-bar-wrap { display: flex; align-items: center; gap: 8px; }
   .prog-stack-bar {
     flex: 1; height: 7px; background: rgba(0,0,0,0.06);
@@ -859,7 +859,7 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
 
         {/* ── Welcome Hero ── */}
         <div className="dash-hero">
-          <div className="dash-title">Welcome back, {displayName} 👋</div>
+          <div className="dash-title">Welcome back, {displayName}</div>
           <div className="dash-subtitle">{subtitleText}</div>
           {activeDropdown && <div className="dash-dropdown-backdrop" onClick={() => setActiveDropdown(null)} />}
           <div className="dash-scope-wrap">
@@ -902,7 +902,7 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
               <div className="stat-card-accent" style={{ background: s.accent }} />
               <div className="stat-icon">{s.icon}</div>
               <div className="stat-label">{s.label}</div>
-              <div className="stat-value" style={{ color: s.accent }}>{s.value}</div>
+              <div className="stat-value" style={{ color: HERITAGE }}>{s.value}</div>
               {s.sub && <div className="stat-sub">{s.sub}</div>}
               {s.onClick && <div className="stat-link">View all →</div>}
             </div>
@@ -1194,38 +1194,46 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
 
           <div className="share-inner">
             <div className="share-preview">
-              <div className="share-preview-logo">🪔 IndiYatra · Heritage of Bharat</div>
+              <div className="share-preview-logo">IndiYatra · Heritage of Bharat</div>
               <div className="share-stat-row">
                 <div className="share-stat">
-                  <div className="share-stat-val" style={{ color: SAFFRON }}>{totalDharma}</div>
+                  <div className="share-stat-val">{totalDharma}</div>
                   <div className="share-stat-lbl">Dharma Pts</div>
                 </div>
                 <div className="share-stat">
-                  <div className="share-stat-val" style={{ color: GREEN }}>{lessonsCompleted}</div>
+                  <div className="share-stat-val">{lessonsCompleted}</div>
                   <div className="share-stat-lbl">Lessons</div>
                 </div>
               </div>
               <div className="share-msg-text">{shareText}</div>
             </div>
             <div className="share-actions">
-              <button
-                className={"share-btn share-btn-wa" + (canShare ? " active" : "")}
-                disabled={!canShare}
-                onClick={canShare ? () => window.open("https://wa.me/?text=" + encodeURIComponent(shareText), "_blank") : undefined}>
-                💬 WhatsApp
-              </button>
-              <button
-                className={"share-btn share-btn-tw" + (canShare ? " active" : "")}
-                disabled={!canShare}
-                onClick={canShare ? () => window.open("https://twitter.com/intent/tweet?text=" + encodeURIComponent(shareText), "_blank") : undefined}>
-                𝕏 Twitter / X
-              </button>
-              <button
-                className={"share-btn share-btn-copy" + (canShare ? " active" : "") + (copyDone ? " copied" : "")}
-                disabled={!canShare}
-                onClick={canShare ? handleCopyLink : undefined}>
-                {copyDone ? "✓ Copied!" : "🔗 Copy Link"}
-              </button>
+              <div className="share-btn-row">
+                <button
+                  className={"share-btn share-btn-wa" + (canShare ? " active" : "")}
+                  disabled={!canShare}
+                  aria-label="Share on WhatsApp"
+                  title="Share on WhatsApp"
+                  onClick={canShare ? () => window.open("https://wa.me/?text=" + encodeURIComponent(shareText), "_blank") : undefined}>
+                  <i className="ti ti-brand-whatsapp" aria-hidden="true" />
+                </button>
+                <button
+                  className={"share-btn share-btn-tw" + (canShare ? " active" : "")}
+                  disabled={!canShare}
+                  aria-label="Share on X"
+                  title="Share on X"
+                  onClick={canShare ? () => window.open("https://twitter.com/intent/tweet?text=" + encodeURIComponent(shareText), "_blank") : undefined}>
+                  <i className="ti ti-brand-x" aria-hidden="true" />
+                </button>
+                <button
+                  className={"share-btn share-btn-copy" + (canShare ? " active" : "") + (copyDone ? " copied" : "")}
+                  disabled={!canShare}
+                  aria-label={copyDone ? "Copied" : "Copy link"}
+                  title={copyDone ? "Copied" : "Copy link"}
+                  onClick={canShare ? handleCopyLink : undefined}>
+                  <i className={"ti " + (copyDone ? "ti-check" : "ti-link")} aria-hidden="true" />
+                </button>
+              </div>
               {!canShare && <div className="share-coming">Sign in to share</div>}
             </div>
           </div>

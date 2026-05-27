@@ -7,13 +7,13 @@ import { SkeletonLessonList } from "../components/Skeletons";
 const styles = `
   .module-banner { max-width: 860px; margin: 0 auto 24px; padding: 0 1.5rem; }
   .module-banner-inner {
-    border-radius: 16px; padding: 14px 20px;
+    border-radius: 14px; padding: 14px 20px;
     background: rgba(255,142,0,0.05);
     border: 1px solid rgba(255,142,0,0.15); display: flex; align-items: center; gap: 16px;
   }
   .module-banner-accent  { width: 5px; height: 40px; border-radius: 3px; background: ${HERITAGE}; flex-shrink: 0; }
   .module-banner-body    { flex: 1; min-width: 0; }
-  .module-banner-number  { font-size: 0.6875rem; color: #9CA3AF; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 2px; }
+  .module-banner-number  { font-size: 0.6875rem; color: #6B6B6B; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 2px; }
   .module-banner-title   { font-family: 'Alumni Sans', sans-serif; font-size: 1.1875rem; font-weight: 700; color: ${HERITAGE}; }
   .module-banner-count   {
     flex-shrink: 0; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em;
@@ -23,7 +23,7 @@ const styles = `
   .lessons-content { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 80px; }
   .lesson-row {
     display: flex; align-items: center; gap: 16px;
-    background: white; border-radius: 14px; border: 1px solid rgba(0,0,0,0.08);
+    background: white; border-radius: 14px; border: 1px solid rgba(0,0,0,0.07);
     padding: 16px 20px; margin-bottom: 12px; cursor: pointer;
     transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
     animation: fadeUp 0.35s ease both; box-shadow: 0 2px 10px rgba(255,142,0,0.05);
@@ -40,8 +40,8 @@ const styles = `
   .lesson-num.done { background: ${GREEN}; }
   .lesson-divider { width: 1px; height: 36px; background: rgba(0,0,0,0.10); flex-shrink: 0; }
   .lesson-info { flex: 1; min-width: 0; }
-  .lesson-title { font-family: 'Alumni Sans', sans-serif; font-size: 1.1875rem; font-weight: 700; color: #111827; margin-bottom: 3px; line-height: 1.2; }
-  .lesson-meta  { font-size: 0.75rem; color: #9CA3AF; }
+  .lesson-title { font-family: 'Alumni Sans', sans-serif; font-size: 1.1875rem; font-weight: 700; color: #0A0A0A; margin-bottom: 3px; line-height: 1.2; }
+  .lesson-meta  { font-size: 0.75rem; color: #6B6B6B; }
   .lesson-cta {
     flex-shrink: 0; border: 1.5px solid ${SAFFRON}; color: ${SAFFRON}; border-radius: 999px;
     padding: 6px 16px; font-family: 'Alumni Sans', sans-serif; font-size: 0.8125rem;
@@ -57,11 +57,11 @@ const styles = `
   .lesson-row.locked:hover {
     transform: none !important; box-shadow: none !important;
   }
-  .lesson-lock { flex-shrink: 0; font-size: 0.9rem; color: #9CA3AF; }
+  .lesson-lock { flex-shrink: 0; font-size: 0.9rem; color: #6B6B6B; }
   .bm-btn {
     flex-shrink: 0; background: none; border: none; cursor: pointer;
     font-size: 1.125rem; line-height: 1; padding: 4px 6px; border-radius: 8px;
-    color: #9CA3AF; transition: color 0.15s, transform 0.15s;
+    color: #6B6B6B; transition: color 0.15s, transform 0.15s;
   }
   .bm-btn:hover { color: #FF8E00; transform: scale(1.15); }
   .bm-btn.saved { color: #FF8E00; }

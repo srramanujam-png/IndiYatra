@@ -33,13 +33,13 @@ const styles = `
   }
   .pm-close {
     background: none; border: none; cursor: pointer;
-    font-size: 20px; color: #888;
+    font-size: 20px; color: #6B6B6B;
     width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
     border-radius: 50%; transition: background 0.15s;
   }
   .pm-close:hover { background: rgba(0,0,0,0.06); }
   .pm-label { font-size: 13px; font-weight: 600; color: #555; margin-bottom: 6px; display: block; }
-  .pm-hint  { font-size: 12px; color: #999; margin-top: 6px; line-height: 1.4; }
+  .pm-hint  { font-size: 12px; color: #6B6B6B; margin-top: 6px; line-height: 1.4; }
   .pm-input {
     width: 100%; padding: 10px 14px; border-radius: 10px;
     border: 1.5px solid #e0e0e0; background: #fff;

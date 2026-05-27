@@ -31,8 +31,8 @@ const EDITOR_STYLES = `
   .editor-page { max-width: 900px; margin: 0 auto; padding: 24px 16px 80px; }
 
   .ep-hero {
-    background: linear-gradient(135deg, #00509E 0%, #1a3a6e 100%);
-    border-radius: 16px; padding: 24px 28px; color: #fff;
+    background: #00509E;
+    border-radius: 14px; padding: 24px 28px; color: #fff;
     margin-bottom: 28px;
   }
   .ep-hero h1 {
@@ -53,12 +53,12 @@ const EDITOR_STYLES = `
     padding: 14px 16px; text-align: center;
   }
   .ep-stat-num { font-family: 'Alumni Sans', sans-serif; font-size: 1.875rem; font-weight: 800; color: #FF8E00; line-height: 1; }
-  .ep-stat-lbl { font-size: 0.75rem; color: #6B7280; margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .ep-stat-lbl { font-size: 0.75rem; color: #6B6B6B; margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
 
   .ep-section { margin-bottom: 32px; }
   .ep-section-title {
     font-family: 'Alumni Sans', sans-serif; font-size: 1.25rem;
-    font-weight: 800; color: #1a1a2e; margin: 0 0 14px;
+    font-weight: 800; color: #0A0A0A; margin: 0 0 14px;
     border-left: 4px solid #FF8E00; padding-left: 12px;
   }
 
@@ -70,7 +70,7 @@ const EDITOR_STYLES = `
   .ep-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   @media (max-width: 560px) { .ep-form-grid { grid-template-columns: 1fr; } }
   .ep-field { display: flex; flex-direction: column; gap: 5px; }
-  .ep-field label { font-size: 0.8125rem; font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; }
+  .ep-field label { font-size: 0.8125rem; font-weight: 700; color: #1F1F1F; text-transform: uppercase; letter-spacing: 0.05em; }
   .ep-field input,
   .ep-field select,
   .ep-field textarea {
@@ -108,7 +108,7 @@ const EDITOR_STYLES = `
   .ep-table th {
     padding: 11px 14px; text-align: left; font-size: 0.75rem;
     font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
-    color: #6B7280; background: white; border-bottom: 1px solid rgba(0,0,0,0.10); white-space: nowrap;
+    color: #6B6B6B; background: white; border-bottom: 1px solid rgba(0,0,0,0.10); white-space: nowrap;
   }
   .ep-table td { padding: 12px 14px; font-size: 0.9rem; border-bottom: 1px solid #f0ece5; vertical-align: middle; }
   .ep-table tr:last-child td { border-bottom: none; }
@@ -150,9 +150,9 @@ const EDITOR_STYLES = `
     padding: 18px 20px; border-bottom: 1.5px solid #eee;
     display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-shrink: 0;
   }
-  .ep-panel-header-text h3 { font-family: 'Alumni Sans', sans-serif; font-size: 1.125rem; font-weight: 800; color: #1a1a2e; margin: 0 0 2px; }
-  .ep-panel-header-text p  { font-size: 0.8125rem; color: #6B7280; margin: 0; }
-  .ep-panel-close { background: none; border: none; font-size: 1.25rem; cursor: pointer; color: #6B7280; flex-shrink: 0; padding: 2px 6px; }
+  .ep-panel-header-text h3 { font-family: 'Alumni Sans', sans-serif; font-size: 1.125rem; font-weight: 800; color: #0A0A0A; margin: 0 0 2px; }
+  .ep-panel-header-text p  { font-size: 0.8125rem; color: #6B6B6B; margin: 0; }
+  .ep-panel-close { background: none; border: none; font-size: 1.25rem; cursor: pointer; color: #6B6B6B; flex-shrink: 0; padding: 2px 6px; }
   .ep-panel-body { flex: 1; overflow-y: auto; padding: 20px; }
   .ep-panel-footer {
     padding: 14px 20px; border-top: 1.5px solid #eee; flex-shrink: 0;
@@ -162,7 +162,7 @@ const EDITOR_STYLES = `
   /* Edit form specifics */
   .ep-edit-field { margin-bottom: 16px; }
   .ep-edit-field label {
-    display: block; font-size: 0.8125rem; font-weight: 700; color: #374151;
+    display: block; font-size: 0.8125rem; font-weight: 700; color: #1F1F1F;
     text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px;
   }
   .ep-edit-field .ep-hint { font-size: 0.75rem; color: #aaa; font-weight: 400; text-transform: none; letter-spacing: 0; }
@@ -180,7 +180,7 @@ const EDITOR_STYLES = `
   .ep-section-divider { border: none; border-top: 1.5px solid #f0ece5; margin: 20px 0; }
 
   /* Taxonomy picker */
-  .ep-tax-section h4 { font-size: 0.875rem; font-weight: 700; color: #1a1a2e; margin: 0 0 6px; }
+  .ep-tax-section h4 { font-size: 0.875rem; font-weight: 700; color: #0A0A0A; margin: 0 0 6px; }
   .ep-tax-group { margin-bottom: 12px; }
   .ep-tax-group-label { font-size: 0.75rem; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
   .ep-tax-pills { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -191,7 +191,7 @@ const EDITOR_STYLES = `
   }
   .ep-tax-pill.existing { background: #E8F5E9; border-color: #a5d6a7; color: #1a7a3a; cursor: default; }
   .ep-tax-pill.selected { background: #FF8E00; border-color: #FF8E00; color: #fff; }
-  .ep-tax-pill.available { background: white; border-color: rgba(0,0,0,0.12); color: #374151; }
+  .ep-tax-pill.available { background: white; border-color: rgba(0,0,0,0.12); color: #1F1F1F; }
   .ep-tax-pill.available:hover { border-color: #FF8E00; color: #FF8E00; }
   .ep-tax-note { font-size: 0.75rem; color: #aaa; margin-top: 6px; }
 
@@ -202,7 +202,7 @@ const EDITOR_STYLES = `
     animation: fadeIn 0.18s ease both;
   }
   .ep-modal {
-    background: #fff; border-radius: 16px; width: min(460px, 100%);
+    background: #fff; border-radius: 14px; width: min(460px, 100%);
     max-height: 80vh; display: flex; flex-direction: column;
     box-shadow: 0 8px 40px rgba(0,0,0,0.22);
     animation: scaleUp 0.18s ease both;
@@ -215,7 +215,7 @@ const EDITOR_STYLES = `
     padding: 18px 20px 14px; border-bottom: 1.5px solid #eee;
     display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
   }
-  .ep-modal-header h3 { font-family: 'Alumni Sans', sans-serif; font-size: 1.125rem; font-weight: 800; color: #1a1a2e; margin: 0; }
+  .ep-modal-header h3 { font-family: 'Alumni Sans', sans-serif; font-size: 1.125rem; font-weight: 800; color: #0A0A0A; margin: 0; }
   .ep-modal-body { flex: 1; overflow-y: auto; padding: 20px; }
   .ep-modal-footer {
     padding: 12px 20px; border-top: 1.5px solid #eee; flex-shrink: 0;
@@ -235,9 +235,9 @@ const EDITOR_STYLES = `
   /* Event log */
   .ep-event { display: flex; gap: 12px; margin-bottom: 14px; }
   .ep-event-dot { width: 10px; height: 10px; border-radius: 50%; background: #FF8E00; margin-top: 5px; flex-shrink: 0; }
-  .ep-event-action { font-weight: 700; font-size: 0.875rem; color: #1a1a2e; }
-  .ep-event-meta   { font-size: 0.8rem; color: #6B7280; margin-top: 2px; }
-  .ep-event-comment { font-size: 0.875rem; color: #374151; margin-top: 3px; font-style: italic; }
+  .ep-event-action { font-weight: 700; font-size: 0.875rem; color: #0A0A0A; }
+  .ep-event-meta   { font-size: 0.8rem; color: #6B6B6B; margin-top: 2px; }
+  .ep-event-comment { font-size: 0.875rem; color: #1F1F1F; margin-top: 3px; font-style: italic; }
 `;
 
 // ── Shared components ─────────────────────────────────────────────────────────
@@ -1502,7 +1502,7 @@ function VerifierView({ showToast }) {
 
 // ── Main EditorPage ───────────────────────────────────────────────────────────
 export default function EditorPage({
-  settings, onOpenSettings, onHome, onDashboard, onLikes, onBookmarks, onDiscover,
+  settings, onOpenSettings, onSaveSettings, onHome, onDashboard, onLikes, onBookmarks, onDiscover,
   onAdmin, isAdmin, onResume, bookmarks, onToggleBookmark,
   userEditorialRole, onEditor,
   languages = [],

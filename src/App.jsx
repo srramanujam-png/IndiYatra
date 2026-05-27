@@ -279,11 +279,15 @@ export default function App() {
 
   async function handleResume() {
     if (!profile?.last_visited_route) { goForward("course"); return; }
+    // Helper: drop a stale/invalid saved route so subsequent loads don't re-fire the bad lookup.
+    const clearStaleRoute = () => {
+      if (user?.id) updateLastVisited(user.id, null).catch(() => {});
+    };
     try {
       const route = JSON.parse(profile.last_visited_route);
-      if (!route.module_id) { goForward("course"); return; }
+      if (!route.module_id) { clearStaleRoute(); goForward("course"); return; }
       const mods = await supabase("modules", `?module_id=eq.${route.module_id}&select=*`);
-      if (!mods || mods.length === 0) { goForward("course"); return; }
+      if (!Array.isArray(mods) || mods.length === 0) { clearStaleRoute(); goForward("course"); return; }
       setSelectedModule(mods[0]);
       if (route.level_id)    setSelectedLevelId(route.level_id);
       if (route.course_name) setSelectedCourse(c => c ?? { course_name: route.course_name });
@@ -291,6 +295,7 @@ export default function App() {
       goForward("lessons");
     } catch (e) {
       console.warn("handleResume:", e);
+      clearStaleRoute();
       goForward("course");
     }
   }

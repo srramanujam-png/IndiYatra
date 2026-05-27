@@ -872,29 +872,8 @@ export async function adminImportSnippetsFull(rows) {
   (assetRes.data   || []).forEach(r => { assetMap[normalize(r.file_path)]   = r.asset_id; });
   (mappingRes.data || []).forEach(r => { mappingSet.add(r.lesson_id + ":" + r.snippet_id); });
 
-  // ── 3. ID generators — detect prefix & pad-length from existing IDs ──────
-  function makeIdGen(existingIds, fallbackPrefix, fallbackPad) {
-    const ids = (existingIds || []).filter(Boolean);
-    let prefix = fallbackPrefix;
-    let pad    = fallbackPad;
-    if (ids.length) {
-      const m = ids[0].match(/^([A-Za-z_]+)(\d+)$/);
-      if (m) { prefix = m[1]; pad = m[2].length; }
-    }
-    const nums = ids
-      .map(id => parseInt(id.slice(prefix.length), 10))
-      .filter(n => !isNaN(n));
-    let next = (nums.length ? Math.max(...nums) : 0) + 1;
-    return () => prefix + String(next++).padStart(pad, "0");
-  }
-
-  const nextSnipId   = makeIdGen((snipCoreRes.data || []).map(r => r.snippet_id),   "SNIP_",   5);
-  const nextLessonId = makeIdGen((lessonRes.data   || []).map(r => r.lesson_id),     "LES_",    5);
-  const nextModuleId = makeIdGen((moduleRes.data   || []).map(r => r.module_id),     "MOD_",    5);
-  const nextThemeId  = makeIdGen((themeRes.data    || []).map(r => r.theme_id),      "THEME_",  5);
-  const nextLevelId  = makeIdGen((levelRes.data    || []).map(r => r.level_id),      "LEVEL_",  5);
-  const nextCourseId = makeIdGen((courseRes.data   || []).map(r => r.course_id),     "COURSE_", 5);
-  const nextAssetId  = makeIdGen((assetRes.data    || []).map(r => r.asset_id),      "ASSET_",  5);
+  // ── 3. UUID generator (all content IDs are auto-generated UUIDs) ───────────
+  const uuid = () => crypto.randomUUID();
 
   // ── 4. Process rows ───────────────────────────────────────────────────────
   const stats = {
@@ -932,7 +911,7 @@ export async function adminImportSnippetsFull(rows) {
       // ── Find or create snippet_core ─────────────────────────────────────
       let snippetId = hookMap[normalize(englishHook)];
       if (!snippetId) {
-        snippetId = nextSnipId();
+        snippetId = uuid();
         const coreRow = { snippet_id: snippetId };
         const dv = v => v !== undefined && String(v).trim() !== "" ? Number(v) : undefined;
         if (dv(row.difficulty_level) !== undefined) coreRow.difficulty_level = dv(row.difficulty_level);
@@ -951,7 +930,7 @@ export async function adminImportSnippetsFull(rows) {
       if (picUrl) {
         let assetId = assetMap[normalize(picUrl)];
         if (!assetId) {
-          assetId = nextAssetId();
+          assetId = uuid();
           const { error: assetErr } = await supabaseClient.from("asset_library").insert({
             asset_id:    assetId,
             file_path:   picUrl,
@@ -1017,14 +996,15 @@ export async function adminImportSnippetsFull(rows) {
             courseId = _cm.id;
             if (_cm.type === "fuzzy") stats.fuzzyMatches++;
           } else {
-            courseId = nextCourseId();
+            courseId = uuid();
             const { error: e } = await supabaseClient.from("courses").insert({ course_id: courseId, course_name: courseName });
             if (!e) { courseMap[normalize(courseName)] = courseId; stats.coursesCreated++; }
             else    { stats.errors.push("Create course (" + courseName + "): " + e.message); courseId = null; }
           }
         }
 
-        // Find or create level
+        // Find level — levels are fixed constants (Preparatory / Middle / Secondary)
+        // They are pre-seeded by uuid_migration.sql; NOT auto-created from imports.
         let levelId = null;
         const levelName = String(row.level || "").trim();
         if (levelName) {
@@ -1033,10 +1013,7 @@ export async function adminImportSnippetsFull(rows) {
             levelId = _lm.id;
             if (_lm.type === "fuzzy") stats.fuzzyMatches++;
           } else {
-            levelId = nextLevelId();
-            const { error: e } = await supabaseClient.from("levels").insert({ level_id: levelId, title: levelName });
-            if (!e) { levelMap[normalize(levelName)] = levelId; stats.levelsCreated++; }
-            else    { stats.errors.push("Create level (" + levelName + "): " + e.message); levelId = null; }
+            stats.errors.push('Unknown level "' + levelName + '" — must be one of: Preparatory, Middle, Secondary. Module will be created without a level.');
           }
         }
 
@@ -1049,7 +1026,7 @@ export async function adminImportSnippetsFull(rows) {
             themeId = _tm.id;
             if (_tm.type === "fuzzy") stats.fuzzyMatches++;
           } else {
-            themeId = nextThemeId();
+            themeId = uuid();
             const { error: e } = await supabaseClient.from("themes").insert({ theme_id: themeId, title: themeName });
             if (!e) { themeMap[normalize(themeName)] = themeId; stats.themesCreated++; }
             else    { stats.errors.push("Create theme (" + themeName + "): " + e.message); themeId = null; }
@@ -1065,7 +1042,7 @@ export async function adminImportSnippetsFull(rows) {
             moduleId = _mm.id;
             if (_mm.type === "fuzzy") stats.fuzzyMatches++;
           } else {
-            moduleId = nextModuleId();
+            moduleId = uuid();
             const modRow = { module_id: moduleId, module_name: moduleName, visibility: "public" };
             if (courseId) modRow.course_id = courseId;
             if (levelId)  modRow.level_id  = levelId;
@@ -1077,7 +1054,7 @@ export async function adminImportSnippetsFull(rows) {
         }
 
         // Create lesson
-        lessonId = nextLessonId();
+        lessonId = uuid();
         const lesRow = { lesson_id: lessonId, lesson_name: lessonName };
         if (moduleId) lesRow.module_id = moduleId;
         const { error: lesErr } = await supabaseClient.from("lessons").insert(lesRow);
@@ -1153,7 +1130,7 @@ export async function adminDryRunImport(rows) {
 
   const LOOKUP_MAPS = { language: langMap, course: courseMap, level: levelMap, theme: themeMap, module: moduleMap, lesson: lessonMap };
   const DISP_MAPS   = { language: langDisp, course: courseDisp, level: levelDisp, theme: themeDisp, module: moduleDisp, lesson: lessonDisp };
-  const CAN_CREATE  = { language: false, course: true, level: true, theme: true, module: true, lesson: true };
+  const CAN_CREATE  = { language: false, course: true, level: false, theme: true, module: true, lesson: true };
   const FIELDS      = ["language", "course", "level", "theme", "module", "lesson"];
 
   // Collect unique values per field from the rows

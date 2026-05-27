@@ -108,14 +108,14 @@ const headerStyles = `
   }
   .prof-dd-name {
     padding: 14px 16px 4px;
-    font-size: 13px; font-weight: 700; color: #1a1a2e;
+    font-size: 13px; font-weight: 700; color: #0A0A0A;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .prof-dd-name span { display: block; font-size: 11px; font-weight: 400; color: #aaa; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
   .prof-dd-item {
     display: block; width: 100%; padding: 10px 16px;
     background: none; border: none; text-align: left;
-    font-size: 14px; color: #1a1a2e; cursor: pointer; transition: background 0.12s;
+    font-size: 14px; color: #0A0A0A; cursor: pointer; transition: background 0.12s;
   }
   .prof-dd-item:hover { background: #f5f5f5; }
   .prof-dd-item.danger { color: #c00; }
@@ -140,7 +140,7 @@ const headerStyles = `
   .prof-lang-btn {
     display: flex; align-items: center; gap: 8px;
     padding: 7px 0; background: none; border: none;
-    text-align: left; font-size: 14px; color: #1a1a2e; cursor: pointer;
+    text-align: left; font-size: 14px; color: #0A0A0A; cursor: pointer;
     font-family: inherit; border-radius: 6px; transition: color 0.12s;
   }
   .prof-lang-btn:hover { color: #FF8E00; }
@@ -157,7 +157,7 @@ const headerStyles = `
     transition: background 0.12s, color 0.12s;
     white-space: nowrap;
   }
-  .hdr-nav-link:hover { background: #f5f5f5; color: #1a1a2e; }
+  .hdr-nav-link:hover { background: #f5f5f5; color: #0A0A0A; }
   .hdr-nav-link.active { color: #FF8E00; }
   .hdr-nav-link.active svg { color: #FF8E00; }
   @media (min-width: 1025px) and (max-width: 1280px) {
@@ -230,7 +230,7 @@ const headerStyles = `
     border: 1.5px solid transparent;
     transition: background 0.12s, border-color 0.12s;
   }
-  .btm-tab-inner svg { color: #888; transition: color 0.12s; }
+  .btm-tab-inner svg { color: #6B6B6B; transition: color 0.12s; }
   .btm-tab:hover .btm-tab-inner:not(.active) { border-color: #FF8E00; }
   .btm-tab:hover .btm-tab-inner:not(.active) svg { color: #FF8E00; }
   .btm-tab:hover .btm-tab-inner:not(.active) .btm-label { color: #FF8E00; }
@@ -238,7 +238,7 @@ const headerStyles = `
   .btm-tab-inner.active svg { color: #fff; }
   .btm-tab-inner.active .btm-label { color: #fff; }
   .btm-label {
-    font-size: 10px; font-weight: 600; color: #888; line-height: 1;
+    font-size: 10px; font-weight: 600; color: #6B6B6B; line-height: 1;
     transition: color 0.12s;
   }
 
