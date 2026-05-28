@@ -17,9 +17,9 @@ import { supabase } from "../lib/supabase";
 
 // ── Status config ─────────────────────────────────────────────────────────────
 const STATUS_CFG = {
-  unassigned:      { label: "Unassigned",       bg: "#F8F8F6", color: "#374151"     },
+  unassigned:      { label: "Unassigned",       bg: "#F8F8F6", color: "#1F1F1F"     },
   assigned:        { label: "Assigned",          bg: "#EEF5FF", color: "#1a56c9" },
-  in_draft:        { label: "In Draft",          bg: "#FFF8ED", color: "#b86000" },
+  in_draft:        { label: "In Draft",          bg: "white", color: "#FF8E00" },
   submitted:       { label: "Submitted",         bg: "#F3E5F5", color: "#6a1b8a" },
   needs_revision:  { label: "Needs Revision",    bg: "#FFF3CD", color: "#856404" },
   approved:        { label: "Approved",          bg: "#E8F5E9", color: "#1a7a3a" },
@@ -99,7 +99,7 @@ const EDITOR_STYLES = `
   .ep-btn-sm:hover { opacity: 0.82; }
   .ep-btn-approve  { background: #E8F5E9; color: #1a7a3a; }
   .ep-btn-reject   { background: #FFEBEE; color: #c62828; }
-  .ep-btn-sendback { background: #FFF8ED; color: #b86000; }
+  .ep-btn-sendback { background: white; color: #b86000; }
   .ep-btn-publish  { background: #00509E; color: #fff; }
 
   /* Tables */
@@ -123,7 +123,7 @@ const EDITOR_STYLES = `
     font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
     background: #EEF5FF; color: #1a56c9;
   }
-  .ep-content-type.lesson { background: #FFF8ED; color: #b86000; }
+  .ep-content-type.lesson { background: white; color: #b86000; }
 
   .ep-empty { text-align: center; padding: 48px 24px; color: #aaa; font-size: 1rem; }
   .ep-empty-icon { font-size: 2.5rem; margin-bottom: 8px; }
@@ -225,7 +225,7 @@ const EDITOR_STYLES = `
   /* Toast */
   .ep-toast {
     position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
-    background: #1a1a2e; color: #fff; padding: 10px 22px;
+    background: #00509E; color: #fff; padding: 10px 22px;
     border-radius: 999px; font-size: 0.875rem; font-weight: 600;
     box-shadow: 0 4px 20px rgba(0,0,0,0.25); z-index: 9999;
     animation: fadeUp 0.2s ease both; white-space: nowrap; pointer-events: none;
@@ -243,7 +243,7 @@ const EDITOR_STYLES = `
 // ── Shared components ─────────────────────────────────────────────────────────
 
 function StatusBadge({ status }) {
-  const cfg = STATUS_CFG[status] || { label: status, bg: "#eee", color: "#374151" };
+  const cfg = STATUS_CFG[status] || { label: status, bg: "#eee", color: "#1F1F1F" };
   return <span className="ep-status-badge" style={{ background: cfg.bg, color: cfg.color }}>{cfg.label}</span>;
 }
 
@@ -265,8 +265,8 @@ function CsTag({ item }) {
   if (item.content_status === "full")
     return <span style={{background:"#E8F5E9",color:"#1a7a3a",fontSize:"0.7rem",padding:"2px 8px",borderRadius:"999px",fontWeight:700,whiteSpace:"nowrap"}}>Full ({item.total_fields}/{item.total_fields})</span>;
   if (item.content_status === "partial")
-    return <span style={{background:"#FFF8ED",color:"#b86000",fontSize:"0.7rem",padding:"2px 8px",borderRadius:"999px",fontWeight:700,whiteSpace:"nowrap"}}>Partial ({item.filled_count}/{item.total_fields})</span>;
-  return <span style={{background:"rgba(0,0,0,0.05)",color:"#6B7280",fontSize:"0.7rem",padding:"2px 8px",borderRadius:"999px",fontWeight:700,whiteSpace:"nowrap",border:"1px solid rgba(0,0,0,0.10)"}}>None</span>;
+    return <span style={{background:"white",color:"#FF8E00",fontSize:"0.7rem",padding:"2px 8px",borderRadius:"999px",fontWeight:700,whiteSpace:"nowrap"}}>Partial ({item.filled_count}/{item.total_fields})</span>;
+  return <span style={{background:"rgba(0,0,0,0.05)",color:"#6B6B6B",fontSize:"0.7rem",padding:"2px 8px",borderRadius:"999px",fontWeight:700,whiteSpace:"nowrap",border:"1px solid rgba(0,0,0,0.10)"}}>None</span>;
 }
 
 // ── SubRoleBadge — pill showing the caller's sub_role for this draft ────────
@@ -614,7 +614,7 @@ function DraftEditForm({ draft, onClose, onSaved, showToast }) {
                     {/* Preview: uploaded (priority) or existing */}
                     {(imageUrl || existingImage?.file_path) && (
                       <div style={{ marginBottom: 12 }}>
-                        <div style={{ fontSize: "0.75rem", color: "#6B7280", marginBottom: 6 }}>
+                        <div style={{ fontSize: "0.75rem", color: "#6B6B6B", marginBottom: 6 }}>
                           {imageUrl ? "New image (will publish with draft):" : "Current live image:"}
                         </div>
                         <img
@@ -629,7 +629,7 @@ function DraftEditForm({ draft, onClose, onSaved, showToast }) {
                     <label style={{
                       display: "inline-block", cursor: imageUploading ? "not-allowed" : "pointer",
                       background: "#f3f4f6", border: "1px solid #d1d5db", borderRadius: 8,
-                      padding: "7px 16px", fontSize: "0.875rem", color: "#374151",
+                      padding: "7px 16px", fontSize: "0.875rem", color: "#1F1F1F",
                       opacity: imageUploading ? 0.6 : 1, marginBottom: 10,
                     }}>
                       {imageUploading ? "Uploading…" : imageUrl ? "Replace Image" : "Choose Image"}
@@ -958,7 +958,7 @@ function SupervisorView({ languages, showToast }) {
       flex:1, padding:"10px 12px", border:"none",
       borderRight: key !== "all" ? "1px solid rgba(0,0,0,0.10)" : "none",
       background: activeTab === key ? "#00509E" : "white",
-      color: activeTab === key ? "#fff" : "#374151",
+      color: activeTab === key ? "#fff" : "#1F1F1F",
       fontWeight: 700, fontSize: "0.875rem", cursor: "pointer",
     };
   }
@@ -1064,8 +1064,8 @@ function SupervisorView({ languages, showToast }) {
                         <td onClick={e => e.stopPropagation()}>
                           <input type="checkbox" checked={isSelected} onChange={() => toggleSelect(id)} />
                         </td>
-                        <td style={{ fontFamily:"monospace", fontSize:"0.8125rem", color:"#374151", whiteSpace:"nowrap" }}>{id}</td>
-                        <td style={{ fontSize:"0.8125rem", color:"#374151", maxWidth:220 }}>
+                        <td style={{ fontFamily:"monospace", fontSize:"0.8125rem", color:"#1F1F1F", whiteSpace:"nowrap" }}>{id}</td>
+                        <td style={{ fontSize:"0.8125rem", color:"#1F1F1F", maxWidth:220 }}>
                           {item.preview_hook
                             ? item.preview_hook.slice(0, 65) + (item.preview_hook.length > 65 ? "..." : "")
                             : <span style={{ color:"#ccc", fontStyle:"italic" }}>No English hook</span>}
@@ -1087,7 +1087,7 @@ function SupervisorView({ languages, showToast }) {
                 <span style={{ fontSize:"0.875rem", color:"#1a56c9", fontWeight:700 }}>
                   {selected.size} item{selected.size !== 1 ? "s" : ""} selected
                 </span>
-                <span style={{ fontSize:"0.8125rem", color:"#6B7280" }}>of {filteredItems.length} shown</span>
+                <span style={{ fontSize:"0.8125rem", color:"#6B6B6B" }}>of {filteredItems.length} shown</span>
                 <div style={{ marginLeft:"auto", display:"flex", gap:8 }}>
                   <button className="ep-btn-sm ep-btn-secondary" onClick={toggleSelectAll}>
                     {selected.size === filteredItems.length ? "Deselect all" : "Select all"}
@@ -1123,10 +1123,10 @@ function SupervisorView({ languages, showToast }) {
 
               {/* Assignment details — user + role + optional fields in one card */}
               <div className="ep-form">
-                <div style={{ fontWeight:700, color:"#1a1a2e", fontSize:"0.875rem", marginBottom:14 }}>
+                <div style={{ fontWeight:700, color:"#0A0A0A", fontSize:"0.875rem", marginBottom:14 }}>
                   Assign {selected.size} item{selected.size !== 1 ? "s" : ""}
                   {contentType === "snippet_translation" && langFilter && (
-                    <span style={{ fontWeight:400, color:"#6B7280", fontSize:"0.8125rem" }}>
+                    <span style={{ fontWeight:400, color:"#6B6B6B", fontSize:"0.8125rem" }}>
                       {" "}&#8212; <strong>{languages.find(l => l.language_id === langFilter)?.language || langFilter}</strong>
                     </span>
                   )}
@@ -1295,7 +1295,7 @@ function SupervisorView({ languages, showToast }) {
                               return s;
                             })} />
                         </td>
-                        <td style={{ fontFamily:"monospace", fontSize:"0.8125rem", color:"#374151" }}>
+                        <td style={{ fontFamily:"monospace", fontSize:"0.8125rem", color:"#1F1F1F" }}>
                           {d.content_id}
                           {d.notes && (
                             <div style={{ fontSize:"0.75rem", color:"#aaa", marginTop:2 }} title={d.notes}>
@@ -1304,7 +1304,7 @@ function SupervisorView({ languages, showToast }) {
                           )}
                         </td>
                         <td><ContentTypeTag type={d.content_type} /></td>
-                        <td style={{ fontSize:"0.8125rem", color:"#374151" }}>{d.language_id || "&#8212;"}</td>
+                        <td style={{ fontSize:"0.8125rem", color:"#1F1F1F" }}>{d.language_id || "&#8212;"}</td>
                         <td style={{ fontSize:"0.875rem" }}>{d.editor_name || "&#8212;"}</td>
                         <td>
                           {roleCfg
@@ -1392,13 +1392,13 @@ function EditorView({ showToast }) {
               <tbody>
                 {drafts.map(d => (
                   <tr key={d.id}>
-                    <td style={{ fontFamily: "monospace", fontSize: "0.8125rem", color: "#374151" }}>{d.content_id}</td>
+                    <td style={{ fontFamily: "monospace", fontSize: "0.8125rem", color: "#1F1F1F" }}>{d.content_id}</td>
                     <td><ContentTypeTag type={d.content_type} /></td>
-                    <td style={{ fontSize: "0.8125rem", color: "#374151" }}>{d.language_id || "—"}</td>
+                    <td style={{ fontSize: "0.8125rem", color: "#1F1F1F" }}>{d.language_id || "—"}</td>
                     <td><SubRoleBadge role={d.sub_role} /></td>
                     <td><StatusBadge status={d.status} /></td>
                     <td style={{ fontSize: "0.8125rem" }}>{fmtDue(d.due_date)}</td>
-                    <td style={{ fontSize: "0.8125rem", color: "#6B7280", maxWidth: 130 }}>
+                    <td style={{ fontSize: "0.8125rem", color: "#6B6B6B", maxWidth: 130 }}>
                       {d.notes ? d.notes.slice(0,55)+(d.notes.length>55?"…":"") : "—"}
                     </td>
                     <td>
@@ -1469,9 +1469,9 @@ function VerifierView({ showToast }) {
               <tbody>
                 {drafts.map(d => (
                   <tr key={d.id}>
-                    <td style={{ fontFamily: "monospace", fontSize: "0.8125rem", color: "#374151" }}>{d.content_id}</td>
+                    <td style={{ fontFamily: "monospace", fontSize: "0.8125rem", color: "#1F1F1F" }}>{d.content_id}</td>
                     <td><ContentTypeTag type={d.content_type} /></td>
-                    <td style={{ fontSize: "0.8125rem", color: "#374151" }}>{d.language_id || "—"}</td>
+                    <td style={{ fontSize: "0.8125rem", color: "#1F1F1F" }}>{d.language_id || "—"}</td>
                     <td style={{ fontSize: "0.875rem" }}>{d.editor_name || "—"}</td>
                     <td><SubRoleBadge role={d.sub_role} /></td>
                     <td><StatusBadge status={d.status} /></td>

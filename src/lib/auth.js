@@ -85,16 +85,16 @@ export async function loadCompletions(userId) {
 export async function saveCompletion(userId, lessonId, courseId, pointsEarned = 0, snippetCount = null) {
   const { data, error } = await supabaseClient
     .from("lesson_completions")
-    .insert({
+    .upsert({
       profile_id: userId,
       lesson_id: lessonId,
       course_id: courseId,
       points_earned: pointsEarned,
       snippet_count: snippetCount,
       completed_at: new Date().toISOString(),
-    });
+    }, { onConflict: "profile_id,lesson_id" });
   if (error) {
-    console.error("[saveCompletion] INSERT failed:", JSON.stringify(error),
+    console.error("[saveCompletion] UPSERT failed:", JSON.stringify(error),
       { userId, lessonId, courseId, pointsEarned, snippetCount });
   }
   return { data, error };
@@ -808,6 +808,14 @@ function _fuzzyLookup(needle, normMap, threshold = 0.8) {
   return null;
 }
 
+// Exact-only variant — used by adminImportSnippetsFull so deliberate
+// minor variations in lesson/module/theme/course/language names are never
+// silently collapsed into an existing record.
+function _exactLookup(needle, normMap) {
+  if (!needle || normMap[needle] === undefined) return null;
+  return { id: normMap[needle], matchedNorm: needle, score: 1, type: "exact" };
+}
+
 // adminImportSnippetsFull(rows)
 //
 // Single-sheet, text-only import. Each row = one snippet × one language.
@@ -833,13 +841,12 @@ export async function adminImportSnippetsFull(rows) {
 
   // ── 1. Load all lookup data upfront ──────────────────────────────────────
   const [
-    langRes, enTransRes, allTransRes, snipCoreRes,
+    langRes, allTransRes, snipCoreRes,
     lessonRes, moduleRes, themeRes, levelRes, courseRes, assetRes, mappingRes,
   ] = await Promise.all([
     supabaseClient.from("languages").select("language_id, language"),
-    supabaseClient.from("snippet_translations").select("snippet_id, hook").eq("language", "LANG_01"),
     supabaseClient.from("snippet_translations").select("snippet_id, language"),
-    supabaseClient.from("snippet_core").select("snippet_id"),
+    supabaseClient.from("snippet_core").select("snippet_id, asset_id, import_key"),
     supabaseClient.from("lessons").select("lesson_id, lesson_name"),
     supabaseClient.from("modules").select("module_id, module_name, course_id, level_id, theme_id"),
     supabaseClient.from("themes").select("theme_id, title"),
@@ -851,7 +858,6 @@ export async function adminImportSnippetsFull(rows) {
 
   // ── 2. Lookup maps (normalized text → id) ────────────────────────────────
   const langMap    = {};   // e.g. "tamil" → "LANG_13"
-  const hookMap    = {};   // normalized EN hook → snippet_id
   const transSet   = new Set();   // "snip_id:lang_id" already exists
   const lessonMap  = {};
   const moduleMap  = {};
@@ -862,7 +868,6 @@ export async function adminImportSnippetsFull(rows) {
   const mappingSet = new Set();   // "lesson_id:snippet_id" already exists
 
   (langRes.data    || []).forEach(r => { langMap[normalize(r.language)]    = r.language_id; });
-  (enTransRes.data || []).forEach(r => { if (r.hook) hookMap[normalize(r.hook)] = r.snippet_id; });
   (allTransRes.data|| []).forEach(r => { transSet.add(r.snippet_id + ":" + r.language); });
   (lessonRes.data  || []).forEach(r => { lessonMap[normalize(r.lesson_name)] = r.lesson_id; });
   (moduleRes.data  || []).forEach(r => { moduleMap[normalize(r.module_name)] = r.module_id; });
@@ -870,6 +875,12 @@ export async function adminImportSnippetsFull(rows) {
   (levelRes.data   || []).forEach(r => { levelMap[normalize(r.title)]       = r.level_id; });
   (courseRes.data  || []).forEach(r => { courseMap[normalize(r.course_name)]= r.course_id; });
   (assetRes.data   || []).forEach(r => { assetMap[normalize(r.file_path)]   = r.asset_id; });
+  const importKeyMap   = {};          // import_key (int) → snippet_id
+  const assetLinkedSet = new Set();  // snippetIds that already have an asset assigned
+  (snipCoreRes.data|| []).forEach(r => {
+    if (r.import_key != null) importKeyMap[r.import_key] = r.snippet_id;
+    if (r.asset_id)           assetLinkedSet.add(r.snippet_id);
+  });
   (mappingRes.data || []).forEach(r => { mappingSet.add(r.lesson_id + ":" + r.snippet_id); });
 
   // ── 3. UUID generator (all content IDs are auto-generated UUIDs) ───────────
@@ -900,7 +911,7 @@ export async function adminImportSnippetsFull(rows) {
         continue;
       }
       const langName  = normalize(row.language || "English");
-      const langMatch = _fuzzyLookup(langName, langMap);
+      const langMatch = _exactLookup(langName, langMap);
       if (!langMatch) {
         stats.errors.push('Unknown language "' + (row.language || "") + '" — row skipped. Add it to the languages table first.');
         continue;
@@ -909,25 +920,35 @@ export async function adminImportSnippetsFull(rows) {
       if (langMatch.type === "fuzzy") stats.fuzzyMatches++;
 
       // ── Find or create snippet_core ─────────────────────────────────────
-      let snippetId = hookMap[normalize(englishHook)];
+      // snippet_key is required — it is the sole deduplication key.
+      const importKeyRaw = String(row.snippet_key || "").trim();
+      const importKeyNum = importKeyRaw !== "" && !isNaN(importKeyRaw) ? Number(importKeyRaw) : null;
+      if (importKeyNum === null) {
+        stats.errors.push("Row skipped — snippet_key is missing or not a number (english_hook: " + englishHook + ")");
+        continue;
+      }
+
+      let snippetId = importKeyMap[importKeyNum] !== undefined ? importKeyMap[importKeyNum] : null;
+
       if (!snippetId) {
         snippetId = uuid();
-        const coreRow = { snippet_id: snippetId };
+        const coreRow = { snippet_id: snippetId, import_key: importKeyNum };
         const dv = v => v !== undefined && String(v).trim() !== "" ? Number(v) : undefined;
         if (dv(row.difficulty_level) !== undefined) coreRow.difficulty_level = dv(row.difficulty_level);
         if (dv(row.snippet_value)    !== undefined) coreRow.snippet_value    = dv(row.snippet_value);
         const { error: coreErr } = await supabaseClient.from("snippet_core").insert(coreRow);
         if (coreErr) {
-          stats.errors.push("Create snippet (" + snippetId + "): " + coreErr.message);
+          stats.errors.push("Create snippet (key=" + importKeyNum + "): " + coreErr.message);
           continue;
         }
-        hookMap[normalize(englishHook)] = snippetId;
+        importKeyMap[importKeyNum] = snippetId;
         stats.snippetsCreated++;
       }
 
       // ── Find or create asset, then link to snippet ──────────────────────
+      // Skip if this snippet already has an asset assigned (first row wins).
       const picUrl = String(row.picture_url || "").trim();
-      if (picUrl) {
+      if (picUrl && !assetLinkedSet.has(snippetId)) {
         let assetId = assetMap[normalize(picUrl)];
         if (!assetId) {
           assetId = uuid();
@@ -946,12 +967,12 @@ export async function adminImportSnippetsFull(rows) {
           }
         }
         if (assetId) {
-          // Link only if snippet_core.asset_id is currently null
-          await supabaseClient
+          const { error: linkErr } = await supabaseClient
             .from("snippet_core")
             .update({ asset_id: assetId })
             .eq("snippet_id", snippetId)
             .is("asset_id", null);
+          if (!linkErr) assetLinkedSet.add(snippetId);
         }
       }
 
@@ -961,7 +982,7 @@ export async function adminImportSnippetsFull(rows) {
         stats.translationsSkipped++;
       } else {
         const hookVal = String(row.hook || "").trim() || (langId === "LANG_01" ? englishHook : "");
-        const transRow = { snippet_id: snippetId, language: langId };
+        const transRow = { snippet_translation_id: uuid(), snippet_id: snippetId, language: langId };
         if (hookVal)                              transRow.hook              = hookVal;
         if (String(row.explanation       || "").trim()) transRow.explanation       = String(row.explanation).trim();
         if (String(row.key_term          || "").trim()) transRow.key_term          = String(row.key_term).trim();
@@ -983,7 +1004,7 @@ export async function adminImportSnippetsFull(rows) {
       const lessonName = String(row.lesson || "").trim();
       if (!lessonName) continue;
 
-      const _lesM = _fuzzyLookup(normalize(lessonName), lessonMap);
+      const _lesM = _exactLookup(normalize(lessonName), lessonMap);
       let lessonId = _lesM ? _lesM.id : null;
       if (_lesM && _lesM.type === "fuzzy") stats.fuzzyMatches++;
       if (!lessonId) {
@@ -991,7 +1012,7 @@ export async function adminImportSnippetsFull(rows) {
         let courseId = null;
         const courseName = String(row.course || "").trim();
         if (courseName) {
-          const _cm = _fuzzyLookup(normalize(courseName), courseMap);
+          const _cm = _exactLookup(normalize(courseName), courseMap);
           if (_cm) {
             courseId = _cm.id;
             if (_cm.type === "fuzzy") stats.fuzzyMatches++;
@@ -1008,7 +1029,7 @@ export async function adminImportSnippetsFull(rows) {
         let levelId = null;
         const levelName = String(row.level || "").trim();
         if (levelName) {
-          const _lm = _fuzzyLookup(normalize(levelName), levelMap);
+          const _lm = _exactLookup(normalize(levelName), levelMap);
           if (_lm) {
             levelId = _lm.id;
             if (_lm.type === "fuzzy") stats.fuzzyMatches++;
@@ -1021,7 +1042,7 @@ export async function adminImportSnippetsFull(rows) {
         let themeId = null;
         const themeName = String(row.theme || "").trim();
         if (themeName) {
-          const _tm = _fuzzyLookup(normalize(themeName), themeMap);
+          const _tm = _exactLookup(normalize(themeName), themeMap);
           if (_tm) {
             themeId = _tm.id;
             if (_tm.type === "fuzzy") stats.fuzzyMatches++;
@@ -1037,13 +1058,13 @@ export async function adminImportSnippetsFull(rows) {
         let moduleId = null;
         const moduleName = String(row.module || "").trim();
         if (moduleName) {
-          const _mm = _fuzzyLookup(normalize(moduleName), moduleMap);
+          const _mm = _exactLookup(normalize(moduleName), moduleMap);
           if (_mm) {
             moduleId = _mm.id;
             if (_mm.type === "fuzzy") stats.fuzzyMatches++;
           } else {
             moduleId = uuid();
-            const modRow = { module_id: moduleId, module_name: moduleName, visibility: "public" };
+            const modRow = { module_id: moduleId, module_name: moduleName, visibility: "PUBLIC" };
             if (courseId) modRow.course_id = courseId;
             if (levelId)  modRow.level_id  = levelId;
             if (themeId)  modRow.theme_id  = themeId;
@@ -1088,6 +1109,9 @@ export async function adminImportSnippetsFull(rows) {
       stats.errors.push("Unexpected error on row: " + (e.message || String(e)));
     }
   }
+
+  // ── Refresh course counts (snippet_count, language_count) ───────────────
+  await supabaseClient.rpc("refresh_course_counts");
 
   return stats;
 }
@@ -1149,7 +1173,7 @@ export async function adminDryRunImport(rows) {
     resolutions[f] = {};
     for (const val of uniqueVals[f]) {
       const n = normalize(val);
-      const match = _fuzzyLookup(n, LOOKUP_MAPS[f]);
+      const match = _exactLookup(n, LOOKUP_MAPS[f]);
       if (match) {
         const resolvedName = DISP_MAPS[f][match.matchedNorm] || match.matchedNorm;
         resolutions[f][val] = { type: match.type, id: match.id, resolvedTo: resolvedName, score: match.score };

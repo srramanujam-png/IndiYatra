@@ -1,6 +1,11 @@
-export const SUPABASE_URL = "https://kurppksdakubwlwtimdh.supabase.co";
-export const SUPABASE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1cnBwa3NkYWt1Yndsd3RpbWRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1Njc5MzYsImV4cCI6MjA5NDE0MzkzNn0.Vzdg4TcXWxKtr4h83OEMroXnfoRVLCk0YrjoWSHgiL0";
+export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+export const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  throw new Error(
+    "Missing Supabase env vars. Copy .env.example to .env and set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY."
+  );
+}
 
 export async function supabase(table, query = "") {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query}`, {

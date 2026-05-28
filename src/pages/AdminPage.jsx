@@ -22,7 +22,7 @@ const TOKEN_TYPES = FOREST_TOKEN_TYPES;  // from appStrings
 const styles = `
   .admin-tabs {
     max-width: 1100px; margin: 0 auto; padding: 20px 1.25rem 0;
-    display: flex; gap: 4px; border-bottom: 2px solid #EAD9BE; flex-wrap: wrap;
+    display: flex; gap: 4px; border-bottom: 2px solid rgba(0,0,0,0.07); flex-wrap: wrap;
   }
   .admin-tab-btn {
     padding: 10px 20px; font-family: 'Alumni Sans', sans-serif;
@@ -35,7 +35,7 @@ const styles = `
   .admin-tab-btn.active { color: ${SAFFRON}; border-bottom-color: ${SAFFRON}; }
   .admin-sub-tabs {
     display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 20px;
-    border-bottom: 1.5px solid #f0e8d8; padding-bottom: 0;
+    border-bottom: 1.5px solid rgba(0,0,0,0.07); padding-bottom: 0;
   }
   .admin-sub-btn {
     padding: 7px 16px; font-size: 0.875rem; font-weight: 700;
@@ -51,7 +51,7 @@ const styles = `
     gap: 16px; margin-bottom: 24px;
   }
   .admin-stat-card {
-    background: white; border-radius: 14px; border: 1px solid #EAD9BE;
+    background: white; border-radius: 14px; border: 1px solid rgba(0,0,0,0.07);
     padding: 18px 20px; box-shadow: none;
   }
   .admin-stat-val { font-family: 'Alumni Sans', sans-serif; font-size: 2rem; font-weight: 800; color: ${HERITAGE}; line-height: 1; }
@@ -61,11 +61,11 @@ const styles = `
   .admin-table th {
     text-align: left; padding: 10px 14px; font-size: 0.75rem; font-weight: 700;
     color: #aaa; text-transform: uppercase; letter-spacing: 0.06em;
-    border-bottom: 1.5px solid #EAD9BE; white-space: nowrap;
+    border-bottom: 1.5px solid rgba(0,0,0,0.07); white-space: nowrap;
   }
   .admin-table td { padding: 11px 14px; border-bottom: 1px solid #f5efe4; vertical-align: middle; color: #0A0A0A; }
   .admin-table tr:last-child td { border-bottom: none; }
-  .admin-table tr:hover td { background: #fdf9f3; }
+  .admin-table tr:hover td { background: #FAFAF7; }
   .role-pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
   .role-pill.admin { background: ${SAFFRON}22; color: #b86000; border: 1px solid ${SAFFRON}44; }
   .role-pill.learner { background: #f0f0f0; color: #6B6B6B; border: 1px solid #e0e0e0; }
@@ -74,7 +74,7 @@ const styles = `
   .icon-btn { background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 6px; font-size: 0.875rem; transition: background 0.15s; color: #aaa; line-height: 1; }
   .icon-btn:hover { background: #f5f0e8; color: #555; }
   .icon-btn.danger:hover { background: #fff0f0; color: #c00; }
-  .crud-form-row { background: #fdf9f3; border-bottom: 1px solid #f0e8d8; }
+  .crud-form-row { background: #FAFAF7; border-bottom: 1px solid rgba(0,0,0,0.07); }
   .crud-form-row td { padding: 12px 14px; }
   .crud-input { padding: 7px 10px; border-radius: 8px; border: 1.5px solid #e0d4bc; font-size: 0.875rem; font-family: 'Source Sans 3', sans-serif; color: #0A0A0A; outline: none; transition: border-color 0.15s; width: 100%; box-sizing: border-box; }
   .crud-input:focus { border-color: ${SAFFRON}; }
@@ -86,23 +86,23 @@ const styles = `
   .crud-msg.ok  { background: #f0fdf4; color: ${GREEN}; }
   .crud-msg.err { background: #fff0f0; color: #c00; }
   .tax-type-label { font-size: 0.75rem; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.07em; margin: 20px 0 10px; }
-  .tax-term-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px; border: 1px solid #EAD9BE; background: white; margin-bottom: 8px; }
+  .tax-term-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.07); background: white; margin-bottom: 8px; }
   .tax-term-id  { font-size: 0.6875rem; color: #bbb; font-weight: 600; min-width: 72px; }
   .tax-term-name { flex: 1; font-size: 0.9375rem; font-weight: 600; color: #0A0A0A; }
   .tax-term-count { font-size: 0.75rem; color: #aaa; min-width: 80px; text-align: right; }
   .tax-edit-input { flex: 1; padding: 5px 10px; border-radius: 8px; border: 1.5px solid ${SAFFRON}; font-size: 0.9375rem; font-family: 'Source Sans 3', sans-serif; outline: none; color: #0A0A0A; }
-  .tax-add-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 16px; background: #fdf9f3; border-radius: 12px; border: 1.5px dashed #e0d4bc; margin-top: 20px; }
+  .tax-add-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 16px; background: #FAFAF7; border-radius: 12px; border: 1.5px dashed rgba(0,0,0,0.10); margin-top: 20px; }
   .tax-add-input { padding: 8px 12px; border-radius: 8px; border: 1.5px solid #e0d4bc; font-size: 0.875rem; font-family: 'Source Sans 3', sans-serif; outline: none; color: #0A0A0A; transition: border-color 0.15s; }
   .tax-add-input:focus { border-color: ${SAFFRON}; }
   .tax-type-select { padding: 8px 12px; border-radius: 8px; border: 1.5px solid #e0d4bc; font-size: 0.875rem; background: white; color: #0A0A0A; outline: none; cursor: pointer; }
   .badge-admin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
-  .badge-admin-card { background: white; border-radius: 14px; border: 1px solid #EAD9BE; padding: 16px; transition: box-shadow 0.15s; box-shadow: 0 1px 6px rgba(0,0,0,0.04); }
+  .badge-admin-card { background: white; border-radius: 14px; border: 1px solid rgba(0,0,0,0.07); padding: 16px; transition: box-shadow 0.15s;  }
   .badge-admin-card.inactive { opacity: 0.5; }
   .badge-cat-pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.625rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 8px; }
   .badge-cat-pill.progression { background: ${HERITAGE}18; color: ${HERITAGE}; }
   .badge-cat-pill.volume { background: ${GREEN}18; color: ${GREEN}; }
   .badge-cat-pill.streak { background: white; color: #b86000; }
-  .badge-cat-pill.daily { background: #7B2D8B18; color: #7B2D8B; }
+  .badge-cat-pill.daily { background: rgba(0,80,158,0.08); color: #00509E; }
   .badge-icon-big { font-size: 1.75rem; line-height: 1; margin-bottom: 6px; display: block; }
   .badge-admin-name { font-family: 'Alumni Sans', sans-serif; font-size: 1rem; font-weight: 700; color: #0A0A0A; margin-bottom: 2px; }
   .badge-admin-criteria { font-size: 0.75rem; color: #6B6B6B; margin-bottom: 10px; line-height: 1.4; }
@@ -216,6 +216,7 @@ export default function AdminPage({
 
   // ── Import ────────────────────────────────��──────────────────────────────────
   const [importFile,    setImportFile]    = useState(null);
+  const [nextSnippetKey, setNextSnippetKey] = useState(null);
   const [importSheets,  setImportSheets]  = useState(null);   // { Snippets: [...], Lessons: [...], Mapping: [...] }
   const [importRunning, setImportRunning] = useState(false);
   const [importMsg,     setImportMsg]     = useState("");
@@ -621,6 +622,16 @@ export default function AdminPage({
   }
 
   // ── Import handlers ──────────────────────────────────────────────────────────
+  async function fetchNextSnippetKey() {
+    const { data } = await supabaseClient
+      .from("snippet_core")
+      .select("import_key")
+      .order("import_key", { ascending: false })
+      .limit(1);
+    const maxKey = data?.[0]?.import_key ?? 0;
+    setNextSnippetKey(maxKey + 1);
+  }
+
   function handleImportFile(e) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -637,7 +648,15 @@ export default function AdminPage({
         // Accept a sheet named "Snippets", or fall back to the first sheet
         const sheetName = wb.SheetNames.includes("Snippets") ? "Snippets" : wb.SheetNames[0];
         if (!sheetName) { setImportMsg("The file has no sheets."); return; }
-        const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { defval: "" });
+        const rawRows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { defval: "" });
+        // Normalise header names: trim, lowercase, spaces → underscores.
+        // This lets spreadsheets use "Module", "Lesson", "English Hook" etc.
+        const rows = rawRows.map(r => {
+          const out = {};
+          for (const [k, v] of Object.entries(r))
+            out[k.trim().toLowerCase().replace(/\s+/g, "_")] = v;
+          return out;
+        });
         if (!rows.length) { setImportMsg("Sheet is empty."); return; }
         setImportSheets({ Snippets: rows });
       } catch (err) {
@@ -788,7 +807,7 @@ export default function AdminPage({
                       <option value="true">Yes</option>
                       <option value="false">No</option>
                     </select>
-                  ) : col.includes("description") || col.includes("explanation") ? (
+                  ) : col.includes("description") || col.includes("explanation") || col === "snippet_value" ? (
                     <textarea className="crud-textarea" value={val} readOnly={isId} onChange={e => !isId && setEditData(d => ({ ...d, [col]: e.target.value }))} />
                   ) : (
                     <input className="crud-input" value={val} readOnly={isId} style={isId ? { background: "#f5f0e8", color: "#aaa" } : {}} onChange={e => !isId && setEditData(d => ({ ...d, [col]: e.target.value }))} />
@@ -840,7 +859,7 @@ export default function AdminPage({
                       <option value="false">No</option>
                       <option value="true">Yes</option>
                     </select>
-                  ) : col.includes("description") || col.includes("explanation") ? (
+                  ) : col.includes("description") || col.includes("explanation") || col === "snippet_value" ? (
                     <textarea className="crud-textarea" placeholder={col} value={val} onChange={e => setAddData(d => ({ ...d, [col]: e.target.value }))} />
                   ) : (
                     <input className="crud-input" placeholder={col === pk ? "Required" : col} value={val} onChange={e => setAddData(d => ({ ...d, [col]: e.target.value }))} />
@@ -928,7 +947,7 @@ export default function AdminPage({
                           <tr key={u.profile_id}>
                             <td style={{ fontWeight: 600 }}>{u.display_name || <span style={{ color: "#bbb" }}>—</span>}</td>
                             <td><span className={"role-pill " + (u.role_id !== "ROLE_04" ? "admin" : "learner")}>{u.role_name}</span></td>
-                            <td style={{ color: "#888" }}>{fmtDate(u.created_at)}</td>
+                            <td style={{ color: "#6B6B6B" }}>{fmtDate(u.created_at)}</td>
                             <td>{u.lessons_completed}</td>
                             <td>{u.dharma_points.toLocaleString()}</td>
                           </tr>
@@ -975,7 +994,7 @@ export default function AdminPage({
                                   <input value={editCatData.token_icon || ""} onChange={e => setEditCatData(p => ({ ...p, token_icon: e.target.value }))}
                                     style={{ width: 48, padding: "4px 6px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: "1.1rem", textAlign: "center" }} />
                                 </td>
-                                <td style={{ fontSize: "0.8rem", color: "#888" }}>{row.token_type}</td>
+                                <td style={{ fontSize: "0.8rem", color: "#6B6B6B" }}>{row.token_type}</td>
                                 <td>
                                   <input value={editCatData.token_name || ""} onChange={e => setEditCatData(p => ({ ...p, token_name: e.target.value }))}
                                     style={{ width: 120, padding: "4px 8px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: "0.875rem" }} />
@@ -1009,8 +1028,8 @@ export default function AdminPage({
                                   </span>
                                 </td>
                                 <td style={{ fontWeight: 600 }}>{row.token_name}</td>
-                                <td style={{ color: "#888", fontSize: "0.8rem" }}>{row.earn_trigger || "—"}</td>
-                                <td style={{ color: "#888", fontSize: "0.8rem", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.description || "—"}</td>
+                                <td style={{ color: "#6B6B6B", fontSize: "0.8rem" }}>{row.earn_trigger || "—"}</td>
+                                <td style={{ color: "#6B6B6B", fontSize: "0.8rem", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.description || "—"}</td>
                                 <td style={{ color: "#aaa", fontSize: "0.8rem" }}>{row.sort_order}</td>
                                 <td>{row.is_active ? <span style={{ color: GREEN, fontWeight: 700 }}>✓</span> : <span style={{ color: "#ccc" }}>–</span>}</td>
                                 <td style={{ whiteSpace: "nowrap" }}>
@@ -1068,19 +1087,19 @@ export default function AdminPage({
                 </div>
 
                 {/* Grant New Token panel */}
-                <div style={{ marginTop: 24, background: "#FFF9F2", border: "1px solid #EAD9BE", borderRadius: 14, padding: "18px 20px" }}>
-                  <div style={{ fontFamily: "'Alumni Sans', sans-serif", fontWeight: 700, fontSize: "1rem", color: "#1a1a2e", marginBottom: 12 }}>Grant New Token</div>
+                <div style={{ marginTop: 24, background: "white", border: "1px solid rgba(0,0,0,0.07)", borderRadius: 14, padding: "18px 20px" }}>
+                  <div style={{ fontFamily: "'Alumni Sans', sans-serif", fontWeight: 700, fontSize: "1rem", color: "#0A0A0A", marginBottom: 12 }}>Grant New Token</div>
                   {grantMsg && <div className={"crud-msg " + (grantMsg.includes("failed") ? "err" : "ok")} style={{ marginBottom: 10 }}>{grantMsg}</div>}
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                      <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "#888" }}>User</label>
+                      <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "#6B6B6B" }}>User</label>
                       <select className="crud-select" value={grantUser} onChange={e => setGrantUser(e.target.value)} style={{ minWidth: 160 }}>
                         <option value="">Select user…</option>
                         {(users || []).map(u => <option key={u.id} value={u.id}>{u.display_name || u.id.slice(0,8)}</option>)}
                       </select>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                      <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "#888" }}>Token type</label>
+                      <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "#6B6B6B" }}>Token type</label>
                       <select className="crud-select" value={grantType} onChange={e => setGrantType(e.target.value)}>
                         {tokenCatalogue.length > 0
                           ? tokenCatalogue.map(t => <option key={t.token_type} value={t.token_type}>{t.token_icon} {t.token_name}</option>)
@@ -1089,7 +1108,7 @@ export default function AdminPage({
                       </select>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                      <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "#888" }}>Qty</label>
+                      <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "#6B6B6B" }}>Qty</label>
                       <input type="number" min={1} max={999} value={grantQty} onChange={e => setGrantQty(e.target.value)}
                         style={{ width: 70, padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 8, fontSize: "0.9rem" }} />
                     </div>
@@ -1119,7 +1138,7 @@ export default function AdminPage({
                 {/* ── Filter bars ── */}
                 {contentSub === "Modules" && (
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14, alignItems: "center" }}>
-                    <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#888" }}>Filter:</span>
+                    <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#6B6B6B" }}>Filter:</span>
                     <select className="crud-select" value={moduleFilter.course} onChange={e => { const f={...moduleFilter,course:e.target.value}; setModuleFilter(f); loadContent("Modules",f,lessonFilter,snippetFilter); }}>
                       <option value="">All Courses</option>
                       {courses.map(c => <option key={c.course_id} value={c.course_id}>{c.course_name}</option>)}
@@ -1140,7 +1159,7 @@ export default function AdminPage({
                 )}
                 {contentSub === "Lessons" && (
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14, alignItems: "center" }}>
-                    <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#888" }}>Filter:</span>
+                    <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#6B6B6B" }}>Filter:</span>
                     <select className="crud-select" value={lessonFilter.module} onChange={e => { const f={module:e.target.value}; setLessonFilter(f); loadContent("Lessons",moduleFilter,f,snippetFilter); }}>
                       <option value="">All Modules</option>
                       {refData.modules.map(m => <option key={m.module_id} value={m.module_id}>{m.module_name}</option>)}
@@ -1153,7 +1172,7 @@ export default function AdminPage({
                 )}
                 {contentSub === "Snippets" && (
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14, alignItems: "center" }}>
-                    <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#888" }}>Filter:</span>
+                    <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#6B6B6B" }}>Filter:</span>
                     <select className="crud-select" value={snippetFilter.lesson} onChange={e => { const f={lesson:e.target.value}; setSnippetFilter(f); loadContent("Snippets",moduleFilter,lessonFilter,f); }}>
                       <option value="">All Snippets (by ID)</option>
                       {refData.lessons.map(l => <option key={l.lesson_id} value={l.lesson_id}>{l.lesson_name}</option>)}
@@ -1178,7 +1197,7 @@ export default function AdminPage({
                         <button className="btn-primary" style={{ padding: "7px 18px", minHeight: 36, fontSize: "0.875rem" }} onClick={() => { setShowAdd(s => !s); setAddData({}); setEditId(null); }}>
                           {showAdd ? "Cancel" : "+ Add New"}
                         </button>
-                        {dragSaving && <span style={{ fontSize: "0.8rem", color: "#888" }}>Saving order…</span>}
+                        {dragSaving && <span style={{ fontSize: "0.8rem", color: "#6B6B6B" }}>Saving order…</span>}
                         {canReorder && !dragSaving && <span style={{ fontSize: "0.75rem", color: "#bbb" }}>⠿ Drag rows to reorder</span>}
                       </div>
                       <div className="admin-table-wrap">
@@ -1264,7 +1283,7 @@ export default function AdminPage({
                       </div>
                     ))}
                     <form className="tax-add-form" onSubmit={addTerm}>
-                      <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "#888", whiteSpace: "nowrap" }}>Add term</span>
+                      <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "#6B6B6B", whiteSpace: "nowrap" }}>Add term</span>
                       <input className="tax-add-input" placeholder="Term name" value={newTermName} onChange={e => setNewTermName(e.target.value)} style={{ flex: 1, minWidth: 140 }} />
                       <select className="tax-type-select" value={newTermType} onChange={e => setNewTermType(e.target.value)}>
                         <option value="category">Category</option>
@@ -1308,7 +1327,7 @@ export default function AdminPage({
                           const ab = addBadgeData;
                           const setAb = patch => setAddBadgeData(p => ({ ...p, ...patch }));
                           return (
-                            <tr style={{ background: "#FFF9F2" }}>
+                            <tr style={{ background: "white" }}>
                               <td><input style={{ width: 48, textAlign: "center" }} value={ab.badge_icon || ""} onChange={e => setAb({ badge_icon: e.target.value })} placeholder="🏆" /></td>
                               <td><input style={{ width: 110, fontFamily: "monospace", fontSize: "0.8rem" }} value={ab.badge_id || ""} onChange={e => setAb({ badge_id: e.target.value })} placeholder="BADGE_XX" /></td>
                               <td><input style={{ width: 130 }} value={ab.badge_name || ""} onChange={e => setAb({ badge_name: e.target.value })} placeholder="Name…" /></td>
@@ -1342,7 +1361,7 @@ export default function AdminPage({
                           return (
                             <tr key={badge.badge_id} style={{ background: "#F0F7FF" }}>
                               <td><input style={{ width: 48, textAlign: "center" }} value={eb.badge_icon || ""} onChange={e => setEb({ badge_icon: e.target.value })} /></td>
-                              <td style={{ fontFamily: "monospace", fontSize: "0.8rem", color: "#888" }}>{badge.badge_id}</td>
+                              <td style={{ fontFamily: "monospace", fontSize: "0.8rem", color: "#6B6B6B" }}>{badge.badge_id}</td>
                               <td><input style={{ width: 130 }} value={eb.badge_name || ""} onChange={e => setEb({ badge_name: e.target.value })} /></td>
                               <td>
                                 <select value={eb.badge_category || ""} onChange={e => setEb({ badge_category: e.target.value })}>
@@ -1369,13 +1388,13 @@ export default function AdminPage({
                         })() : (
                           <tr key={badge.badge_id} style={{ opacity: badge.is_active ? 1 : 0.5 }}>
                             <td style={{ fontSize: "1.25rem", textAlign: "center" }}>{badge.badge_icon}</td>
-                            <td style={{ fontFamily: "monospace", fontSize: "0.8rem", color: "#888" }}>{badge.badge_id}</td>
+                            <td style={{ fontFamily: "monospace", fontSize: "0.8rem", color: "#6B6B6B" }}>{badge.badge_id}</td>
                             <td style={{ fontWeight: 600 }}>{badge.badge_name}</td>
                             <td><span className={"badge-cat-pill " + badge.badge_category}>{badge.badge_category}</span></td>
                             <td style={{ fontSize: "0.8125rem", color: "#666" }}>{badge.criteria_type}</td>
                             <td style={{ textAlign: "center", fontWeight: 600 }}>{badge.criteria_value}</td>
                             <td style={{ fontSize: "0.8125rem", color: "#666", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{badge.description}</td>
-                            <td style={{ textAlign: "center", color: "#888" }}>{badge.sort_order}</td>
+                            <td style={{ textAlign: "center", color: "#6B6B6B" }}>{badge.sort_order}</td>
                             <td style={{ textAlign: "center" }}>
                               <label className="toggle-switch" style={{ margin: "0 auto" }}>
                                 <input type="checkbox" checked={badge.is_active} onChange={() => toggleBadge(badge)} />
@@ -1404,16 +1423,31 @@ export default function AdminPage({
                   <div className="page-section-title">Import from Excel</div>
                 </div>
                 <p style={{ color: "#555", marginBottom: 16, fontSize: "0.9rem" }}>
-                  Add new snippets from an <strong>.xlsx</strong> file. No IDs needed — all matching is by text.
-                  Spelling variations are tolerated (fuzzy matching). Existing (snippet × language) pairs are skipped.
+                  Add new snippets from an <strong>.xlsx</strong> file. The <code>snippet_key</code> column
+                  is a stable integer ID that groups translations and enables reliable re-imports.
+                  Lookup fields (lesson, module, theme, course, language) must match exactly (case-insensitive).
+                  Existing (snippet × language) pairs are skipped.
                 </p>
+
+                {/* ── Next snippet key banner ── */}
+                {nextSnippetKey === null
+                  ? <div style={{ marginBottom: 16 }}><button className="btn-secondary" style={{ fontSize: "0.8rem", padding: "5px 14px" }} onClick={fetchNextSnippetKey}>Check next snippet key</button></div>
+                  : (
+                  <div style={{ marginBottom: 20, padding: "10px 16px", background: "#f0f7ff", border: "1px solid #c0d8f0", borderRadius: 10, display: "flex", alignItems: "center", gap: 10 }}>
+                    <i className="ti ti-key" style={{ color: "#00509E", fontSize: "1.1rem" }} />
+                    <span style={{ fontSize: "0.9rem", color: "#1F1F1F" }}>
+                      Next available <strong>snippet_key</strong>: <strong style={{ color: "#00509E", fontSize: "1.1rem" }}>{nextSnippetKey}</strong>
+                      <span style={{ color: "#6B6B6B", marginLeft: 8 }}>— start your next Excel batch from this number</span>
+                    </span>
+                  </div>
+                )}
 
                 {/* ── Step 1: Download template ── */}
                 <div style={{ marginBottom: 20, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                   <button className="btn-secondary" style={{ padding: "7px 18px", fontSize: "0.875rem" }} onClick={downloadTemplate}>
                     ⬇ Download Template
                   </button>
-                  <span style={{ fontSize: "0.8rem", color: "#888" }}>
+                  <span style={{ fontSize: "0.8rem", color: "#6B6B6B" }}>
                     Includes a Reference sheet with valid language, level, and course names.
                   </span>
                 </div>
@@ -1443,7 +1477,7 @@ export default function AdminPage({
                   const cols = Object.keys(rows[0]);
                   return (
                     <div key={sheetName} style={{ marginBottom: 24 }}>
-                      <div style={{ fontFamily: "'Alumni Sans', sans-serif", fontWeight: 700, fontSize: "1rem", color: "#1a1a2e", marginBottom: 8 }}>
+                      <div style={{ fontFamily: "'Alumni Sans', sans-serif", fontWeight: 700, fontSize: "1rem", color: "#0A0A0A", marginBottom: 8 }}>
                         {sheetName} — {rows.length} row{rows.length !== 1 ? "s" : ""}
                       </div>
                       <div className="admin-table-wrap" style={{ maxHeight: 200, overflowY: "auto" }}>
@@ -1477,7 +1511,7 @@ export default function AdminPage({
                       {validateRunning ? "Validating…" : "🔍 Validate"}
                     </button>
                     {validateResults && !validateRunning && (
-                      <span style={{ fontSize: "0.8rem", color: "#888" }}>
+                      <span style={{ fontSize: "0.8rem", color: "#6B6B6B" }}>
                         {validated ? "Validation passed — ready to import." : "Fix errors before importing."}
                       </span>
                     )}
@@ -1537,7 +1571,7 @@ export default function AdminPage({
                                   return (
                                     <div key={val} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, fontSize: "0.8rem" }}>
                                       <span style={{ fontFamily: "monospace", background: "#f0f0f0", padding: "2px 7px", borderRadius: 4, color: "#333" }}>{val}</span>
-                                      {res.resolvedTo && <><span style={{ color: "#999" }}>→</span><span style={{ color: "#222" }}>{res.resolvedTo}</span></>}
+                                      {res.resolvedTo && <><span style={{ color: "#6B6B6B" }}>→</span><span style={{ color: "#222" }}>{res.resolvedTo}</span></>}
                                       <span style={{ background: badge.bg, color: badge.color, padding: "2px 8px", borderRadius: 10, fontSize: "0.73rem", fontWeight: 700 }}>{badge.text}</span>
                                     </div>
                                   );
@@ -1562,11 +1596,7 @@ export default function AdminPage({
                     >
                       {importRunning ? "Importing…" : "⬆ Import " + (importSheets?.Snippets?.length || 0) + " rows"}
                     </button>
-                    {validateResults?.counts?.warn > 0 && !importRunning && (
-                      <div style={{ marginTop: 6, fontSize: "0.8rem", color: "#b86000" }}>
-                        Fuzzy-matched values will use the resolved names shown above.
-                      </div>
-                    )}
+
                   </div>
                 )}
 
@@ -1594,7 +1624,7 @@ export default function AdminPage({
                       return (
                         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 24px", marginBottom: 16 }}>
                           {statItems.map(s => (
-                            <div key={s.label} style={{ fontSize: "0.875rem", color: s.dim ? "#888" : "#2a6", minWidth: 170 }}>
+                            <div key={s.label} style={{ fontSize: "0.875rem", color: s.dim ? "#6B6B6B" : "#00924A", minWidth: 170 }}>
                               <span style={{ fontWeight: 700 }}>{s.val ?? 0}</span>
                               <span style={{ color: "#555", marginLeft: 6 }}>{s.label}</span>
                             </div>

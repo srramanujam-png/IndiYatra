@@ -71,7 +71,7 @@ const styles = `
   .gw-section-text { font-size: 0.9375rem; color: #444; line-height: 1.6; font-family: 'Source Sans 3', sans-serif; }
   .gw-citation  { font-size: 0.75rem; color: #aaa; border-top: 1px solid #f0ebe0; padding-top: 10px; margin-top: 4px; font-style: italic; }
   .gw-meta { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
-  .gw-stars { color: #D4A017; font-size: 0.875rem; }
+  .gw-stars { color: #FF8E00; font-size: 0.875rem; }
 
   /* Skeleton */
   .gw-snip-loading { pointer-events: none; }
@@ -213,9 +213,9 @@ export default function GatewayPage({
 
   const CHOICES = [
     { icon: "📚", title: "Follow a Course",        sub: "Structured learning, step by step",   action: onCourseFlow,        color: HERITAGE  },
-    { icon: "🧭", title: "Explore Your Interests", sub: "Browse themes and topics",             action: onExploreInterests,  color: "#7B2D8B" },
+    { icon: "🧭", title: "Explore Your Interests", sub: "Browse themes and topics",             action: onExploreInterests,  color: "#00509E" },
     { icon: "❤️",  title: "Most Liked",             sub: "Community’s favourite snippets",  action: handleMostLiked,     color: "#E53935" },
-    { icon: "🔖", title: "Most Saved",             sub: "Most bookmarked by learners",          action: handleMostSaved,     color: "#D4A017" },
+    { icon: "🔖", title: "Most Saved",             sub: "Most bookmarked by learners",          action: handleMostSaved,     color: "#FF8E00" },
     { icon: "🎲", title: "Surprise Me",            sub: "Random snippets, keep exploring",     action: handleSurpriseMe,    color: SAFFRON   },
   ];
 

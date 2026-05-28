@@ -14,7 +14,7 @@ const styles = `
   .settings-card {
     background: white; border-radius: 14px; padding: 22px;
     margin-bottom: 24px; box-shadow: none;
-    border: 1px solid #EAD9BE;
+    border: 1px solid rgba(0,0,0,0.07);
   }
   .settings-card-label {
     font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.08em;

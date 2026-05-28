@@ -79,20 +79,22 @@ const styles = `
     background: white; border-radius: 14px; border: 1px solid rgba(0,0,0,0.07);
     padding: 18px 14px; position: relative; overflow: hidden;
     transition: transform 0.18s, box-shadow 0.18s;
-    box-shadow: none;
+    box-shadow: none; text-align: center;
   }
   .stat-card:hover { box-shadow: none; border-color: rgba(0,0,0,0.12); }
   .stat-ghost { background: transparent; border: 1px dashed rgba(0,0,0,0.06) !important; box-shadow: none !important; pointer-events: none; }
   .stat-ghost:hover { transform: none !important; box-shadow: none !important; }
-  .stat-card-accent { display: none; }
-  .stat-icon { font-size: 1.375rem; margin-bottom: 10px; line-height: 1; }
+  .stat-icon { font-size: 1.375rem; margin-bottom: 10px; line-height: 1; color: ${HERITAGE}; }
   .stat-label {
+    display: flex; flex-direction: column; align-items: center; gap: 1px;
     font-size: 0.625rem; font-weight: 700; letter-spacing: 0.07em;
     text-transform: uppercase; color: #6B6B6B; margin-bottom: 5px;
+    line-height: 1.1;
   }
+  .stat-label-word { display: block; line-height: 1.1; }
   .stat-value {
     font-family: 'Alumni Sans', sans-serif; font-size: 1.75rem;
-    font-weight: 800; line-height: 1; margin-bottom: 4px;
+    font-weight: 800; line-height: 1; margin-bottom: 4px; color: ${HERITAGE};
   }
   .stat-sub  { font-size: 0.6875rem; color: #6B6B6B; line-height: 1.3; }
   .stat-link { font-size: 0.6875rem; color: ${HERITAGE}; cursor: pointer; }
@@ -184,9 +186,19 @@ const styles = `
   .badge-name { font-size: 0.5625rem; color: #6B6B6B; text-align: center; line-height: 1.3; }
 
   /* ── Share card ── */
-  .share-inner { display: flex; gap: 24px; align-items: flex-start; }
+  .share-section-head {
+    flex-wrap: nowrap; gap: 8px; margin-bottom: 16px; align-items: center;
+  }
+  .share-section-head .page-section-title {
+    flex: 0 1 auto; min-width: 0; white-space: nowrap;
+    font-size: 1.125rem; margin-right: 4px;
+  }
+  .share-head-toolbar {
+    display: flex; align-items: center; gap: 4px; margin-left: auto; flex-shrink: 0;
+  }
+  .share-inner { display: block; }
   .share-preview {
-    flex: 1; min-width: 0;
+    width: 100%; box-sizing: border-box;
     background: white;
     border: 1px solid rgba(0,0,0,0.07); border-radius: 14px; padding: 18px 22px;
   }
@@ -202,22 +214,27 @@ const styles = `
   }
   .share-stat-lbl { font-size: 0.625rem; color: #6B6B6B; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
   .share-footer-txt { font-size: 0.6875rem; color: #6B6B6B; margin-top: 4px; }
-  .share-actions { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; align-items: center; }
-  .share-btn-row { display: flex; gap: 10px; align-items: center; }
-  .share-btn {
+  .share-toolbar-btn {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 44px; height: 44px; min-height: 44px; min-width: 44px;
+    width: 30px; height: 30px; min-height: 30px; min-width: 30px;
     border-radius: 50%; padding: 0;
-    font-size: 1.25rem; line-height: 1;
     cursor: not-allowed; opacity: 0.45;
     border: 1.5px solid ${GREEN}; color: ${GREEN};
-    background: white; transition: opacity 0.2s, background 0.2s, color 0.2s;
+    background: white; transition: opacity 0.2s, background 0.2s, color 0.2s, border-color 0.2s;
   }
-  .share-btn .ti { font-size: 1.25rem; line-height: 1; }
-  .share-btn.active { cursor: pointer; opacity: 1; }
-  .share-btn.active:hover { background: ${GREEN}; color: white; }
-  .share-btn.copied { background: ${GREEN}; color: white; }
-  .share-coming { font-size: 0.6875rem; color: #6B6B6B; text-align: center; font-style: italic; margin-top: 2px; }
+  .share-toolbar-btn .ti { font-size: 0.9375rem; line-height: 1; }
+  .share-toolbar-btn.active { cursor: pointer; opacity: 1; }
+  .share-toolbar-btn.active:hover { background: ${GREEN}; color: white; }
+  .share-toolbar-btn.copied { background: ${GREEN}; color: white; }
+  .share-toolbar-btn.share-edit {
+    border-color: rgba(0,0,0,0.12); color: #6B6B6B;
+    cursor: pointer; opacity: 1;
+  }
+  .share-toolbar-btn.share-edit:hover,
+  .share-toolbar-btn.share-edit.open {
+    color: ${SAFFRON}; border-color: ${SAFFRON}; background: ${SAFFRON}08;
+  }
+  .share-coming { font-size: 0.6875rem; color: #6B6B6B; text-align: right; font-style: italic; margin-top: 8px; }
 
   /* ── Share settings panel ── */
   .share-settings {
@@ -253,11 +270,6 @@ const styles = `
     border-radius: 999px; padding: 6px 14px; font-size: 0.8125rem; cursor: pointer;
   }
   .share-reset-btn:hover { color: #1F1F1F; border-color: rgba(0,0,0,0.20); }
-  .share-gear {
-    background: none; border: none; cursor: pointer; font-size: 0.9375rem;
-    color: #6B6B6B; padding: 2px 4px; border-radius: 6px; transition: color 0.2s; line-height: 1;
-  }
-  .share-gear:hover, .share-gear.open { color: ${SAFFRON}; }
   .share-msg-text {
     font-size: 0.8125rem; color: #1F1F1F; line-height: 1.5; margin-top: 4px;
     font-style: italic;
@@ -325,11 +337,41 @@ const styles = `
     font-size: 0.5rem; font-weight: 700; letter-spacing: 0.08em;
     text-transform: uppercase; color: #6B6B6B;
   }
+  /* ── Activity stacked view (≤600px) ── */
+  .act-stack { display: none; }
+  .act-stack-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0; border-top: 1px solid rgba(0,0,0,0.07);
+    flex-wrap: wrap; gap: 6px;
+  }
+  .act-stack-day { font-weight: 700; color: #0A0A0A; font-size: 0.9375rem; }
+  .act-stack-day.today { color: ${SAFFRON}; }
+  .act-stack-date { font-size: 0.75rem; color: #6B6B6B; margin-left: 5px; }
+  .act-stack-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .act-pill {
+    font-size: 0.75rem; font-weight: 700; border-radius: 999px;
+    padding: 3px 10px; white-space: nowrap;
+  }
+  .act-pill-lesson { background: rgba(0,146,74,0.10); color: #00924A; }
+  .act-pill-dharma { background: rgba(255,142,0,0.10); color: ${SAFFRON}; }
+  .act-pill-none   { background: rgba(0,0,0,0.05); color: #6B6B6B; }
+
+  /* ── Progress stacked view (≤600px) ── */
+  .prog-stack { display: none; }
+  .prog-stack-row { padding: 12px 0; border-top: 1px solid rgba(0,0,0,0.07); }
+  .prog-stack-name { font-size: 0.9375rem; font-weight: 700; color: #0A0A0A; margin-bottom: 6px; }
+  .prog-stack-bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .prog-stack-bar {
+    flex: 1; height: 7px; background: rgba(0,0,0,0.06);
+    border-radius: 4px; overflow: hidden;
+  }
+  .prog-stack-fill { height: 100%; border-radius: 4px; }
+  .prog-stack-pct { font-size: 0.75rem; font-weight: 700; min-width: 32px; text-align: right; }
+
   /* ── Responsive ── */
   @media (max-width: 768px) {
     .dash-section { padding: 18px 16px; }
     .dash-stats   { grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .share-inner  { flex-direction: column; }
     .prog-bar     { width: 56px; }
     .forest-grid  { grid-template-columns: repeat(3, 1fr); }
     .badge-cards  { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
@@ -361,40 +403,12 @@ const styles = `
     .forest-token { padding: 14px 6px; }
     .forest-token-icon  { font-size: 1.5rem; }
     .forest-token-count { font-size: 1.5rem; }
-    /* Share icon buttons stay as circles, centered */
-    .share-actions { min-width: 0; width: 100%; align-items: center; }
+    .share-section-head .page-section-title { font-size: 1rem; }
+    .share-head-toolbar { gap: 3px; }
+    .share-toolbar-btn { width: 28px; height: 28px; min-width: 28px; min-height: 28px; }
+    .share-toolbar-btn .ti { font-size: 0.875rem; }
   }
 
-  /* ── Activity stacked view (≤600px) ── */
-  .act-stack { display: none; }
-  .act-stack-row {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 0; border-top: 1px solid rgba(0,0,0,0.07);
-    flex-wrap: wrap; gap: 6px;
-  }
-  .act-stack-day { font-weight: 700; color: #0A0A0A; font-size: 0.9375rem; }
-  .act-stack-day.today { color: ${SAFFRON}; }
-  .act-stack-date { font-size: 0.75rem; color: #6B6B6B; margin-left: 5px; }
-  .act-stack-pills { display: flex; gap: 6px; flex-wrap: wrap; }
-  .act-pill {
-    font-size: 0.75rem; font-weight: 700; border-radius: 999px;
-    padding: 3px 10px; white-space: nowrap;
-  }
-  .act-pill-lesson { background: rgba(0,146,74,0.10); color: #00924A; }
-  .act-pill-dharma { background: rgba(255,142,0,0.10); color: ${SAFFRON}; }
-  .act-pill-none   { background: rgba(0,0,0,0.05); color: #6B6B6B; }
-
-  /* ── Progress stacked view (≤600px) ── */
-  .prog-stack { display: none; }
-  .prog-stack-row { padding: 12px 0; border-top: 1px solid rgba(0,0,0,0.07); }
-  .prog-stack-name { font-size: 0.9375rem; font-weight: 700; color: #0A0A0A; margin-bottom: 6px; }
-  .prog-stack-bar-wrap { display: flex; align-items: center; gap: 8px; }
-  .prog-stack-bar {
-    flex: 1; height: 7px; background: rgba(0,0,0,0.06);
-    border-radius: 4px; overflow: hidden;
-  }
-  .prog-stack-fill { height: 100%; border-radius: 4px; }
-  .prog-stack-pct { font-size: 0.75rem; font-weight: 700; min-width: 32px; text-align: right; }
 `;
 
 // ─── Data helpers ─────────────────────────────────────────────────────────────
@@ -449,13 +463,17 @@ function buildActivityFromCompletions(completions, lessonProgress, rawTokensData
     );
     const label = i === 0 ? "Today"
       : ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d.getDay()];
+    // Exclude progress rows for lessons that were also completed today — prevents double-counting
+    const completedTodayIds = new Set(rows.map(c => c.lesson_id));
     return {
       day:      label,
       date:     d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
       lessons:  rows.length,
       dharma:   rows.reduce((s, c) => s + (c.points_earned || 0), 0),
       snippets: rows.reduce((s, c) => s + (c.snippet_count || 0), 0)
-                + progRows.reduce((s, p) => s + (p.snippet_index + 1), 0),
+                + progRows
+                    .filter(p => !completedTodayIds.has(p.lesson_id))
+                    .reduce((s, p) => s + (p.snippet_index + 1), 0),
       plants:   plantRows.length,
       today:    i === 0,
     };
@@ -719,7 +737,7 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
   // two sequential awaits in fetchData. Guard all uses with _hasLessonIds.
   const _courseModuleIds = new Set(
     rawModules
-      .filter(m => !_courseId || !m.course_id || m.course_id === _courseId)
+      .filter(m => !_courseId || m.course_id === _courseId)
       .map(m => m.module_id)
   );
   const _courseLessonIds = new Set(
@@ -729,10 +747,13 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
   );
   const _hasLessonIds = _courseLessonIds.size > 0;
 
-  // completions carry course_id on each row — filter directly, no rawModules dependency.
-  // Rows with null course_id (saved before the column existed) count as "this course".
+  // completions carry course_id on each row — filter directly.
+  // Legacy rows with null course_id are attributed via lesson_id membership in _courseLessonIds
+  // rather than being included in every course (the old !c.course_id catch-all caused 7/5 bugs).
   const scopedCompletions = scope !== "all" && _courseId
-    ? completions.filter(c => !c.course_id || c.course_id === _courseId)
+    ? completions.filter(c =>
+        c.course_id === _courseId ||
+        (!c.course_id && _hasLessonIds && _courseLessonIds.has(c.lesson_id)))
     : completions;
 
   // lesson_progress and likes have no course_id column — use _courseLessonIds.
@@ -750,8 +771,13 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
 
   const totalDharma      = scopedCompletions.reduce((s, c) => s + (c.points_earned || 0), 0);
   const lessonsCompleted = scopedCompletions.length;
+  // Only add progress rows for lessons that are NOT yet completed — prevents double-counting
+  // (lesson_progress rows persist even after a lesson is completed).
+  const scopedCompletedIds = new Set(scopedCompletions.map(c => c.lesson_id));
   const snippetsViewed   = scopedCompletions.reduce((s, c) => s + (c.snippet_count || 0), 0)
-                         + scopedProgress.reduce((s, p) => s + (p.snippet_index + 1), 0);
+                         + scopedProgress
+                             .filter(p => !scopedCompletedIds.has(p.lesson_id))
+                             .reduce((s, p) => s + (p.snippet_index + 1), 0);
   const streakData       = buildStreakFromCompletions(scopedCompletions);
   const activityData     = buildActivityFromCompletions(scopedCompletions, scopedProgress, rawTokensData);
 
@@ -781,21 +807,21 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
 
   const STATS = [
     {
-      key: "dharma",  icon: <i className="ti ti-diamond" style={{color: SAFFRON}} />,  label: "Dharma Points",
-      value: String(totalDharma), sub: null, accent: SAFFRON,
+      key: "dharma",  icon: <i className="ti ti-diamond" />,  label: "Dharma Points",
+      value: String(totalDharma), sub: null,
     },
     {
-      key: "lessons", icon: <i className="ti ti-book-2" style={{color: GREEN}} />, label: "Lessons Completed",
+      key: "lessons", icon: <i className="ti ti-book-2" />, label: "Lessons Completed",
       value: courseLessonTotal ? `${lessonsCompleted}/${courseLessonTotal}` : String(lessonsCompleted),
-      sub: null, accent: GREEN,
+      sub: null,
     },
     {
-      key: "badges", icon: <i className="ti ti-trophy" style={{color: SAFFRON}} />, label: "Badges Earned",
+      key: "badges", icon: <i className="ti ti-trophy" />, label: "Badges Earned",
       value: allBadges.length > 0 ? `${earnedBadgeIds.size}/${allBadges.length}` : "—",
-      sub: null, accent: SAFFRON,
+      sub: null,
     },
-    { key: "snippets",  icon: <i className="ti ti-book-2" style={{color: HERITAGE}} />, label: "Snippets Viewed", value: String(snippetsViewed), sub: null, accent: HERITAGE },
-    { key: "bookmarks", icon: <i className="ti ti-heart" style={{color: HERITAGE}} />, label: "Snippets Liked",  value: scopedLikesCount !== null ? scopedLikesCount.toLocaleString() : "—", sub: null, accent: HERITAGE, onClick: onLikes },
+    { key: "snippets",  icon: <i className="ti ti-book-2" />, label: "Snippets Viewed", value: String(snippetsViewed), sub: null },
+    { key: "bookmarks", icon: <i className="ti ti-heart" />, label: "Snippets Liked",  value: scopedLikesCount !== null ? scopedLikesCount.toLocaleString() : "—", sub: null, onClick: onLikes },
   ];
 
   const FOREST_TOKENS = FOREST_TOKEN_DEFS.filter(t => t.type !== "dharma");
@@ -899,10 +925,13 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
               onClick={s.onClick}
               style={s.onClick ? { cursor: "pointer" } : undefined}
             >
-              <div className="stat-card-accent" style={{ background: s.accent }} />
               <div className="stat-icon">{s.icon}</div>
-              <div className="stat-label">{s.label}</div>
-              <div className="stat-value" style={{ color: HERITAGE }}>{s.value}</div>
+              <div className="stat-label">
+                {s.label.split(" ").map(word => (
+                  <span key={word} className="stat-label-word">{word}</span>
+                ))}
+              </div>
+              <div className="stat-value">{s.value}</div>
               {s.sub && <div className="stat-sub">{s.sub}</div>}
               {s.onClick && <div className="stat-link">View all →</div>}
             </div>
@@ -1157,14 +1186,45 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
 
 {/* ── Share Your Yatra ── */}
         <div className="dash-section">
-          <div className="dash-section-head">
-            <div className="page-section-title"><i className="ti ti-share" style={{color: "#00509E", marginRight: 6}} />Share Your Yatra</div>
-            <button
-              className={"share-gear" + (showShareSettings ? " open" : "")}
-              title="Customise share message"
-              onClick={() => { setShareMsgDraft(shareMessage); setShowShareSettings(v => !v); }}>
-              ⚙
-            </button>
+          <div className="dash-section-head share-section-head">
+            <div className="page-section-title">Share Your Yatra</div>
+            <div className="share-head-toolbar">
+              <button
+                type="button"
+                className={"share-toolbar-btn" + (canShare ? " active" : "")}
+                disabled={!canShare}
+                aria-label="Share on WhatsApp"
+                title="Share on WhatsApp"
+                onClick={canShare ? () => window.open("https://wa.me/?text=" + encodeURIComponent(shareText), "_blank") : undefined}>
+                <i className="ti ti-brand-whatsapp" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                className={"share-toolbar-btn" + (canShare ? " active" : "")}
+                disabled={!canShare}
+                aria-label="Share on X"
+                title="Share on X"
+                onClick={canShare ? () => window.open("https://twitter.com/intent/tweet?text=" + encodeURIComponent(shareText), "_blank") : undefined}>
+                <i className="ti ti-brand-x" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                className={"share-toolbar-btn" + (canShare ? " active" : "") + (copyDone ? " copied" : "")}
+                disabled={!canShare}
+                aria-label={copyDone ? "Copied" : "Copy link"}
+                title={copyDone ? "Copied" : "Copy link"}
+                onClick={canShare ? handleCopyLink : undefined}>
+                <i className={"ti " + (copyDone ? "ti-check" : "ti-link")} aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                className={"share-toolbar-btn share-edit" + (showShareSettings ? " open" : "")}
+                aria-label="Edit share message"
+                title="Edit share message"
+                onClick={() => { setShareMsgDraft(shareMessage); setShowShareSettings(v => !v); }}>
+                <i className="ti ti-pencil" aria-hidden="true" />
+              </button>
+            </div>
           </div>
 
           {/* Settings panel */}
@@ -1207,35 +1267,7 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
               </div>
               <div className="share-msg-text">{shareText}</div>
             </div>
-            <div className="share-actions">
-              <div className="share-btn-row">
-                <button
-                  className={"share-btn share-btn-wa" + (canShare ? " active" : "")}
-                  disabled={!canShare}
-                  aria-label="Share on WhatsApp"
-                  title="Share on WhatsApp"
-                  onClick={canShare ? () => window.open("https://wa.me/?text=" + encodeURIComponent(shareText), "_blank") : undefined}>
-                  <i className="ti ti-brand-whatsapp" aria-hidden="true" />
-                </button>
-                <button
-                  className={"share-btn share-btn-tw" + (canShare ? " active" : "")}
-                  disabled={!canShare}
-                  aria-label="Share on X"
-                  title="Share on X"
-                  onClick={canShare ? () => window.open("https://twitter.com/intent/tweet?text=" + encodeURIComponent(shareText), "_blank") : undefined}>
-                  <i className="ti ti-brand-x" aria-hidden="true" />
-                </button>
-                <button
-                  className={"share-btn share-btn-copy" + (canShare ? " active" : "") + (copyDone ? " copied" : "")}
-                  disabled={!canShare}
-                  aria-label={copyDone ? "Copied" : "Copy link"}
-                  title={copyDone ? "Copied" : "Copy link"}
-                  onClick={canShare ? handleCopyLink : undefined}>
-                  <i className={"ti " + (copyDone ? "ti-check" : "ti-link")} aria-hidden="true" />
-                </button>
-              </div>
-              {!canShare && <div className="share-coming">Sign in to share</div>}
-            </div>
+
           </div>
         </div>
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase, SAFFRON, HERITAGE, GREEN, logoUrl, DEFAULT_LANG_CODE, DIFFICULTY_STARS } from "../lib/supabase";
 import { useAuthContext } from "../contexts/AuthContext";
-import { loadUserLikes, insertLike, deleteLike, postComment, deleteComment, adminDeleteComment, editComment } from "../lib/auth";
+import { supabaseClient, loadUserLikes, insertLike, deleteLike, postComment, deleteComment, adminDeleteComment, editComment } from "../lib/auth";
 import { globalStyles } from "../styles/global";
 
 const BLUE = "#00509E";
@@ -15,11 +15,11 @@ const BADGE_META = {
 };
 
 const styles = `
-  .player-wrap { min-height: 100vh; background: #FFFDF5; display: flex; flex-direction: column; }
+  .player-wrap { min-height: 100vh; background: #FAFAF7; display: flex; flex-direction: column; }
 
   .player-top-bar {
     position: sticky; top: 0; z-index: 100;
-    background: rgba(255,253,245,0.97); backdrop-filter: blur(12px);
+    background: rgba(250,250,247,0.97); backdrop-filter: blur(12px);
     border-bottom: 1px solid ${SAFFRON};
     padding: 0 1.5rem; height: 54px;
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -36,26 +36,27 @@ const styles = `
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .player-count { font-size: 0.875rem; color: #aaa; font-weight: 600; flex-shrink: 0; }
-  .player-nav-links { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+  .player-nav-links { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
   .player-nav-link {
-    background: none; border: none; cursor: pointer; padding: 0;
-    font-size: 0.75rem; font-weight: 700; color: #bbb;
-    letter-spacing: 0.03em; transition: color 0.15s; white-space: nowrap;
+    display: flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; border-radius: 8px;
+    background: none; border: none; cursor: pointer;
+    font-size: 1.125rem; color: #bbb; transition: background 0.12s, color 0.15s;
   }
-  .player-nav-link:hover { color: #FF8E00; }
-  .player-progress { height: 3px; background: #f0e8d8; }
+  .player-nav-link:hover { background: rgba(0,0,0,0.05); color: #FF8E00; }
+  .player-progress { height: 3px; background: rgba(0,0,0,0.06); }
   .player-progress-fill { height: 100%; background: ${SAFFRON}; transition: width 0.4s ease; }
 
   .player-body {
     flex: 1; max-width: 680px; width: 100%; margin: 0 auto;
-    padding: 24px 1.5rem 120px;
+    padding: 20px 1rem 120px;
     touch-action: pan-y; /* allow vertical scroll, handle horizontal ourselves */
     user-select: none;
   }
 
   /* Card */
   .snip-card {
-    background: white; border-radius: 20px; border: 1px solid #E8D5B0;
+    background: white; border-radius: 20px; border: 1px solid rgba(0,0,0,0.07);
     box-shadow: 0 4px 24px rgba(255,142,0,0.08); overflow: hidden;
   }
   @keyframes snippetFadeIn {
@@ -114,7 +115,7 @@ const styles = `
   }
 
   /* Body */
-  .snip-body { padding: 24px 24px 20px; }
+  .snip-body { padding: 20px 20px 16px; }
   .snip-hook {
     font-family: 'Alumni Sans', sans-serif; font-size: 1.625rem; font-weight: 800;
     color: ${HERITAGE}; line-height: 1.25; margin-bottom: 16px;
@@ -127,7 +128,7 @@ const styles = `
   .snip-divider { height: 1px; background: #eee; margin: 20px 0; }
 
   .snip-key-term {
-    background: #FFF8ED; border-left: 4px solid ${SAFFRON};
+    background: white; border-left: 3px solid ${SAFFRON};
     border-radius: 0 14px 14px 0; padding: 14px 18px; margin-bottom: 14px;
   }
   .snip-kt-label { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: ${SAFFRON}; margin-bottom: 6px; }
@@ -154,8 +155,8 @@ const styles = `
   /* Bottom nav */
   .player-nav {
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
-    background: #FFFDF5;
-    border-top: 1px solid #e8d5b0; padding: 14px 1.5rem;
+    background: #FAFAF7;
+    border-top: 1px solid rgba(0,0,0,0.07); padding: 12px 1.5rem;
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
   }
   .pnav-btn {
@@ -163,7 +164,7 @@ const styles = `
     font-family: 'Alumni Sans', sans-serif; font-size: 1rem; font-weight: 700;
     cursor: pointer; transition: all 0.2s; border: 2px solid transparent;
   }
-  .pnav-prev { border-color: #e0d4bc; background: white; color: #6B6B6B; }
+  .pnav-prev { border-color: rgba(0,0,0,0.12); background: white; color: #6B6B6B; }
   .pnav-prev:hover:not(:disabled) { border-color: ${SAFFRON}; color: ${SAFFRON}; }
   .pnav-prev:disabled { opacity: 0.3; cursor: not-allowed; }
   .pnav-next   { background: ${SAFFRON}; color: white; border-color: ${SAFFRON}; box-shadow: 0 4px 16px rgba(255,142,0,0.3); }
@@ -172,7 +173,7 @@ const styles = `
   .pnav-finish:hover { box-shadow: 0 6px 22px rgba(0,146,74,0.45); transform: translateY(-1px); }
 
   .pnav-dots { display: flex; gap: 6px; align-items: center; }
-  .pnav-dot  { width: 8px; height: 8px; border-radius: 50%; background: #e0d4bc; transition: all 0.25s; cursor: pointer; }
+  .pnav-dot  { width: 8px; height: 8px; border-radius: 50%; background: rgba(0,0,0,0.13); transition: all 0.25s; cursor: pointer; }
   .pnav-dot:hover { background: ${SAFFRON}88; }
   .pnav-dot.active { background: ${SAFFRON}; transform: scale(1.35); }
   .pnav-dot.done   { background: ${GREEN}; }
@@ -209,7 +210,7 @@ const styles = `
     background: #F8F4FF; border: 1px solid #E0D4F0; border-radius: 14px;
     padding: 12px 16px; margin-bottom: 16px; text-align: left;
   }
-  .comp-badges-title { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #7B2D8B; margin-bottom: 10px; }
+  .comp-badges-title { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #00509E; margin-bottom: 10px; }
   .comp-badge-row { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
   .comp-badge-row:last-child { margin-bottom: 0; }
   .comp-badge-emoji { font-size: 1.25rem; flex-shrink: 0; }
@@ -232,7 +233,7 @@ const styles = `
   /* Social strip */
   .snip-social {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 24px 6px; border-top: 1px solid #f0e8d8; margin-top: 16px; gap: 8px;
+    padding: 12px 24px 6px; border-top: 1px solid rgba(0,0,0,0.07); margin-top: 16px; gap: 8px;
   }
   .snip-social-left  { display: flex; align-items: center; gap: 10px; }
   .snip-social-right { display: flex; align-items: center; gap: 14px; }
@@ -255,7 +256,7 @@ const styles = `
   .snip-share-btn    { cursor: pointer; opacity: 1; }
   .snip-share-btn:hover { color: #FF8E00; }
   .snip-social-icon  { font-size: 1.125rem; line-height: 1; display: flex; align-items: center; }
-  .snip-social-sep   { color: #e0d4bc; font-size: 1rem; }
+  .snip-social-sep   { color: rgba(0,0,0,0.12); font-size: 1rem; }
 
   /* Share popover */
   .share-popover-overlay {
@@ -271,7 +272,7 @@ const styles = `
     box-shadow: 0 -4px 24px rgba(0,0,0,0.12);
   }
   .share-popover-handle {
-    width: 40px; height: 4px; background: #e0d4bc; border-radius: 2px;
+    width: 40px; height: 4px; background: rgba(0,0,0,0.12); border-radius: 2px;
     margin: 0 auto 16px;
   }
   .share-popover-title {
@@ -298,21 +299,22 @@ const styles = `
   .share-pop-btn-copy.copied { border-color: #00924A; color: #00924A; }
   .share-pop-cancel {
     margin-top: 8px; padding: 12px; border-radius: 12px; border: none;
-    background: #f5f0e8; color: #6B6B6B; cursor: pointer;
+    background: #f5f5f5; color: #6B6B6B; cursor: pointer;
     font-family: 'Alumni Sans', sans-serif; font-size: 0.9375rem; font-weight: 700;
     width: 100%; transition: background 0.15s; min-height: 44px;
   }
-  .share-pop-cancel:hover { background: #ede5d8; }
+  .share-pop-cancel:hover { background: #ebebeb; }
 
   /* Comments sheet */
   .comments-overlay {
     position: fixed; inset: 0; z-index: 150;
     background: rgba(0,0,0,0.4); backdrop-filter: blur(2px);
-    display: flex; align-items: flex-end;
+    display: flex; align-items: flex-end; justify-content: center;
     animation: fadeIn 0.2s ease;
   }
   .comments-sheet {
-    background: white; border-radius: 24px 24px 0 0; width: 100%; max-height: 70vh;
+    background: white; border-radius: 24px 24px 0 0;
+    width: 100%; max-width: 680px; max-height: 70vh;
     display: flex; flex-direction: column; overflow: hidden;
     animation: slideUp 0.3s cubic-bezier(0.25,0.46,0.45,0.94) both;
   }
@@ -322,7 +324,7 @@ const styles = `
   }
   .comments-header {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 16px 20px; border-bottom: 1px solid #f0e8d8; flex-shrink: 0;
+    padding: 16px 20px; border-bottom: 1px solid rgba(0,0,0,0.07); flex-shrink: 0;
   }
   .comments-title {
     font-family: 'Alumni Sans', sans-serif; font-size: 1.25rem; font-weight: 700; color: #333;
@@ -344,7 +346,7 @@ const styles = `
   }
   .comment-row { display: flex; gap: 12px; margin-bottom: 16px; }
   .comment-avatar {
-    width: 32px; height: 32px; border-radius: 50%; background: #f0e8d8;
+    width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.06);
     flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.875rem;
   }
   .comment-content { flex: 1; }
@@ -360,7 +362,7 @@ const styles = `
   .comment-edit-form { margin-top: 4px; }
   .comment-edit-actions { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
   .comment-edit-cancel-btn { background: none; border: 1px solid #ddd; border-radius: 6px; padding: 4px 12px; font-size: 0.875rem; cursor: pointer; color: #666; }
-  .comment-edit-cancel-btn:hover { background: #f5f0e8; }
+  .comment-edit-cancel-btn:hover { background: #f5f5f5; }
   .comments-count { font-size: 0.875rem; color: #aaa; font-weight: 400; }
   /* Comments footer */
   .comments-footer { border-top: 1px solid #f0ebe0; padding: 12px 16px; background: #fff; }
@@ -385,11 +387,80 @@ const styles = `
   .comment-post-btn:disabled { opacity: 0.45; cursor: not-allowed; }
   .comment-post-btn:not(:disabled):hover { opacity: 0.88; }
 
+
+  /* Snippet edit button */
+  .snip-edit-btn { cursor: pointer; }
+  .snip-edit-btn:hover { color: ${HERITAGE}; }
+
+  /* Edit panel (reuses comments-sheet pattern) */
+  .edit-panel-overlay {
+    position: fixed; inset: 0; z-index: 155;
+    background: rgba(0,0,0,0.4); backdrop-filter: blur(2px);
+    display: flex; align-items: flex-end; justify-content: center;
+    animation: fadeIn 0.2s ease;
+  }
+  .edit-panel-sheet {
+    background: white; border-radius: 24px 24px 0 0;
+    width: 100%; max-width: 680px; max-height: 85vh;
+    display: flex; flex-direction: column; overflow: hidden;
+    animation: slideUp 0.3s cubic-bezier(0.25,0.46,0.45,0.94) both;
+  }
+  .edit-panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px; border-bottom: 1px solid rgba(0,0,0,0.07); flex-shrink: 0;
+  }
+  .edit-panel-title {
+    font-family: 'Alumni Sans', sans-serif; font-size: 1.25rem; font-weight: 700; color: #333;
+  }
+  .edit-panel-close {
+    background: none; border: none; cursor: pointer;
+    font-size: 1.25rem; color: #aaa; padding: 4px; line-height: 1;
+  }
+  .edit-panel-close:hover { color: #555; }
+  .edit-panel-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
+  .edit-field-group { margin-bottom: 18px; }
+  .edit-field-label {
+    display: block; font-size: 0.6875rem; font-weight: 700;
+    letter-spacing: 0.09em; text-transform: uppercase; color: ${HERITAGE};
+    margin-bottom: 6px;
+  }
+  .edit-field-input {
+    width: 100%; box-sizing: border-box;
+    border: 1px solid rgba(0,0,0,0.12); border-radius: 10px;
+    padding: 9px 12px; font-size: 0.9375rem;
+    font-family: 'Source Sans 3', sans-serif; color: #0A0A0A;
+    background: #FAFAF7; resize: vertical; outline: none;
+    transition: border-color 0.15s;
+  }
+  .edit-field-input:focus { border-color: ${HERITAGE}; }
+  .edit-panel-footer {
+    border-top: 1px solid rgba(0,0,0,0.07);
+    padding: 12px 20px; background: white;
+    display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+  }
+  .edit-panel-msg { font-size: 0.875rem; color: ${GREEN}; flex: 1; }
+  .edit-panel-msg.err { color: #e55; }
+  .edit-cancel-btn {
+    padding: 9px 22px; border-radius: 999px; border: 1.5px solid rgba(0,0,0,0.12);
+    background: white; color: #6B6B6B; cursor: pointer;
+    font-family: 'Alumni Sans', sans-serif; font-size: 0.9375rem; font-weight: 700;
+    transition: background 0.15s;
+  }
+  .edit-cancel-btn:hover { background: #f5f5f5; }
+  .edit-save-btn {
+    padding: 9px 28px; border-radius: 999px; border: none;
+    background: ${HERITAGE}; color: white; cursor: pointer;
+    font-family: 'Alumni Sans', sans-serif; font-size: 0.9375rem; font-weight: 700;
+    transition: opacity 0.15s;
+  }
+  .edit-save-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .edit-save-btn:not(:disabled):hover { opacity: 0.88; }
+
   @media (max-width: 480px) {
-    .player-body { padding: 16px 1rem 115px; }
+    .player-body { padding: 12px 0.75rem 115px; }
     .snip-hook { font-size: 1.375rem; }
     .snip-explanation { font-size: 0.9375rem; }
-    .snip-body { padding: 18px 16px 14px; }
+    .snip-body { padding: 16px 14px 12px; }
     .pnav-btn  { padding: 10px 18px; font-size: 0.9375rem; }
     .player-nav { padding: 10px 1rem; bottom: 0; }
     .player-nav-links { display: none !important; }
@@ -407,6 +478,8 @@ export default function SnippetPlayer({
   onBackToLessons, onBackToLikes, onBackToDiscover = null, playlistLabel = "", onHome, onDashboard, onLikes, onBookmarks, onDiscover, onComplete, onNextLesson,
   bookmarks = new Set(), onToggleBookmark,
   isAdmin = false,
+  isCreator = false,
+  userEditorialRole = null,
   snippetShareMsg = "I found this story. It is very exciting. You can read this and more at indiyatra.in. It has an amazing collection."
 }) {
   const playlistMode       = !!(playlistSnippetIds && playlistSnippetIds.length > 0);
@@ -434,6 +507,12 @@ export default function SnippetPlayer({
   const [commentPosting,  setCommentPosting]  = useState(false);
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editDraft,        setEditDraft]        = useState("");
+
+  // Snippet inline edit state
+  const [showEditPanel,  setShowEditPanel]  = useState(false);
+  const [editSnipDraft,  setEditSnipDraft]  = useState({});
+  const [editSaving,     setEditSaving]     = useState(false);
+  const [editMsg,        setEditMsg]        = useState("");
 
   // Swipe tracking
   const touchStartX  = useRef(null);
@@ -645,6 +724,57 @@ export default function SnippetPlayer({
     setCommentDraft("");
   }
 
+  const canEdit = isAdmin || isCreator;
+
+  function openEditPanel() {
+    if (!snip) return;
+    const t = translations[snip.snippet_id] || {};
+    setEditSnipDraft({
+      hook:             t.hook             || "",
+      explanation:      t.explanation      || "",
+      key_term:         t.key_term         || "",
+      key_term_meaning: t.key_term_meaning || "",
+      life_connection:  t.life_connection  || "",
+      quiz_recap:       t.quiz_recap       || "",
+      source_citation:  t.source_citation  || "",
+    });
+    setEditMsg("");
+    setShowEditPanel(true);
+  }
+
+  async function saveEditSnippet() {
+    if (!snip || editSaving) return;
+    setEditSaving(true);
+    setEditMsg("");
+    const t = translations[snip.snippet_id] || {};
+    const payload = {
+      snippet_id:       snip.snippet_id,
+      language:         t.language || "en",
+      hook:             editSnipDraft.hook,
+      explanation:      editSnipDraft.explanation,
+      key_term:         editSnipDraft.key_term,
+      key_term_meaning: editSnipDraft.key_term_meaning,
+      life_connection:  editSnipDraft.life_connection,
+      quiz_recap:       editSnipDraft.quiz_recap,
+      source_citation:  editSnipDraft.source_citation,
+    };
+    const { data, error } = await supabaseClient
+      .from("snippet_translations")
+      .upsert(payload, { onConflict: "snippet_id,language" })
+      .select()
+      .single();
+    if (error) {
+      setEditMsg("Save failed: " + error.message);
+      setEditSaving(false);
+      return;
+    }
+    // Update local translations state so the card re-renders immediately
+    setTranslations(prev => ({ ...prev, [snip.snippet_id]: data }));
+    setEditMsg("Saved!");
+    setEditSaving(false);
+    setTimeout(() => { setShowEditPanel(false); setEditMsg(""); }, 900);
+  }
+
   async function postCommentHandler() {
     if (!user || !commentDraft.trim() || commentPosting) return;
     setCommentPosting(true);
@@ -654,6 +784,7 @@ export default function SnippetPlayer({
       setCommentsData(prev => [data, ...prev]);
       setCommentCounts(prev => ({ ...prev, [commentsSnipId]: (prev[commentsSnipId] || 0) + 1 }));
       setCommentDraft("");
+      setShowComments(false);
     }
     setCommentPosting(false);
   }
@@ -713,11 +844,11 @@ export default function SnippetPlayer({
           <button className="player-back" onClick={playlistMode ? backToPlaylist : onBackToLessons}>← Back</button>
           <div className="player-lesson-name">{playlistMode ? (playlistLabel || "♥ Likes Playlist") : lesson?.lesson_name}</div>
           <div className="player-nav-links">
-            <button className="player-nav-link" onClick={onHome}>Home</button>
-            <button className="player-nav-link" onClick={onDiscover}>Discover</button>
-            <button className="player-nav-link" onClick={onDashboard}>Dashboard</button>
-            <button className="player-nav-link" onClick={onLikes}>Likes</button>
-            <button className="player-nav-link" onClick={onBookmarks}>Bookmarks</button>
+            <button className="player-nav-link" onClick={onHome} title="Home"><i className="ti ti-home" /></button>
+            <button className="player-nav-link" onClick={onDiscover} title="Discover"><i className="ti ti-search" /></button>
+            <button className="player-nav-link" onClick={onDashboard} title="Dashboard"><i className="ti ti-chart-bar" /></button>
+            <button className="player-nav-link" onClick={onLikes} title="Likes"><i className="ti ti-heart" /></button>
+            <button className="player-nav-link" onClick={onBookmarks} title="Bookmarks"><i className="ti ti-bookmark" /></button>
           </div>
         </div>
         <div className="player-progress">
@@ -857,6 +988,16 @@ export default function SnippetPlayer({
                         </span>
                         <span>Share</span>
                       </button>
+                      {canEdit && (
+                        <button
+                          className="snip-social-btn snip-edit-btn"
+                          title="Edit snippet"
+                          onClick={e => { e.stopPropagation(); openEditPanel(); }}
+                        >
+                          <span className="snip-social-icon"><i className="ti ti-pencil" /></span>
+                          <span>Edit</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1053,6 +1194,46 @@ export default function SnippetPlayer({
                     <button className="comments-signin-btn" onClick={() => { closeComments(); onSignIn?.(); }}>Sign in</button>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Inline snippet edit panel */}
+        {showEditPanel && canEdit && snip && (
+          <div className="edit-panel-overlay" onClick={() => setShowEditPanel(false)}>
+            <div className="edit-panel-sheet" onClick={e => e.stopPropagation()}>
+              <div className="edit-panel-header">
+                <div className="edit-panel-title">Edit Snippet</div>
+                <button className="edit-panel-close" onClick={() => setShowEditPanel(false)}>&#x2715;</button>
+              </div>
+              <div className="edit-panel-body">
+                {[
+                  { key: "hook",             label: "Hook (headline)",      rows: 2 },
+                  { key: "explanation",      label: "Explanation",          rows: 5 },
+                  { key: "key_term",         label: "Key Term",             rows: 1 },
+                  { key: "key_term_meaning", label: "Key Term Meaning",     rows: 2 },
+                  { key: "life_connection",  label: "Life Connection",      rows: 3 },
+                  { key: "quiz_recap",       label: "Refresher Questions",  rows: 3 },
+                  { key: "source_citation",  label: "Source / Citation",    rows: 1 },
+                ].map(({ key, label, rows }) => (
+                  <div className="edit-field-group" key={key}>
+                    <label className="edit-field-label">{label}</label>
+                    <textarea
+                      className="edit-field-input"
+                      rows={rows}
+                      value={editSnipDraft[key] || ""}
+                      onChange={e => setEditSnipDraft(prev => ({ ...prev, [key]: e.target.value }))}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="edit-panel-footer">
+                {editMsg && <span className={"edit-panel-msg" + (editMsg.startsWith("Save failed") ? " err" : "")}>{editMsg}</span>}
+                <button className="edit-cancel-btn" onClick={() => setShowEditPanel(false)}>Cancel</button>
+                <button className="edit-save-btn" onClick={saveEditSnippet} disabled={editSaving}>
+                  {editSaving ? "Saving…" : "Save"}
+                </button>
               </div>
             </div>
           </div>

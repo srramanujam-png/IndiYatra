@@ -52,6 +52,7 @@ export default function App() {
   const [bookmarks,    setBookmarks]    = useState(new Set());
   const [toastMsg,     setToastMsg]     = useState("");
   const [isAdmin,      setIsAdmin]      = useState(false);
+  const [isCreator,    setIsCreator]    = useState(false);
   const [userEditorialRole, setUserEditorialRole] = useState(null);
 
   const { user, profile, authLoading, refreshProfile } = useAuth();
@@ -107,6 +108,7 @@ export default function App() {
       setLessonProgress(new Map());
       setBookmarks(new Set());
       setIsAdmin(false);
+      setIsCreator(false);
       setUserEditorialRole(null);
       setSettings({ ...DEFAULT_SETTINGS });
       return;
@@ -132,6 +134,13 @@ export default function App() {
     supabaseClient.rpc("is_admin").then(({ data }) => {
       setIsAdmin(data === true);
     });
+    supabaseClient
+      .from("user_roles_mapping")
+      .select("role_id")
+      .eq("profile_id", user.id)
+      .eq("role_id", "ROLE_07")
+      .maybeSingle()
+      .then(({ data }) => { setIsCreator(!!data); });
     getEditorialRole().then(({ data, error }) => {
       if (data) {
         // RPC returned a role string
@@ -502,6 +511,7 @@ export default function App() {
     onAdmin:     () => goForward("admin"),
     onEditor:    () => goForward("editor"),
     isAdmin,
+    isCreator,
     userEditorialRole,
     onResume:    handleResume,
     bookmarks,
@@ -650,7 +660,7 @@ export default function App() {
         );
       case "admin":
         return (
-          <Suspense fallback={<div style={{padding:"2rem",textAlign:"center",color:"#888"}}>Loading…</div>}>
+          <Suspense fallback={<div style={{padding:"2rem",textAlign:"center",color:"#6B6B6B"}}>Loading…</div>}>
             <AdminPage
               {...commonProps}
               isAdmin={isAdmin}
@@ -660,7 +670,7 @@ export default function App() {
         );
       case "editor":
         return (
-          <Suspense fallback={<div style={{padding:"2rem",textAlign:"center",color:"#888"}}>Loading…</div>}>
+          <Suspense fallback={<div style={{padding:"2rem",textAlign:"center",color:"#6B6B6B"}}>Loading…</div>}>
             <EditorPage
               {...commonProps}
               userEditorialRole={userEditorialRole}
@@ -703,7 +713,7 @@ export default function App() {
       {toastMsg && (
         <div style={{
           position: "fixed", bottom: "90px", left: "50%", transform: "translateX(-50%)",
-          background: "#1a1a2e", color: "white", padding: "10px 22px",
+          background: "#00509E", color: "white", padding: "10px 22px",
           borderRadius: "999px", fontSize: "0.875rem", fontWeight: 600,
           boxShadow: "0 4px 20px rgba(0,0,0,0.25)", zIndex: 9999,
           animation: "fadeUp 0.2s ease both", whiteSpace: "nowrap", pointerEvents: "none",

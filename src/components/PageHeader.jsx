@@ -42,10 +42,12 @@ const IcBookmark = () => (
     <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
   </svg>
 );
+/* Side-view skeleton key — reads clearly at 20px (bow + shaft + teeth) */
 const IcKey = () => (
   <svg {...S}>
-    <circle cx="8" cy="15" r="4" />
-    <path d="M12 15h8M17 11.5v7" />
+    <circle cx="7.5" cy="12" r="3.75" fill="currentColor" stroke="none" />
+    <path d="M11.25 12h10.75" />
+    <path d="M20 12v2.25M17 12v1.75" />
   </svg>
 );
 const IcPencil = () => (
@@ -161,9 +163,8 @@ const headerStyles = `
   .hdr-nav-link.active { color: #FF8E00; }
   .hdr-nav-link.active svg { color: #FF8E00; }
   @media (min-width: 1025px) and (max-width: 1280px) {
-    .hdr-nav-text  { display: none; }
-    .hdr-nav-link  { padding: 5px 7px; }
-    .hdr-nav-resume, .hdr-nav-admin, .hdr-nav-editor { padding: 5px 7px; }
+    .hdr-nav-link  { padding: 5px 6px; font-size: 12px; }
+    .hdr-nav-resume, .hdr-nav-admin, .hdr-nav-editor { padding: 5px 6px; font-size: 12px; }
   }
   .hdr-nav-sep {
     width: 1px; height: 22px; background: #ddd;
@@ -459,6 +460,7 @@ export default function PageHeader({
           {isAdmin && onAdmin && (
             <button className="hdr-nav-admin" onClick={onAdmin} type="button" title="Admin">
               <IcKey />
+              <span className="hdr-nav-text">Admin</span>
             </button>
           )}
 
