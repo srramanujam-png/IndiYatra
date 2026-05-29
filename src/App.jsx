@@ -6,6 +6,7 @@ import AuthModal     from "./components/AuthModal";
 import ProfileModal  from "./components/ProfileModal";
 import { supabase, LEVEL_LABELS } from "./lib/supabase";
 import { loadSettings, saveSettings, DEFAULT_SETTINGS } from "./hooks/useSettings";
+import { APP_NAME, DEFAULT_SNIPPET_SHARE_MSG, PLAYLIST } from "./config/appStrings";
 import { awardForLessonComplete } from "./lib/awards";
 import SettingsPage from "./pages/SettingsPage";
 import HomePage      from "./pages/HomePage";
@@ -466,7 +467,7 @@ export default function App() {
     setPlaylistSnippetIds(snippetIds);
     setPlaylistStartIndex(startIndex);
     setPlaylistSource("likes");
-    setPlaylistLabel("\u2665 Likes Playlist");
+    setPlaylistLabel(PLAYLIST.likes);
     goForward("player");
   }
 
@@ -483,7 +484,7 @@ export default function App() {
     setPlaylistSnippetIds(snippetIds);
     setPlaylistStartIndex(0);
     setPlaylistSource("gateway");
-    setPlaylistLabel(label || "IndiYatra");
+    setPlaylistLabel(label || PLAYLIST.gateway);
     goForward("player");
   }
 
@@ -550,7 +551,7 @@ export default function App() {
               undefined
             }
             playlistLabel={playlistLabel}
-            snippetShareMsg={profile?.snippet_share_message || localStorage.getItem("indiyatra_snippet_share_message") || "I found this story. It is very exciting. You can read this and more at indiyatra.in. It has an amazing collection."}
+            snippetShareMsg={profile?.snippet_share_message || localStorage.getItem("indiyatra_snippet_share_message") || DEFAULT_SNIPPET_SHARE_MSG}
           />
         );
       case "lessons":
@@ -682,7 +683,7 @@ export default function App() {
       case "gateway":
         return (
           <GatewayPage
-            settings={settings}
+            {...commonProps}
             onCourseFlow={() => setPage("home")}
             onExploreInterests={() => goForward("discover")}
             onPlayMostLiked={ids => handlePlayFromGateway(ids, "♥ Most Liked")}

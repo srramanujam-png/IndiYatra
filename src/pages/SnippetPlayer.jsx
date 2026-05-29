@@ -3,6 +3,7 @@ import { supabase, SAFFRON, HERITAGE, GREEN, logoUrl, DEFAULT_LANG_CODE, DIFFICU
 import { useAuthContext } from "../contexts/AuthContext";
 import { supabaseClient, loadUserLikes, insertLike, deleteLike, postComment, deleteComment, adminDeleteComment, editComment } from "../lib/auth";
 import { globalStyles } from "../styles/global";
+import { DEFAULT_SNIPPET_SHARE_MSG, APP_URL, PLAYER, SIGNIN } from "../config/appStrings";
 
 const BLUE = "#00509E";
 
@@ -15,49 +16,49 @@ const BADGE_META = {
 };
 
 const styles = `
-  .player-wrap { min-height: 100vh; background: #FAFAF7; display: flex; flex-direction: column; }
+  .player-wrap { min-height: 100vh; background: #FFFFFF; display: flex; flex-direction: column; }
 
   .player-top-bar {
     position: sticky; top: 0; z-index: 100;
-    background: rgba(250,250,247,0.97); backdrop-filter: blur(12px);
-    border-bottom: 1px solid ${SAFFRON};
+    background: rgba(255,255,255,0.97); backdrop-filter: blur(12px);
+    border-bottom: 1px solid #E5E7EB;
     padding: 0 1.5rem; height: 54px;
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
   }
   .player-back {
     display: flex; align-items: center; gap: 5px; background: none; border: none;
-    cursor: pointer; font-family: 'Alumni Sans', sans-serif; font-size: 1rem;
-    font-weight: 700; color: #6B6B6B; transition: color 0.2s; flex-shrink: 0;
+    cursor: pointer; font-family: 'Inter', system-ui, sans-serif; font-size: 0.875rem;
+    font-weight: 500; color: #4A5565; transition: color 0.2s; flex-shrink: 0;
   }
   .player-back:hover { color: ${SAFFRON}; }
   .player-lesson-name {
-    font-family: 'Alumni Sans', sans-serif; font-size: 1rem; font-weight: 700;
+    font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1rem; font-weight: 500;
     color: ${HERITAGE}; flex: 1; text-align: center;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .player-count { font-size: 0.875rem; color: #aaa; font-weight: 600; flex-shrink: 0; }
+  .player-count { font-size: 0.8125rem; color: #4A5565; font-weight: 500; flex-shrink: 0; font-family: 'Inter', system-ui, sans-serif; }
   .player-nav-links { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
   .player-nav-link {
     display: flex; align-items: center; justify-content: center;
     width: 34px; height: 34px; border-radius: 8px;
     background: none; border: none; cursor: pointer;
-    font-size: 1.125rem; color: #bbb; transition: background 0.12s, color 0.15s;
+    font-size: 1.125rem; color: #4A5565; transition: background 0.12s, color 0.15s;
   }
-  .player-nav-link:hover { background: rgba(0,0,0,0.05); color: #FF8E00; }
-  .player-progress { height: 3px; background: rgba(0,0,0,0.06); }
+  .player-nav-link:hover { background: #F3F4F6; color: ${SAFFRON}; }
+  .player-progress { height: 3px; background: #F3F4F6; }
   .player-progress-fill { height: 100%; background: ${SAFFRON}; transition: width 0.4s ease; }
 
   .player-body {
     flex: 1; max-width: 680px; width: 100%; margin: 0 auto;
     padding: 20px 1rem 120px;
-    touch-action: pan-y; /* allow vertical scroll, handle horizontal ourselves */
+    touch-action: pan-y;
     user-select: none;
   }
 
   /* Card */
   .snip-card {
-    background: white; border-radius: 20px; border: 1px solid rgba(0,0,0,0.07);
-    box-shadow: 0 4px 24px rgba(255,142,0,0.08); overflow: hidden;
+    background: white; border-radius: 12px; border: 1px solid #E5E7EB;
+    overflow: hidden;
   }
   @keyframes snippetFadeIn {
     from { opacity: 0; }
@@ -66,7 +67,6 @@ const styles = `
   .snip-enter-next { animation: snippetFadeIn 0.2s ease both; }
   .snip-enter-prev { animation: snippetFadeIn 0.2s ease both; }
 
-  /* Swipe hint indicators */
   @keyframes swipeFadeOut {
     0%   { opacity: 0.4; }
     75%  { opacity: 0.4; }
@@ -74,17 +74,17 @@ const styles = `
   }
   .swipe-hint {
     display: flex; align-items: center; justify-content: center; gap: 6px;
-    margin-top: 12px; font-size: 0.75rem; color: #aaa;
-    pointer-events: none;
+    margin-top: 12px; font-size: 0.75rem; color: #4A5565;
+    pointer-events: none; font-family: 'Inter', system-ui, sans-serif;
     animation: swipeFadeOut 3.5s ease forwards;
   }
 
-  /* Image — full bleed, mask on img only so overlay badges are unaffected */
+  /* Image */
   .snip-img {
     position: relative; width: 100%;
-    background: white;
+    background: #FEF7FF;
     display: flex; align-items: center; justify-content: center;
-    max-height: 340px;
+    max-height: 340px; border-radius: 10px 10px 0 0; overflow: hidden;
   }
   .snip-img img {
     display: block; width: 100%; max-height: 340px; object-fit: contain;
@@ -94,15 +94,16 @@ const styles = `
   .snip-diff {
     position: absolute; bottom: 10px; right: 10px;
     background: rgba(0,0,0,0.50); color: white; border-radius: 999px;
-    padding: 3px 10px; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.04em;
+    padding: 3px 10px; font-size: 0.6875rem; font-weight: 500; letter-spacing: 0.04em;
+    font-family: 'Inter', system-ui, sans-serif;
   }
 
   /* No-image header band */
   .snip-header-band {
     position: relative; width: 100%; height: 160px;
-    background: #FAFAF7;
+    background: #FEF7FF;
     display: flex; align-items: center; justify-content: center;
-    overflow: hidden;
+    overflow: hidden; border-radius: 10px 10px 0 0;
   }
   .snip-header-ornament {
     font-size: 4.5rem; opacity: 0.15; user-select: none; pointer-events: none;
@@ -110,138 +111,135 @@ const styles = `
   .snip-lang-badge {
     position: absolute; top: 10px; left: 10px;
     background: rgba(0,0,0,0.45); color: white; border-radius: 999px;
-    padding: 3px 10px; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.04em;
-    text-transform: capitalize;
+    padding: 3px 10px; font-size: 0.6875rem; font-weight: 500; letter-spacing: 0.04em;
+    text-transform: capitalize; font-family: 'Inter', system-ui, sans-serif;
   }
 
   /* Body */
-  .snip-body { padding: 20px 20px 16px; }
+  .snip-body { padding: 20px 24px 16px; }
   .snip-hook {
-    font-family: 'Alumni Sans', sans-serif; font-size: 1.625rem; font-weight: 800;
-    color: ${HERITAGE}; line-height: 1.25; margin-bottom: 16px;
-    letter-spacing: -0.01em; text-align: left;
+    font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.625rem; font-weight: 500;
+    color: ${HERITAGE}; line-height: 1.3; margin-bottom: 16px;
+    letter-spacing: 0.01em; text-align: left;
   }
   .snip-explanation {
-    font-size: 1.0625rem; color: #2a2a2a; line-height: 1.85; margin-bottom: 20px;
-    text-align: justify;
+    font-size: 1rem; color: #4A5565; line-height: 1.85; margin-bottom: 20px;
+    text-align: justify; font-family: 'Nunito Sans', system-ui, sans-serif;
   }
-  .snip-divider { height: 1px; background: #eee; margin: 20px 0; }
+  .snip-divider { height: 1px; background: #E5E7EB; margin: 20px 0; }
 
   .snip-key-term {
     background: white; border-left: 3px solid ${SAFFRON};
-    border-radius: 0 14px 14px 0; padding: 14px 18px; margin-bottom: 14px;
+    border-radius: 0 12px 12px 0; padding: 14px 18px; margin-bottom: 14px;
   }
-  .snip-kt-label { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: ${SAFFRON}; margin-bottom: 6px; }
-  .snip-kt-word  { font-family: 'Alumni Sans', sans-serif; font-size: 1.375rem; font-weight: 800; color: ${HERITAGE}; margin-bottom: 4px; }
-  .snip-kt-meaning { font-size: 1rem; color: #555; line-height: 1.55; }
+  .snip-kt-label { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: ${SAFFRON}; margin-bottom: 6px; font-family: 'Inter', system-ui, sans-serif; }
+  .snip-kt-word  { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.25rem; font-weight: 500; color: ${HERITAGE}; margin-bottom: 4px; }
+  .snip-kt-meaning { font-size: 1rem; color: #4A5565; line-height: 1.6; font-family: 'Nunito Sans', system-ui, sans-serif; }
 
   .snip-life {
     background: #F0FAF4; border-left: 4px solid ${GREEN};
-    border-radius: 0 14px 14px 0; padding: 14px 18px; margin-bottom: 14px;
+    border-radius: 0 12px 12px 0; padding: 14px 18px; margin-bottom: 14px;
   }
-  .snip-life-label { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: ${GREEN}; margin-bottom: 6px; }
-  .snip-life-text  { font-size: 1rem; color: #2a4a2a; line-height: 1.65; }
+  .snip-life-label { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: ${GREEN}; margin-bottom: 6px; font-family: 'Inter', system-ui, sans-serif; }
+  .snip-life-text  { font-size: 1rem; color: #2a4a2a; line-height: 1.7; font-family: 'Nunito Sans', system-ui, sans-serif; }
 
   .snip-quiz {
     background: #EEF5FF; border-left: 4px solid ${BLUE};
-    border-radius: 0 14px 14px 0; padding: 14px 18px; margin-bottom: 14px;
+    border-radius: 0 12px 12px 0; padding: 14px 18px; margin-bottom: 14px;
   }
-  .snip-quiz-label { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: ${BLUE}; margin-bottom: 6px; }
-  .snip-quiz-text  { font-size: 1rem; color: #1a2a4a; line-height: 1.65; }
+  .snip-quiz-label { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: ${BLUE}; margin-bottom: 6px; font-family: 'Inter', system-ui, sans-serif; }
+  .snip-quiz-text  { font-size: 1rem; color: #1a2a4a; line-height: 1.7; font-family: 'Nunito Sans', system-ui, sans-serif; }
 
-  .snip-citation { font-size: 0.75rem; color: #ccc; font-style: italic; text-align: right; margin-top: 8px; }
-  .snip-empty    { text-align: center; padding: 48px 24px; font-family: 'Alumni Sans', sans-serif; font-size: 1.25rem; color: #bbb; }
+  .snip-citation { font-size: 0.75rem; color: #4A5565; font-style: italic; text-align: right; margin-top: 8px; font-family: 'Nunito Sans', system-ui, sans-serif; }
+  .snip-empty    { text-align: center; padding: 48px 24px; font-family: 'Oswald', sans-serif; font-size: 1.25rem; color: #4A5565; }
 
   /* Bottom nav */
   .player-nav {
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
-    background: #FAFAF7;
-    border-top: 1px solid rgba(0,0,0,0.07); padding: 12px 1.5rem;
+    background: #FFFFFF; border-top: 1px solid #E5E7EB; padding: 12px 1.5rem;
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
   }
   .pnav-btn {
-    display: flex; align-items: center; gap: 6px; border-radius: 999px; padding: 11px 24px;
-    font-family: 'Alumni Sans', sans-serif; font-size: 1rem; font-weight: 700;
-    cursor: pointer; transition: all 0.2s; border: 2px solid transparent;
+    display: flex; align-items: center; gap: 6px; border-radius: 12px; padding: 10px 20px;
+    font-family: 'Inter', system-ui, sans-serif; font-size: 0.875rem; font-weight: 500;
+    cursor: pointer; transition: all 0.2s; border: 1px solid transparent;
+    box-shadow: 0px 1px 0.5px 0.05px rgba(29, 41, 61, 0.02);
   }
-  .pnav-prev { border-color: rgba(0,0,0,0.12); background: white; color: #6B6B6B; }
+  .pnav-prev { border-color: #E5E7EB; background: white; color: #4A5565; }
   .pnav-prev:hover:not(:disabled) { border-color: ${SAFFRON}; color: ${SAFFRON}; }
   .pnav-prev:disabled { opacity: 0.3; cursor: not-allowed; }
-  .pnav-next   { background: ${SAFFRON}; color: white; border-color: ${SAFFRON}; box-shadow: 0 4px 16px rgba(255,142,0,0.3); }
-  .pnav-next:hover { box-shadow: 0 6px 22px rgba(255,142,0,0.45); transform: translateY(-1px); }
-  .pnav-finish { background: ${GREEN}; color: white; border-color: ${GREEN}; box-shadow: 0 4px 16px rgba(0,146,74,0.3); }
-  .pnav-finish:hover { box-shadow: 0 6px 22px rgba(0,146,74,0.45); transform: translateY(-1px); }
+  .pnav-next   { background: ${SAFFRON}; color: white; border-color: ${SAFFRON}; }
+  .pnav-next:hover { opacity: 0.9; transform: translateY(-1px); }
+  .pnav-finish { background: ${GREEN}; color: white; border-color: ${GREEN}; }
+  .pnav-finish:hover { opacity: 0.9; transform: translateY(-1px); }
 
   .pnav-dots { display: flex; gap: 6px; align-items: center; }
-  .pnav-dot  { width: 8px; height: 8px; border-radius: 50%; background: rgba(0,0,0,0.13); transition: all 0.25s; cursor: pointer; }
+  .pnav-dot  { width: 8px; height: 8px; border-radius: 50%; background: #E5E7EB; transition: all 0.25s; cursor: pointer; }
   .pnav-dot:hover { background: ${SAFFRON}88; }
   .pnav-dot.active { background: ${SAFFRON}; transform: scale(1.35); }
   .pnav-dot.done   { background: ${GREEN}; }
-
 
   /* Completion modal */
   .completion-overlay {
     position: fixed; inset: 0; z-index: 200;
     background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
     display: flex; align-items: flex-start; justify-content: center; padding: 5vh 1rem 2rem;
-    animation: fadeIn 0.2s ease;
-    overflow-y: auto;
+    animation: fadeIn 0.2s ease; overflow-y: auto;
   }
   .completion-card {
-    background: white; border-radius: 24px; padding: 32px 28px;
+    background: white; border-radius: 16px; padding: 32px 28px;
     text-align: center; max-width: 380px; width: 100%;
     animation: fadeUp 0.35s ease both;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
     margin: 0 auto;
   }
   .comp-emoji    { font-size: 3rem; margin-bottom: 12px; }
-  .comp-title    { font-family: 'Alumni Sans', sans-serif; font-size: 1.75rem; font-weight: 800; color: ${HERITAGE}; margin-bottom: 6px; }
-  .comp-subtitle { font-size: 0.875rem; color: #6B6B6B; margin-bottom: 16px; line-height: 1.5; }
+  .comp-title    { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.75rem; font-weight: 500; color: ${HERITAGE}; margin-bottom: 6px; }
+  .comp-subtitle { font-size: 0.9375rem; color: #4A5565; margin-bottom: 16px; line-height: 1.6; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .comp-points {
     display: flex; align-items: center; justify-content: center; gap: 8px;
-    background: white;
-    border: 1.5px solid ${SAFFRON}44; border-radius: 14px;
+    background: white; border: 1px solid ${SAFFRON}44; border-radius: 12px;
     padding: 12px 20px; margin-bottom: 16px;
   }
   .comp-points-icon  { font-size: 1.375rem; }
-  .comp-points-value { font-family: 'Alumni Sans', sans-serif; font-size: 2.125rem; font-weight: 800; color: ${SAFFRON}; line-height: 1; }
-  .comp-points-label { font-size: 0.875rem; font-weight: 600; color: #b86000; }
+  .comp-points-value { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 2rem; font-weight: 700; color: ${SAFFRON}; line-height: 1; }
+  .comp-points-label { font-size: 0.875rem; font-weight: 500; color: #b86000; font-family: 'Inter', system-ui, sans-serif; }
   .comp-badges {
-    background: #F8F4FF; border: 1px solid #E0D4F0; border-radius: 14px;
+    background: #F3F4F6; border: 1px solid #E5E7EB; border-radius: 12px;
     padding: 12px 16px; margin-bottom: 16px; text-align: left;
   }
-  .comp-badges-title { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #00509E; margin-bottom: 10px; }
+  .comp-badges-title { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: ${HERITAGE}; margin-bottom: 10px; font-family: 'Inter', system-ui, sans-serif; }
   .comp-badge-row { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
   .comp-badge-row:last-child { margin-bottom: 0; }
   .comp-badge-emoji { font-size: 1.25rem; flex-shrink: 0; }
-  .comp-badge-text  { font-size: 0.875rem; color: #333; line-height: 1.3; }
+  .comp-badge-text  { font-size: 0.9375rem; color: #101828; line-height: 1.3; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .comp-btn {
-    display: block; width: 100%; padding: 12px; border-radius: 999px; border: none;
-    cursor: pointer; font-family: 'Alumni Sans', sans-serif; font-size: 1rem; font-weight: 700;
+    display: block; width: 100%; padding: 12px 20px; border-radius: 12px; border: none;
+    cursor: pointer; font-family: 'Inter', system-ui, sans-serif; font-size: 0.875rem; font-weight: 500;
     margin-bottom: 8px; transition: all 0.2s;
+    box-shadow: 0px 1px 0.5px 0.05px rgba(29, 41, 61, 0.02);
   }
-  .comp-next      { background: ${HERITAGE}; color: white; box-shadow: 0 4px 16px rgba(0,80,158,0.25); }
-  .comp-next:hover { box-shadow: 0 6px 22px rgba(0,80,158,0.4); transform: translateY(-1px); }
-  .comp-primary   { background: ${SAFFRON}; color: white; box-shadow: 0 4px 16px rgba(255,142,0,0.3); }
-  .comp-primary:hover   { box-shadow: 0 6px 22px rgba(255,142,0,0.45); transform: translateY(-1px); }
-  .comp-dashboard { background: white; color: ${HERITAGE}; border: 1.5px solid ${HERITAGE}44; }
-  .comp-dashboard:hover { background: ${HERITAGE}0d; }
-  .comp-secondary { background: #f5f5f5; color: #6B6B6B; font-size: 0.875rem; }
-  .comp-secondary:hover { background: #eee; }
-
+  .comp-next      { background: ${HERITAGE}; color: white; }
+  .comp-next:hover { opacity: 0.9; transform: translateY(-1px); }
+  .comp-primary   { background: ${SAFFRON}; color: white; }
+  .comp-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .comp-dashboard { background: white; color: ${HERITAGE}; border: 1px solid #E5E7EB !important; }
+  .comp-dashboard:hover { background: #F3F4F6; }
+  .comp-secondary { background: #F3F4F6; color: #4A5565; font-size: 0.8125rem; }
+  .comp-secondary:hover { background: #E5E7EB; }
 
   /* Social strip */
   .snip-social {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 24px 6px; border-top: 1px solid rgba(0,0,0,0.07); margin-top: 16px; gap: 8px;
+    padding: 12px 24px 6px; border-top: 1px solid #E5E7EB; margin-top: 16px; gap: 8px;
   }
   .snip-social-left  { display: flex; align-items: center; gap: 10px; }
   .snip-social-right { display: flex; align-items: center; gap: 14px; }
   .snip-social-btn {
     display: flex; align-items: center; gap: 6px;
     background: none; border: none; padding: 6px 0;
-    font-size: 1rem; color: #bbb; transition: color 0.2s;
-    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.9375rem; color: #4A5565; transition: color 0.2s;
+    font-family: 'Inter', system-ui, sans-serif; font-weight: 500;
   }
   .snip-like-btn          { cursor: pointer; }
   .snip-like-btn:hover    { color: #FF8E00; }
@@ -251,12 +249,12 @@ const styles = `
   .snip-bm-btn:hover   { color: #FF8E00; }
   .snip-bm-btn.active  { color: #FF8E00; background: #FF8E0018; border-radius: 8px; }
   .snip-bm-btn.disabled { cursor: not-allowed; opacity: 0.5; }
-  .snip-comment-btn  { cursor: pointer; opacity: 1; }
+  .snip-comment-btn  { cursor: pointer; }
   .snip-comment-btn:hover { color: #FF8E00; }
-  .snip-share-btn    { cursor: pointer; opacity: 1; }
+  .snip-share-btn    { cursor: pointer; }
   .snip-share-btn:hover { color: #FF8E00; }
   .snip-social-icon  { font-size: 1.125rem; line-height: 1; display: flex; align-items: center; }
-  .snip-social-sep   { color: rgba(0,0,0,0.12); font-size: 1rem; }
+  .snip-social-sep   { color: #E5E7EB; font-size: 1rem; }
 
   /* Share popover */
   .share-popover-overlay {
@@ -266,44 +264,45 @@ const styles = `
     animation: fadeIn 0.15s ease;
   }
   .share-popover {
-    background: white; border-radius: 24px 24px 0 0; width: 100%;
+    background: white; border-radius: 16px 16px 0 0; width: 100%;
     padding: 20px 24px 32px;
     animation: slideUp 0.25s cubic-bezier(0.25,0.46,0.45,0.94) both;
-    box-shadow: 0 -4px 24px rgba(0,0,0,0.12);
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.10);
   }
   .share-popover-handle {
-    width: 40px; height: 4px; background: rgba(0,0,0,0.12); border-radius: 2px;
+    width: 40px; height: 4px; background: #E5E7EB; border-radius: 2px;
     margin: 0 auto 16px;
   }
   .share-popover-title {
-    font-family: 'Alumni Sans', sans-serif; font-size: 1.125rem; font-weight: 700;
-    color: #0A0A0A; margin-bottom: 6px;
+    font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.125rem; font-weight: 500;
+    color: #101828; margin-bottom: 6px;
   }
   .share-popover-hook {
-    font-size: 0.8125rem; color: #6B6B6B; margin-bottom: 18px;
+    font-size: 0.875rem; color: #4A5565; margin-bottom: 18px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-family: 'Nunito Sans', system-ui, sans-serif;
   }
   .share-popover-btns { display: flex; flex-direction: column; gap: 10px; }
   .share-pop-btn {
     display: flex; align-items: center; gap: 12px;
-    padding: 13px 18px; border-radius: 12px; border: 1.5px solid;
-    background: white; cursor: pointer; font-family: 'Alumni Sans', sans-serif;
-    font-size: 1rem; font-weight: 700; letter-spacing: 0.02em;
+    padding: 13px 18px; border-radius: 12px; border: 1px solid;
+    background: white; cursor: pointer; font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.9375rem; font-weight: 500;
     transition: opacity 0.15s; text-decoration: none;
     min-height: 48px;
   }
   .share-pop-btn:hover { opacity: 0.82; }
   .share-pop-btn-wa   { border-color: #25D366; color: #25D366; }
-  .share-pop-btn-tw   { border-color: #0A0A0A; color: #0A0A0A; }
+  .share-pop-btn-tw   { border-color: #101828; color: #101828; }
   .share-pop-btn-copy { border-color: #00509E; color: #00509E; }
   .share-pop-btn-copy.copied { border-color: #00924A; color: #00924A; }
   .share-pop-cancel {
     margin-top: 8px; padding: 12px; border-radius: 12px; border: none;
-    background: #f5f5f5; color: #6B6B6B; cursor: pointer;
-    font-family: 'Alumni Sans', sans-serif; font-size: 0.9375rem; font-weight: 700;
+    background: #F3F4F6; color: #4A5565; cursor: pointer;
+    font-family: 'Inter', system-ui, sans-serif; font-size: 0.9375rem; font-weight: 500;
     width: 100%; transition: background 0.15s; min-height: 44px;
   }
-  .share-pop-cancel:hover { background: #ebebeb; }
+  .share-pop-cancel:hover { background: #E5E7EB; }
 
   /* Comments sheet */
   .comments-overlay {
@@ -313,7 +312,7 @@ const styles = `
     animation: fadeIn 0.2s ease;
   }
   .comments-sheet {
-    background: white; border-radius: 24px 24px 0 0;
+    background: white; border-radius: 16px 16px 0 0;
     width: 100%; max-width: 680px; max-height: 70vh;
     display: flex; flex-direction: column; overflow: hidden;
     animation: slideUp 0.3s cubic-bezier(0.25,0.46,0.45,0.94) both;
@@ -324,75 +323,74 @@ const styles = `
   }
   .comments-header {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 16px 20px; border-bottom: 1px solid rgba(0,0,0,0.07); flex-shrink: 0;
+    padding: 16px 20px; border-bottom: 1px solid #E5E7EB; flex-shrink: 0;
   }
   .comments-title {
-    font-family: 'Alumni Sans', sans-serif; font-size: 1.25rem; font-weight: 700; color: #333;
+    font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.125rem; font-weight: 500; color: #101828;
   }
   .comments-close {
     background: none; border: none; cursor: pointer;
-    font-size: 1.25rem; color: #aaa; padding: 4px; line-height: 1;
+    font-size: 1.25rem; color: #4A5565; padding: 4px; line-height: 1;
   }
-  .comments-close:hover { color: #555; }
+  .comments-close:hover { color: #101828; }
   .comments-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
-  .comments-empty { text-align: center; padding: 32px; color: #bbb; font-size: 0.9375rem; }
+  .comments-empty { text-align: center; padding: 32px; color: #4A5565; font-size: 0.9375rem; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .comments-signin { text-align: center; padding: 16px 0 8px; }
-  .comments-signin-text { font-size: 0.875rem; color: #aaa; margin-bottom: 10px; }
+  .comments-signin-text { font-size: 0.9375rem; color: #4A5565; margin-bottom: 10px; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .comments-signin-btn {
-    display: inline-block; padding: 10px 24px; border-radius: 999px;
+    display: inline-block; padding: 10px 24px; border-radius: 12px;
     background: #FF8E00; color: white; border: none;
-    font-family: 'Alumni Sans', sans-serif; font-size: 0.9375rem; font-weight: 700;
+    font-family: 'Inter', system-ui, sans-serif; font-size: 0.875rem; font-weight: 500;
     opacity: 0.4; cursor: not-allowed;
   }
   .comment-row { display: flex; gap: 12px; margin-bottom: 16px; }
   .comment-avatar {
-    width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.06);
+    width: 32px; height: 32px; border-radius: 50%; background: #F3F4F6;
     flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.875rem;
   }
   .comment-content { flex: 1; }
-  .comment-author { font-size: 0.8125rem; font-weight: 700; color: #333; margin-bottom: 2px; }
-  .comment-text { font-size: 0.875rem; color: #555; line-height: 1.5; }
-  .comment-time { font-size: 0.6875rem; color: #bbb; margin-top: 3px; }
+  .comment-author { font-size: 0.8125rem; font-weight: 700; color: #101828; margin-bottom: 2px; font-family: 'Nunito Sans', system-ui, sans-serif; }
+  .comment-text { font-size: 0.9375rem; color: #4A5565; line-height: 1.6; font-family: 'Nunito Sans', system-ui, sans-serif; }
+  .comment-time { font-size: 0.6875rem; color: #4A5565; margin-top: 3px; font-family: 'Inter', system-ui, sans-serif; }
   .comment-author-row { display: flex; align-items: center; gap: 4px; margin-bottom: 2px; }
   .comment-actions { display: flex; align-items: center; gap: 2px; margin-left: 4px; }
-  .comment-delete-btn { background: none; border: none; cursor: pointer; color: #ccc; font-size: 0.75rem; padding: 0 2px; line-height: 1; }
+  .comment-delete-btn { background: none; border: none; cursor: pointer; color: #E5E7EB; font-size: 0.75rem; padding: 0 2px; line-height: 1; }
   .comment-delete-btn:hover { color: #e55; }
-  .comment-edit-btn { background: none; border: none; cursor: pointer; color: #ccc; font-size: 0.75rem; padding: 0 2px; line-height: 1; }
+  .comment-edit-btn { background: none; border: none; cursor: pointer; color: #E5E7EB; font-size: 0.75rem; padding: 0 2px; line-height: 1; }
   .comment-edit-btn:hover { color: #FF8E00; }
   .comment-edit-form { margin-top: 4px; }
   .comment-edit-actions { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
-  .comment-edit-cancel-btn { background: none; border: 1px solid #ddd; border-radius: 6px; padding: 4px 12px; font-size: 0.875rem; cursor: pointer; color: #666; }
-  .comment-edit-cancel-btn:hover { background: #f5f5f5; }
-  .comments-count { font-size: 0.875rem; color: #aaa; font-weight: 400; }
-  /* Comments footer */
-  .comments-footer { border-top: 1px solid #f0ebe0; padding: 12px 16px; background: #fff; }
+  .comment-edit-cancel-btn { background: none; border: 1px solid #E5E7EB; border-radius: 8px; padding: 4px 12px; font-size: 0.875rem; cursor: pointer; color: #4A5565; font-family: 'Inter', system-ui, sans-serif; }
+  .comment-edit-cancel-btn:hover { background: #F3F4F6; }
+  .comments-count { font-size: 0.875rem; color: #4A5565; font-weight: 400; font-family: 'Inter', system-ui, sans-serif; }
+  .comments-footer { border-top: 1px solid #E5E7EB; padding: 12px 16px; background: #fff; }
   .comment-input {
     width: 100%; box-sizing: border-box;
-    border: 1px solid #ddd; border-radius: 10px;
+    border: 1px solid #E5E7EB; border-radius: 10px;
     padding: 10px 12px; font-size: 0.9375rem;
-    font-family: 'Source Sans 3', sans-serif;
+    font-family: 'Nunito Sans', system-ui, sans-serif;
     resize: none; outline: none;
-    background: #faf8f4; color: #0A0A0A;
+    background: #FFFFFF; color: #101828;
     transition: border-color 0.15s;
   }
   .comment-input:focus { border-color: #FF8E00; }
   .comment-footer-row { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
-  .comment-char-count { font-size: 0.75rem; color: #bbb; }
+  .comment-char-count { font-size: 0.75rem; color: #4A5565; font-family: 'Inter', system-ui, sans-serif; }
   .comment-post-btn {
     background: #FF8E00; color: #fff; border: none;
     border-radius: 8px; padding: 7px 18px;
-    font-size: 0.9375rem; font-weight: 600;
+    font-size: 0.875rem; font-weight: 500;
     cursor: pointer; transition: opacity 0.15s;
+    font-family: 'Inter', system-ui, sans-serif;
   }
   .comment-post-btn:disabled { opacity: 0.45; cursor: not-allowed; }
   .comment-post-btn:not(:disabled):hover { opacity: 0.88; }
-
 
   /* Snippet edit button */
   .snip-edit-btn { cursor: pointer; }
   .snip-edit-btn:hover { color: ${HERITAGE}; }
 
-  /* Edit panel (reuses comments-sheet pattern) */
+  /* Edit panel */
   .edit-panel-overlay {
     position: fixed; inset: 0; z-index: 155;
     background: rgba(0,0,0,0.4); backdrop-filter: blur(2px);
@@ -400,57 +398,57 @@ const styles = `
     animation: fadeIn 0.2s ease;
   }
   .edit-panel-sheet {
-    background: white; border-radius: 24px 24px 0 0;
+    background: white; border-radius: 16px 16px 0 0;
     width: 100%; max-width: 680px; max-height: 85vh;
     display: flex; flex-direction: column; overflow: hidden;
     animation: slideUp 0.3s cubic-bezier(0.25,0.46,0.45,0.94) both;
   }
   .edit-panel-header {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 16px 20px; border-bottom: 1px solid rgba(0,0,0,0.07); flex-shrink: 0;
+    padding: 16px 20px; border-bottom: 1px solid #E5E7EB; flex-shrink: 0;
   }
   .edit-panel-title {
-    font-family: 'Alumni Sans', sans-serif; font-size: 1.25rem; font-weight: 700; color: #333;
+    font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.125rem; font-weight: 500; color: #101828;
   }
   .edit-panel-close {
     background: none; border: none; cursor: pointer;
-    font-size: 1.25rem; color: #aaa; padding: 4px; line-height: 1;
+    font-size: 1.25rem; color: #4A5565; padding: 4px; line-height: 1;
   }
-  .edit-panel-close:hover { color: #555; }
+  .edit-panel-close:hover { color: #101828; }
   .edit-panel-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
   .edit-field-group { margin-bottom: 18px; }
   .edit-field-label {
-    display: block; font-size: 0.6875rem; font-weight: 700;
+    display: block; font-size: 0.6875rem; font-weight: 600;
     letter-spacing: 0.09em; text-transform: uppercase; color: ${HERITAGE};
-    margin-bottom: 6px;
+    margin-bottom: 6px; font-family: 'Inter', system-ui, sans-serif;
   }
   .edit-field-input {
     width: 100%; box-sizing: border-box;
-    border: 1px solid rgba(0,0,0,0.12); border-radius: 10px;
+    border: 1px solid #E5E7EB; border-radius: 10px;
     padding: 9px 12px; font-size: 0.9375rem;
-    font-family: 'Source Sans 3', sans-serif; color: #0A0A0A;
-    background: #FAFAF7; resize: vertical; outline: none;
+    font-family: 'Nunito Sans', system-ui, sans-serif; color: #101828;
+    background: #FFFFFF; resize: vertical; outline: none;
     transition: border-color 0.15s;
   }
   .edit-field-input:focus { border-color: ${HERITAGE}; }
   .edit-panel-footer {
-    border-top: 1px solid rgba(0,0,0,0.07);
+    border-top: 1px solid #E5E7EB;
     padding: 12px 20px; background: white;
     display: flex; align-items: center; justify-content: flex-end; gap: 10px;
   }
-  .edit-panel-msg { font-size: 0.875rem; color: ${GREEN}; flex: 1; }
+  .edit-panel-msg { font-size: 0.875rem; color: ${GREEN}; flex: 1; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .edit-panel-msg.err { color: #e55; }
   .edit-cancel-btn {
-    padding: 9px 22px; border-radius: 999px; border: 1.5px solid rgba(0,0,0,0.12);
-    background: white; color: #6B6B6B; cursor: pointer;
-    font-family: 'Alumni Sans', sans-serif; font-size: 0.9375rem; font-weight: 700;
+    padding: 9px 22px; border-radius: 12px; border: 1px solid #E5E7EB;
+    background: white; color: #4A5565; cursor: pointer;
+    font-family: 'Inter', system-ui, sans-serif; font-size: 0.875rem; font-weight: 500;
     transition: background 0.15s;
   }
-  .edit-cancel-btn:hover { background: #f5f5f5; }
+  .edit-cancel-btn:hover { background: #F3F4F6; }
   .edit-save-btn {
-    padding: 9px 28px; border-radius: 999px; border: none;
+    padding: 9px 28px; border-radius: 12px; border: none;
     background: ${HERITAGE}; color: white; cursor: pointer;
-    font-family: 'Alumni Sans', sans-serif; font-size: 0.9375rem; font-weight: 700;
+    font-family: 'Inter', system-ui, sans-serif; font-size: 0.875rem; font-weight: 500;
     transition: opacity 0.15s;
   }
   .edit-save-btn:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -461,7 +459,7 @@ const styles = `
     .snip-hook { font-size: 1.375rem; }
     .snip-explanation { font-size: 0.9375rem; }
     .snip-body { padding: 16px 14px 12px; }
-    .pnav-btn  { padding: 10px 18px; font-size: 0.9375rem; }
+    .pnav-btn  { padding: 8px 16px; font-size: 0.8125rem; }
     .player-nav { padding: 10px 1rem; bottom: 0; }
     .player-nav-links { display: none !important; }
     .snip-img { max-height: 300px; }
@@ -480,7 +478,7 @@ export default function SnippetPlayer({
   isAdmin = false,
   isCreator = false,
   userEditorialRole = null,
-  snippetShareMsg = "I found this story. It is very exciting. You can read this and more at indiyatra.in. It has an amazing collection."
+  snippetShareMsg = DEFAULT_SNIPPET_SHARE_MSG
 }) {
   const playlistMode       = !!(playlistSnippetIds && playlistSnippetIds.length > 0);
   const backToPlaylist      = onBackToDiscover || onBackToLikes;
@@ -949,7 +947,7 @@ export default function SnippetPlayer({
                         className={"snip-social-btn snip-like-btn" + (liked.has(snip.snippet_id) ? " active" : "") + (!user || user.is_anonymous ? " disabled" : "")}
                         onClick={e => { e.stopPropagation(); toggleLike(snip.snippet_id); }}
                         disabled={!user || user.is_anonymous}
-                        title={!user || user.is_anonymous ? "Sign in to like" : liked.has(snip.snippet_id) ? "Unlike" : "Like"}
+                        title={!user || user.is_anonymous ? SIGNIN.likeTooltip : liked.has(snip.snippet_id) ? PLAYER.unlikeTooltip : "Like"}
                       >
                         <span className="snip-social-icon">{liked.has(snip.snippet_id) ? "♥" : "♡"}</span>
                         <span>{likeCounts[snip.snippet_id] || 0}</span>
@@ -967,7 +965,7 @@ export default function SnippetPlayer({
                     <div className="snip-social-right">
                       <button
                         className={"snip-social-btn snip-bm-btn" + (bookmarks.has("snippet:" + snip.snippet_id) ? " active" : "") + (!user || user.is_anonymous ? " disabled" : "")}
-                        title={!user || user.is_anonymous ? "Sign in to bookmark" : bookmarks.has("snippet:" + snip.snippet_id) ? "Remove bookmark" : "Bookmark this snippet"}
+                        title={!user || user.is_anonymous ? SIGNIN.bookmarkTooltip : bookmarks.has("snippet:" + snip.snippet_id) ? PLAYER.removeBookmark : PLAYER.addBookmark}
                         onClick={() => { if (onToggleBookmark) onToggleBookmark("snippet", String(snip.snippet_id), snip.hook || "Snippet"); }}
                       >
                         <span className="snip-social-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill={bookmarks.has("snippet:" + snip.snippet_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span>
@@ -1046,7 +1044,7 @@ export default function SnippetPlayer({
           const trans = shareSnip ? (translations[shareSnip.snippet_id] || {}) : {};
           const hook = trans.hook || shareSnip?.hook || "";
           const shareText = (hook ? hook + "\n\n" : "") + snippetShareMsg;
-          const shareUrl  = "https://indiyatra.in";
+          const shareUrl  = APP_URL;
           const waHref  = "https://wa.me/?text=" + encodeURIComponent(shareText + "\n" + shareUrl);
           const twHref  = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(shareText) + "&url=" + encodeURIComponent(shareUrl);
           return (
@@ -1246,7 +1244,7 @@ export default function SnippetPlayer({
               {playlistMode ? (
                 <>
                   <div className="comp-emoji">{isDiscoverPlaylist ? "\u{1F9ED}" : "\u2665"}</div>
-                  <div className="comp-title">{isDiscoverPlaylist ? "Discover Playlist Complete" : "End of Likes Playlist"}</div>
+                  <div className="comp-title">{isDiscoverPlaylist ? PLAYER.discoverComplete : PLAYER.likesComplete}</div>
                   <div className="comp-subtitle">You've reviewed all <strong>{snippets.length}</strong> snippet{snippets.length !== 1 ? "s" : ""} in <strong>{playlistLabel || "this playlist"}</strong>.</div>
                   <button className="comp-btn comp-primary" onClick={backToPlaylist}>{isDiscoverPlaylist ? "Back to Discover" : "Back to Likes"}</button>
                   <button className="comp-btn comp-secondary" onClick={() => { setCurrent(0); setDone(false); }}>Review Again</button>
@@ -1261,7 +1259,7 @@ export default function SnippetPlayer({
                   <div className="comp-points">
                     <span className="comp-points-icon">🪙</span>
                     <span className="comp-points-value">+{totalPoints}</span>
-                    <span className="comp-points-label">Dharma Points</span>
+                    <span className="comp-points-label">{PLAYER.dharmaPoints}</span>
                   </div>
 
                   {earnedBadges.length > 0 && (

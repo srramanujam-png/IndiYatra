@@ -847,11 +847,11 @@ export async function adminImportSnippetsFull(rows) {
     supabaseClient.from("languages").select("language_id, language"),
     supabaseClient.from("snippet_translations").select("snippet_id, language"),
     supabaseClient.from("snippet_core").select("snippet_id, asset_id, import_key"),
-    supabaseClient.from("lessons").select("lesson_id, lesson_name"),
-    supabaseClient.from("modules").select("module_id, module_name, course_id, level_id, theme_id"),
-    supabaseClient.from("themes").select("theme_id, title"),
+    supabaseClient.from("lessons").select("lesson_id, lesson_name, module_id, sort_order"),
+    supabaseClient.from("modules").select("module_id, module_name, course_id, level_id, theme_id, sort_order"),
+    supabaseClient.from("themes").select("theme_id, title, sort_order"),
     supabaseClient.from("levels").select("level_id, title"),
-    supabaseClient.from("courses").select("course_id, course_name"),
+    supabaseClient.from("courses").select("course_id, course_name, sort_order"),
     supabaseClient.from("asset_library").select("asset_id, file_path"),
     supabaseClient.from("lesson_snippet_mapping").select("lesson_id, snippet_id"),
   ]);
@@ -883,7 +883,25 @@ export async function adminImportSnippetsFull(rows) {
   });
   (mappingRes.data || []).forEach(r => { mappingSet.add(r.lesson_id + ":" + r.snippet_id); });
 
-  // ── 3. UUID generator (all content IDs are auto-generated UUIDs) ───────────
+  // ── 3. sort_order trackers ────────────────────────────────────────────────
+  const courseMaxOrder = Math.max(0, ...(courseRes.data || []).map(r => r.sort_order || 0));
+  const themeMaxOrder  = Math.max(0, ...(themeRes.data  || []).map(r => r.sort_order || 0));
+  let nextCourseOrder  = courseMaxOrder;
+  let nextThemeOrder   = themeMaxOrder;
+
+  const moduleGroupMax = {};
+  (moduleRes.data || []).forEach(r => {
+    const key = (r.course_id || "") + "|" + (r.level_id || "") + "|" + (r.theme_id || "");
+    moduleGroupMax[key] = Math.max(moduleGroupMax[key] || 0, r.sort_order || 0);
+  });
+
+  const lessonModuleMax = {};
+  (lessonRes.data || []).forEach(r => {
+    if (r.module_id)
+      lessonModuleMax[r.module_id] = Math.max(lessonModuleMax[r.module_id] || 0, r.sort_order || 0);
+  });
+
+  // ── 4. UUID generator (all content IDs are auto-generated UUIDs) ───────────
   const uuid = () => crypto.randomUUID();
 
   // ── 4. Process rows ───────────────────────────────────────────────────────
@@ -1018,7 +1036,8 @@ export async function adminImportSnippetsFull(rows) {
             if (_cm.type === "fuzzy") stats.fuzzyMatches++;
           } else {
             courseId = uuid();
-            const { error: e } = await supabaseClient.from("courses").insert({ course_id: courseId, course_name: courseName });
+            nextCourseOrder++;
+            const { error: e } = await supabaseClient.from("courses").insert({ course_id: courseId, course_name: courseName, sort_order: nextCourseOrder });
             if (!e) { courseMap[normalize(courseName)] = courseId; stats.coursesCreated++; }
             else    { stats.errors.push("Create course (" + courseName + "): " + e.message); courseId = null; }
           }
@@ -1048,7 +1067,8 @@ export async function adminImportSnippetsFull(rows) {
             if (_tm.type === "fuzzy") stats.fuzzyMatches++;
           } else {
             themeId = uuid();
-            const { error: e } = await supabaseClient.from("themes").insert({ theme_id: themeId, title: themeName });
+            nextThemeOrder++;
+            const { error: e } = await supabaseClient.from("themes").insert({ theme_id: themeId, title: themeName, sort_order: nextThemeOrder });
             if (!e) { themeMap[normalize(themeName)] = themeId; stats.themesCreated++; }
             else    { stats.errors.push("Create theme (" + themeName + "): " + e.message); themeId = null; }
           }
@@ -1064,7 +1084,9 @@ export async function adminImportSnippetsFull(rows) {
             if (_mm.type === "fuzzy") stats.fuzzyMatches++;
           } else {
             moduleId = uuid();
-            const modRow = { module_id: moduleId, module_name: moduleName, visibility: "PUBLIC" };
+            const modGroupKey = (courseId || "") + "|" + (levelId || "") + "|" + (themeId || "");
+            moduleGroupMax[modGroupKey] = (moduleGroupMax[modGroupKey] || 0) + 1;
+            const modRow = { module_id: moduleId, module_name: moduleName, visibility: "PUBLIC", sort_order: moduleGroupMax[modGroupKey] };
             if (courseId) modRow.course_id = courseId;
             if (levelId)  modRow.level_id  = levelId;
             if (themeId)  modRow.theme_id  = themeId;
@@ -1076,8 +1098,9 @@ export async function adminImportSnippetsFull(rows) {
 
         // Create lesson
         lessonId = uuid();
+        if (moduleId) lessonModuleMax[moduleId] = (lessonModuleMax[moduleId] || 0) + 1;
         const lesRow = { lesson_id: lessonId, lesson_name: lessonName };
-        if (moduleId) lesRow.module_id = moduleId;
+        if (moduleId) { lesRow.module_id = moduleId; lesRow.sort_order = lessonModuleMax[moduleId]; }
         const { error: lesErr } = await supabaseClient.from("lessons").insert(lesRow);
         if (lesErr) {
           stats.errors.push("Create lesson (" + lessonName + "): " + lesErr.message);

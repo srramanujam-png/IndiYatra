@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { DEFAULT_SHARE_MSG, DEFAULT_SNIPPET_SHARE_MSG } from "../config/appStrings";
+import { APP_NAME, DEFAULT_SHARE_MSG, DEFAULT_SNIPPET_SHARE_MSG, SIGNIN } from "../config/appStrings";
 import { updateDisplayName, updateShareMessage, updateSnippetShareMessage } from "../lib/auth";
 import { SAFFRON, HERITAGE, GREEN, PARCHMENT } from "../lib/supabase";
 import { globalStyles } from "../styles/global";
@@ -12,74 +12,81 @@ const styles = `
     max-width: 640px; margin: 0 auto; padding: 28px 1.5rem 80px;
   }
   .settings-card {
-    background: white; border-radius: 14px; padding: 22px;
+    background: white; border-radius: 12px; padding: 22px;
     margin-bottom: 24px; box-shadow: none;
-    border: 1px solid rgba(0,0,0,0.07);
+    border: 1px solid #E5E7EB;
   }
   .settings-card-label {
-    font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.08em;
-    text-transform: uppercase; color: #aaa; margin-bottom: 16px;
+    font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #4A5565; margin-bottom: 16px;
+    font-family: 'Inter', system-ui, sans-serif;
   }
   .settings-field-label {
-    display: block; font-size: 0.875rem; color: #555; margin-bottom: 6px;
+    display: block; font-size: 0.875rem; color: #4A5565; margin-bottom: 6px;
+    font-family: 'Nunito Sans', system-ui, sans-serif;
   }
   .settings-input {
-    width: 100%; border: 1.5px solid #e8d5b0; border-radius: 10px;
-    padding: 10px 14px; font-family: 'Source Sans 3', sans-serif; font-size: 1rem;
-    color: #0A0A0A; outline: none; transition: border-color 0.2s; background: white;
+    width: 100%; border: 1.5px solid #E5E7EB; border-radius: 10px;
+    padding: 10px 14px; font-family: 'Nunito Sans', system-ui, sans-serif; font-size: 1rem;
+    color: #101828; outline: none; transition: border-color 0.2s; background: white;
     box-sizing: border-box;
   }
   .settings-input:focus { border-color: ${SAFFRON}; }
-  .settings-input:disabled { background: #f9f5ef; color: #aaa; cursor: not-allowed; }
+  .settings-input:disabled { background: #F3F4F6; color: #4A5565; cursor: not-allowed; }
   .settings-textarea {
-    width: 100%; border: 1.5px solid #e8d5b0; border-radius: 10px;
-    padding: 10px 14px; font-family: 'Source Sans 3', sans-serif; font-size: 0.9375rem;
-    color: #0A0A0A; outline: none; transition: border-color 0.2s; background: white;
+    width: 100%; border: 1.5px solid #E5E7EB; border-radius: 10px;
+    padding: 10px 14px; font-family: 'Nunito Sans', system-ui, sans-serif; font-size: 0.9375rem;
+    color: #101828; outline: none; transition: border-color 0.2s; background: white;
     resize: vertical; min-height: 80px; line-height: 1.5; box-sizing: border-box;
   }
   .settings-textarea:focus { border-color: ${SAFFRON}; }
   .settings-save-row { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
   .settings-save-btn {
-    background: ${SAFFRON}; color: white; border: none; border-radius: 10px;
-    padding: 10px 24px; font-family: 'Alumni Sans', sans-serif; font-size: 1rem;
-    font-weight: 700; cursor: pointer; min-height: 44px; letter-spacing: 0.02em;
-    transition: box-shadow 0.2s; white-space: nowrap;
+    background: ${SAFFRON}; color: white; border: none; border-radius: 12px;
+    padding: 10px 24px; font-family: 'Inter', system-ui, sans-serif; font-size: 0.9375rem;
+    font-weight: 500; cursor: pointer; min-height: 44px; letter-spacing: 0.01em;
+    transition: opacity 0.2s; white-space: nowrap;
+    box-shadow: 0px 1px 0.5px 0.05px rgba(29, 41, 61, 0.02);
   }
-  .settings-save-btn:hover { box-shadow: 0 4px 16px ${SAFFRON}55; }
-  .settings-save-btn:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
-  .settings-status { font-size: 0.875rem; }
+  .settings-save-btn:hover { opacity: 0.9; }
+  .settings-save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .settings-status { font-size: 0.875rem; font-family: 'Inter', system-ui, sans-serif; }
   .settings-status.saved { color: ${GREEN}; }
   .settings-status.error { color: #c0392b; }
-  .settings-status.saving { color: #aaa; }
+  .settings-status.saving { color: #4A5565; }
   .settings-lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .settings-lang-btn {
-    padding: 12px 12px; border-radius: 10px; border: 1.5px solid #e8d5b0;
-    background: white; cursor: pointer; font-size: 0.9375rem; font-weight: 600;
-    color: #555; transition: all 0.15s; text-align: left;
+    padding: 12px 12px; border-radius: 12px; border: 1.5px solid #E5E7EB;
+    background: white; cursor: pointer; font-size: 0.875rem; font-weight: 600;
+    color: #4A5565; transition: all 0.15s; text-align: left;
     display: flex; flex-direction: column; gap: 2px; min-height: 48px;
+    font-family: 'Nunito Sans', system-ui, sans-serif;
   }
   .settings-lang-btn:hover { border-color: ${SAFFRON}; color: ${SAFFRON}; }
   .settings-lang-btn.active { border-color: ${SAFFRON}; background: ${SAFFRON}11; color: ${SAFFRON}; }
   .settings-lang-native { font-size: 0.8125rem; opacity: 0.7; }
   .settings-fs-row { display: flex; gap: 8px; }
   .settings-fs-btn {
-    flex: 1; padding: 12px; border-radius: 10px; border: 1.5px solid #e8d5b0;
-    background: white; cursor: pointer; font-weight: 700; color: #555;
+    flex: 1; padding: 12px; border-radius: 12px; border: 1.5px solid #E5E7EB;
+    background: white; cursor: pointer; font-weight: 700; color: #4A5565;
     transition: all 0.15s; text-align: center; min-height: 48px; font-size: 1rem;
+    font-family: 'Nunito Sans', system-ui, sans-serif;
   }
   .settings-fs-btn:hover { border-color: ${SAFFRON}; color: ${SAFFRON}; }
   .settings-fs-btn.active { border-color: ${SAFFRON}; background: ${SAFFRON}11; color: ${SAFFRON}; }
-  .settings-hint { font-size: 0.8125rem; color: #aaa; margin-top: 8px; line-height: 1.4; }
+  .settings-hint { font-size: 0.8125rem; color: #4A5565; margin-top: 8px; line-height: 1.4; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .settings-guest-note {
-    background: #fff8ed; border: 1.5px solid #ffe0a0; border-radius: 10px;
-    padding: 12px 14px; font-size: 0.875rem; color: #a06800; margin-bottom: 16px;
+    background: ${SAFFRON}08; border: 1.5px solid ${SAFFRON}33; border-radius: 10px;
+    padding: 12px 14px; font-size: 0.875rem; color: #b86000; margin-bottom: 16px;
+    font-family: 'Nunito Sans', system-ui, sans-serif;
   }
   .settings-code {
-    background: #f5f0e8; padding: 1px 5px; border-radius: 4px; font-size: 0.8125rem;
+    background: #F3F4F6; padding: 1px 5px; border-radius: 4px; font-size: 0.8125rem;
+    font-family: ui-monospace, Consolas, monospace;
   }
   .settings-reset-btn {
-    background: none; border: none; font-size: 0.8125rem; color: #aaa;
-    cursor: pointer; padding: 0;
+    background: none; border: none; font-size: 0.8125rem; color: #4A5565;
+    cursor: pointer; padding: 0; font-family: 'Inter', system-ui, sans-serif;
   }
   .settings-reset-btn:hover { color: ${SAFFRON}; }
   @media (max-width: 768px) {
@@ -237,7 +244,7 @@ export default function SettingsPage({
       {/* Hero */}
       <div className="page-hero">
         <div className="page-title">Settings</div>
-        <div className="page-subtitle">Personalise your IndiYatra experience.</div>
+        <div className="page-subtitle">Personalise your {APP_NAME} experience.</div>
       </div>
 
       <div className="settings-body">
@@ -247,7 +254,7 @@ export default function SettingsPage({
           <div className="settings-card-label">Your Profile</div>
           {isGuest && (
             <div className="settings-guest-note">
-              👤 You're browsing as a guest. Sign in to save your display name across devices.
+              👤 {SIGNIN.guest}
             </div>
           )}
           <label className="settings-field-label">Display Name</label>
@@ -356,7 +363,7 @@ export default function SettingsPage({
           </div>
           {isGuest && (
             <p className="settings-hint" style={{ marginTop: 10 }}>
-              Saved locally on this device. Sign in to sync across devices.
+              {SIGNIN.settingsSync}
             </p>
           )}
         </div>
@@ -396,7 +403,7 @@ export default function SettingsPage({
           </div>
           {isGuest && (
             <p className="settings-hint" style={{ marginTop: 10 }}>
-              Saved locally on this device. Sign in to sync across devices.
+              {SIGNIN.settingsSync}
             </p>
           )}
         </div>

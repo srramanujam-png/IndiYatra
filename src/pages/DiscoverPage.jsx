@@ -3,6 +3,7 @@ import { supabase, SAFFRON, HERITAGE, GREEN, DEFAULT_LANG_CODE } from "../lib/su
 import { globalStyles } from "../styles/global";
 import PageHeader from "../components/PageHeader";
 import { SkeletonDiscoverResults } from "../components/Skeletons";
+import { APP_FOOTER, EMPTY } from "../config/appStrings";
 
 // Colour per content type — brand colours only
 const TYPE_META = {
@@ -23,30 +24,31 @@ const TYPE_FILTERS = [
 const styles = `
   .discover-hero {
     text-align: center; padding: 36px 1.5rem 28px;
-    border-bottom: 1px solid rgba(0,0,0,0.07);
+    border-bottom: 1px solid #E5E7EB;
   }
   .discover-hero h1 {
-    font-family: 'Alumni Sans', sans-serif; font-size: 2rem;
-    font-weight: 800; color: ${HERITAGE}; margin: 0 0 6px;
+    font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 2rem;
+    font-weight: 700; color: #101828; margin: 0 0 6px;
   }
-  .discover-hero p { color: #1F1F1F; font-size: 0.9375rem; margin: 0; }
+  .discover-hero p { color: #4A5565; font-size: 0.9375rem; margin: 0; font-family: 'Nunito Sans', system-ui, sans-serif; }
 
   .discover-pills-wrap {
     max-width: 1100px; margin: 0 auto; padding: 24px 1.5rem 0;
   }
   .discover-pill-group-label {
-    font-size: 0.75rem; font-weight: 700; color: #6B6B6B;
+    font-size: 0.75rem; font-weight: 700; color: #4A5565;
     text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px;
+    font-family: 'Inter', system-ui, sans-serif;
   }
   .discover-pill-row {
     display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;
   }
   .discover-pill {
     padding: 9px 18px; border-radius: 999px; min-height: 40px;
-    border: 1.5px solid rgba(0,0,0,0.10); background: white;
-    font-size: 0.9375rem; font-weight: 600; color: #1F1F1F;
+    border: 1.5px solid #E5E7EB; background: white;
+    font-size: 0.9375rem; font-weight: 600; color: #101828;
     cursor: pointer; transition: border-color 0.15s, background 0.15s, color 0.15s;
-    font-family: 'Source Sans 3', sans-serif; display: inline-flex; align-items: center;
+    font-family: 'Nunito Sans', system-ui, sans-serif; display: inline-flex; align-items: center;
   }
   .discover-pill:hover { border-color: ${SAFFRON}; color: ${SAFFRON}; }
   .discover-pill.active {
@@ -59,9 +61,10 @@ const styles = `
   }
   .discover-type-pill {
     padding: 5px 14px; border-radius: 999px;
-    border: 1.5px solid rgba(0,0,0,0.10); background: white;
-    font-size: 0.8125rem; font-weight: 600; color: #1F1F1F;
+    border: 1.5px solid #E5E7EB; background: white;
+    font-size: 0.8125rem; font-weight: 600; color: #101828;
     cursor: pointer; transition: border-color 0.15s, background 0.15s, color 0.15s;
+    font-family: 'Inter', system-ui, sans-serif;
   }
   .discover-type-pill:hover { border-color: ${HERITAGE}; color: ${HERITAGE}; }
   .discover-type-pill.active {
@@ -72,7 +75,8 @@ const styles = `
     max-width: 1100px; margin: 0 auto; padding: 24px 1.5rem 100px;
   }
   .discover-results-header {
-    font-size: 0.875rem; color: #6B6B6B; margin-bottom: 18px;
+    font-size: 0.875rem; color: #4A5565; margin-bottom: 18px;
+    font-family: 'Nunito Sans', system-ui, sans-serif;
   }
   .discover-results-header strong { color: ${HERITAGE}; }
 
@@ -82,8 +86,8 @@ const styles = `
     gap: 14px; margin-bottom: 24px;
   }
   .discover-snippet-card {
-    background: white; border-radius: 14px;
-    border: 1px solid rgba(0,0,0,0.07);
+    background: white; border-radius: 12px;
+    border: 1px solid #E5E7EB;
     border-top: 3px solid ${SAFFRON};
     padding: 16px 18px;
     cursor: pointer; transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
@@ -91,57 +95,61 @@ const styles = `
   }
   .discover-snippet-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.11);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
     border-color: ${SAFFRON};
   }
   .discover-snippet-hook {
-    font-size: 0.9375rem; font-weight: 600; color: #0A0A0A;
+    font-size: 0.9375rem; font-weight: 600; color: #101828;
     line-height: 1.5; margin-bottom: 10px;
     display: -webkit-box; -webkit-line-clamp: 3;
     -webkit-box-orient: vertical; overflow: hidden;
+    font-family: 'Nunito Sans', system-ui, sans-serif;
   }
   .discover-snippet-badge {
-    font-size: 0.75rem; font-weight: 700; color: ${SAFFRON};
+    font-size: 0.75rem; font-weight: 600; color: ${SAFFRON};
+    font-family: 'Inter', system-ui, sans-serif;
   }
 
   /* Row cards — lessons, modules, courses */
   .discover-row-card {
     display: flex; align-items: center; justify-content: space-between;
-    background: white; border-radius: 12px; border: 1px solid rgba(0,0,0,0.07);
+    background: white; border-radius: 12px; border: 1px solid #E5E7EB;
     padding: 14px 16px; margin-bottom: 8px; min-height: 52px;
     cursor: pointer; transition: border-color 0.15s, background 0.15s;
     animation: fadeUp 0.25s ease both;
   }
-  .discover-row-card:hover { background: rgba(0,0,0,0.02); border-color: ${SAFFRON}44; }
+  .discover-row-card:hover { background: #FAFAFA; border-color: ${SAFFRON}44; }
   .discover-row-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
   .discover-row-icon {
     font-size: 1.125rem; flex-shrink: 0; width: 28px; text-align: center;
   }
   .discover-row-name {
-    font-size: 0.9375rem; font-weight: 600; color: #0A0A0A;
+    font-size: 0.9375rem; font-weight: 600; color: #101828;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-family: 'Nunito Sans', system-ui, sans-serif;
   }
-  .discover-row-arrow { color: #6B6B6B; font-size: 1.125rem; flex-shrink: 0; }
+  .discover-row-arrow { color: #4A5565; font-size: 1.125rem; flex-shrink: 0; }
 
   .discover-group { margin-bottom: 28px; }
   .discover-group-label {
-    font-size: 0.75rem; font-weight: 700; color: #6B6B6B;
+    font-size: 0.75rem; font-weight: 700; color: #4A5565;
     text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px;
+    font-family: 'Inter', system-ui, sans-serif;
   }
 
   .discover-loading {
-    text-align: center; padding: 60px; color: #6B6B6B; font-size: 1rem;
+    text-align: center; padding: 60px; color: #4A5565; font-size: 1rem;
   }
   .discover-empty {
-    text-align: center; padding: 60px 24px; color: #6B6B6B;
+    text-align: center; padding: 60px 24px; color: #4A5565;
     max-width: 400px; margin: 0 auto;
   }
   .discover-empty-icon { font-size: 2.5rem; margin-bottom: 14px; }
   .discover-empty h3 {
-    font-family: 'Alumni Sans', sans-serif; font-size: 1.375rem;
-    color: #6B6B6B; margin-bottom: 8px;
+    font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.25rem;
+    color: #4A5565; margin-bottom: 8px;
   }
-  .discover-empty p { font-size: 0.9375rem; color: #6B6B6B; line-height: 1.6; }
+  .discover-empty p { font-size: 0.9375rem; color: #4A5565; line-height: 1.6; font-family: 'Nunito Sans', system-ui, sans-serif; }
   @media (max-width: 768px) {
     .discover-pills-wrap, .discover-type-filter, .discover-body { padding-left: 1rem; padding-right: 1rem; }
     .discover-snippet-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
@@ -153,10 +161,10 @@ const styles = `
   }
 
   .discover-prompt {
-    text-align: center; padding: 48px 24px; color: #6B6B6B;
+    text-align: center; padding: 48px 24px; color: #4A5565;
   }
   .discover-prompt-icon { font-size: 2.5rem; margin-bottom: 12px; }
-  .discover-prompt p { font-size: 0.9375rem; }
+  .discover-prompt p { font-size: 0.9375rem; font-family: 'Nunito Sans', system-ui, sans-serif; }
 `;
 
 export default function DiscoverPage({
@@ -401,9 +409,9 @@ export default function DiscoverPage({
         ) : totalAll === 0 ? (
           <div className="discover-empty">
             <div className="discover-empty-icon">&#x1F4AD;</div>
-            <h3>Nothing tagged yet</h3>
+            <h3>{EMPTY.discoverTagged}</h3>
             <p>
-              No content has been tagged with &ldquo;{selectedTermObj?.displayName}&rdquo; yet.
+              {EMPTY.discoverBody(selectedTermObj?.displayName)}{" "}
               Tags can be added in the Supabase content_taxonomy_mapping table.
             </p>
           </div>
@@ -535,8 +543,7 @@ export default function DiscoverPage({
       </div>
 
       <footer className="footer">
-        &copy; {new Date().getFullYear()} IndiYatra · Heritage for Every Child
+        {APP_FOOTER(new Date().getFullYear())}
       </footer>
     </>
-  );
-}
+  );}

@@ -107,7 +107,7 @@ function getState(done, total) {
   return "none";
 }
 
-export default function ModulesPage({ course, theme, levelId, settings, completedLessons = new Set(), onModuleClick, onBack, onBackToCourse, onOpenSettings, onDashboard, onLikes, onBookmarks, onDiscover, onResume, bookmarks = new Set(), onToggleBookmark, userEditorialRole, onEditor, activePage, onSaveSettings, languages = [] }) {
+export default function ModulesPage({ course, theme, levelId, settings, completedLessons = new Set(), onModuleClick, onBack, onBackToCourse, onOpenSettings, onDashboard, onLikes, onBookmarks, onDiscover, onResume, bookmarks = new Set(), onToggleBookmark, userEditorialRole, onEditor, isAdmin, onAdmin, activePage, onSaveSettings, languages = [] }) {
   const [modules, setModules]       = useState([]);
   const [assets, setAssets]         = useState({});
   const [lessonsByModule, setLessonsByModule] = useState({});
@@ -117,7 +117,7 @@ export default function ModulesPage({ course, theme, levelId, settings, complete
   useEffect(() => {
     async function load() {
       const [mods, assetData] = await Promise.all([
-        supabase("modules", `?select=*&level_id=eq.${levelId}&theme_id=eq.${theme.theme_id}&order=module_number`),
+        supabase("modules", `?select=*&level_id=eq.${levelId}&theme_id=eq.${theme.theme_id}&order=sort_order`),
         supabase("asset_library", "?select=*"),
       ]);
       const assetMap = {};
@@ -155,6 +155,8 @@ export default function ModulesPage({ course, theme, levelId, settings, complete
         onResume={onResume}
         userEditorialRole={userEditorialRole}
         onEditor={onEditor}
+        isAdmin={isAdmin}
+        onAdmin={onAdmin}
         activePage={activePage}
         settings={settings}
         onSaveSettings={onSaveSettings}

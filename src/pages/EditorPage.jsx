@@ -14,6 +14,7 @@ import {
   loadAllContentRoleAssignments, deleteAssignment,
 } from "../lib/auth";
 import { supabase } from "../lib/supabase";
+import { EMPTY } from "../config/appStrings";
 
 // ── Status config ─────────────────────────────────────────────────────────────
 const STATUS_CFG = {
@@ -31,51 +32,50 @@ const EDITOR_STYLES = `
   .editor-page { max-width: 900px; margin: 0 auto; padding: 24px 16px 80px; }
 
   .ep-hero {
-    background: #00509E;
-    border-radius: 14px; padding: 24px 28px; color: #fff;
-    margin-bottom: 28px;
+    background: #FFFFFF; padding: 32px 0 24px; margin-bottom: 28px;
   }
   .ep-hero h1 {
-    font-family: 'Alumni Sans', sans-serif; font-size: 1.75rem;
-    font-weight: 800; margin: 0 0 4px; letter-spacing: 0.01em;
+    font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 2rem;
+    font-weight: 700; color: #101828; margin: 0 0 6px; letter-spacing: 0.01em;
   }
-  .ep-hero p { opacity: 0.8; font-size: 0.9375rem; margin: 0; }
+  .ep-hero p { font-size: 0.9375rem; color: #4A5565; margin: 0; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .ep-role-badge {
-    display: inline-block; background: rgba(255,255,255,0.18);
-    border: 1px solid rgba(255,255,255,0.35); border-radius: 999px;
-    padding: 3px 14px; font-size: 0.8125rem; font-weight: 700;
-    letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px;
+    display: inline-flex; align-items: center;
+    border: 1.5px solid #00509E; color: #00509E; border-radius: 999px;
+    padding: 3px 14px; font-size: 0.75rem; font-weight: 700;
+    letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 12px;
+    font-family: 'Inter', system-ui, sans-serif;
   }
 
   .ep-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; margin-bottom: 28px; }
   .ep-stat {
-    background: #fff; border-radius: 12px; border: 1px solid rgba(0,0,0,0.10);
+    background: #fff; border-radius: 12px; border: 1px solid #E5E7EB;
     padding: 14px 16px; text-align: center;
   }
-  .ep-stat-num { font-family: 'Alumni Sans', sans-serif; font-size: 1.875rem; font-weight: 800; color: #FF8E00; line-height: 1; }
-  .ep-stat-lbl { font-size: 0.75rem; color: #6B6B6B; margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .ep-stat-num { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.875rem; font-weight: 700; color: #FF8E00; line-height: 1; }
+  .ep-stat-lbl { font-size: 0.75rem; color: #4A5565; margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-family: 'Inter', system-ui, sans-serif; }
 
   .ep-section { margin-bottom: 32px; }
   .ep-section-title {
-    font-family: 'Alumni Sans', sans-serif; font-size: 1.25rem;
-    font-weight: 800; color: #0A0A0A; margin: 0 0 14px;
+    font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.25rem;
+    font-weight: 500; color: #101828; margin: 0 0 14px;
     border-left: 4px solid #FF8E00; padding-left: 12px;
   }
 
   /* Assignment form */
   .ep-form {
-    background: #fff; border-radius: 14px; border: 1px solid rgba(0,0,0,0.10);
+    background: #fff; border-radius: 12px; border: 1px solid #E5E7EB;
     padding: 22px 24px; margin-bottom: 24px;
   }
   .ep-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   @media (max-width: 560px) { .ep-form-grid { grid-template-columns: 1fr; } }
   .ep-field { display: flex; flex-direction: column; gap: 5px; }
-  .ep-field label { font-size: 0.8125rem; font-weight: 700; color: #1F1F1F; text-transform: uppercase; letter-spacing: 0.05em; }
+  .ep-field label { font-size: 0.8125rem; font-weight: 600; color: #101828; text-transform: uppercase; letter-spacing: 0.05em; font-family: 'Inter', system-ui, sans-serif; }
   .ep-field input,
   .ep-field select,
   .ep-field textarea {
-    border: 1.5px solid #ddd; border-radius: 8px; padding: 9px 12px;
-    font-size: 0.9375rem; font-family: 'Source Sans 3', sans-serif;
+    border: 1.5px solid #E5E7EB; border-radius: 8px; padding: 9px 12px;
+    font-size: 0.9375rem; font-family: 'Nunito Sans', system-ui, sans-serif;
     background: white; transition: border-color 0.15s; outline: none;
   }
   .ep-field input:focus,
@@ -86,16 +86,18 @@ const EDITOR_STYLES = `
 
   .ep-btn {
     display: inline-flex; align-items: center; gap: 6px;
-    padding: 10px 22px; border-radius: 999px; border: none;
-    font-size: 0.9375rem; font-weight: 700; cursor: pointer;
+    padding: 10px 22px; border-radius: 12px; border: none;
+    font-size: 0.9375rem; font-weight: 500; cursor: pointer;
+    font-family: 'Inter', system-ui, sans-serif;
     transition: opacity 0.15s, transform 0.12s;
+    box-shadow: 0px 1px 0.5px 0.05px rgba(29, 41, 61, 0.02);
   }
   .ep-btn:hover { opacity: 0.88; transform: translateY(-1px); }
   .ep-btn:active { transform: translateY(0); }
   .ep-btn-primary   { background: #FF8E00; color: #fff; }
-  .ep-btn-secondary { background: #f0f0f0; color: #333; }
+  .ep-btn-secondary { background: #F3F4F6; color: #4A5565; }
   .ep-btn-heritage  { background: #00509E; color: #fff; }
-  .ep-btn-sm { padding: 6px 14px; font-size: 0.8125rem; border-radius: 999px; border: none; font-weight: 700; cursor: pointer; transition: opacity 0.12s; }
+  .ep-btn-sm { padding: 6px 14px; font-size: 0.8125rem; border-radius: 8px; border: none; font-weight: 500; cursor: pointer; transition: opacity 0.12s; font-family: 'Inter', system-ui, sans-serif; }
   .ep-btn-sm:hover { opacity: 0.82; }
   .ep-btn-approve  { background: #E8F5E9; color: #1a7a3a; }
   .ep-btn-reject   { background: #FFEBEE; color: #c62828; }
@@ -103,16 +105,17 @@ const EDITOR_STYLES = `
   .ep-btn-publish  { background: #00509E; color: #fff; }
 
   /* Tables */
-  .ep-table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid rgba(0,0,0,0.10); }
+  .ep-table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid #E5E7EB; }
   .ep-table { width: 100%; border-collapse: collapse; background: #fff; }
   .ep-table th {
     padding: 11px 14px; text-align: left; font-size: 0.75rem;
-    font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
-    color: #6B6B6B; background: white; border-bottom: 1px solid rgba(0,0,0,0.10); white-space: nowrap;
+    font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+    color: #4A5565; background: white; border-bottom: 1px solid #E5E7EB; white-space: nowrap;
+    font-family: 'Inter', system-ui, sans-serif;
   }
-  .ep-table td { padding: 12px 14px; font-size: 0.9rem; border-bottom: 1px solid #f0ece5; vertical-align: middle; }
+  .ep-table td { padding: 12px 14px; font-size: 0.9rem; border-bottom: 1px solid #E5E7EB; vertical-align: middle; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .ep-table tr:last-child td { border-bottom: none; }
-  .ep-table tr:hover td { background: #fffdf7; }
+  .ep-table tr:hover td { background: #F9FAFB; }
 
   .ep-status-badge {
     display: inline-block; padding: 3px 10px; border-radius: 999px;
@@ -147,53 +150,54 @@ const EDITOR_STYLES = `
   }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   .ep-panel-header {
-    padding: 18px 20px; border-bottom: 1.5px solid #eee;
+    padding: 18px 20px; border-bottom: 1.5px solid #E5E7EB;
     display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-shrink: 0;
   }
-  .ep-panel-header-text h3 { font-family: 'Alumni Sans', sans-serif; font-size: 1.125rem; font-weight: 800; color: #0A0A0A; margin: 0 0 2px; }
-  .ep-panel-header-text p  { font-size: 0.8125rem; color: #6B6B6B; margin: 0; }
-  .ep-panel-close { background: none; border: none; font-size: 1.25rem; cursor: pointer; color: #6B6B6B; flex-shrink: 0; padding: 2px 6px; }
+  .ep-panel-header-text h3 { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.125rem; font-weight: 500; color: #101828; margin: 0 0 2px; }
+  .ep-panel-header-text p  { font-size: 0.8125rem; color: #4A5565; margin: 0; font-family: 'Nunito Sans', system-ui, sans-serif; }
+  .ep-panel-close { background: none; border: none; font-size: 1.25rem; cursor: pointer; color: #4A5565; flex-shrink: 0; padding: 2px 6px; }
   .ep-panel-body { flex: 1; overflow-y: auto; padding: 20px; }
   .ep-panel-footer {
-    padding: 14px 20px; border-top: 1.5px solid #eee; flex-shrink: 0;
+    padding: 14px 20px; border-top: 1.5px solid #E5E7EB; flex-shrink: 0;
     display: flex; gap: 10px; flex-wrap: wrap;
   }
 
   /* Edit form specifics */
   .ep-edit-field { margin-bottom: 16px; }
   .ep-edit-field label {
-    display: block; font-size: 0.8125rem; font-weight: 700; color: #1F1F1F;
+    display: block; font-size: 0.8125rem; font-weight: 600; color: #101828;
     text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px;
+    font-family: 'Inter', system-ui, sans-serif;
   }
-  .ep-edit-field .ep-hint { font-size: 0.75rem; color: #aaa; font-weight: 400; text-transform: none; letter-spacing: 0; }
+  .ep-edit-field .ep-hint { font-size: 0.75rem; color: #4A5565; font-weight: 400; text-transform: none; letter-spacing: 0; }
   .ep-edit-field input,
   .ep-edit-field textarea {
     width: 100%; box-sizing: border-box;
-    border: 1.5px solid #ddd; border-radius: 8px; padding: 9px 12px;
-    font-size: 0.9375rem; font-family: 'Source Sans 3', sans-serif;
+    border: 1.5px solid #E5E7EB; border-radius: 8px; padding: 9px 12px;
+    font-size: 0.9375rem; font-family: 'Nunito Sans', system-ui, sans-serif;
     background: white; transition: border-color 0.15s; outline: none; resize: vertical;
   }
   .ep-edit-field input:focus,
   .ep-edit-field textarea:focus { border-color: #FF8E00; background: #fff; }
   .ep-edit-field textarea.short { min-height: 56px; }
   .ep-edit-field textarea.tall  { min-height: 100px; }
-  .ep-section-divider { border: none; border-top: 1.5px solid #f0ece5; margin: 20px 0; }
+  .ep-section-divider { border: none; border-top: 1.5px solid #E5E7EB; margin: 20px 0; }
 
   /* Taxonomy picker */
-  .ep-tax-section h4 { font-size: 0.875rem; font-weight: 700; color: #0A0A0A; margin: 0 0 6px; }
+  .ep-tax-section h4 { font-size: 0.875rem; font-weight: 700; color: #101828; margin: 0 0 6px; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .ep-tax-group { margin-bottom: 12px; }
-  .ep-tax-group-label { font-size: 0.75rem; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .ep-tax-group-label { font-size: 0.75rem; font-weight: 600; color: #4A5565; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; font-family: 'Inter', system-ui, sans-serif; }
   .ep-tax-pills { display: flex; flex-wrap: wrap; gap: 6px; }
   .ep-tax-pill {
     padding: 4px 12px; border-radius: 999px; font-size: 0.8125rem; font-weight: 600;
     cursor: pointer; border: 1.5px solid; transition: all 0.12s;
-    user-select: none;
+    user-select: none; font-family: 'Inter', system-ui, sans-serif;
   }
   .ep-tax-pill.existing { background: #E8F5E9; border-color: #a5d6a7; color: #1a7a3a; cursor: default; }
   .ep-tax-pill.selected { background: #FF8E00; border-color: #FF8E00; color: #fff; }
-  .ep-tax-pill.available { background: white; border-color: rgba(0,0,0,0.12); color: #1F1F1F; }
+  .ep-tax-pill.available { background: white; border-color: #E5E7EB; color: #101828; }
   .ep-tax-pill.available:hover { border-color: #FF8E00; color: #FF8E00; }
-  .ep-tax-note { font-size: 0.75rem; color: #aaa; margin-top: 6px; }
+  .ep-tax-note { font-size: 0.75rem; color: #4A5565; margin-top: 6px; font-family: 'Inter', system-ui, sans-serif; }
 
   /* ── Centred modal (activity log) ──────────────────────────── */
   .ep-modal-backdrop {
@@ -202,9 +206,9 @@ const EDITOR_STYLES = `
     animation: fadeIn 0.18s ease both;
   }
   .ep-modal {
-    background: #fff; border-radius: 14px; width: min(460px, 100%);
+    background: #fff; border-radius: 12px; width: min(460px, 100%);
     max-height: 80vh; display: flex; flex-direction: column;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.22);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.15);
     animation: scaleUp 0.18s ease both;
   }
   @keyframes scaleUp {
@@ -212,13 +216,13 @@ const EDITOR_STYLES = `
     to   { opacity: 1; transform: scale(1); }
   }
   .ep-modal-header {
-    padding: 18px 20px 14px; border-bottom: 1.5px solid #eee;
+    padding: 18px 20px 14px; border-bottom: 1.5px solid #E5E7EB;
     display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
   }
-  .ep-modal-header h3 { font-family: 'Alumni Sans', sans-serif; font-size: 1.125rem; font-weight: 800; color: #0A0A0A; margin: 0; }
+  .ep-modal-header h3 { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.125rem; font-weight: 500; color: #101828; margin: 0; }
   .ep-modal-body { flex: 1; overflow-y: auto; padding: 20px; }
   .ep-modal-footer {
-    padding: 12px 20px; border-top: 1.5px solid #eee; flex-shrink: 0;
+    padding: 12px 20px; border-top: 1.5px solid #E5E7EB; flex-shrink: 0;
     display: flex; justify-content: flex-end;
   }
 
@@ -226,18 +230,19 @@ const EDITOR_STYLES = `
   .ep-toast {
     position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
     background: #00509E; color: #fff; padding: 10px 22px;
-    border-radius: 999px; font-size: 0.875rem; font-weight: 600;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.25); z-index: 9999;
+    border-radius: 12px; font-size: 0.875rem; font-weight: 500;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.20); z-index: 9999;
     animation: fadeUp 0.2s ease both; white-space: nowrap; pointer-events: none;
+    font-family: 'Inter', system-ui, sans-serif;
   }
   @keyframes fadeUp { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }
 
   /* Event log */
   .ep-event { display: flex; gap: 12px; margin-bottom: 14px; }
   .ep-event-dot { width: 10px; height: 10px; border-radius: 50%; background: #FF8E00; margin-top: 5px; flex-shrink: 0; }
-  .ep-event-action { font-weight: 700; font-size: 0.875rem; color: #0A0A0A; }
-  .ep-event-meta   { font-size: 0.8rem; color: #6B6B6B; margin-top: 2px; }
-  .ep-event-comment { font-size: 0.875rem; color: #1F1F1F; margin-top: 3px; font-style: italic; }
+  .ep-event-action { font-weight: 700; font-size: 0.875rem; color: #101828; font-family: 'Nunito Sans', system-ui, sans-serif; }
+  .ep-event-meta   { font-size: 0.8rem; color: #4A5565; margin-top: 2px; font-family: 'Inter', system-ui, sans-serif; }
+  .ep-event-comment { font-size: 0.875rem; color: #4A5565; margin-top: 3px; font-style: italic; font-family: 'Nunito Sans', system-ui, sans-serif; }
 `;
 
 // ── Shared components ─────────────────────────────────────────────────────────
@@ -1036,7 +1041,7 @@ function SupervisorView({ languages, showToast }) {
           ) : itemsLoading ? (
             <p style={{ color:"#aaa", textAlign:"center", padding:32 }}>Loading content...</p>
           ) : filteredItems.length === 0 ? (
-            <EmptyState msg="No content matches your filters." />
+            <EmptyState msg={EMPTY.editorContent} />
           ) : (
             <div className="ep-table-wrap" style={{ marginBottom:12 }}>
               <table className="ep-table">
@@ -1264,7 +1269,7 @@ function SupervisorView({ languages, showToast }) {
           {dataLoading ? (
             <p style={{ color:"#aaa", textAlign:"center", padding:32 }}>Loading...</p>
           ) : filteredDrafts.length === 0 ? (
-            <EmptyState msg="No tasks match your filters." />
+            <EmptyState msg={EMPTY.editorTasks} />
           ) : (
             <div className="ep-table-wrap">
               <table className="ep-table">
@@ -1381,7 +1386,7 @@ function EditorView({ showToast }) {
       <div className="ep-section">
         <div className="ep-section-title">My Tasks</div>
         {loading ? <p style={{ color: "#aaa", textAlign: "center", padding: 32 }}>Loading…</p>
-        : drafts.length === 0 ? <EmptyState msg="No tasks assigned to you yet." />
+        : drafts.length === 0 ? <EmptyState msg={EMPTY.drafts} />
         : (
           <div className="ep-table-wrap">
             <table className="ep-table">
@@ -1458,7 +1463,7 @@ function VerifierView({ showToast }) {
       <div className="ep-section">
         <div className="ep-section-title">Review Queue</div>
         {loading ? <p style={{ color: "#aaa", textAlign: "center", padding: 32 }}>Loading…</p>
-        : drafts.length === 0 ? <EmptyState msg="No items waiting for review." />
+        : drafts.length === 0 ? <EmptyState msg={EMPTY.review} />
         : (
           <div className="ep-table-wrap">
             <table className="ep-table">

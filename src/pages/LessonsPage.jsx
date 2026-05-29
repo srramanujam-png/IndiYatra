@@ -78,14 +78,14 @@ const styles = `
   }
 `;
 
-export default function LessonsPage({ course, theme, module, levelId, settings, completedLessons = new Set(), onLessonClick, onBack, onBackToCourse, onBackToModules, onOpenSettings, onLessonsLoaded, onDashboard, onLikes, onBookmarks, onDiscover, onResume, bookmarks = new Set(), onToggleBookmark, userEditorialRole, onEditor, activePage, onSaveSettings, languages = [] }) {
+export default function LessonsPage({ course, theme, module, levelId, settings, completedLessons = new Set(), onLessonClick, onBack, onBackToCourse, onBackToModules, onOpenSettings, onLessonsLoaded, onDashboard, onLikes, onBookmarks, onDiscover, onResume, bookmarks = new Set(), onToggleBookmark, userEditorialRole, onEditor, isAdmin, onAdmin, activePage, onSaveSettings, languages = [] }) {
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
   const levelMeta = LEVEL_LABELS[levelId] || { label: "All Levels", color: SAFFRON };
 
   useEffect(() => {
     async function load() {
-      const data = await supabase("lessons", `?select=*&module_id=eq.${module.module_id}&order=lesson_number`);
+      const data = await supabase("lessons", `?select=*&module_id=eq.${module.module_id}&order=sort_order`);
       setLessons(data || []);
       if (onLessonsLoaded) onLessonsLoaded(data || []);
       setLoading(false);
@@ -102,6 +102,8 @@ export default function LessonsPage({ course, theme, module, levelId, settings, 
         onResume={onResume}
         userEditorialRole={userEditorialRole}
         onEditor={onEditor}
+        isAdmin={isAdmin}
+        onAdmin={onAdmin}
         activePage={activePage}
         settings={settings}
         onSaveSettings={onSaveSettings}

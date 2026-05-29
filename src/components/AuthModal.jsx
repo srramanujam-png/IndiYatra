@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { SAFFRON, HERITAGE, PARCHMENT } from "../lib/supabase";
 import { signInWithProvider, signInWithEmail, signUpWithEmail, signInAnonymously } from "../lib/auth";
+import { APP_NAME, AUTH } from "../config/appStrings";
 
 const SAFFRON_VAL  = "#FF8E00";
 const HERITAGE_VAL = "#00509E";
@@ -14,10 +15,10 @@ const styles = `
     padding: 1rem;
   }
   .auth-modal {
-    background: ${PARCHMENT_VAL}; border-radius: 20px;
+    background: #FFFFFF; border-radius: 16px;
     width: 100%; max-width: 440px;
     padding: 36px 32px 32px;
-    box-shadow: 0 24px 80px rgba(0,0,0,0.22);
+    box-shadow: 0 24px 80px rgba(0,0,0,0.15); border: 1px solid #E5E7EB;
     position: relative;
     animation: authSlideUp 0.28s cubic-bezier(0.25,0.46,0.45,0.94) both;
   }
@@ -28,75 +29,84 @@ const styles = `
   .auth-close {
     position: absolute; top: 16px; right: 16px;
     background: none; border: none; cursor: pointer;
-    font-size: 20px; color: #6B6B6B; line-height: 1;
+    font-size: 20px; color: #4A5565; line-height: 1;
     width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
     border-radius: 50%; transition: background 0.15s;
   }
-  .auth-close:hover { background: rgba(0,0,0,0.06); }
+  .auth-close:hover { background: #F3F4F6; }
   .auth-title {
-    font-family: 'Alumni Sans', sans-serif;
-    font-size: 28px; font-weight: 800; color: ${HERITAGE_VAL};
+    font-family: 'Oswald', 'Arial Narrow', sans-serif;
+    font-size: 28px; font-weight: 700; color: ${HERITAGE_VAL};
     margin-bottom: 4px; text-align: center;
   }
   .auth-subtitle {
-    font-size: 14px; color: #6B6B6B; text-align: center; margin-bottom: 28px;
+    font-size: 14px; color: #4A5565; text-align: center; margin-bottom: 28px;
+    font-family: 'Nunito Sans', system-ui, sans-serif;
   }
   .auth-social-btn {
-    width: 100%; padding: 12px 16px; border-radius: 10px;
-    border: 1.5px solid #e0e0e0; background: #fff; cursor: pointer;
+    width: 100%; padding: 12px 16px; border-radius: 12px;
+    border: 1.5px solid #E5E7EB; background: #fff; cursor: pointer;
     display: flex; align-items: center; gap: 12px;
-    font-size: 15px; font-weight: 600; color: #1a1a1a;
+    font-size: 15px; font-weight: 600; color: #101828;
     margin-bottom: 10px; transition: border-color 0.15s, box-shadow 0.15s;
+    font-family: 'Nunito Sans', system-ui, sans-serif;
   }
   .auth-social-btn:hover { border-color: ${SAFFRON_VAL}; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
   .auth-social-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .auth-divider {
     display: flex; align-items: center; gap: 12px;
-    margin: 20px 0; color: #bbb; font-size: 13px;
+    margin: 20px 0; color: #4A5565; font-size: 13px;
+    font-family: 'Inter', system-ui, sans-serif;
   }
   .auth-divider::before, .auth-divider::after {
-    content: ''; flex: 1; height: 1px; background: #e0e0e0;
+    content: ''; flex: 1; height: 1px; background: #E5E7EB;
   }
   .auth-input-group { margin-bottom: 14px; }
-  .auth-input-label { font-size: 13px; font-weight: 600; color: #555; margin-bottom: 6px; display: block; }
+  .auth-input-label { font-size: 13px; font-weight: 600; color: #4A5565; margin-bottom: 6px; display: block; font-family: 'Inter', system-ui, sans-serif; }
   .auth-input {
     width: 100%; padding: 10px 14px; border-radius: 10px;
-    border: 1.5px solid #e0e0e0; background: #fff;
-    font-size: 15px; color: #1a1a1a; outline: none;
+    border: 1.5px solid #E5E7EB; background: #fff;
+    font-size: 15px; color: #101828; outline: none;
     box-sizing: border-box; transition: border-color 0.15s;
+    font-family: 'Nunito Sans', system-ui, sans-serif;
   }
   .auth-input:focus { border-color: ${SAFFRON_VAL}; }
   .auth-submit {
-    width: 100%; padding: 13px; border-radius: 10px;
-    background: ${SAFFRON_VAL}; color: #fff; font-size: 16px; font-weight: 700;
+    width: 100%; padding: 13px; border-radius: 12px;
+    background: ${SAFFRON_VAL}; color: #fff; font-size: 15px; font-weight: 500;
     border: none; cursor: pointer; margin-top: 8px; transition: opacity 0.15s;
+    font-family: 'Inter', system-ui, sans-serif;
+    box-shadow: 0px 1px 0.5px 0.05px rgba(29, 41, 61, 0.02);
   }
-  .auth-submit:hover { opacity: 0.88; }
+  .auth-submit:hover { opacity: 0.9; }
   .auth-submit:disabled { opacity: 0.5; cursor: not-allowed; }
-  .auth-toggle { text-align: center; margin-top: 16px; font-size: 14px; color: #666; }
+  .auth-toggle { text-align: center; margin-top: 16px; font-size: 14px; color: #4A5565; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .auth-toggle button {
     background: none; border: none; cursor: pointer;
     color: ${HERITAGE_VAL}; font-weight: 600; font-size: 14px;
-    padding: 0; text-decoration: underline;
+    padding: 0; text-decoration: underline; font-family: 'Nunito Sans', system-ui, sans-serif;
   }
   .auth-guest-btn {
-    width: 100%; padding: 11px 16px; border-radius: 10px;
-    border: 1.5px solid #e0e0e0; background: transparent; cursor: pointer;
+    width: 100%; padding: 11px 16px; border-radius: 12px;
+    border: 1.5px solid #E5E7EB; background: transparent; cursor: pointer;
     display: flex; align-items: center; justify-content: center; gap: 8px;
-    font-size: 14px; font-weight: 600; color: #6B6B6B;
+    font-size: 14px; font-weight: 500; color: #4A5565;
     margin-top: 14px; transition: border-color 0.15s, color 0.15s;
+    font-family: 'Inter', system-ui, sans-serif;
   }
-  .auth-guest-btn:hover { border-color: #bbb; color: #555; }
+  .auth-guest-btn:hover { border-color: #4A5565; color: #101828; }
   .auth-guest-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .auth-error {
     background: #fff0f0; border: 1px solid #ffcccc; border-radius: 8px;
     padding: 10px 14px; color: #c00; font-size: 13px;
     margin-bottom: 14px; text-align: center;
+    font-family: 'Nunito Sans', system-ui, sans-serif;
   }
   .auth-success {
     background: #f0fff4; border: 1px solid #b2f5c8; border-radius: 8px;
     padding: 10px 14px; color: #006600; font-size: 13px;
     margin-bottom: 14px; text-align: center;
+    font-family: 'Nunito Sans', system-ui, sans-serif;
   }
 `;
 
@@ -161,16 +171,16 @@ export default function AuthModal({ onClose }) {
       <div className="auth-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
         <div className="auth-modal">
           <button className="auth-close" onClick={onClose} aria-label="Close">&#x2715;</button>
-          <div className="auth-title">IndiYatra</div>
+          <div className="auth-title">{APP_NAME}</div>
           <div className="auth-subtitle">
-            {mode === "signin" ? "Sign in to continue your Yatra" : "Create your account"}
+            {mode === "signin" ? AUTH.signinSubtitle : AUTH.signupSubtitle}
           </div>
 
           {error   && <div className="auth-error">{error}</div>}
           {success && <div className="auth-success">{success}</div>}
 
           <button className="auth-social-btn" onClick={() => handleSocial("google")} disabled={loading}>
-            <GoogleIcon /> Continue with Google
+            <GoogleIcon /> {AUTH.continueGoogle}
           </button>
 
 
@@ -200,24 +210,24 @@ export default function AuthModal({ onClose }) {
               />
             </div>
             <button className="auth-submit" type="submit" disabled={loading}>
-              {loading ? "Please wait…" : mode === "signin" ? "Sign In" : "Create Account"}
+              {loading ? AUTH.pleaseWait : mode === "signin" ? AUTH.signIn : AUTH.createAccountCta}
             </button>
           </form>
 
           <div className="auth-toggle">
             {mode === "signin" ? (
-              <>New here?{" "}
-                <button type="button" onClick={() => switchMode("signup")}>Create an account</button>
+              <>{AUTH.newHere}{" "}
+                <button type="button" onClick={() => switchMode("signup")}>{AUTH.createAccount}</button>
               </>
             ) : (
-              <>Already have an account?{" "}
-                <button type="button" onClick={() => switchMode("signin")}>Sign in</button>
+              <>{AUTH.alreadyHave}{" "}
+                <button type="button" onClick={() => switchMode("signin")}>{AUTH.signIn}</button>
               </>
             )}
           </div>
 
           <button className="auth-guest-btn" onClick={handleGuest} disabled={loading}>
-            &#x1F465; Continue as Guest
+            &#x1F465; {AUTH.continueGuest}
           </button>
         </div>
       </div>

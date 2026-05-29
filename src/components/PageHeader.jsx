@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { logoUrl } from "../lib/supabase";
 import { useAuthContext } from "../contexts/AuthContext";
+import { APP_NAME } from "../config/appStrings";
 
 const SAFFRON  = "#FF8E00";
 const HERITAGE = "#00509E";
@@ -98,9 +99,9 @@ const headerStyles = `
   .auth-avatar-btn img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
   .prof-dropdown {
     position: absolute; top: calc(100% + 8px); right: 0;
-    background: #fff; border-radius: 14px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.14);
-    min-width: 240px; z-index: 500;
+    background: #fff; border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    min-width: 240px; z-index: 500; border: 1px solid #E5E7EB;
     animation: ddDown 0.18s ease both;
     overflow: hidden;
   }
@@ -110,31 +111,33 @@ const headerStyles = `
   }
   .prof-dd-name {
     padding: 14px 16px 4px;
-    font-size: 13px; font-weight: 700; color: #0A0A0A;
+    font-size: 13px; font-weight: 700; color: #101828;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-family: 'Nunito Sans', system-ui, sans-serif;
   }
-  .prof-dd-name span { display: block; font-size: 11px; font-weight: 400; color: #aaa; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .prof-dd-name span { display: block; font-size: 11px; font-weight: 500; color: #4A5565; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.06em; font-family: 'Inter', system-ui, sans-serif; }
   .prof-dd-item {
     display: block; width: 100%; padding: 10px 16px;
     background: none; border: none; text-align: left;
-    font-size: 14px; color: #0A0A0A; cursor: pointer; transition: background 0.12s;
+    font-size: 14px; color: #101828; cursor: pointer; transition: background 0.12s;
+    font-family: 'Nunito Sans', system-ui, sans-serif;
   }
-  .prof-dd-item:hover { background: #f5f5f5; }
+  .prof-dd-item:hover { background: #F3F4F6; }
   .prof-dd-item.danger { color: #c00; }
   .prof-dd-item.highlight { color: #FF8E00; font-weight: 600; }
-  .prof-dd-divider { height: 1px; background: #eee; margin: 4px 0; }
+  .prof-dd-divider { height: 1px; background: #E5E7EB; margin: 4px 0; }
   .prof-dd-section { padding: 8px 16px 10px; }
   .prof-dd-section-label {
-    font-size: 11px; font-weight: 700; color: #aaa;
+    font-size: 11px; font-weight: 600; color: #4A5565;
     text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 7px;
-    display: block;
+    display: block; font-family: 'Inter', system-ui, sans-serif;
   }
   .prof-font-btns { display: flex; gap: 6px; }
   .prof-font-btn {
-    flex: 1; padding: 5px 0; border-radius: 8px; border: 1.5px solid #e0d4bc;
-    background: none; font-size: 13px; color: #555; cursor: pointer;
+    flex: 1; padding: 5px 0; border-radius: 8px; border: 1.5px solid #E5E7EB;
+    background: none; font-size: 13px; color: #4A5565; cursor: pointer;
     transition: background 0.12s, border-color 0.12s, color 0.12s;
-    font-family: inherit;
+    font-family: 'Nunito Sans', system-ui, sans-serif;
   }
   .prof-font-btn:hover { border-color: #FF8E00; color: #FF8E00; }
   .prof-font-btn.active { background: #FF8E00; border-color: #FF8E00; color: #fff; font-weight: 700; }
@@ -142,8 +145,8 @@ const headerStyles = `
   .prof-lang-btn {
     display: flex; align-items: center; gap: 8px;
     padding: 7px 0; background: none; border: none;
-    text-align: left; font-size: 14px; color: #0A0A0A; cursor: pointer;
-    font-family: inherit; border-radius: 6px; transition: color 0.12s;
+    text-align: left; font-size: 14px; color: #101828; cursor: pointer;
+    font-family: 'Nunito Sans', system-ui, sans-serif; border-radius: 6px; transition: color 0.12s;
   }
   .prof-lang-btn:hover { color: #FF8E00; }
   .prof-lang-btn.active { color: #FF8E00; font-weight: 700; }
@@ -155,11 +158,11 @@ const headerStyles = `
     display: flex; align-items: center; gap: 5px;
     background: none; border: none; cursor: pointer;
     padding: 5px 9px; border-radius: 8px;
-    font-size: 13px; font-weight: 600; color: #444;
+    font-size: 13px; font-weight: 500; color: #4A5565;
     transition: background 0.12s, color 0.12s;
-    white-space: nowrap;
+    white-space: nowrap; font-family: 'Inter', system-ui, sans-serif;
   }
-  .hdr-nav-link:hover { background: #f5f5f5; color: #0A0A0A; }
+  .hdr-nav-link:hover { background: #F3F4F6; color: #101828; }
   .hdr-nav-link.active { color: #FF8E00; }
   .hdr-nav-link.active svg { color: #FF8E00; }
   @media (min-width: 1025px) and (max-width: 1280px) {
@@ -167,7 +170,7 @@ const headerStyles = `
     .hdr-nav-resume, .hdr-nav-admin, .hdr-nav-editor { padding: 5px 6px; font-size: 12px; }
   }
   .hdr-nav-sep {
-    width: 1px; height: 22px; background: #ddd;
+    width: 1px; height: 22px; background: #E5E7EB;
     margin: 0 2px; flex-shrink: 0;
   }
   .hdr-nav-resume {
@@ -206,7 +209,7 @@ const headerStyles = `
     transition: background 0.12s;
     flex-shrink: 0;
   }
-  .mob-icon-btn:hover { background: #f5f5f5; }
+  .mob-icon-btn:hover { background: #F3F4F6; }
   .mob-icon-btn.saffron { color: #FF8E00; }
   .mob-icon-btn.blue    { color: #00509E; }
   .mob-icon-btn.purple  { color: #00509E; }
@@ -215,7 +218,7 @@ const headerStyles = `
   /* ── Bottom tab bar ───────────────────────────────────────── */
   .btm-nav {
     position: fixed; bottom: 0; left: 0; right: 0;
-    background: #fff; border-top: 1px solid #eee;
+    background: #fff; border-top: 1px solid #E5E7EB;
     display: flex; align-items: flex-start; justify-content: space-around;
     padding: 6px 0 calc(6px + env(safe-area-inset-bottom, 0px));
     z-index: 200;
@@ -231,7 +234,7 @@ const headerStyles = `
     border: 1.5px solid transparent;
     transition: background 0.12s, border-color 0.12s;
   }
-  .btm-tab-inner svg { color: #6B6B6B; transition: color 0.12s; }
+  .btm-tab-inner svg { color: #4A5565; transition: color 0.12s; }
   .btm-tab:hover .btm-tab-inner:not(.active) { border-color: #FF8E00; }
   .btm-tab:hover .btm-tab-inner:not(.active) svg { color: #FF8E00; }
   .btm-tab:hover .btm-tab-inner:not(.active) .btm-label { color: #FF8E00; }
@@ -239,8 +242,8 @@ const headerStyles = `
   .btm-tab-inner.active svg { color: #fff; }
   .btm-tab-inner.active .btm-label { color: #fff; }
   .btm-label {
-    font-size: 10px; font-weight: 600; color: #6B6B6B; line-height: 1;
-    transition: color 0.12s;
+    font-size: 10px; font-weight: 600; color: #4A5565; line-height: 1;
+    transition: color 0.12s; font-family: 'Inter', system-ui, sans-serif;
   }
 
   /* ── Mobile avatar chip ───────────────────────────────────── */
@@ -423,7 +426,7 @@ export default function PageHeader({
 
         {/* Logo */}
         <div className="header-logo" onClick={onHome} style={{ cursor: "pointer" }}>
-          <img src={logoUrl} alt="IndiYatra"
+          <img src={logoUrl} alt={APP_NAME}
             onError={e => { e.target.style.display = "none"; }} />
         </div>
 

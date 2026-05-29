@@ -116,7 +116,7 @@ function getState(done, total) {
   return "none";
 }
 
-export default function CoursePage({ course, settings, completedLessons = new Set(), onThemeClick, onBack, onOpenSettings, onDashboard, onLikes, onBookmarks, onDiscover, onResume, bookmarks = new Set(), onToggleBookmark, userEditorialRole, onEditor, activePage, onSaveSettings, languages = [] }) {
+export default function CoursePage({ course, settings, completedLessons = new Set(), onThemeClick, onBack, onOpenSettings, onDashboard, onLikes, onBookmarks, onDiscover, onResume, bookmarks = new Set(), onToggleBookmark, userEditorialRole, onEditor, isAdmin, onAdmin, activePage, onSaveSettings, languages = [] }) {
   const [levels, setLevels]       = useState([]);
   const [themes, setThemes]       = useState([]);
   const [modules, setModules]     = useState([]);
@@ -130,8 +130,8 @@ export default function CoursePage({ course, settings, completedLessons = new Se
       const courseFilter = course?.course_id ? `&course_id=eq.${course.course_id}` : "";
       const [lvls, thms, mods, assetData] = await Promise.all([
         supabase("levels", "?select=*&order=level_number"),
-        supabase("themes", "?select=*&order=theme_id"),
-        supabase("modules", `?select=*&order=module_name${courseFilter}`),
+        supabase("themes", "?select=*&order=sort_order"),
+        supabase("modules", `?select=*&order=sort_order${courseFilter}`),
         supabase("asset_library", "?select=*"),
       ]);
       const assetMap = {};
@@ -193,6 +193,8 @@ export default function CoursePage({ course, settings, completedLessons = new Se
         onResume={onResume}
         userEditorialRole={userEditorialRole}
         onEditor={onEditor}
+        isAdmin={isAdmin}
+        onAdmin={onAdmin}
         activePage={activePage}
         settings={settings}
         onSaveSettings={onSaveSettings}

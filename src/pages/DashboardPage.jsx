@@ -5,65 +5,66 @@ import PageHeader from "../components/PageHeader";
 import { SkeletonBadges } from "../components/Skeletons";
 import { supabaseClient } from "../lib/auth";
 import { useAuthContext } from "../contexts/AuthContext";
-import { DEFAULT_SHARE_MSG, FOREST_TOKENS as FOREST_TOKEN_DEFS } from "../config/appStrings";
+import { APP_URL, APP_SHARE_LOGO, PLAYER, DEFAULT_SHARE_MSG, FOREST_TOKENS as FOREST_TOKEN_DEFS } from "../config/appStrings";
 
 // Off-brand colours removed — using brand constants only
 
 const styles = `
-  /* ── Layout ── */
-
   /* ── Welcome Hero Band ── */
   .dash-hero {
-    background: white; border: 1px solid rgba(0,0,0,0.07); border-radius: 14px;
+    background: white; border: 1px solid #E5E7EB; border-radius: 12px;
     padding: 24px 20px; margin-bottom: 24px;
-    box-shadow: none;
   }
 
   /* ── Course chip ── */
   .dash-course-chip {
     display: inline-block; padding: 3px 14px; border-radius: 999px;
     background: ${SAFFRON}15; color: ${SAFFRON}; font-size: 0.75rem;
-    font-weight: 700; letter-spacing: 0.04em; margin-bottom: 10px;
+    font-weight: 600; letter-spacing: 0.04em; margin-bottom: 10px;
+    font-family: 'Inter', system-ui, sans-serif;
   }
 
   /* ── Welcome title ── */
   .dash-subtitle {
-    font-size: 0.9375rem; color: #6B6B6B; margin-top: 2px; margin-bottom: 0;
-    font-family: 'Source Sans 3', sans-serif; font-weight: 400;
+    font-size: 0.9375rem; color: #4A5565; margin-top: 2px; margin-bottom: 0;
+    font-family: 'Nunito Sans', system-ui, sans-serif; font-weight: 400;
   }
   .dash-title {
-    font-family: 'Alumni Sans', sans-serif; font-size: 2.125rem; font-weight: 800;
-    color: #0A0A0A; margin-bottom: 18px; line-height: 1.1;
+    font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 2rem; font-weight: 700;
+    color: #101828; margin-bottom: 18px; line-height: 1.25;
   }
 
-  /* ── Scope pill (Option C) ── */
+  /* ── Scope pill ── */
   .dash-scope-wrap {
     position: relative; display: inline-block; margin-top: 14px;
   }
   .dash-scope-pill {
     display: inline-flex; align-items: center; gap: 7px;
-    padding: 7px 14px; border-radius: 10px; cursor: pointer;
-    font-size: 0.8125rem; font-weight: 600; white-space: nowrap;
-    color: #1F1F1F; background: white;
-    border: 1.5px solid rgba(0,0,0,0.10);
+    padding: 7px 14px; border-radius: 12px; cursor: pointer;
+    font-size: 0.8125rem; font-weight: 500; white-space: nowrap;
+    color: #101828; background: white;
+    border: 1px solid #E5E7EB;
+    font-family: 'Inter', system-ui, sans-serif;
     transition: border-color 0.2s, color 0.2s, background 0.2s;
     min-height: 36px;
+    box-shadow: 0px 1px 0.5px 0.05px rgba(29, 41, 61, 0.02);
   }
   .dash-scope-pill:hover, .dash-scope-pill.open {
     border-color: ${SAFFRON}; color: ${SAFFRON}; background: ${SAFFRON}08;
   }
   .dash-scope-pill-icon { font-size: 1rem; line-height: 1; }
-  .dash-scope-pill-chevron { font-size: 0.6875rem; color: #6B6B6B; margin-left: 2px; }
+  .dash-scope-pill-chevron { font-size: 0.6875rem; color: #4A5565; margin-left: 2px; }
   .dash-scope-pill.open .dash-scope-pill-chevron { color: ${SAFFRON}; }
   .dash-dropdown-backdrop { position: fixed; inset: 0; z-index: 199; }
   .dash-dropdown {
     position: absolute; top: calc(100% + 6px); left: 0; z-index: 200;
-    background: white; border: 1px solid rgba(0,0,0,0.07); border-radius: 12px;
-    box-shadow: none; min-width: 160px;
+    background: white; border: 1px solid #E5E7EB; border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08); min-width: 160px;
     overflow: hidden; padding: 4px 0;
   }
   .dash-dropdown-item {
-    padding: 11px 16px; font-size: 0.875rem; color: #1F1F1F; cursor: pointer;
+    padding: 11px 16px; font-size: 0.875rem; color: #101828; cursor: pointer;
+    font-family: 'Nunito Sans', system-ui, sans-serif;
     transition: background 0.15s; display: flex; align-items: center; gap: 8px;
     min-height: 44px;
   }
@@ -76,98 +77,102 @@ const styles = `
     gap: 12px; margin-bottom: 24px;
   }
   .stat-card {
-    background: white; border-radius: 14px; border: 1px solid rgba(0,0,0,0.07);
+    background: white; border-radius: 12px; border: 1px solid #E5E7EB;
     padding: 18px 14px; position: relative; overflow: hidden;
-    transition: transform 0.18s, box-shadow 0.18s;
-    box-shadow: none; text-align: center;
+    transition: transform 0.18s, border-color 0.18s;
+    text-align: center;
   }
-  .stat-card:hover { box-shadow: none; border-color: rgba(0,0,0,0.12); }
-  .stat-ghost { background: transparent; border: 1px dashed rgba(0,0,0,0.06) !important; box-shadow: none !important; pointer-events: none; }
-  .stat-ghost:hover { transform: none !important; box-shadow: none !important; }
+  .stat-card:hover { border-color: #B5D7D5; transform: translateY(-2px); }
+  .stat-ghost { background: transparent; border: 1px dashed #F3F4F6 !important; pointer-events: none; }
+  .stat-ghost:hover { transform: none !important; }
   .stat-icon { font-size: 1.375rem; margin-bottom: 10px; line-height: 1; color: ${HERITAGE}; }
   .stat-label {
     display: flex; flex-direction: column; align-items: center; gap: 1px;
-    font-size: 0.625rem; font-weight: 700; letter-spacing: 0.07em;
-    text-transform: uppercase; color: #6B6B6B; margin-bottom: 5px;
-    line-height: 1.1;
+    font-size: 0.625rem; font-weight: 600; letter-spacing: 0.07em;
+    text-transform: uppercase; color: #4A5565; margin-bottom: 5px;
+    line-height: 1.1; font-family: 'Inter', system-ui, sans-serif;
   }
   .stat-label-word { display: block; line-height: 1.1; }
   .stat-value {
-    font-family: 'Alumni Sans', sans-serif; font-size: 1.75rem;
-    font-weight: 800; line-height: 1; margin-bottom: 4px; color: ${HERITAGE};
+    font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.75rem;
+    font-weight: 700; line-height: 1; margin-bottom: 4px; color: ${HERITAGE};
   }
-  .stat-sub  { font-size: 0.6875rem; color: #6B6B6B; line-height: 1.3; }
-  .stat-link { font-size: 0.6875rem; color: ${HERITAGE}; cursor: pointer; }
+  .stat-sub  { font-size: 0.6875rem; color: #4A5565; line-height: 1.3; }
+  .stat-link { font-size: 0.6875rem; color: ${HERITAGE}; cursor: pointer; font-family: 'Inter', system-ui, sans-serif; }
   .stat-link:hover { text-decoration: underline; }
 
   /* ── Section card ── */
   .dash-section {
-    background: white; border-radius: 14px; border: 1px solid rgba(0,0,0,0.07);
-    padding: 22px 22px; margin-bottom: 24px;
-    box-shadow: none;
+    background: white; border-radius: 12px; border: 1px solid #E5E7EB;
+    padding: 24px; margin-bottom: 24px;
   }
   .dash-section-head {
     display: flex; align-items: center; justify-content: space-between;
     margin-bottom: 18px;
   }
-  .dash-section-meta { font-size: 0.75rem; color: #6B6B6B; font-weight: 600; }
+  .dash-section-meta { font-size: 0.75rem; color: #4A5565; font-weight: 600; font-family: 'Inter', system-ui, sans-serif; }
 
   /* ── Streak heatmap ── */
   .streak-grid { display: flex; gap: 3px; flex-wrap: wrap; }
   .streak-cell { width: 13px; height: 13px; border-radius: 3px; flex-shrink: 0; }
   .streak-legend {
     display: flex; align-items: center; gap: 6px;
-    margin-top: 10px; font-size: 0.6875rem; color: #6B6B6B;
+    margin-top: 10px; font-size: 0.6875rem; color: #4A5565;
+    font-family: 'Inter', system-ui, sans-serif;
   }
   .streak-legend-cell { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
-  .streak-summary { font-size: 0.875rem; color: #1F1F1F; margin-top: 10px; }
-  .streak-summary strong { color: #0A0A0A; }
+  .streak-summary { font-size: 0.9375rem; color: #4A5565; margin-top: 10px; font-family: 'Nunito Sans', system-ui, sans-serif; }
+  .streak-summary strong { color: #101828; }
 
   /* ── Course progress table ── */
   .prog-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .prog-table { width: 100%; border-collapse: collapse; }
   .prog-table th {
-    font-size: 0.6875rem; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.06em; color: #6B6B6B; padding: 0 0 10px; text-align: left;
+    font-size: 0.6875rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.06em; color: #4A5565; padding: 0 0 10px; text-align: left;
+    font-family: 'Inter', system-ui, sans-serif;
   }
   .prog-table th:not(:first-child) { text-align: center; }
-  .prog-table td { padding: 12px 0; border-top: 1px solid rgba(0,0,0,0.07); vertical-align: middle; }
+  .prog-table td { padding: 12px 0; border-top: 1px solid #E5E7EB; vertical-align: middle; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .prog-theme-name { font-size: 0.9375rem; font-weight: 700; color: ${SAFFRON}; text-align: left; }
   .prog-bar-wrap { display: flex; align-items: center; gap: 6px; justify-content: center; }
-  .prog-bar { height: 6px; width: 80px; background: rgba(0,0,0,0.06); border-radius: 3px; overflow: hidden; flex-shrink: 0; }
+  .prog-bar { height: 6px; width: 80px; background: #F3F4F6; border-radius: 3px; overflow: hidden; flex-shrink: 0; }
   .prog-bar-fill { height: 100%; border-radius: 3px; }
-  .prog-pct { font-size: 0.6875rem; font-weight: 700; min-width: 28px; text-align: right; }
-  .prog-counts { font-size: 0.625rem; color: #6B6B6B; text-align: right; }
+  .prog-pct { font-size: 0.6875rem; font-weight: 700; min-width: 28px; text-align: right; font-family: 'Inter', system-ui, sans-serif; }
+  .prog-counts { font-size: 0.625rem; color: #4A5565; text-align: right; }
 
   /* ── Activity table ── */
   .act-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .act-table { width: 100%; border-collapse: collapse; }
   .act-table th {
-    font-size: 0.6875rem; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.06em; color: #6B6B6B; padding: 0 0 10px;
-    text-align: right;
+    font-size: 0.6875rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.06em; color: #4A5565; padding: 0 0 10px;
+    text-align: right; font-family: 'Inter', system-ui, sans-serif;
   }
   .act-table th:first-child { text-align: left; }
   .act-table td {
-    padding: 11px 0; border-top: 1px solid rgba(0,0,0,0.07);
-    font-size: 0.875rem; text-align: right; color: #1F1F1F;
+    padding: 11px 0; border-top: 1px solid #E5E7EB;
+    font-size: 0.9375rem; text-align: right; color: #4A5565;
+    font-family: 'Nunito Sans', system-ui, sans-serif;
   }
   .act-table td:first-child { text-align: left; }
-  .act-day   { font-weight: 700; color: #0A0A0A; font-size: 0.9375rem; }
+  .act-day   { font-weight: 700; color: #101828; font-size: 0.9375rem; }
   .act-today { color: ${SAFFRON}; }
-  .act-date  { font-size: 0.75rem; color: #6B6B6B; margin-left: 5px; }
-  .act-total td { font-weight: 700; color: #0A0A0A; border-top: 2px solid rgba(0,0,0,0.12) !important; }
+  .act-date  { font-size: 0.75rem; color: #4A5565; margin-left: 5px; }
+  .act-total td { font-weight: 700; color: #101828; border-top: 2px solid #E5E7EB !important; }
   .act-nonzero { font-weight: 700; color: ${HERITAGE} !important; }
 
   /* ── Badges ── */
   .badge-level-label {
-    font-size: 0.625rem; font-weight: 700; letter-spacing: 0.08em;
-    text-transform: uppercase; color: #6B6B6B; margin-bottom: 10px;
+    font-size: 0.625rem; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #4A5565; margin-bottom: 10px;
+    font-family: 'Inter', system-ui, sans-serif;
   }
   .badge-theme-group { margin-bottom: 16px; }
   .badge-theme-label {
-    font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.05em;
+    font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.05em;
     text-transform: uppercase; color: ${SAFFRON}; margin-bottom: 10px;
+    font-family: 'Inter', system-ui, sans-serif;
   }
   .badge-row { display: flex; gap: 8px; flex-wrap: wrap; }
   .badge-item { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 52px; }
@@ -176,14 +181,10 @@ const styles = `
     display: flex; align-items: center; justify-content: center;
     font-size: 1.0625rem; transition: transform 0.18s; cursor: default;
   }
-  .badge-circle.earned {
-    border: 2px solid ${SAFFRON}; background: white;
-  }
+  .badge-circle.earned { border: 2px solid ${SAFFRON}; background: white; }
   .badge-circle.earned:hover { transform: scale(1.12); }
-  .badge-circle.locked {
-    border: 2px solid rgba(0,0,0,0.08); background: white; opacity: 0.4;
-  }
-  .badge-name { font-size: 0.5625rem; color: #6B6B6B; text-align: center; line-height: 1.3; }
+  .badge-circle.locked { border: 2px solid #E5E7EB; background: white; opacity: 0.4; }
+  .badge-name { font-size: 0.5625rem; color: #4A5565; text-align: center; line-height: 1.3; font-family: 'Nunito Sans', system-ui, sans-serif; }
 
   /* ── Share card ── */
   .share-section-head {
@@ -199,27 +200,26 @@ const styles = `
   .share-inner { display: block; }
   .share-preview {
     width: 100%; box-sizing: border-box;
-    background: white;
-    border: 1px solid rgba(0,0,0,0.07); border-radius: 14px; padding: 18px 22px;
+    background: white; border: 1px solid #E5E7EB; border-radius: 12px; padding: 18px 22px;
   }
   .share-preview-logo {
-    font-family: 'Alumni Sans', sans-serif; font-size: 1.125rem; font-weight: 800;
+    font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.125rem; font-weight: 500;
     color: ${GREEN}; margin-bottom: 14px;
   }
   .share-stat-row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 12px; }
   .share-stat { text-align: center; }
   .share-stat-val {
-    font-family: 'Alumni Sans', sans-serif; font-size: 1.625rem;
-    font-weight: 800; line-height: 1; color: ${GREEN};
+    font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.625rem;
+    font-weight: 700; line-height: 1; color: ${GREEN};
   }
-  .share-stat-lbl { font-size: 0.625rem; color: #6B6B6B; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
-  .share-footer-txt { font-size: 0.6875rem; color: #6B6B6B; margin-top: 4px; }
+  .share-stat-lbl { font-size: 0.625rem; color: #4A5565; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; font-family: 'Inter', system-ui, sans-serif; }
+  .share-footer-txt { font-size: 0.6875rem; color: #4A5565; margin-top: 4px; }
   .share-toolbar-btn {
     display: inline-flex; align-items: center; justify-content: center;
     width: 30px; height: 30px; min-height: 30px; min-width: 30px;
     border-radius: 50%; padding: 0;
     cursor: not-allowed; opacity: 0.45;
-    border: 1.5px solid ${GREEN}; color: ${GREEN};
+    border: 1px solid ${GREEN}; color: ${GREEN};
     background: white; transition: opacity 0.2s, background 0.2s, color 0.2s, border-color 0.2s;
   }
   .share-toolbar-btn .ti { font-size: 0.9375rem; line-height: 1; }
@@ -227,28 +227,28 @@ const styles = `
   .share-toolbar-btn.active:hover { background: ${GREEN}; color: white; }
   .share-toolbar-btn.copied { background: ${GREEN}; color: white; }
   .share-toolbar-btn.share-edit {
-    border-color: rgba(0,0,0,0.12); color: #6B6B6B;
-    cursor: pointer; opacity: 1;
+    border-color: #E5E7EB; color: #4A5565; cursor: pointer; opacity: 1;
   }
   .share-toolbar-btn.share-edit:hover,
   .share-toolbar-btn.share-edit.open {
     color: ${SAFFRON}; border-color: ${SAFFRON}; background: ${SAFFRON}08;
   }
-  .share-coming { font-size: 0.6875rem; color: #6B6B6B; text-align: right; font-style: italic; margin-top: 8px; }
+  .share-coming { font-size: 0.6875rem; color: #4A5565; text-align: right; font-style: italic; margin-top: 8px; }
 
   /* ── Share settings panel ── */
   .share-settings {
-    background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.07); border-radius: 12px;
+    background: #F3F4F6; border: 1px solid #E5E7EB; border-radius: 12px;
     padding: 14px 16px; margin-bottom: 16px;
   }
   .share-settings-label {
-    font-size: 0.6875rem; font-weight: 700; color: #6B6B6B;
+    font-size: 0.6875rem; font-weight: 600; color: #4A5565;
     text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px;
+    font-family: 'Inter', system-ui, sans-serif;
   }
   .share-textarea {
-    width: 100%; min-height: 68px; border: 1px solid rgba(0,0,0,0.10); border-radius: 8px;
-    padding: 9px 12px; font-family: 'Source Sans 3', sans-serif; font-size: 0.875rem;
-    color: #1F1F1F; background: white; resize: vertical; line-height: 1.5;
+    width: 100%; min-height: 68px; border: 1px solid #E5E7EB; border-radius: 8px;
+    padding: 9px 12px; font-family: 'Nunito Sans', system-ui, sans-serif; font-size: 0.9375rem;
+    color: #101828; background: white; resize: vertical; line-height: 1.5;
     box-sizing: border-box;
   }
   .share-textarea:focus { outline: none; border-color: ${SAFFRON}; }
@@ -256,26 +256,27 @@ const styles = `
   .share-token {
     font-size: 0.6875rem; background: ${SAFFRON}12; color: ${SAFFRON};
     border: 1px solid ${SAFFRON}33; border-radius: 999px; padding: 2px 10px;
-    cursor: pointer; font-weight: 700; user-select: none;
+    cursor: pointer; font-weight: 600; user-select: none;
+    font-family: 'Inter', system-ui, sans-serif;
   }
   .share-token:hover { background: ${SAFFRON}22; }
   .share-settings-row { display: flex; justify-content: flex-end; gap: 8px; }
   .share-save-btn {
-    background: ${SAFFRON}; color: white; border: none; border-radius: 999px;
-    padding: 6px 18px; font-size: 0.8125rem; font-weight: 700; cursor: pointer;
+    background: ${SAFFRON}; color: white; border: none; border-radius: 12px;
+    padding: 6px 18px; font-size: 0.8125rem; font-weight: 500; cursor: pointer;
+    font-family: 'Inter', system-ui, sans-serif;
   }
   .share-save-btn:hover { opacity: 0.9; }
   .share-reset-btn {
-    background: transparent; color: #6B6B6B; border: 1px solid rgba(0,0,0,0.10);
-    border-radius: 999px; padding: 6px 14px; font-size: 0.8125rem; cursor: pointer;
+    background: transparent; color: #4A5565; border: 1px solid #E5E7EB;
+    border-radius: 12px; padding: 6px 14px; font-size: 0.8125rem; cursor: pointer;
+    font-family: 'Inter', system-ui, sans-serif;
   }
-  .share-reset-btn:hover { color: #1F1F1F; border-color: rgba(0,0,0,0.20); }
+  .share-reset-btn:hover { color: #101828; border-color: #B5D7D5; }
   .share-msg-text {
-    font-size: 0.8125rem; color: #1F1F1F; line-height: 1.5; margin-top: 4px;
-    font-style: italic;
+    font-size: 0.9375rem; color: #4A5565; line-height: 1.6; margin-top: 4px;
+    font-style: italic; font-family: 'Nunito Sans', system-ui, sans-serif;
   }
-
-
 
   /* ── Forest tokens ── */
   .forest-grid {
@@ -284,89 +285,90 @@ const styles = `
   }
   .forest-token {
     display: flex; flex-direction: column; align-items: center; gap: 4px;
-    background: white; border: 1px solid rgba(0,0,0,0.07); border-radius: 14px;
+    background: white; border: 1px solid #E5E7EB; border-radius: 12px;
     padding: 16px 8px; transition: border-color 0.2s, transform 0.18s;
   }
-  .forest-token:hover { border-color: rgba(0,0,0,0.18); transform: translateY(-2px); }
+  .forest-token:hover { border-color: #B5D7D5; transform: translateY(-2px); }
   .forest-token-icon  { font-size: 1.75rem; line-height: 1; }
   .forest-token-count {
-    font-family: 'Alumni Sans', sans-serif; font-size: 1.75rem;
-    font-weight: 800; color: #0A0A0A; line-height: 1;
+    font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.75rem;
+    font-weight: 700; color: #101828; line-height: 1;
   }
-  .forest-token-count.zero { color: #6B6B6B; }
-  .forest-token-label { font-size: 0.75rem; font-weight: 700; color: #1F1F1F; }
-  .forest-token-sub   { font-size: 0.5625rem; color: #6B6B6B; text-align: center; }
+  .forest-token-count.zero { color: #4A5565; }
+  .forest-token-label { font-size: 0.75rem; font-weight: 700; color: #101828; font-family: 'Nunito Sans', system-ui, sans-serif; }
+  .forest-token-sub   { font-size: 0.5625rem; color: #4A5565; text-align: center; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .forest-dharma {
     display: flex; align-items: center; gap: 8px;
     background: white; border: 1px solid ${SAFFRON};
-    border-radius: 999px; padding: 6px 16px; width: fit-content;
-    font-size: 0.8125rem; font-weight: 700; color: ${SAFFRON};
+    border-radius: 12px; padding: 6px 16px; width: fit-content;
+    font-size: 0.8125rem; font-weight: 600; color: ${SAFFRON};
+    font-family: 'Inter', system-ui, sans-serif;
   }
   .forest-empty {
-    font-size: 0.8125rem; color: #6B6B6B; font-style: italic; padding: 8px 0;
+    font-size: 0.9375rem; color: #4A5565; font-style: italic; padding: 8px 0;
+    font-family: 'Nunito Sans', system-ui, sans-serif;
   }
 
   /* ── Badge cards ── */
   .badge-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 14px; }
   .badge-card {
     display: flex; flex-direction: column; align-items: center; gap: 6px;
-    background: white; border: 1px solid rgba(0,0,0,0.07); border-radius: 14px;
-    padding: 20px 14px;
-    transition: border-color 0.2s, transform 0.18s;
+    background: white; border: 1px solid #E5E7EB; border-radius: 12px;
+    padding: 20px 14px; transition: border-color 0.2s, transform 0.18s;
   }
   .badge-card.earned {
-    border-color: ${SAFFRON}; background: rgba(255,142,0,0.06);
-    box-shadow: 0 2px 12px rgba(255,142,0,0.13);
+    border-color: ${SAFFRON}; background: rgba(255,142,0,0.04);
   }
   .badge-card.earned:hover { transform: translateY(-3px); }
   .badge-card.locked { opacity: 0.45; }
   .badge-card-icon { font-size: 2.25rem; line-height: 1; }
   .badge-card-name {
-    font-family: 'Alumni Sans', sans-serif; font-size: 1rem;
-    font-weight: 700; color: #0A0A0A; text-align: center;
+    font-family: 'Nunito Sans', system-ui, sans-serif; font-size: 0.9375rem;
+    font-weight: 700; color: #101828; text-align: center;
   }
   .badge-card-desc {
-    font-size: 0.5625rem; color: #6B6B6B; text-align: center; line-height: 1.4;
+    font-size: 0.5625rem; color: #4A5565; text-align: center; line-height: 1.4;
+    font-family: 'Nunito Sans', system-ui, sans-serif;
   }
   .badge-card-earned-tag {
-    font-size: 0.5rem; font-weight: 700; letter-spacing: 0.08em;
+    font-size: 0.5rem; font-weight: 600; letter-spacing: 0.08em;
     text-transform: uppercase; color: ${SAFFRON}; background: rgba(255,142,0,0.12);
     border-radius: 999px; padding: 2px 8px;
+    font-family: 'Inter', system-ui, sans-serif;
   }
   .badge-card-locked-tag {
-    font-size: 0.5rem; font-weight: 700; letter-spacing: 0.08em;
-    text-transform: uppercase; color: #6B6B6B;
+    font-size: 0.5rem; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #4A5565;
+    font-family: 'Inter', system-ui, sans-serif;
   }
   /* ── Activity stacked view (≤600px) ── */
   .act-stack { display: none; }
   .act-stack-row {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 0; border-top: 1px solid rgba(0,0,0,0.07);
+    padding: 10px 0; border-top: 1px solid #E5E7EB;
     flex-wrap: wrap; gap: 6px;
   }
-  .act-stack-day { font-weight: 700; color: #0A0A0A; font-size: 0.9375rem; }
+  .act-stack-day { font-weight: 700; color: #101828; font-size: 0.9375rem; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .act-stack-day.today { color: ${SAFFRON}; }
-  .act-stack-date { font-size: 0.75rem; color: #6B6B6B; margin-left: 5px; }
+  .act-stack-date { font-size: 0.75rem; color: #4A5565; margin-left: 5px; }
   .act-stack-pills { display: flex; gap: 6px; flex-wrap: wrap; }
   .act-pill {
-    font-size: 0.75rem; font-weight: 700; border-radius: 999px;
+    font-size: 0.75rem; font-weight: 600; border-radius: 999px;
     padding: 3px 10px; white-space: nowrap;
+    font-family: 'Inter', system-ui, sans-serif;
   }
   .act-pill-lesson { background: rgba(0,146,74,0.10); color: #00924A; }
   .act-pill-dharma { background: rgba(255,142,0,0.10); color: ${SAFFRON}; }
-  .act-pill-none   { background: rgba(0,0,0,0.05); color: #6B6B6B; }
+  .act-pill-none   { background: #F3F4F6; color: #4A5565; }
 
   /* ── Progress stacked view (≤600px) ── */
   .prog-stack { display: none; }
-  .prog-stack-row { padding: 12px 0; border-top: 1px solid rgba(0,0,0,0.07); }
-  .prog-stack-name { font-size: 0.9375rem; font-weight: 700; color: #0A0A0A; margin-bottom: 6px; }
+  .prog-stack-row { padding: 12px 0; border-top: 1px solid #E5E7EB; }
+  .prog-stack-name { font-size: 0.9375rem; font-weight: 700; color: #101828; margin-bottom: 6px; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .prog-stack-bar-wrap { display: flex; align-items: center; gap: 8px; }
-  .prog-stack-bar {
-    flex: 1; height: 7px; background: rgba(0,0,0,0.06);
-    border-radius: 4px; overflow: hidden;
-  }
+  .prog-stack-bar { flex: 1; height: 7px; background: #F3F4F6; border-radius: 4px; overflow: hidden; }
   .prog-stack-fill { height: 100%; border-radius: 4px; }
-  .prog-stack-pct { font-size: 0.75rem; font-weight: 700; min-width: 32px; text-align: right; }
+  .prog-stack-pct { font-size: 0.75rem; font-weight: 700; min-width: 32px; text-align: right; font-family: 'Inter', system-ui, sans-serif; }
 
   /* ── Responsive ── */
   @media (max-width: 768px) {
@@ -377,28 +379,20 @@ const styles = `
     .badge-cards  { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
   }
   @media (max-width: 600px) {
-    /* Hero stacks on mobile */
-    .dash-hero { padding: 18px 16px; border-radius: 14px; }
-    /* Progress table → stacked bars */
+    .dash-hero { padding: 18px 16px; border-radius: 12px; }
     .prog-table-wrap { display: none; }
     .prog-stack      { display: block; }
-    /* Activity table → stacked pills */
     .act-table-wrap  { display: none; }
     .act-stack       { display: block; }
-    /* Forest sub-labels illegible at this size */
     .forest-token-sub { display: none; }
-    /* Share message text slightly smaller */
-    .share-msg-text  { font-size: 0.8125rem; }
+    .share-msg-text  { font-size: 0.875rem; }
   }
   @media (max-width: 480px) {
-    .dash-title  { font-size: 1.5rem; }
+    .dash-title  { font-size: 1.625rem; }
     .dash-stats  { grid-template-columns: repeat(3, 1fr); }
     .stat-value  { font-size: 1.5rem; }
-    /* Streak — smaller cells so all 60 fit in one row */
     .streak-cell { width: 11px; height: 11px; }
-    /* Activity table: also hide Snippets column at tiny screens */
     .act-table th:nth-child(4), .act-table td:nth-child(4) { display: none; }
-    /* Forest — 3 col */
     .forest-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
     .forest-token { padding: 14px 6px; }
     .forest-token-icon  { font-size: 1.5rem; }
@@ -408,7 +402,6 @@ const styles = `
     .share-toolbar-btn { width: 28px; height: 28px; min-width: 28px; min-height: 28px; }
     .share-toolbar-btn .ti { font-size: 0.875rem; }
   }
-
 `;
 
 // ─── Data helpers ─────────────────────────────────────────────────────────────
@@ -807,7 +800,7 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
 
   const STATS = [
     {
-      key: "dharma",  icon: <i className="ti ti-diamond" />,  label: "Dharma Points",
+      key: "dharma",  icon: <i className="ti ti-diamond" />,  label: PLAYER.dharmaPoints,
       value: String(totalDharma), sub: null,
     },
     {
@@ -843,7 +836,7 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
     setShareMsgDraft(DEFAULT_SHARE_MSG);
   }
   function handleCopyLink() {
-    navigator.clipboard.writeText("https://indiyatra.in").then(() => {
+    navigator.clipboard.writeText(APP_URL).then(() => {
       setCopyDone(true);
       setTimeout(() => setCopyDone(false), 2000);
     });
@@ -1254,7 +1247,7 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
 
           <div className="share-inner">
             <div className="share-preview">
-              <div className="share-preview-logo">IndiYatra · Heritage of Bharat</div>
+              <div className="share-preview-logo">{APP_SHARE_LOGO}</div>
               <div className="share-stat-row">
                 <div className="share-stat">
                   <div className="share-stat-val">{totalDharma}</div>

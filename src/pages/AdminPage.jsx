@@ -15,7 +15,7 @@ import {
 import { globalStyles } from "../styles/global";
 import PageHeader from "../components/PageHeader";
 
-const TABS = ["Overview", "Users", "Tokens", "Content", "Taxonomy", "Badges", "Import"];
+const TABS = ["Overview", "Users", "Tokens", "Content", "Taxonomy", "Badges", "Featured", "Order", "Import"];
 const CONTENT_SUBS = ["Levels", "Courses", "Themes", "Modules", "Lessons", "Snippets"];
 const TOKEN_TYPES = FOREST_TOKEN_TYPES;  // from appStrings
 
@@ -189,6 +189,27 @@ export default function AdminPage({
   const [grantQty,     setGrantQty]     = useState(1);
   const [grantMsg,     setGrantMsg]     = useState("");
 
+  // ── Featured Snippets ────────────────────────────────────────────────────────
+  const [featLoading,   setFeatLoading]   = useState(false);
+  const [featSlots,     setFeatSlots]     = useState(Array(10).fill(null));
+  const [featSearch,    setFeatSearch]    = useState("");
+  const [featResults,   setFeatResults]   = useState([]);
+  const [featSearching, setFeatSearching] = useState(false);
+  const [featMsg,       setFeatMsg]       = useState("");
+  const [featTargetSlot,setFeatTargetSlot]= useState(null);
+
+  // ── Order tab ─────────────────────────────────────────────────────────────
+  const [orderPanel,   setOrderPanel]   = useState("courses");
+  const [orderCourses, setOrderCourses] = useState([]);
+  const [orderThemes,  setOrderThemes]  = useState([]);
+  const [orderModules, setOrderModules] = useState([]);
+  const [orderLessons, setOrderLessons] = useState([]);
+  const [orderFilter,  setOrderFilter]  = useState({ course:"", level:"", theme:"", module:"" });
+  const [orderDragIdx, setOrderDragIdx] = useState(null);
+  const [orderSaving,  setOrderSaving]  = useState(false);
+  const [orderMsg,     setOrderMsg]     = useState("");
+  const [orderLoading, setOrderLoading] = useState(false);
+
   // ── Content filters + drag ───────��─────────────────────────────────────────────
   const [refData,        setRefData]        = useState({ levels: [], themes: [], modules: [], lessons: [] });
   const [moduleFilter,   setModuleFilter]   = useState({ course: "", level: "", theme: "" });
@@ -268,6 +289,8 @@ export default function AdminPage({
     if (activeTab === "Tokens"   && tokenCatalogue.length === 0) loadTokenCatalogue();
     if (activeTab === "Taxonomy" && terms.length === 0) loadTaxonomy();
     if (activeTab === "Badges"   && badges.length === 0) loadBadges();
+    if (activeTab === "Featured" && !featLoading && featSlots.every(s => s === null)) loadFeatured();
+    if (activeTab === "Order")   { loadOrderPanel("courses"); loadOrderPanel("themes"); }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, isAdmin]);
 
@@ -431,6 +454,138 @@ export default function AdminPage({
       }
     }
     setContentLoading(false);
+  }
+
+
+  // ── Featured Snippets functions ──────────────────────────────────────────────
+  async function loadFeatured() {
+    setFeatLoading(true);
+    setFeatMsg("");
+    try {
+      const rows = await supabase(
+        "featured_snippets",
+        "?select=display_order,snippet_id,snippet_core(snippet_id,asset_id,difficulty_level,like_count)&order=display_order.asc&limit=10"
+      );
+      const slots = Array(10).fill(null);
+      if (Array.isArray(rows)) {
+        rows.forEach(r => { if (r.display_order >= 1 && r.display_order <= 10) slots[r.display_order - 1] = r; });
+      } else {
+        setFeatMsg("featured_snippets table not found — run supabase/sort_order.sql and supabase/featured_snippets.sql in the Supabase SQL editor first.");
+      }
+      setFeatSlots(slots);
+    } catch (e) {
+      setFeatMsg("Error loading featured snippets: " + e.message);
+    }
+    setFeatLoading(false);
+  }
+
+  async function searchFeatSnip() {
+    if (!featSearch.trim()) return;
+    setFeatSearching(true);
+    const q = "?select=snippet_id,asset_id,like_count&asset_id=not.is.null&order=like_count.desc&limit=20";
+    const results = await supabase("snippet_core", q);
+    // Filter by search term against translations
+    setFeatResults(results || []);
+    setFeatSearching(false);
+  }
+
+  async function assignFeatSlot(slot, snippetId) {
+    const { error } = await supabaseClient.from("featured_snippets").upsert(
+      { display_order: slot, snippet_id: snippetId, set_by: (await supabaseClient.auth.getUser()).data?.user?.id },
+      { onConflict: "display_order" }
+    );
+    if (error) { setFeatMsg("Failed: " + error.message); return; }
+    setFeatMsg("Slot " + slot + " updated.");
+    loadFeatured();
+  }
+
+  async function clearFeatSlot(slot) {
+    const { error } = await supabaseClient.from("featured_snippets").delete().eq("display_order", slot);
+    if (error) { setFeatMsg("Failed: " + error.message); return; }
+    setFeatMsg("Slot " + slot + " cleared.");
+    loadFeatured();
+  }
+
+  async function moveFeatSlot(slot, dir) {
+    const targetSlot = slot + dir;
+    if (targetSlot < 1 || targetSlot > 10) return;
+    const a = featSlots[slot - 1];
+    const b = featSlots[targetSlot - 1];
+    if (!a) return;
+    if (b) {
+      await supabaseClient.from("featured_snippets").upsert(
+        [{ display_order: slot, snippet_id: b.snippet_id }, { display_order: targetSlot, snippet_id: a.snippet_id }],
+        { onConflict: "display_order" }
+      );
+    } else {
+      await supabaseClient.from("featured_snippets").delete().eq("display_order", slot);
+      await supabaseClient.from("featured_snippets").upsert(
+        { display_order: targetSlot, snippet_id: a.snippet_id },
+        { onConflict: "display_order" }
+      );
+    }
+    loadFeatured();
+  }
+
+  // ── Order tab functions ──────────────────────────────────────────────────
+  async function loadOrderPanel(panel, filter) {
+    const f = filter || orderFilter;
+    setOrderLoading(true); setOrderMsg("");
+    if (panel === "courses") {
+      const d = await supabase("courses", "?select=course_id,course_name,sort_order&order=sort_order");
+      setOrderCourses(d || []);
+    } else if (panel === "themes") {
+      const d = await supabase("themes", "?select=theme_id,title,sort_order&order=sort_order");
+      setOrderThemes(d || []);
+    } else if (panel === "modules") {
+      let q = "?select=module_id,module_name,sort_order&order=sort_order";
+      if (f.course) q += "&course_id=eq." + f.course;
+      if (f.level)  q += "&level_id=eq."  + f.level;
+      if (f.theme)  q += "&theme_id=eq."  + f.theme;
+      const d = await supabase("modules", q);
+      setOrderModules(d || []);
+    } else if (panel === "lessons") {
+      let q = "?select=lesson_id,lesson_name,sort_order&order=sort_order";
+      if (f.module) q += "&module_id=eq." + f.module;
+      const d = await supabase("lessons", q);
+      setOrderLessons(d || []);
+    }
+    setOrderLoading(false);
+  }
+
+  async function saveOrder(panel, items) {
+    setOrderSaving(true); setOrderMsg("");
+    const idField = { courses:"course_id", themes:"theme_id", modules:"module_id", lessons:"lesson_id" }[panel];
+    let failed = 0;
+    for (let i = 0; i < items.length; i++) {
+      const { error } = await supabaseClient.from(panel).update({ sort_order: i + 1 }).eq(idField, items[i][idField]);
+      if (error) failed++;
+    }
+    setOrderMsg(failed === 0 ? "Order saved." : failed + " update(s) failed.");
+    setOrderSaving(false);
+  }
+
+  function orderMove(panel, idx, dir) {
+    const lists = { courses:orderCourses, themes:orderThemes, modules:orderModules, lessons:orderLessons };
+    const sets  = { courses:setOrderCourses, themes:setOrderThemes, modules:setOrderModules, lessons:setOrderLessons };
+    const next = [...(lists[panel] || [])];
+    const swap = idx + dir;
+    if (swap < 0 || swap >= next.length) return;
+    [next[idx], next[swap]] = [next[swap], next[idx]];
+    sets[panel](next);
+    saveOrder(panel, next);
+  }
+
+  function orderDrop(panel, toIdx) {
+    if (orderDragIdx === null || orderDragIdx === toIdx) { setOrderDragIdx(null); return; }
+    const lists = { courses:orderCourses, themes:orderThemes, modules:orderModules, lessons:orderLessons };
+    const sets  = { courses:setOrderCourses, themes:setOrderThemes, modules:setOrderModules, lessons:setOrderLessons };
+    const next = [...(lists[panel] || [])];
+    const [moved] = next.splice(orderDragIdx, 1);
+    next.splice(toIdx, 0, moved);
+    sets[panel](next);
+    setOrderDragIdx(null);
+    saveOrder(panel, next);
   }
 
   // ── Content CRUD helpers ─────────────────────────────────────────────────────
@@ -899,6 +1054,11 @@ export default function AdminPage({
         <div className="admin-denied"><h2>Access Denied</h2><p>You need an admin role to view this page.</p></div>
       ) : (
         <>
+          <div style={{ padding:'32px 2rem 0', maxWidth:1440, margin:'0 auto' }}>
+            <h1 style={{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'2rem', color:'#101828', margin:'0 0 6px' }}>Admin Dashboard</h1>
+            <p style={{ fontFamily:"'Nunito Sans',sans-serif", fontSize:'0.9375rem', color:'#4A5565', margin:0 }}>Manage content, users, tokens, and platform settings.</p>
+          </div>
+
           <div className="admin-tabs">
             {TABS.map(t => <button key={t} className={"admin-tab-btn" + (activeTab === t ? " active" : "")} onClick={() => setActiveTab(t)}>{t}</button>)}
           </div>
@@ -1415,6 +1575,211 @@ export default function AdminPage({
               </div>
             )}
 
+
+            {/* ── FEATURED ────────────────────────────────────────────────── */}
+            {activeTab === "Featured" && (
+              <div className="page-section">
+                <div className="page-section-head">
+                  <div className="page-section-title">Featured Snippets</div>
+                  <div className="page-section-meta" style={{ fontSize:"0.8125rem", color:"#4A5565" }}>
+                    Slot 1 = hero card on Gateway page. Slots 2–10 = swipe pool.
+                  </div>
+                </div>
+
+                {featMsg && <div className={"crud-msg " + (featMsg.includes("Failed") ? "err" : "ok")} style={{ marginBottom:12 }}>{featMsg}</div>}
+
+                <div style={{ display:"flex", gap:10, marginBottom:16 }}>
+                  <input value={featSearch} onChange={e => setFeatSearch(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && searchFeatSnip()}
+                    placeholder="Search snippet by key or hook…"
+                    style={{ flex:1, padding:"7px 12px", borderRadius:8, border:"1px solid #E5E7EB", fontSize:"0.875rem" }} />
+                  <button onClick={searchFeatSnip} disabled={featSearching}
+                    className="btn-primary" style={{ padding:"7px 16px", fontSize:"0.875rem" }}>
+                    {featSearching ? "Searching…" : "Search"}
+                  </button>
+                </div>
+
+                {featResults.length > 0 && featTargetSlot && (
+                  <div style={{ marginBottom:16, padding:"10px 14px", background:"#F9F9F9", borderRadius:8, border:"1px solid #E5E7EB" }}>
+                    <div style={{ fontSize:"0.8125rem", fontWeight:600, marginBottom:8, color:"#101828" }}>
+                      Assign to Slot {featTargetSlot}:
+                    </div>
+                    <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                      {featResults.slice(0, 10).map(r => (
+                        <div key={r.snippet_id} style={{ display:"flex", alignItems:"center", gap:10 }}>
+                          <span style={{ fontFamily:"'Inter',sans-serif", fontSize:"0.8125rem", flex:1, color:"#4A5565" }}>
+                            {r.snippet_id.slice(0, 8)}… · ♥ {r.like_count || 0}
+                          </span>
+                          <button onClick={() => { assignFeatSlot(featTargetSlot, r.snippet_id); setFeatResults([]); setFeatTargetSlot(null); }}
+                            style={{ padding:"3px 12px", borderRadius:6, border:"1px solid #00509E", color:"#00509E", background:"white", cursor:"pointer", fontSize:"0.8125rem" }}>
+                            Fill
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {featLoading ? <div style={{ color:"#4A5565" }}>Loading…</div> : (
+                  <div className="admin-table-wrap">
+                    <table className="admin-table">
+                      <thead><tr>
+                        <th style={{ width:36 }}>Slot</th>
+                        <th>Snippet ID</th>
+                        <th style={{ width:60 }}>Likes</th>
+                        <th style={{ width:120 }}>Actions</th>
+                      </tr></thead>
+                      <tbody>
+                        {featSlots.map((slot, i) => (
+                          <tr key={i} style={{ background: i === 0 ? "#FFFBF0" : "white" }}>
+                            <td style={{ fontWeight:700, color: i===0 ? "#FF8E00" : "#4A5565" }}>{i + 1}{i===0?" ★":""}</td>
+                            <td style={{ fontFamily:"'Inter',sans-serif", fontSize:"0.8125rem", color:"#4A5565" }}>
+                              {slot ? slot.snippet_id.slice(0, 16) + "…" : <span style={{ color:"#ccc" }}>— empty —</span>}
+                            </td>
+                            <td style={{ color:"#4A5565", fontSize:"0.8125rem" }}>
+                              {slot?.snippet_core?.like_count ?? "—"}
+                            </td>
+                            <td>
+                              <div style={{ display:"flex", gap:4 }}>
+                                <button onClick={() => { setFeatTargetSlot(i + 1); setFeatResults([]); setFeatSearch(""); }}
+                                  style={{ padding:"2px 8px", borderRadius:6, border:"1px solid #00509E", color:"#00509E", background:"white", cursor:"pointer", fontSize:"0.75rem" }}>
+                                  Fill
+                                </button>
+                                {slot && <>
+                                  <button onClick={() => moveFeatSlot(i + 1, -1)} disabled={i === 0}
+                                    style={{ padding:"2px 6px", borderRadius:6, border:"1px solid #E5E7EB", background:"white", cursor:"pointer", fontSize:"0.75rem" }}>↑</button>
+                                  <button onClick={() => moveFeatSlot(i + 1, 1)} disabled={i === 9}
+                                    style={{ padding:"2px 6px", borderRadius:6, border:"1px solid #E5E7EB", background:"white", cursor:"pointer", fontSize:"0.75rem" }}>↓</button>
+                                  <button onClick={() => clearFeatSlot(i + 1)}
+                                    style={{ padding:"2px 8px", borderRadius:6, border:"1px solid #E5E7EB", color:"#999", background:"white", cursor:"pointer", fontSize:"0.75rem" }}>✕</button>
+                                </>}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── ORDER ──────────────────────────────────────────────────── */}
+            {activeTab === "Order" && (
+              <div className="page-section">
+                <div className="page-section-head">
+                  <div className="page-section-title">Content Order</div>
+                  <div className="page-section-meta" style={{ fontSize:"0.8125rem", color:"#4A5565" }}>Drag rows or use ↑↓ to reorder. Saves immediately.</div>
+                </div>
+
+                <div style={{ display:"flex", gap:8, marginBottom:20, flexWrap:"wrap" }}>
+                  {["courses","themes","modules","lessons"].map(p => (
+                    <button key={p} onClick={() => { setOrderPanel(p); loadOrderPanel(p); }}
+                      style={{ padding:"6px 18px", borderRadius:8, border:"1.5px solid", cursor:"pointer",
+                        fontFamily:"'Inter',sans-serif", fontSize:"0.8125rem", fontWeight:500,
+                        borderColor: orderPanel===p ? "#00509E":"#E5E7EB",
+                        background:  orderPanel===p ? "#00509E":"white",
+                        color:       orderPanel===p ? "white":"#4A5565" }}>
+                      {({courses:"Courses",themes:"Themes",modules:"Modules",lessons:"Lessons"})[p]}
+                    </button>
+                  ))}
+                </div>
+
+                {orderPanel === "modules" && (
+                  <div style={{ display:"flex", gap:10, marginBottom:16, flexWrap:"wrap" }}>
+                    <select value={orderFilter.course} onChange={e => { const f={...orderFilter,course:e.target.value}; setOrderFilter(f); loadOrderPanel("modules",f); }}
+                      style={{ padding:"6px 10px", borderRadius:8, border:"1px solid #E5E7EB", fontSize:"0.8125rem" }}>
+                      <option value="">All Courses</option>
+                      {orderCourses.map(c => <option key={c.course_id} value={c.course_id}>{c.course_name}</option>)}
+                    </select>
+                    <select value={orderFilter.theme} onChange={e => { const f={...orderFilter,theme:e.target.value}; setOrderFilter(f); loadOrderPanel("modules",f); }}
+                      style={{ padding:"6px 10px", borderRadius:8, border:"1px solid #E5E7EB", fontSize:"0.8125rem" }}>
+                      <option value="">All Themes</option>
+                      {orderThemes.map(t => <option key={t.theme_id} value={t.theme_id}>{t.title}</option>)}
+                    </select>
+                  </div>
+                )}
+
+                {orderPanel === "lessons" && (
+                  <div style={{ display:"flex", gap:10, marginBottom:16, flexWrap:"wrap" }}>
+                    <select value={orderFilter.course} onChange={async e => {
+                        const f={...orderFilter,course:e.target.value,theme:"",module:""};
+                        setOrderFilter(f); setOrderModules([]); setOrderLessons([]);
+                        let q="?select=module_id,module_name,sort_order&order=sort_order";
+                        if (f.course) q+="&course_id=eq."+f.course;
+                        setOrderModules(await supabase("modules",q) || []);
+                      }}
+                      style={{ padding:"6px 10px", borderRadius:8, border:"1px solid #E5E7EB", fontSize:"0.8125rem" }}>
+                      <option value="">All Courses</option>
+                      {orderCourses.map(c => <option key={c.course_id} value={c.course_id}>{c.course_name}</option>)}
+                    </select>
+                    <select value={orderFilter.theme} onChange={async e => {
+                        const f={...orderFilter,theme:e.target.value,module:""};
+                        setOrderFilter(f); setOrderLessons([]);
+                        let q="?select=module_id,module_name,sort_order&order=sort_order";
+                        if (f.course) q+="&course_id=eq."+f.course;
+                        if (f.theme)  q+="&theme_id=eq."+f.theme;
+                        setOrderModules(await supabase("modules",q) || []);
+                      }}
+                      style={{ padding:"6px 10px", borderRadius:8, border:"1px solid #E5E7EB", fontSize:"0.8125rem" }}>
+                      <option value="">All Themes</option>
+                      {orderThemes.map(t => <option key={t.theme_id} value={t.theme_id}>{t.title}</option>)}
+                    </select>
+                    <select value={orderFilter.module} onChange={e => { const f={...orderFilter,module:e.target.value}; setOrderFilter(f); loadOrderPanel("lessons",f); }}
+                      style={{ padding:"6px 10px", borderRadius:8, border:"1px solid #E5E7EB", fontSize:"0.8125rem" }}>
+                      <option value="">Select Module</option>
+                      {orderModules.map(m => <option key={m.module_id} value={m.module_id}>{m.module_name}</option>)}
+                    </select>
+                  </div>
+                )}
+
+                {orderMsg && <div className={"crud-msg "+(orderMsg.includes("failed")?"err":"ok")} style={{ marginBottom:12 }}>{orderMsg}</div>}
+
+                {orderLoading && <div style={{ color:"#4A5565", fontSize:"0.9rem", padding:"12px 0" }}>Loading…</div>}
+
+                {!orderLoading && (
+                  <div className="admin-table-wrap">
+                    <table className="admin-table">
+                      <thead><tr>
+                        <th style={{ width:32 }}></th>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th style={{ width:80 }}>Reorder</th>
+                      </tr></thead>
+                      <tbody>
+                        {(({courses:orderCourses,themes:orderThemes,modules:orderModules,lessons:orderLessons})[orderPanel]||[]).length === 0 && (
+                          <tr><td colSpan={4} style={{ color:"#4A5565", padding:"16px", textAlign:"center" }}>
+                            {orderPanel==="modules"||orderPanel==="lessons" ? "Select filters above to load items." : "No items found."}
+                          </td></tr>
+                        )}
+                        {(({courses:orderCourses,themes:orderThemes,modules:orderModules,lessons:orderLessons})[orderPanel]||[]).map((row, idx) => {
+                          const idKey  ={courses:"course_id",themes:"theme_id",modules:"module_id",lessons:"lesson_id"}[orderPanel];
+                          const nameKey={courses:"course_name",themes:"title",modules:"module_name",lessons:"lesson_name"}[orderPanel];
+                          const allItems=({courses:orderCourses,themes:orderThemes,modules:orderModules,lessons:orderLessons})[orderPanel]||[];
+                          return (
+                            <tr key={row[idKey]} draggable
+                              onDragStart={() => setOrderDragIdx(idx)}
+                              onDragOver={e => e.preventDefault()}
+                              onDrop={() => orderDrop(orderPanel, idx)}
+                              style={{ background:orderDragIdx===idx?"#FFF8EE":"white", cursor:"grab" }}>
+                              <td style={{ color:"#aaa", fontSize:"1rem", textAlign:"center", userSelect:"none" }}>⠿</td>
+                              <td style={{ color:"#4A5565", fontSize:"0.8rem", width:36 }}>{idx+1}</td>
+                              <td style={{ fontWeight:500 }}>{row[nameKey]}</td>
+                              <td><div style={{ display:"flex", gap:4 }}>
+                                <button onClick={() => orderMove(orderPanel,idx,-1)} disabled={idx===0||orderSaving}
+                                  style={{ padding:"2px 8px", borderRadius:6, border:"1px solid #E5E7EB", background:"white", cursor:"pointer", fontSize:"0.8rem" }}>↑</button>
+                                <button onClick={() => orderMove(orderPanel,idx,1)} disabled={idx===allItems.length-1||orderSaving}
+                                  style={{ padding:"2px 8px", borderRadius:6, border:"1px solid #E5E7EB", background:"white", cursor:"pointer", fontSize:"0.8rem" }}>↓</button>
+                              </div></td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* ── IMPORT ──────────────────────────────────────────────────── */}
             {activeTab === "Import" && (

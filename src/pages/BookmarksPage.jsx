@@ -5,6 +5,7 @@ import { globalStyles } from "../styles/global";
 import { useAuthContext } from "../contexts/AuthContext";
 import PageHeader from "../components/PageHeader";
 import { SkeletonBookmarkList } from "../components/Skeletons";
+import { APP_FOOTER, SIGNIN, EMPTY } from "../config/appStrings";
 
 const BM_ICON = (size = 28, color = "#FF8E00") => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill={color} stroke={color}
@@ -24,31 +25,31 @@ const TYPE_META = {
 const styles = `
   .bmp-hero {
     text-align: center; padding: 40px 1.5rem 28px;
-    border-bottom: 1px solid rgba(0,0,0,0.07);
+    border-bottom: 1px solid #E5E7EB;
   }
   .bmp-hero h1 {
-    font-family: 'Alumni Sans', sans-serif; font-size: 2rem; font-weight: 800;
-    color: ${HERITAGE}; margin-bottom: 6px;
+    font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 2rem; font-weight: 700;
+    color: #101828; margin-bottom: 6px;
   }
-  .bmp-hero p { color: #1F1F1F; font-size: 0.9375rem; }
+  .bmp-hero p { color: #4A5565; font-size: 0.9375rem; font-family: 'Nunito Sans', system-ui, sans-serif; }
 
   .bmp-filters {
     max-width: 1100px; margin: 0 auto; padding: 20px 1.5rem 0;
     display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
   }
-  .bmp-filter-label { font-size: 0.8125rem; font-weight: 600; color: #6B6B6B; }
+  .bmp-filter-label { font-size: 0.8125rem; font-weight: 600; color: #4A5565; font-family: 'Inter', system-ui, sans-serif; }
   .bmp-filter-select {
-    padding: 6px 12px; border-radius: 999px; border: 1.5px solid rgba(0,0,0,0.10);
-    background: white; font-size: 0.8125rem; font-weight: 600; color: #1F1F1F;
+    padding: 6px 12px; border-radius: 999px; border: 1.5px solid #E5E7EB;
+    background: white; font-size: 0.8125rem; font-weight: 600; color: #101828;
     cursor: pointer; outline: none; appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23aaa'/%3E%3C/svg%3E");
     background-repeat: no-repeat; background-position: right 10px center;
-    padding-right: 28px;
+    padding-right: 28px; font-family: 'Inter', system-ui, sans-serif;
   }
   .bmp-filter-select:focus { border-color: ${SAFFRON}; }
-  .bmp-clear  { font-size: 0.8125rem; color: ${SAFFRON}; cursor: pointer; font-weight: 600; margin-left: 4px; }
+  .bmp-clear  { font-size: 0.8125rem; color: ${SAFFRON}; cursor: pointer; font-weight: 600; margin-left: 4px; font-family: 'Inter', system-ui, sans-serif; }
   .bmp-clear:hover { text-decoration: underline; }
-  .bmp-count  { font-size: 0.8125rem; color: #6B6B6B; margin-left: auto; }
+  .bmp-count  { font-size: 0.8125rem; color: #4A5565; margin-left: auto; font-family: 'Inter', system-ui, sans-serif; }
 
   .bmp-list {
     max-width: 1100px; margin: 0 auto; padding: 24px 1.5rem 80px;
@@ -57,33 +58,34 @@ const styles = `
 
   .bmp-card { cursor: pointer; }
   .bmp-card {
-    background: white; border-radius: 14px; border: 1px solid rgba(0,0,0,0.07);
-    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    background: white; border-radius: 12px; border: 1px solid #E5E7EB;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
     display: flex; align-items: center; gap: 0;
     overflow: hidden; animation: fadeUp 0.35s ease both;
     transition: box-shadow 0.2s, transform 0.2s;
   }
-  .bmp-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.11); transform: translateX(3px); }
+  .bmp-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.08); transform: translateX(3px); }
 
   .bmp-card-bar  { width: 5px; flex-shrink: 0; align-self: stretch; }
   .bmp-card-icon { font-size: 1.375rem; padding: 0 14px; flex-shrink: 0; }
   .bmp-card-body { flex: 1; min-width: 0; padding: 14px 0; }
   .bmp-card-name {
-    font-family: 'Alumni Sans', sans-serif; font-size: 1.125rem; font-weight: 700;
-    color: #0A0A0A; line-height: 1.2; margin-bottom: 4px;
+    font-family: 'Nunito Sans', system-ui, sans-serif; font-size: 1.0625rem; font-weight: 700;
+    color: #101828; line-height: 1.2; margin-bottom: 4px;
   }
-  .bmp-card-breadcrumb { font-size: 0.75rem; color: #6B6B6B; line-height: 1.5; }
+  .bmp-card-breadcrumb { font-size: 0.75rem; color: #4A5565; line-height: 1.5; font-family: 'Inter', system-ui, sans-serif; }
   .bmp-card-breadcrumb span { color: ${HERITAGE}; font-weight: 600; }
-  .bmp-card-meta { font-size: 0.6875rem; color: #6B6B6B; margin-top: 4px; }
+  .bmp-card-meta { font-size: 0.6875rem; color: #4A5565; margin-top: 4px; font-family: 'Inter', system-ui, sans-serif; }
 
   .bmp-card-right { display: flex; align-items: center; gap: 8px; padding: 0 16px; flex-shrink: 0; }
   .bmp-type-badge {
-    font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.05em;
+    font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.05em;
     padding: 3px 9px; border-radius: 999px; white-space: nowrap;
+    font-family: 'Inter', system-ui, sans-serif;
   }
   .bmp-remove-btn {
     background: none; border: none; cursor: pointer; font-size: 1rem;
-    color: #6B6B6B; padding: 8px; border-radius: 8px;
+    color: #4A5565; padding: 8px; border-radius: 8px;
     transition: color 0.15s, background 0.15s;
     line-height: 1; min-width: 36px; min-height: 36px;
     display: flex; align-items: center; justify-content: center;
@@ -91,27 +93,28 @@ const styles = `
   .bmp-remove-btn:hover { color: #e05252; background: #e0525210; }
 
   .bmp-empty {
-    text-align: center; padding: 80px 24px; color: #6B6B6B;
+    text-align: center; padding: 80px 24px; color: #4A5565;
     max-width: 400px; margin: 0 auto;
   }
   .bmp-empty .empty-icon { font-size: 3rem; margin-bottom: 16px; }
-  .bmp-empty h3 { font-family: 'Alumni Sans', sans-serif; font-size: 1.375rem; color: #6B6B6B; margin-bottom: 8px; }
-  .bmp-empty p  { font-size: 0.9375rem; line-height: 1.6; }
+  .bmp-empty h3 { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.25rem; color: #4A5565; margin-bottom: 8px; }
+  .bmp-empty p  { font-size: 0.9375rem; line-height: 1.6; font-family: 'Nunito Sans', system-ui, sans-serif; }
 
   .bmp-signin {
     text-align: center; padding: 80px 24px;
   }
   .bmp-signin .empty-icon { font-size: 3rem; margin-bottom: 16px; }
-  .bmp-signin h3 { font-family: 'Alumni Sans', sans-serif; font-size: 1.375rem; color: ${HERITAGE}; margin-bottom: 8px; }
-  .bmp-signin p  { font-size: 0.9375rem; color: #1F1F1F; margin-bottom: 24px; }
+  .bmp-signin h3 { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.25rem; color: ${HERITAGE}; margin-bottom: 8px; }
+  .bmp-signin p  { font-size: 0.9375rem; color: #4A5565; margin-bottom: 24px; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .bmp-signin-btn {
     display: inline-flex; align-items: center; justify-content: center;
-    padding: 12px 28px; border-radius: 10px; min-height: 44px;
-    background: ${SAFFRON}; color: white; font-family: 'Alumni Sans', sans-serif;
-    font-size: 1rem; font-weight: 700; cursor: pointer; border: none;
-    letter-spacing: 0.02em; transition: box-shadow 0.2s;
+    padding: 12px 28px; border-radius: 12px; min-height: 44px;
+    background: ${SAFFRON}; color: white; font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.9375rem; font-weight: 500; cursor: pointer; border: none;
+    letter-spacing: 0.01em; transition: opacity 0.2s;
+    box-shadow: 0px 1px 0.5px 0.05px rgba(29, 41, 61, 0.02);
   }
-  .bmp-signin-btn:hover { box-shadow: 0 4px 16px ${SAFFRON}55; }
+  .bmp-signin-btn:hover { opacity: 0.9; }
 
   @media (max-width: 768px) {
     .bmp-list { padding: 16px 1rem 80px; }
@@ -235,7 +238,7 @@ export default function BookmarksPage({
         <h1><span style={{verticalAlign:"middle",marginRight:8,display:"inline-flex"}}>{BM_ICON(26)}</span>My Bookmarks</h1>
         <p>
           {isGuest
-            ? "Sign in to see your bookmarks"
+            ? SIGNIN.bookmarks
             : loading
               ? ""
               : `${items.length} item${items.length !== 1 ? "s" : ""} saved`}
@@ -246,7 +249,7 @@ export default function BookmarksPage({
         <div className="bmp-signin">
           <div className="empty-icon">{BM_ICON(44)}</div>
           <h3>Your bookmarks live here</h3>
-          <p>Sign in to bookmark lessons, modules and themes to revisit later.</p>
+          <p>{SIGNIN.bookmarksBody}</p>
           <button className="bmp-signin-btn" onClick={onSignIn}>Sign in</button>
         </div>
       ) : loading ? (
@@ -254,7 +257,7 @@ export default function BookmarksPage({
       ) : items.length === 0 ? (
         <div className="bmp-empty">
           <div className="empty-icon">{BM_ICON(44)}</div>
-          <h3>No bookmarks yet</h3>
+          <h3>{EMPTY.bookmarks}</h3>
           <p>Tap the bookmark icon on any lesson, module, theme or snippet while browsing to save it here.</p>
         </div>
       ) : (
@@ -345,7 +348,7 @@ export default function BookmarksPage({
         </>
       )}
 
-      <footer className="footer">© {new Date().getFullYear()} IndiYatra · Heritage for Every Child</footer>
+      <footer className="footer">{APP_FOOTER(new Date().getFullYear())}</footer>
     </>
   );
 }
