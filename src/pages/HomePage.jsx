@@ -198,7 +198,8 @@ export default function HomePage({
   isAdmin, onAdmin, userEditorialRole, onEditor,
   activePage, onSaveSettings, languages = [],
 }) {
-  const { onSignIn } = useContext(AuthContext);
+  const { onSignIn, user } = useContext(AuthContext);
+  const isGuest = !user || user.is_anonymous;
 
   const [courses, setCourses]               = useState([]);
   const [assets, setAssets]                 = useState({});
@@ -247,7 +248,7 @@ export default function HomePage({
         ]}
       />
 
-      <section className="hp-hero">
+      {isGuest && <section className="hp-hero">
         <div className="hp-hero-inner">
           <div>
             <div className="hp-welcome-label">Welcome back</div>
@@ -277,7 +278,7 @@ export default function HomePage({
             ))}
           </div>
         </div>
-      </section>
+      </section>}
 
       <section className="hp-panel">
         <div className="hp-panel-inner">

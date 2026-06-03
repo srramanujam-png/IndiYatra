@@ -19,6 +19,7 @@ import LikesPage      from "./pages/LikesPage";
 import BookmarksPage  from "./pages/BookmarksPage";
 import DiscoverPage   from "./pages/DiscoverPage";
 import GatewayPage    from "./pages/GatewayPage";
+import CourseNavigatorPage from "./pages/CourseNavigatorPage";
 const AdminPage  = lazy(() => import("./pages/AdminPage"));
 const EditorPage = lazy(() => import("./pages/EditorPage"));
 
@@ -49,6 +50,7 @@ export default function App() {
   const [navDirection, setNavDirection]         = useState("none");
   const snippetAdvanceTimer = useRef(null);
   const toastTimer = useRef(null);
+  const lastVisitedRouteRef = useRef(null); // stays in sync; profile state is stale after login
 
   const [bookmarks,    setBookmarks]    = useState(new Set());
   const [toastMsg,     setToastMsg]     = useState("");
@@ -65,6 +67,8 @@ export default function App() {
   const [playlistSnippetIds, setPlaylistSnippetIds] = useState(null);
   const [playlistStartIndex, setPlaylistStartIndex] = useState(0);
   const [playlistSource,     setPlaylistSource]     = useState("likes");
+  const [playerReturnPage, setPlayerReturnPage]   = useState("lessons");
+  const [navigatorSelection, setNavigatorSelection] = useState(null); // pre-seeds Navigator when returning from Resume/player
   const [playlistLabel,      setPlaylistLabel]      = useState("");
   const [selectedTheme, setSelectedTheme]       = useState(null);
   const [selectedLevelId, setSelectedLevelId]   = useState(null);
@@ -287,26 +291,51 @@ export default function App() {
     }
   }
 
+  function saveLastVisited(routeObj) {
+    lastVisitedRouteRef.current = routeObj;
+    if (user?.id) {
+      updateLastVisited(user.id, routeObj ? JSON.stringify(routeObj) : null)
+        .catch(e => console.warn("updateLastVisited:", e));
+    }
+  }
+
   async function handleResume() {
-    if (!profile?.last_visited_route) { goForward("course"); return; }
-    // Helper: drop a stale/invalid saved route so subsequent loads don't re-fire the bad lookup.
-    const clearStaleRoute = () => {
-      if (user?.id) updateLastVisited(user.id, null).catch(() => {});
-    };
+    // Use the in-memory ref first (updated on every lesson open this session),
+    // fall back to the persisted profile value loaded at login.
+    const rawRoute = lastVisitedRouteRef.current
+      ?? profile?.last_visited_route;
+    if (!rawRoute) { goForward("navigator"); return; }
+    const clearStaleRoute = () => saveLastVisited(null);
     try {
-      const route = JSON.parse(profile.last_visited_route);
-      if (!route.module_id) { clearStaleRoute(); goForward("course"); return; }
+      const route = typeof rawRoute === "string" ? JSON.parse(rawRoute) : rawRoute;
+      if (!route.module_id) { clearStaleRoute(); goForward("navigator"); return; }
+      // Fetch module (always needed for setSelectedModule)
       const mods = await supabase("modules", `?module_id=eq.${route.module_id}&select=*`);
-      if (!Array.isArray(mods) || mods.length === 0) { clearStaleRoute(); goForward("course"); return; }
+      if (!Array.isArray(mods) || mods.length === 0) { clearStaleRoute(); goForward("navigator"); return; }
       setSelectedModule(mods[0]);
       if (route.level_id)    setSelectedLevelId(route.level_id);
-      if (route.course_name) setSelectedCourse(c => c ?? { course_name: route.course_name });
-      if (route.theme_title) setSelectedTheme(t => t ?? { title: route.theme_title });
+      if (route.course_id)   setSelectedCourse(c => c?.course_id ? c : { course_id: route.course_id, course_name: route.course_name });
+      else if (route.course_name) setSelectedCourse(c => c ?? { course_name: route.course_name });
+      if (route.theme_id)    setSelectedTheme(t => t?.theme_id ? t : { theme_id: route.theme_id, title: route.theme_title });
+      else if (route.theme_title) setSelectedTheme(t => t ?? { title: route.theme_title });
+      // If we have a lesson_id, go straight to the player at the saved snippet position
+      if (route.lesson_id) {
+        const lessons = await supabase("lessons", `?lesson_id=eq.${route.lesson_id}&select=*`);
+        if (Array.isArray(lessons) && lessons.length > 0) {
+          setSelectedLesson(lessons[0]);
+          setEarnedBadges([]);
+          setPlayerReturnPage("navigator");
+          setNavigatorSelection({ levelId: route.level_id, themeId: route.theme_id, moduleId: route.module_id, lessonId: route.lesson_id });
+          goForward("player");
+          return;
+        }
+      }
+      // Fallback: no lesson_id saved — go to lessons list
       goForward("lessons");
     } catch (e) {
       console.warn("handleResume:", e);
       clearStaleRoute();
-      goForward("course");
+      goForward("navigator");
     }
   }
 
@@ -352,7 +381,7 @@ export default function App() {
           const rows = await supabase("courses", `?course_id=eq.${content_id}&select=*`);
           if (!rows?.length) return;
           setSelectedCourse(rows[0]);
-          goForward("course");
+          goForward("navigator");
           break;
         }
 
@@ -405,6 +434,7 @@ export default function App() {
           setPlaylistSnippetIds(null);
           // Always start lesson bookmarks from the first snippet
           setLessonProgress(prev => { const m = new Map(prev); m.delete(content_id); return m; });
+          setPlayerReturnPage("navigator");
           goForward("player");
           break;
         }
@@ -446,6 +476,7 @@ export default function App() {
           setPlaylistSnippetIds(null);
           // Set progress to start at the bookmarked snippet
           setLessonProgress(prev => { const m = new Map(prev); m.set(lessonId, snippetIndex); return m; });
+          setPlayerReturnPage("navigator");
           goForward("player");
           break;
         }
@@ -520,6 +551,7 @@ export default function App() {
     activePage:  page,
     onSaveSettings: handleSaveSettings,
     languages,
+    lessonProgress,
   };
 
   const renderPage = () => {
@@ -543,7 +575,7 @@ export default function App() {
               setEarnedBadges([]);
               setSelectedLesson(lesson);
             }}
-            onBackToLessons={() => { setEarnedBadges([]); setPlaylistSnippetIds(null); goBack("lessons"); }}
+            onBackToLessons={() => { setEarnedBadges([]); setPlaylistSnippetIds(null); goBack(playerReturnPage); }}
             onBackToLikes={playlistSource === "likes" ? () => { setPlaylistSnippetIds(null); goBack("likes"); } : undefined}
             onBackToDiscover={
               playlistSource === "discover" ? () => { setPlaylistSnippetIds(null); goBack("discover"); } :
@@ -567,19 +599,23 @@ export default function App() {
             onLessonClick={lesson => {
               setSelectedLesson(lesson);
               setEarnedBadges([]);
-              // Save last visited context for Resume Yatra (fire-and-forget)
+              setPlayerReturnPage("lessons");
+              // Save last visited context for Resume Yatra
               if (user && !user.is_anonymous) {
-                updateLastVisited(user.id, JSON.stringify({
+                saveLastVisited({
+                  lesson_id:   lesson.lesson_id,
                   module_id:   selectedModule?.module_id  ?? null,
                   level_id:    selectedLevelId            ?? null,
+                  course_id:   selectedCourse?.course_id  ?? null,
                   course_name: selectedCourse?.course_name ?? null,
+                  theme_id:    selectedTheme?.theme_id    ?? null,
                   theme_title: selectedTheme?.title        ?? null,
-                })).catch(e => console.warn("updateLastVisited:", e));
+                });
               }
               goForward("player");
             }}
             onBack={() => goBack("home")}
-            onBackToCourse={() => goBack("course")}
+            onBackToCourse={() => goBack("navigator")}
             onBackToModules={() => goBack("modules")}
           />
         );
@@ -593,7 +629,40 @@ export default function App() {
             completedLessons={completedLessons}
             onModuleClick={mod => { setSelectedModule(mod); goForward("lessons"); }}
             onBack={() => goBack("home")}
-            onBackToCourse={() => goBack("course")}
+            onBackToCourse={() => goBack("navigator")}
+          />
+        );
+      case "navigator":
+        return (
+          <CourseNavigatorPage
+            {...commonProps}
+            course={selectedCourse}
+            completedLessons={completedLessons}
+            lessonProgress={lessonProgress}
+            onLessonSelect={(lesson, mod, thm, levelId) => {
+              setSelectedLesson(lesson);
+              setSelectedModule(mod);
+              setSelectedTheme(thm);
+              setSelectedLevelId(levelId);
+              setEarnedBadges([]);
+              setPlayerReturnPage("navigator");
+              setNavigatorSelection({ levelId, themeId: mod.theme_id, moduleId: mod.module_id, lessonId: lesson.lesson_id });
+              if (user && !user.is_anonymous) {
+                saveLastVisited({
+                  lesson_id:   lesson.lesson_id,
+                  module_id:   mod.module_id          ?? null,
+                  level_id:    levelId                ?? null,
+                  course_id:   selectedCourse?.course_id  ?? null,
+                  course_name: selectedCourse?.course_name ?? null,
+                  theme_id:    mod.theme_id           ?? null,
+                  theme_title: thm.title              ?? null,
+                });
+              }
+              goForward("player");
+            }}
+            initialSelection={navigatorSelection}
+            onBack={() => goBack("home")}
+            onBackToCourse={() => goBack("navigator")}
           />
         );
       case "course":
@@ -695,7 +764,7 @@ export default function App() {
         return (
           <HomePage
             {...commonProps}
-            onCourseClick={course => { setSelectedCourse(course); goForward("course"); }}
+            onCourseClick={course => { setSelectedCourse(course); goForward("navigator"); }}
           />
         );
     }

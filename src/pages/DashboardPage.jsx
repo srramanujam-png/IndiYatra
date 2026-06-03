@@ -341,6 +341,45 @@ const styles = `
     text-transform: uppercase; color: #4A5565;
     font-family: 'Inter', system-ui, sans-serif;
   }
+  /* ── Leaderboard ── */
+  .lb-show-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: none; border: 1.5px solid #E5E7EB; border-radius: 10px;
+    padding: 7px 16px; font-size: 0.8125rem; font-weight: 600;
+    color: #4A5565; cursor: pointer; transition: border-color 0.15s, color 0.15s;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  .lb-show-btn:hover, .lb-show-btn.open {
+    border-color: ${SAFFRON}; color: ${SAFFRON};
+  }
+  .lb-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 4px; }
+  .lb-table { width: 100%; border-collapse: collapse; }
+  .lb-table th {
+    font-size: 0.6875rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.06em; color: #4A5565; padding: 0 0 10px;
+    font-family: 'Inter', system-ui, sans-serif; text-align: right;
+  }
+  .lb-table th:first-child { text-align: center; width: 36px; }
+  .lb-table th:nth-child(2) { text-align: left; }
+  .lb-table td {
+    padding: 11px 0; border-top: 1px solid #E5E7EB;
+    font-size: 0.9375rem; text-align: right; color: #4A5565;
+    font-family: 'Nunito Sans', system-ui, sans-serif;
+  }
+  .lb-table td:first-child { text-align: center; font-size: 0.8125rem; font-weight: 700; color: #4A5565; width: 36px; }
+  .lb-table td:nth-child(2) { text-align: left; font-weight: 700; color: #101828; }
+  .lb-row-me td { background: ${SAFFRON}08; }
+  .lb-row-me td:nth-child(2) { color: ${SAFFRON}; }
+  .lb-rank-medal { font-size: 1rem; }
+  .lb-empty {
+    font-size: 0.9375rem; color: #4A5565; font-style: italic;
+    padding: 16px 0; font-family: 'Nunito Sans', system-ui, sans-serif;
+  }
+  .lb-note {
+    font-size: 0.6875rem; color: #4A5565; margin-top: 12px;
+    font-family: 'Inter', system-ui, sans-serif; font-style: italic;
+  }
+
   /* ── Activity stacked view (≤600px) ── */
   .act-stack { display: none; }
   .act-stack-row {
@@ -496,6 +535,10 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
   const [allBadges,      setAllBadges]      = useState([]);
   const [rawTokensData,  setRawTokensData]  = useState([]);
   // DEFAULT_SHARE_MSG imported from appStrings
+  const [leaderboard,        setLeaderboard]        = useState(null);   // null = not yet loaded
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+  const [leaderboardVisible, setLeaderboardVisible] = useState(false);
+
   const [shareMessage,    setShareMessage]   = useState(() => localStorage.getItem("indiyatra_share_message") || DEFAULT_SHARE_MSG);
   const [shareMsgDraft,   setShareMsgDraft]  = useState(shareMessage);
   const [showShareSettings, setShowShareSettings] = useState(false);
@@ -841,6 +884,38 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
       setTimeout(() => setCopyDone(false), 2000);
     });
   }
+  async function handleShowLeaderboard() {
+    if (leaderboardVisible && leaderboard !== null) {
+      setLeaderboardVisible(false);
+      return;
+    }
+    setLeaderboardVisible(true);
+    if (leaderboard !== null) return; // cached from earlier in session
+    setLeaderboardLoading(true);
+    try {
+      const myId = user && !user.is_anonymous ? user.id : null;
+      const args = {
+        ...(  _courseId ? { p_course_id:  _courseId } : {}),
+        ...(myId        ? { p_profile_id: myId }       : {}),
+      };
+      const { data, error } = await supabaseClient.rpc("get_leaderboard", args);
+      if (error) throw error;
+      setLeaderboard(data || []);
+    } catch (e) {
+      console.warn("get_leaderboard:", e);
+      setLeaderboard([]);
+    } finally {
+      setLeaderboardLoading(false);
+    }
+  }
+
+  // When the scope pill changes, reset the leaderboard so the next
+  // Show press re-fetches with the correct course filter.
+  useEffect(() => {
+    setLeaderboard(null);
+    setLeaderboardVisible(false);
+  }, [scope]);
+
   const shareText = renderShareText(shareMessage);
   const canShare  = !!(user && !user.is_anonymous);
 
@@ -1177,7 +1252,84 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
           )}
         </div>
 
-{/* ── Share Your Yatra ── */}
+{/* ── Community Leaderboard ── */}
+        <div className="dash-section">
+          <div className="dash-section-head">
+            <div className="page-section-title">
+              <i className="ti ti-trophy" style={{ color: SAFFRON, marginRight: 6 }} />
+              Community Leaderboard
+            </div>
+            <button
+              type="button"
+              className={"lb-show-btn" + (leaderboardVisible ? " open" : "")}
+              onClick={handleShowLeaderboard}
+            >
+              {leaderboardVisible ? "Hide" : "Show"}
+            </button>
+          </div>
+
+          {leaderboardVisible && (
+            leaderboardLoading ? (
+              <div style={{ color: "#4A5565", fontSize: "0.875rem", padding: "12px 0", fontFamily: "'Nunito Sans', system-ui" }}>
+                Loading leaderboard…
+              </div>
+            ) : !leaderboard || leaderboard.length === 0 ? (
+              <div className="lb-empty">No activity yet — be the first on the board!</div>
+            ) : (
+              <>
+                <div className="lb-table-wrap">
+                  <table className="lb-table">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Plants 🌿</th>
+                        <th>Lessons</th>
+                        <th>Snippets</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {leaderboard.map((row, i) => {
+                        const isMe = row.is_current_user;
+                        // Detect gap: user row appended outside top 25
+                        const prevRank = i > 0 ? leaderboard[i - 1].rank : null;
+                        const hasGap  = prevRank !== null && row.rank - prevRank > 1;
+                        const medal   = row.rank === 1 ? "🥇"
+                                      : row.rank === 2 ? "🥈"
+                                      : row.rank === 3 ? "🥉"
+                                      : row.rank;
+                        return (
+                          <>
+                            {hasGap && (
+                              <tr key={`gap-${row.profile_id}`}>
+                                <td colSpan={5} style={{ textAlign: "center", padding: "6px 0", fontSize: "0.75rem", color: "#4A5565", borderTop: "1px dashed #E5E7EB" }}>· · ·</td>
+                              </tr>
+                            )}
+                            <tr key={row.profile_id} className={isMe ? "lb-row-me" : ""}>
+                              <td><span className="lb-rank-medal">{medal}</span></td>
+                              <td>{row.display_name}{isMe ? " (you)" : ""}</td>
+                              <td>{Number(row.plant_tokens).toLocaleString()}</td>
+                              <td>{Number(row.lessons_completed).toLocaleString()}</td>
+                              <td>{Number(row.snippets_read).toLocaleString()}</td>
+                            </tr>
+                          </>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="lb-note">
+                  Plants (tulsi, ashoka, lotus, peepal, banyan) are lifetime totals.
+                  {_courseId
+                    ? " Lessons and snippets shown for this course only."
+                    : " Lessons and snippets shown across all courses."}
+                </div>
+              </>
+            )
+          )}
+        </div>
+
+        {/* ── Share Your Yatra ── */}
         <div className="dash-section">
           <div className="dash-section-head share-section-head">
             <div className="page-section-title">Share Your Yatra</div>

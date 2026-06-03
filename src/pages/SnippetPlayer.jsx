@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { supabase, SAFFRON, HERITAGE, GREEN, logoUrl, DEFAULT_LANG_CODE, DIFFICULTY_STARS } from "../lib/supabase";
+import { supabase, SAFFRON, HERITAGE, GREEN, logoUrl, DEFAULT_LANG_ID, DIFFICULTY_STARS } from "../lib/supabase";
 import { useAuthContext } from "../contexts/AuthContext";
 import { supabaseClient, loadUserLikes, insertLike, deleteLike, postComment, deleteComment, adminDeleteComment, editComment } from "../lib/auth";
 import { globalStyles } from "../styles/global";
@@ -82,7 +82,7 @@ const styles = `
   /* Image */
   .snip-img {
     position: relative; width: 100%;
-    background: #FEF7FF;
+    background: transparent;
     display: flex; align-items: center; justify-content: center;
     max-height: 340px; border-radius: 10px 10px 0 0; overflow: hidden;
   }
@@ -101,7 +101,7 @@ const styles = `
   /* No-image header band */
   .snip-header-band {
     position: relative; width: 100%; height: 160px;
-    background: #FEF7FF;
+    background: transparent;
     display: flex; align-items: center; justify-content: center;
     overflow: hidden; border-radius: 10px 10px 0 0;
   }
@@ -555,7 +555,8 @@ export default function SnippetPlayer({
         const assetMap = {};
         (assetData || []).forEach(a => { assetMap[a.asset_id] = a; });
 
-        const prefCode = settings.languageCode;
+        // snippet_translations.language stores language IDs (e.g. "LANG_03"), not codes
+        const prefLangId = settings.languageId;
         const transMap = {};
         (transList || []).forEach(t => {
           if (!transMap[t.snippet_id]) transMap[t.snippet_id] = {};
@@ -564,12 +565,14 @@ export default function SnippetPlayer({
         const resolvedTrans = {};
         ids.forEach(id => {
           const opts = transMap[id] || {};
-          resolvedTrans[id] = opts[prefCode] || opts[DEFAULT_LANG_CODE] || Object.values(opts)[0] || null;
+          // Prefer selected language; fall back to English (LANG_03) only
+          resolvedTrans[id] = opts[prefLangId] || opts[DEFAULT_LANG_ID] || null;
         });
 
         const coreMap = {};
         (cores || []).forEach(c => { coreMap[c.snippet_id] = c; });
-        const ordered = ids.map(id => coreMap[id]).filter(Boolean);
+        // Only include snippets that have a translation in the selected (or fallback) language
+        const ordered = ids.map(id => coreMap[id]).filter(s => s && resolvedTrans[s.snippet_id]);
 
         const points = ordered.reduce((sum, s) => sum + (s.snippet_value || 0), 0);
 
@@ -610,7 +613,7 @@ export default function SnippetPlayer({
       setLoading(false);
     }
     load();
-  }, [lesson?.lesson_id, playlistSnippetIds, settings.languageCode]);
+  }, [lesson?.lesson_id, playlistSnippetIds, settings.languageId]);
 
   // Reset position and done-state whenever the lesson changes (e.g. Next Lesson)
   useEffect(() => {

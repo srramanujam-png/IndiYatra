@@ -1407,3 +1407,14 @@ export async function editComment(commentId, newBody) {
     .select()
     .single();
 }
+
+// ─── Course sidebar tree ───────────────────────────────────────────────────────
+/**
+ * Fetches the full Theme > Module > Lesson tree for a given course, with
+ * per-lesson completion and progress status baked in.
+ * Calls the get_course_tree(p_course_id) Supabase RPC.
+ * Returns { data: [...flat rows], error }
+ */
+export async function getCourseTree(courseId) {
+  return supabaseClient.rpc("get_course_tree", { p_course_id: courseId });
+}
