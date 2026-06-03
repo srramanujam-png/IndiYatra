@@ -1418,3 +1418,158 @@ export async function editComment(commentId, newBody) {
 export async function getCourseTree(courseId) {
   return supabaseClient.rpc("get_course_tree", { p_course_id: courseId });
 }
+
+// ─── Quiz helpers ─────────────────────────────────────────────────────────────
+
+export async function getQuizForLesson(lessonId) {
+  const { data, error } = await supabaseClient
+    .from("quiz_sets")
+    .select("*")
+    .eq("lesson_id", lessonId)
+    .eq("is_published", true)
+    .maybeSingle();
+  if (error) console.error("[getQuizForLesson]", error);
+  return { data: data || null, error };
+}
+
+export async function getQuizzesForLessons(lessonIds) {
+  if (!lessonIds || lessonIds.length === 0) return { data: {}, error: null };
+  const { data, error } = await supabaseClient
+    .from("quiz_sets")
+    .select("*")
+    .in("lesson_id", lessonIds)
+    .eq("is_published", true);
+  if (error) { console.error("[getQuizzesForLessons]", error); return { data: {}, error }; }
+  const map = {};
+  (data || []).forEach(q => { if (q.lesson_id) map[q.lesson_id] = q; });
+  return { data: map, error: null };
+}
+
+export async function getQuizQuestions(quizId, languageId) {
+  const { data: refs, error: refErr } = await supabaseClient
+    .from("quiz_questions")
+    .select("id, question_type, question_id, sort_order, points")
+    .eq("quiz_id", quizId)
+    .order("sort_order");
+  if (refErr) { console.error("[getQuizQuestions] refs", refErr); return { data: [], error: refErr }; }
+  if (!refs || refs.length === 0) return { data: [], error: null };
+
+  const snippetRefs    = refs.filter(r => r.question_type === "snippet");
+  const standaloneRefs = refs.filter(r => r.question_type === "standalone");
+
+  let snippetQMap = {};
+  if (snippetRefs.length > 0) {
+    const ids = snippetRefs.map(r => r.question_id);
+    const { data: sqRows, error: sqErr } = await supabaseClient
+      .from("snippet_questions")
+      .select("*")
+      .in("question_id", ids)
+      .eq("language", languageId);
+    if (sqErr) console.error("[getQuizQuestions] snippet_questions", sqErr);
+    (sqRows || []).forEach(q => { snippetQMap[q.question_id] = q; });
+
+    const snippetIds = [...new Set((sqRows || []).map(q => q.snippet_id))];
+    if (snippetIds.length > 0) {
+      const [coreRes, transRes] = await Promise.all([
+        supabaseClient.from("snippet_core").select("snippet_id, asset_id").in("snippet_id", snippetIds),
+        supabaseClient.from("snippet_translations")
+          .select("snippet_id, language, explanation, key_term, key_term_meaning, life_connection, quiz_recap, source_citation, hook")
+          .in("snippet_id", snippetIds),
+      ]);
+      const coreMap = {};
+      (coreRes.data || []).forEach(c => { coreMap[c.snippet_id] = c; });
+      // Build transMap: prefer requested language, fall back to LANG_03
+      const allTransBySnippet = {};
+      (transRes.data || []).forEach(t => {
+        if (!allTransBySnippet[t.snippet_id]) allTransBySnippet[t.snippet_id] = {};
+        allTransBySnippet[t.snippet_id][t.language] = t;
+      });
+      const transMap = {};
+      snippetIds.forEach(sid => {
+        const langs = allTransBySnippet[sid] || {};
+        transMap[sid] = langs[languageId] || langs["LANG_03"] || Object.values(langs)[0] || {};
+      });
+
+      const assetIds = [...new Set(Object.values(coreMap).map(c => c.asset_id).filter(Boolean))];
+      let assetMap = {};
+      if (assetIds.length > 0) {
+        const { data: assets } = await supabaseClient
+          .from("asset_library")
+          .select("asset_id, file_path, alt_text")
+          .in("asset_id", assetIds);
+        (assets || []).forEach(a => { assetMap[a.asset_id] = a; });
+      }
+
+      Object.keys(snippetQMap).forEach(qid => {
+        const sq = snippetQMap[qid];
+        const core  = coreMap[sq.snippet_id]  || {};
+        const trans = transMap[sq.snippet_id] || {};
+        const asset = core.asset_id ? assetMap[core.asset_id] : null;
+        snippetQMap[qid] = { ...sq, asset, ...trans };
+      });
+    }
+  }
+
+  let standaloneQMap = {};
+  if (standaloneRefs.length > 0) {
+    const ids = standaloneRefs.map(r => r.question_id);
+    const { data: stRows, error: stErr } = await supabaseClient
+      .from("standalone_questions")
+      .select("*")
+      .in("question_id", ids)
+      .eq("language", languageId);
+    if (stErr) console.error("[getQuizQuestions] standalone_questions", stErr);
+
+    const assetIds = [...new Set((stRows || []).map(q => q.asset_id).filter(Boolean))];
+    let assetMap = {};
+    if (assetIds.length > 0) {
+      const { data: assets } = await supabaseClient
+        .from("asset_library")
+        .select("asset_id, file_path, alt_text")
+        .in("asset_id", assetIds);
+      (assets || []).forEach(a => { assetMap[a.asset_id] = a; });
+    }
+    (stRows || []).forEach(q => {
+      standaloneQMap[q.question_id] = { ...q, asset: q.asset_id ? assetMap[q.asset_id] : null };
+    });
+  }
+
+  const resolved = refs.map(ref => {
+    const q = ref.question_type === "snippet"
+      ? snippetQMap[ref.question_id]
+      : standaloneQMap[ref.question_id];
+    if (!q) return null;
+    return { ...q, question_type: ref.question_type, points: ref.points, _ref_id: ref.id };
+  }).filter(Boolean);
+
+  return { data: resolved, error: null };
+}
+
+export async function saveQuizAttempt(userId, quizId, score, maxScore, answers) {
+  const { data, error } = await supabaseClient
+    .from("quiz_attempts")
+    .insert({
+      profile_id:   userId,
+      quiz_id:      quizId,
+      score,
+      max_score:    maxScore,
+      started_at:   new Date().toISOString(),
+      completed_at: new Date().toISOString(),
+      answers,
+    })
+    .select()
+    .single();
+  if (error) console.error("[saveQuizAttempt]", error);
+  return { data, error };
+}
+
+export async function getAttemptCount(userId, quizId) {
+  const { count, error } = await supabaseClient
+    .from("quiz_attempts")
+    .select("id", { count: "exact", head: true })
+    .eq("profile_id", userId)
+    .eq("quiz_id", quizId)
+    .not("completed_at", "is", null);
+  if (error) console.error("[getAttemptCount]", error);
+  return { count: count || 0, error };
+}

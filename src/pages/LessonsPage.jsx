@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { getQuizzesForLessons } from "../lib/auth";
 import { supabase, SAFFRON, HERITAGE, GREEN, logoUrl, LEVEL_LABELS } from "../lib/supabase";
 import { globalStyles } from "../styles/global";
 import PageHeader from "../components/PageHeader";
@@ -57,6 +58,19 @@ const styles = `
   .lesson-row.locked:hover {
     transform: none !important; box-shadow: none !important;
   }
+  .lesson-cta-group { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .lesson-cta-quiz {
+    flex-shrink: 0; border: 1.5px solid #00509E; color: #00509E; border-radius: 999px;
+    padding: 6px 14px; font-family: 'Alumni Sans', sans-serif; font-size: 0.8125rem;
+    font-weight: 700; cursor: pointer; background: transparent;
+    transition: background 0.2s, color 0.2s; white-space: nowrap;
+  }
+  .lesson-cta-quiz:hover { background: #00509E; color: white; }
+  .lesson-cta-quiz:disabled { opacity: 0.3; cursor: not-allowed; border-color: #9CA3AF; color: #9CA3AF; }
+  @media (max-width: 480px) {
+    .lesson-cta-quiz { padding: 5px 10px; font-size: 0.75rem; }
+    .lesson-cta-group { gap: 4px; }
+  }
   .lesson-lock { flex-shrink: 0; font-size: 0.9rem; color: #6B6B6B; }
   .bm-btn {
     flex-shrink: 0; background: none; border: none; cursor: pointer;
@@ -78,16 +92,23 @@ const styles = `
   }
 `;
 
-export default function LessonsPage({ course, theme, module, levelId, settings, completedLessons = new Set(), onLessonClick, onBack, onBackToCourse, onBackToModules, onOpenSettings, onLessonsLoaded, onDashboard, onLikes, onBookmarks, onDiscover, onResume, bookmarks = new Set(), onToggleBookmark, userEditorialRole, onEditor, isAdmin, onAdmin, activePage, onSaveSettings, languages = [] }) {
+export default function LessonsPage({ course, theme, module, levelId, settings, completedLessons = new Set(), onLessonClick, onQuizClick, onBack, onBackToCourse, onBackToModules, onOpenSettings, onLessonsLoaded, onDashboard, onLikes, onBookmarks, onDiscover, onResume, bookmarks = new Set(), onToggleBookmark, userEditorialRole, onEditor, isAdmin, onAdmin, activePage, onSaveSettings, languages = [] }) {
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [quizMap,  setQuizMap]  = useState({});   // lesson_id → quiz_sets row
   const levelMeta = LEVEL_LABELS[levelId] || { label: "All Levels", color: SAFFRON };
 
   useEffect(() => {
     async function load() {
       const data = await supabase("lessons", `?select=*&module_id=eq.${module.module_id}&order=sort_order`);
-      setLessons(data || []);
-      if (onLessonsLoaded) onLessonsLoaded(data || []);
+      const loaded = data || [];
+      setLessons(loaded);
+      if (onLessonsLoaded) onLessonsLoaded(loaded);
+      if (loaded.length > 0) {
+        const ids = loaded.map(l => l.lesson_id);
+        const { data: qmap } = await getQuizzesForLessons(ids);
+        setQuizMap(qmap || {});
+      }
       setLoading(false);
     }
     load();
@@ -169,10 +190,19 @@ export default function LessonsPage({ course, theme, module, levelId, settings, 
                     title={bookmarks.has("lesson:" + lesson.lesson_id) ? "Remove bookmark" : "Bookmark lesson"}
                     onClick={e => { e.stopPropagation(); onToggleBookmark && onToggleBookmark("lesson", lesson.lesson_id, lesson.lesson_name); }}
                   ><svg width="20" height="20" viewBox="0 0 24 24" fill={bookmarks.has("lesson:" + lesson.lesson_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
-                  <button className={`lesson-cta${isComplete ? " done" : ""}`}
-                    onClick={e => { e.stopPropagation(); onLessonClick(lesson); }}>
-                    {isComplete ? "Review" : "Start"}
-                  </button>
+                  <div className="lesson-cta-group">
+                    <button className={`lesson-cta${isComplete ? " done" : ""}`}
+                      onClick={e => { e.stopPropagation(); onLessonClick(lesson); }}>
+                      {isComplete ? "Review" : "Learn"}
+                    </button>
+                    <button
+                      className="lesson-cta-quiz"
+                      disabled={!quizMap[lesson.lesson_id]}
+                      title={quizMap[lesson.lesson_id] ? "Take quiz for this lesson" : "No quiz available yet"}
+                      onClick={e => { e.stopPropagation(); if (quizMap[lesson.lesson_id] && onQuizClick) onQuizClick(lesson, quizMap[lesson.lesson_id]); }}>
+                      Quiz
+                    </button>
+                  </div>
                 </>
               )
             }

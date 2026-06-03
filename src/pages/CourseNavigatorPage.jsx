@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { SAFFRON, HERITAGE, GREEN, LEVEL_LABELS } from "../lib/supabase";
-import { getCourseTree } from "../lib/auth";
+import { getCourseTree, getQuizzesForLessons } from "../lib/auth";
 import { globalStyles } from "../styles/global";
 import PageHeader from "../components/PageHeader";
 
@@ -170,8 +170,24 @@ const styles = `
   .nd-card-prog-fill { height: 100%; border-radius: 2px; }
   .nd-card-right { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
   .nd-card-pct { font-size: 0.75rem; font-weight: 700; color: ${HERITAGE}; }
-  .nd-card-cta { font-size: 0.75rem; font-weight: 700; color: ${SAFFRON}; white-space: nowrap; }
-  .nd-card-cta.done { color: ${GREEN}; }
+  .nd-card-cta-group { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .nd-card-cta {
+    border: 1.5px solid ${SAFFRON}; color: ${SAFFRON}; border-radius: 999px;
+    padding: 4px 11px; font-family: 'Alumni Sans', sans-serif; font-size: 0.8125rem;
+    font-weight: 700; cursor: pointer; background: transparent; white-space: nowrap;
+    transition: background 0.2s, color 0.2s;
+  }
+  .nd-card-cta:hover { background: ${SAFFRON}; color: white; }
+  .nd-card-cta.done { border-color: ${GREEN}; color: ${GREEN}; }
+  .nd-card-cta.done:hover { background: ${GREEN}; color: white; border-color: ${GREEN}; }
+  .nd-card-cta-quiz {
+    border: 1.5px solid ${HERITAGE}; color: ${HERITAGE}; border-radius: 999px;
+    padding: 4px 11px; font-family: 'Alumni Sans', sans-serif; font-size: 0.8125rem;
+    font-weight: 700; cursor: pointer; background: transparent; white-space: nowrap;
+    transition: background 0.2s, color 0.2s;
+  }
+  .nd-card-cta-quiz:hover { background: ${HERITAGE}; color: white; }
+  .nd-card-cta-quiz:disabled { opacity: 0.25; cursor: not-allowed; }
 
   /* ── Mobile ── */
   @media (max-width: 768px) {
@@ -199,6 +215,7 @@ export default function CourseNavigatorPage({
   lessonProgress   = new Map(),
   initialSelection = null,
   onLessonSelect,
+  onQuizClick,
   onBack,
   onBackToCourse,
   settings,
@@ -224,6 +241,7 @@ export default function CourseNavigatorPage({
   const [selThemeId,  setSelThemeId]  = useState(null);
   const [selModuleId, setSelModuleId] = useState(null);
   const [selLessonId, setSelLessonId] = useState(null);
+  const [quizMap, setQuizMap] = useState({});  // lesson_id → quiz_sets row
 
   // Mobile drill-down: 'levels' | 'themes' | 'modules' | 'lessons'
   const [mobileDepth, setMobileDepth] = useState("levels");
@@ -250,6 +268,13 @@ export default function CourseNavigatorPage({
         // Default: auto-select first level
         const firstLevel = Object.keys(grouped).sort()[0];
         if (firstLevel) setSelLevelId(firstLevel);
+      }
+      // Fetch quizzes for all lessons in the tree
+      const allLessonIds = (data || []).map(r => r.lesson_id).filter(Boolean);
+      if (allLessonIds.length > 0) {
+        getQuizzesForLessons([...new Set(allLessonIds)]).then(({ data: qmap }) => {
+          setQuizMap(qmap || {});
+        });
       }
       setLoading(false);
     });
@@ -454,9 +479,19 @@ export default function CourseNavigatorPage({
               <div className="nd-card-info">
                 <div className="nd-card-name">{lesson.lesson_name}</div>
               </div>
-              <span className={`nd-card-cta${lStatus === "done" ? " done" : ""}`}>
-                {lStatus === "done" ? "Review" : lStatus === "resume" ? "Resume →" : "Start →"}
-              </span>
+              <div className="nd-card-cta-group">
+                <button className={`nd-card-cta${lStatus === "done" ? " done" : ""}`}
+                  onClick={e => { e.stopPropagation(); desktopClickLesson(lesson, selModuleId, selThemeId, selLevelId); }}>
+                  {lStatus === "done" ? "Review" : lStatus === "resume" ? "Resume →" : "Start →"}
+                </button>
+                <button
+                  className="nd-card-cta-quiz"
+                  disabled={!quizMap[lesson.lesson_id]}
+                  title={quizMap[lesson.lesson_id] ? "Take quiz" : "No quiz available"}
+                  onClick={e => { e.stopPropagation(); if (quizMap[lesson.lesson_id] && onQuizClick) onQuizClick(lesson, quizMap[lesson.lesson_id], { module_id: selModuleId, theme_id: selThemeId }, { theme_id: selThemeId }, selLevelId); }}>
+                  Quiz
+                </button>
+              </div>
             </div>
           );
         })}
@@ -543,9 +578,18 @@ export default function CourseNavigatorPage({
               <div className="nd-card-info">
                 <div className="nd-card-name">{lesson.lesson_name}</div>
               </div>
-              <span className={`nd-card-cta${lStatus === "done" ? " done" : ""}`}>
-                {lStatus === "done" ? "Review" : lStatus === "resume" ? "Resume →" : "Start →"}
-              </span>
+              <div className="nd-card-cta-group">
+                <button className={`nd-card-cta${lStatus === "done" ? " done" : ""}`} onClick={e => { e.stopPropagation(); mobileClickLesson(lesson); }}>
+                  {lStatus === "done" ? "Review" : lStatus === "resume" ? "Resume →" : "Start →"}
+                </button>
+                <button
+                  className="nd-card-cta-quiz"
+                  disabled={!quizMap[lesson.lesson_id]}
+                  title={quizMap[lesson.lesson_id] ? "Take quiz" : "No quiz available"}
+                  onClick={e => { e.stopPropagation(); if (quizMap[lesson.lesson_id] && onQuizClick) onQuizClick(lesson, quizMap[lesson.lesson_id], { module_id: selModuleId, theme_id: selThemeId }, { theme_id: selThemeId }, selLevelId); }}>
+                  Quiz
+                </button>
+              </div>
             </div>
           );
         });

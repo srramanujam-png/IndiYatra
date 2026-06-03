@@ -223,6 +223,8 @@ const styles = `
   .comp-next:hover { opacity: 0.9; transform: translateY(-1px); }
   .comp-primary   { background: ${SAFFRON}; color: white; }
   .comp-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .comp-quiz { background: #00509E; color: white; border-color: #00509E; }
+  .comp-quiz:hover { background: #003E7E; border-color: #003E7E; opacity: 1; transform: translateY(-1px); }
   .comp-dashboard { background: white; color: ${HERITAGE}; border: 1px solid #E5E7EB !important; }
   .comp-dashboard:hover { background: #F3F4F6; }
   .comp-secondary { background: #F3F4F6; color: #4A5565; font-size: 0.8125rem; }
@@ -478,7 +480,9 @@ export default function SnippetPlayer({
   isAdmin = false,
   isCreator = false,
   userEditorialRole = null,
-  snippetShareMsg = DEFAULT_SNIPPET_SHARE_MSG
+  snippetShareMsg = DEFAULT_SNIPPET_SHARE_MSG,
+  lessonQuiz = null,
+  onTakeQuiz = null,
 }) {
   const playlistMode       = !!(playlistSnippetIds && playlistSnippetIds.length > 0);
   const backToPlaylist      = onBackToDiscover || onBackToLikes;
@@ -1283,6 +1287,11 @@ export default function SnippetPlayer({
                   {nextLesson && (
                     <button className="comp-btn comp-next" onClick={() => onNextLesson(nextLesson)}>
                       Next: {nextLesson.lesson_name} →
+                    </button>
+                  )}
+                  {lessonQuiz && onTakeQuiz && (
+                    <button className="comp-btn comp-quiz" onClick={onTakeQuiz}>
+                      🎯 Take the Quiz
                     </button>
                   )}
                   <button className="comp-btn comp-primary" onClick={onBackToLessons}>Back to Lessons</button>

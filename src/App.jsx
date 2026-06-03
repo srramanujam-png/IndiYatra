@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useAuth } from "./hooks/useAuth";
-import { supabaseClient, signOut, loadCompletions, saveCompletion, updateLastVisited, loadLessonProgress, upsertLessonProgress, deleteLessonProgress, loadUserBookmarks, insertBookmark, deleteBookmark, getEditorialRole } from "./lib/auth";
+import { supabaseClient, signOut, loadCompletions, saveCompletion, updateLastVisited, loadLessonProgress, upsertLessonProgress, deleteLessonProgress, loadUserBookmarks, insertBookmark, deleteBookmark, getEditorialRole, getQuizQuestions, getQuizForLesson } from "./lib/auth";
 import { AuthContext } from "./contexts/AuthContext";
 import AuthModal     from "./components/AuthModal";
 import ProfileModal  from "./components/ProfileModal";
@@ -20,6 +20,7 @@ import BookmarksPage  from "./pages/BookmarksPage";
 import DiscoverPage   from "./pages/DiscoverPage";
 import GatewayPage    from "./pages/GatewayPage";
 import CourseNavigatorPage from "./pages/CourseNavigatorPage";
+import QuizPlayer from "./pages/QuizPlayer";
 const AdminPage  = lazy(() => import("./pages/AdminPage"));
 const EditorPage = lazy(() => import("./pages/EditorPage"));
 
@@ -68,6 +69,11 @@ export default function App() {
   const [playlistStartIndex, setPlaylistStartIndex] = useState(0);
   const [playlistSource,     setPlaylistSource]     = useState("likes");
   const [playerReturnPage, setPlayerReturnPage]   = useState("lessons");
+  const [selectedQuiz,     setSelectedQuiz]       = useState(null);   // quiz_sets row
+  const [quizQuestions,    setQuizQuestions]       = useState([]);     // resolved question objects
+  const [quizReturnPage,   setQuizReturnPage]      = useState("lessons");
+  const [lessonQuiz,       setLessonQuiz]         = useState(null);    // quiz for current lesson (completion modal CTA)
+  const [quizKey,          setQuizKey]            = useState(0);       // increment to force QuizPlayer remount
   const [navigatorSelection, setNavigatorSelection] = useState(null); // pre-seeds Navigator when returning from Resume/player
   const [playlistLabel,      setPlaylistLabel]      = useState("");
   const [selectedTheme, setSelectedTheme]       = useState(null);
@@ -584,6 +590,15 @@ export default function App() {
             }
             playlistLabel={playlistLabel}
             snippetShareMsg={profile?.snippet_share_message || localStorage.getItem("indiyatra_snippet_share_message") || DEFAULT_SNIPPET_SHARE_MSG}
+            lessonQuiz={lessonQuiz}
+            onTakeQuiz={lessonQuiz ? async () => {
+              const { data } = await getQuizQuestions(lessonQuiz.quiz_id, settings.languageId || "LANG_03");
+              setSelectedQuiz(lessonQuiz);
+              setQuizQuestions(data || []);
+              setQuizReturnPage("player");
+              setQuizKey(k => k + 1);
+              goForward("quiz");
+            } : null}
           />
         );
       case "lessons":
@@ -600,6 +615,8 @@ export default function App() {
               setSelectedLesson(lesson);
               setEarnedBadges([]);
               setPlayerReturnPage("lessons");
+              setLessonQuiz(null); // reset; fetch below
+              getQuizForLesson(lesson.lesson_id).then(({ data }) => setLessonQuiz(data || null));
               // Save last visited context for Resume Yatra
               if (user && !user.is_anonymous) {
                 saveLastVisited({
@@ -613,6 +630,15 @@ export default function App() {
                 });
               }
               goForward("player");
+            }}
+            onQuizClick={async (lesson, quiz) => {
+              const { data } = await getQuizQuestions(quiz.quiz_id, settings.languageId || "LANG_03");
+              setSelectedLesson(lesson);
+              setSelectedQuiz(quiz);
+              setQuizQuestions(data || []);
+              setQuizReturnPage("lessons");
+              setQuizKey(k => k + 1);
+              goForward("quiz");
             }}
             onBack={() => goBack("home")}
             onBackToCourse={() => goBack("navigator")}
@@ -646,6 +672,8 @@ export default function App() {
               setSelectedLevelId(levelId);
               setEarnedBadges([]);
               setPlayerReturnPage("navigator");
+              setLessonQuiz(null);
+              getQuizForLesson(lesson.lesson_id).then(({ data }) => setLessonQuiz(data || null));
               setNavigatorSelection({ levelId, themeId: mod.theme_id, moduleId: mod.module_id, lessonId: lesson.lesson_id });
               if (user && !user.is_anonymous) {
                 saveLastVisited({
@@ -661,8 +689,37 @@ export default function App() {
               goForward("player");
             }}
             initialSelection={navigatorSelection}
+            onQuizClick={async (lesson, quiz, mod, thm, levelId) => {
+              const { data } = await getQuizQuestions(quiz.quiz_id, settings.languageId || "LANG_03");
+              setSelectedLesson(lesson);
+              setSelectedQuiz(quiz);
+              setQuizQuestions(data || []);
+              setQuizReturnPage("navigator");
+              if (mod?.module_id) setNavigatorSelection({ levelId, themeId: mod.theme_id, moduleId: mod.module_id, lessonId: lesson.lesson_id });
+              setQuizKey(k => k + 1);
+              goForward("quiz");
+            }}
             onBack={() => goBack("home")}
             onBackToCourse={() => goBack("navigator")}
+          />
+        );
+      case "quiz":
+        return (
+          <QuizPlayer
+            key={quizKey}
+            {...commonProps}
+            quiz={selectedQuiz}
+            questions={quizQuestions}
+            lesson={selectedLesson}
+            onBack={() => goBack(quizReturnPage)}
+            onDashboard={() => goForward("dashboard")}
+            onRetake={async () => {
+              if (!selectedQuiz) return;
+              const { data } = await getQuizQuestions(selectedQuiz.quiz_id, settings.languageId || "LANG_03");
+              setQuizQuestions(data || []);
+              setQuizKey(k => k + 1);
+              goForward("quiz");
+            }}
           />
         );
       case "course":
