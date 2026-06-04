@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase, SAFFRON, HERITAGE, GREEN, logoUrl, DEFAULT_LANG_ID, DIFFICULTY_STARS } from "../lib/supabase";
 import { useAuthContext } from "../contexts/AuthContext";
-import { supabaseClient, loadUserLikes, insertLike, deleteLike, postComment, deleteComment, adminDeleteComment, editComment } from "../lib/auth";
+import { supabaseClient, loadUserLikes, insertLike, deleteLike, postComment, deleteComment, adminDeleteComment, editComment, getSnippetQuestion, saveSnippetQuestion } from "../lib/auth";
 import { globalStyles } from "../styles/global";
 import { DEFAULT_SNIPPET_SHARE_MSG, APP_URL, PLAYER, SIGNIN } from "../config/appStrings";
 
@@ -54,11 +54,39 @@ const styles = `
     touch-action: pan-y;
     user-select: none;
   }
+  @media (min-width: 900px) {
+    .player-body { max-width: 1120px; }
+  }
 
   /* Card */
   .snip-card {
     background: white; border-radius: 12px; border: 1px solid #E5E7EB;
     overflow: hidden;
+  }
+
+  /* ── Desktop two-column layout ── */
+  .snip-2col { display: block; }
+  /* Mobile: hook needs padding since it's no longer inside snip-body */
+  .snip-left-col .snip-hook { padding: 16px 20px 12px; }
+  @media (min-width: 900px) {
+    .snip-2col { display: grid; grid-template-columns: 42% 58%; }
+    .snip-left-col {
+      border-right: 1px solid #E5E7EB;
+      display: flex; flex-direction: column;
+    }
+    .snip-left-col .snip-img {
+      border-radius: 0; flex-shrink: 0;
+      max-height: 400px; justify-content: center; background: white;
+    }
+    .snip-left-col .snip-img img {
+      width: auto; max-width: 100%; max-height: 400px; object-fit: contain;
+      -webkit-mask-image: none; mask-image: none;
+    }
+    .snip-left-col .snip-header-band { border-radius: 0; flex-shrink: 0; }
+    .snip-left-col .snip-hook {
+      padding: 20px 24px 16px; border-bottom: 1px solid #E5E7EB; border-top: none;
+    }
+    .snip-right-col { padding: 20px 24px 16px; }
   }
   @keyframes snippetFadeIn {
     from { opacity: 0; }
@@ -256,6 +284,9 @@ const styles = `
   .snip-share-btn    { cursor: pointer; }
   .snip-share-btn:hover { color: #FF8E00; }
   .snip-social-icon  { font-size: 1.125rem; line-height: 1; display: flex; align-items: center; }
+  @media (min-width: 900px) {
+    .snip-social-icon { font-size: 1.375rem; }
+  }
   .snip-social-sep   { color: #E5E7EB; font-size: 1rem; }
 
   /* Share popover */
@@ -511,10 +542,11 @@ export default function SnippetPlayer({
   const [editDraft,        setEditDraft]        = useState("");
 
   // Snippet inline edit state
-  const [showEditPanel,  setShowEditPanel]  = useState(false);
-  const [editSnipDraft,  setEditSnipDraft]  = useState({});
-  const [editSaving,     setEditSaving]     = useState(false);
-  const [editMsg,        setEditMsg]        = useState("");
+  const [showEditPanel,       setShowEditPanel]       = useState(false);
+  const [editSnipDraft,       setEditSnipDraft]       = useState({});
+  const [editSaving,          setEditSaving]          = useState(false);
+  const [editMsg,             setEditMsg]             = useState("");
+  const [editQuestionLoading, setEditQuestionLoading] = useState(false);
 
   // Swipe tracking
   const touchStartX  = useRef(null);
@@ -742,9 +774,31 @@ export default function SnippetPlayer({
       life_connection:  t.life_connection  || "",
       quiz_recap:       t.quiz_recap       || "",
       source_citation:  t.source_citation  || "",
+      // Quiz question fields — populated by async fetch below
+      question:         "",
+      correct_option:   "",
+      wrong_option_1:   "",
+      wrong_option_2:   "",
+      wrong_option_3:   "",
     });
     setEditMsg("");
     setShowEditPanel(true);
+    // Async-fetch existing question for this snippet + language
+    const langId = t.language || settings?.languageId || DEFAULT_LANG_ID;
+    setEditQuestionLoading(true);
+    getSnippetQuestion(snip.snippet_id, langId).then(({ data }) => {
+      if (data) {
+        setEditSnipDraft(prev => ({
+          ...prev,
+          question:       data.question       || "",
+          correct_option: data.correct_option || "",
+          wrong_option_1: data.wrong_option_1 || "",
+          wrong_option_2: data.wrong_option_2 || "",
+          wrong_option_3: data.wrong_option_3 || "",
+        }));
+      }
+      setEditQuestionLoading(false);
+    });
   }
 
   async function saveEditSnippet() {
@@ -752,9 +806,10 @@ export default function SnippetPlayer({
     setEditSaving(true);
     setEditMsg("");
     const t = translations[snip.snippet_id] || {};
+    const langId = t.language || settings?.languageId || DEFAULT_LANG_ID;
     const payload = {
       snippet_id:       snip.snippet_id,
-      language:         t.language || "en",
+      language:         langId,
       hook:             editSnipDraft.hook,
       explanation:      editSnipDraft.explanation,
       key_term:         editSnipDraft.key_term,
@@ -775,6 +830,25 @@ export default function SnippetPlayer({
     }
     // Update local translations state so the card re-renders immediately
     setTranslations(prev => ({ ...prev, [snip.snippet_id]: data }));
+
+    // Save quiz question fields if at least the question text is filled
+    const hasQuestion = !!(editSnipDraft.question && editSnipDraft.correct_option &&
+      editSnipDraft.wrong_option_1 && editSnipDraft.wrong_option_2 && editSnipDraft.wrong_option_3);
+    if (hasQuestion) {
+      const { error: qErr } = await saveSnippetQuestion(snip.snippet_id, langId, {
+        question:       editSnipDraft.question,
+        correct_option: editSnipDraft.correct_option,
+        wrong_option_1: editSnipDraft.wrong_option_1,
+        wrong_option_2: editSnipDraft.wrong_option_2,
+        wrong_option_3: editSnipDraft.wrong_option_3,
+      });
+      if (qErr) {
+        setEditMsg("Translation saved, but question save failed: " + qErr.message);
+        setEditSaving(false);
+        return;
+      }
+    }
+
     setEditMsg("Saved!");
     setEditSaving(false);
     setTimeout(() => { setShowEditPanel(false); setEditMsg(""); }, 900);
@@ -881,74 +955,83 @@ export default function SnippetPlayer({
                   transition: isDragging ? "none" : "transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94)",
                 }}
               >
-                {/* Image / header band */}
-                {asset ? (
-                  <div className="snip-img">
-                    <img
-                      src={asset.file_path}
-                      alt={asset.alt_text || ""}
-                      onError={e => { e.target.style.display = "none"; }}
-                    />
-                    {trans.language && (
-                      <div className="snip-lang-badge">{trans.language}</div>
+                {/* Two-column wrapper (grid on desktop, block on mobile) */}
+                <div className="snip-2col">
+
+                  {/* LEFT COLUMN — hook on top, image below */}
+                  <div className="snip-left-col">
+                    {trans.hook && (
+                      <div className="snip-hook fs-heading">{trans.hook}</div>
                     )}
-                    {snip.difficulty_level && (
-                      <div className="snip-diff">{DIFFICULTY_STARS[snip.difficulty_level]}</div>
+                    {asset ? (
+                      <div className="snip-img">
+                        <img
+                          src={asset.file_path}
+                          alt={asset.alt_text || ""}
+                          onError={e => { e.target.style.display = "none"; }}
+                        />
+                        {trans.language && (
+                          <div className="snip-lang-badge">{trans.language}</div>
+                        )}
+                        {snip.difficulty_level && (
+                          <div className="snip-diff">{DIFFICULTY_STARS[snip.difficulty_level]}</div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="snip-header-band">
+                        <div className="snip-header-ornament">&#127963;</div>
+                        {trans.language && (
+                          <div className="snip-lang-badge">{trans.language}</div>
+                        )}
+                        {snip.difficulty_level && (
+                          <div className="snip-diff">{DIFFICULTY_STARS[snip.difficulty_level]}</div>
+                        )}
+                      </div>
                     )}
                   </div>
-                ) : (
-                  <div className="snip-header-band">
-                    <div className="snip-header-ornament">&#127963;</div>
-                    {trans.language && (
-                      <div className="snip-lang-badge">{trans.language}</div>
+
+                  {/* RIGHT COLUMN — explanation + all content blocks */}
+                  <div className="snip-right-col snip-body">
+                    {trans.explanation && <div className="snip-explanation fs-body">{trans.explanation}</div>}
+
+                    {(trans.key_term || trans.life_connection || trans.quiz_recap) && (
+                      <div className="snip-divider" />
                     )}
-                    {snip.difficulty_level && (
-                      <div className="snip-diff">{DIFFICULTY_STARS[snip.difficulty_level]}</div>
+
+                    {trans.key_term && (
+                      <div className="snip-key-term">
+                        <div className="snip-kt-label">Key Term</div>
+                        <div className="snip-kt-word">{trans.key_term}</div>
+                        {trans.key_term_meaning && <div className="snip-kt-meaning fs-body">{trans.key_term_meaning}</div>}
+                      </div>
+                    )}
+
+                    {trans.life_connection && (
+                      <div className="snip-life">
+                        <div className="snip-life-label">Life Connection</div>
+                        <div className="snip-life-text fs-body">{trans.life_connection}</div>
+                      </div>
+                    )}
+
+                    {trans.quiz_recap && (
+                      <div className="snip-quiz">
+                        <div className="snip-quiz-label">Refresher Questions</div>
+                        <div className="snip-quiz-text fs-body">{trans.quiz_recap}</div>
+                      </div>
+                    )}
+
+                    {trans.source_citation && <div className="snip-citation">{trans.source_citation}</div>}
+
+                    {!trans.hook && !trans.explanation && (
+                      <div style={{ textAlign: "center", padding: "24px 0", color: "#bbb", fontSize: 15 }}>
+                        Content for this snippet is coming soon.
+                      </div>
                     )}
                   </div>
-                )}
+                </div>{/* end snip-2col */}
 
-                <div className="snip-body">
-                  {trans.hook && <div className="snip-hook fs-heading">{trans.hook}</div>}
-                  {trans.explanation && <div className="snip-explanation fs-body">{trans.explanation}</div>}
-
-                  {(trans.key_term || trans.life_connection || trans.quiz_recap) && (
-                    <div className="snip-divider" />
-                  )}
-
-                  {trans.key_term && (
-                    <div className="snip-key-term">
-                      <div className="snip-kt-label">Key Term</div>
-                      <div className="snip-kt-word">{trans.key_term}</div>
-                      {trans.key_term_meaning && <div className="snip-kt-meaning fs-body">{trans.key_term_meaning}</div>}
-                    </div>
-                  )}
-
-                  {trans.life_connection && (
-                    <div className="snip-life">
-                      <div className="snip-life-label">Life Connection</div>
-                      <div className="snip-life-text fs-body">{trans.life_connection}</div>
-                    </div>
-                  )}
-
-                  {trans.quiz_recap && (
-                    <div className="snip-quiz">
-                      <div className="snip-quiz-label">Refresher Questions</div>
-                      <div className="snip-quiz-text fs-body">{trans.quiz_recap}</div>
-                    </div>
-                  )}
-
-                  {trans.source_citation && <div className="snip-citation">{trans.source_citation}</div>}
-
-
-                  {!trans.hook && !trans.explanation && (
-                    <div style={{ textAlign: "center", padding: "24px 0", color: "#bbb", fontSize: 15 }}>
-                      Content for this snippet is coming soon.
-                    </div>
-                  )}
-
-                  {/* Social strip */}
-                  <div className="snip-social">
+                {/* Social strip — full width, outside the grid */}
+                <div className="snip-social">
                     <div className="snip-social-left">
                       <button
                         className={"snip-social-btn snip-like-btn" + (liked.has(snip.snippet_id) ? " active" : "") + (!user || user.is_anonymous ? " disabled" : "")}
@@ -1005,7 +1088,6 @@ export default function SnippetPlayer({
                       )}
                     </div>
                   </div>
-                </div>
               </div>
 
               {/* Swipe hint — only on mobile, fades after first swipe */}
@@ -1232,77 +1314,7 @@ export default function SnippetPlayer({
                     />
                   </div>
                 ))}
-              </div>
-              <div className="edit-panel-footer">
-                {editMsg && <span className={"edit-panel-msg" + (editMsg.startsWith("Save failed") ? " err" : "")}>{editMsg}</span>}
-                <button className="edit-cancel-btn" onClick={() => setShowEditPanel(false)}>Cancel</button>
-                <button className="edit-save-btn" onClick={saveEditSnippet} disabled={editSaving}>
-                  {editSaving ? "Saving…" : "Save"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* Completion modal */}
-        {done && (
-          <div className="completion-overlay">
-            <div className="completion-card">
-              {playlistMode ? (
-                <>
-                  <div className="comp-emoji">{isDiscoverPlaylist ? "\u{1F9ED}" : "\u2665"}</div>
-                  <div className="comp-title">{isDiscoverPlaylist ? PLAYER.discoverComplete : PLAYER.likesComplete}</div>
-                  <div className="comp-subtitle">You've reviewed all <strong>{snippets.length}</strong> snippet{snippets.length !== 1 ? "s" : ""} in <strong>{playlistLabel || "this playlist"}</strong>.</div>
-                  <button className="comp-btn comp-primary" onClick={backToPlaylist}>{isDiscoverPlaylist ? "Back to Discover" : "Back to Likes"}</button>
-                  <button className="comp-btn comp-secondary" onClick={() => { setCurrent(0); setDone(false); }}>Review Again</button>
-                  <button className="comp-btn comp-dashboard" onClick={onDashboard}>Go to Dashboard</button>
-                </>
-              ) : (
-                <>
-                  <div className="comp-emoji">🎉</div>
-                  <div className="comp-title">Lesson Complete!</div>
-                  <div className="comp-subtitle">You've finished <strong>{lesson?.lesson_name}</strong>.</div>
-
-                  <div className="comp-points">
-                    <span className="comp-points-icon">🪙</span>
-                    <span className="comp-points-value">+{totalPoints}</span>
-                    <span className="comp-points-label">{PLAYER.dharmaPoints}</span>
-                  </div>
-
-                  {earnedBadges.length > 0 && (
-                    <div className="comp-badges">
-                      <div className="comp-badges-title">Badges Earned</div>
-                      {earnedBadges.map((b, i) => {
-                        const meta = BADGE_META[b.type] || { emoji: "🏅", label: b.type };
-                        return (
-                          <div className="comp-badge-row" key={i}>
-                            <span className="comp-badge-emoji">{meta.emoji}</span>
-                            <span className="comp-badge-text"><strong>{meta.label}</strong> — {b.name}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {nextLesson && (
-                    <button className="comp-btn comp-next" onClick={() => onNextLesson(nextLesson)}>
-                      Next: {nextLesson.lesson_name} →
-                    </button>
-                  )}
-                  {lessonQuiz && onTakeQuiz && (
-                    <button className="comp-btn comp-quiz" onClick={onTakeQuiz}>
-                      🎯 Take the Quiz
-                    </button>
-                  )}
-                  <button className="comp-btn comp-primary" onClick={onBackToLessons}>Back to Lessons</button>
-                  <button className="comp-btn comp-dashboard" onClick={onDashboard}>Go to Dashboard</button>
-                  <button className="comp-btn comp-secondary" onClick={() => { setCurrent(0); setDone(false); }}>Review Again</button>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    </>
-  );
-}
+                {/* Quiz Question section */}
+                <div style={{ borderTop: "1px solid #E5E7EB", margin: "18px 0 14px" }} />
+                <div style={{ fontSize: "0.6875rem", fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase", color:

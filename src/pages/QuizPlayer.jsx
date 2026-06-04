@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { SAFFRON, HERITAGE, GREEN } from "../lib/supabase";
-import { saveQuizAttempt } from "../lib/auth";
+import { supabaseClient, SAFFRON, HERITAGE, GREEN, DEFAULT_LANG_ID } from "../lib/supabase";
+import { saveQuizAttempt, getAttemptCount, saveSnippetQuestion, saveStandaloneQuestion } from "../lib/auth";
 import PageHeader from "../components/PageHeader";
 import { globalStyles } from "../styles/global";
+import { APP_URL } from "../config/appStrings";
 
 const BLUE = HERITAGE;
 const RED  = "#DC2626";
@@ -41,9 +42,17 @@ const styles = `
   }
   .qp-counter { font-size: 0.8125rem; color: #4A5565; font-weight: 600; flex-shrink: 0; }
 
-  /* ── Progress bar ── */
-  .qp-progress { height: 3px; background: #F3F4F6; }
-  .qp-progress-fill { height: 100%; background: ${SAFFRON}; transition: width 0.35s ease; }
+  /* ── Segmented progress bar ── */
+  .qp-progress-segs {
+    display: flex; gap: 4px; padding: 8px 1.5rem;
+    background: white; border-bottom: 1px solid #F3F4F6;
+  }
+  .qp-progress-seg {
+    flex: 1; height: 4px; border-radius: 999px; background: #E5E7EB;
+    transition: background 0.3s;
+  }
+  .qp-progress-seg.done    { background: ${SAFFRON}; }
+  .qp-progress-seg.current { background: ${SAFFRON}; opacity: 0.45; }
 
   /* ── Quiz timer bar (top-level) ── */
   .qp-quiz-timer {
@@ -54,7 +63,7 @@ const styles = `
   .qp-quiz-timer-fill { height: 100%; background: ${SAFFRON}; transition: width 0.5s linear; border-radius: 999px; }
 
   /* ── Body ── */
-  .qp-body { flex: 1; max-width: 680px; width: 100%; margin: 0 auto; padding: 24px 1rem 120px; }
+  .qp-body { flex: 1; max-width: 1120px; width: 100%; margin: 0 auto; padding: 28px 1.5rem 48px; }
 
   /* ── Question timer (per-question) ── */
   .qp-q-timer {
@@ -65,22 +74,22 @@ const styles = `
   .qp-q-timer-fill { height: 100%; background: ${SAFFRON}; transition: width 0.25s linear; border-radius: 999px; }
   .qp-q-timer-fill.urgent { background: ${RED}; }
 
-  /* ── Card ── */
-  .qp-card {
+  /* ── Unified two-column panel ── */
+  .qp-main {
+    display: grid; grid-template-columns: 1fr 340px; gap: 0;
     background: white; border-radius: 14px; border: 1px solid #E5E7EB;
-    overflow: hidden; margin-bottom: 16px;
-    animation: qpFadeIn 0.2s ease both;
+    overflow: hidden; animation: qpFadeIn 0.2s ease both;
   }
   @keyframes qpFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
-
-  .qp-img {
-    width: 100%; max-height: 300px; overflow: hidden;
-    display: flex; align-items: center; justify-content: center;
-    background: #F9F9F7;
+  @media (max-width: 900px) {
+    .qp-main { grid-template-columns: 1fr; }
+    .qp-right-col { order: -1; border-left: none; border-bottom: 1px solid #E5E7EB; }
   }
-  .qp-img img { width: 100%; max-height: 300px; object-fit: contain; display: block; }
 
-  .qp-card-body { padding: 20px 20px 8px; }
+  /* ── Left column (question card — no own border) ── */
+  .qp-card { overflow: hidden; }
+
+  .qp-card-body { padding: 20px 20px 4px; }
 
   .qp-q-num {
     font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
@@ -88,11 +97,11 @@ const styles = `
   }
   .qp-question {
     font-family: 'Alumni Sans', sans-serif; font-size: 1.375rem; font-weight: 700;
-    color: #0A0A0A; line-height: 1.4; margin-bottom: 20px;
+    color: #0A0A0A; line-height: 1.4; margin-bottom: 8px;
   }
 
   /* ── Options ── */
-  .qp-options { display: flex; flex-direction: column; gap: 10px; padding: 0 20px 20px; }
+  .qp-options { display: flex; flex-direction: column; gap: 10px; padding: 12px 20px 16px; }
   .qp-option {
     border: 2px solid #E5E7EB; border-radius: 10px; padding: 13px 16px;
     cursor: pointer; display: flex; align-items: center; gap: 12px;
@@ -114,52 +123,91 @@ const styles = `
   .qp-option.wrong   .qp-option-marker  { background: ${RED};   color: white; }
   .qp-option.selected:not(.correct):not(.wrong) .qp-option-marker { background: ${SAFFRON}; color: white; }
 
-  /* ── Reveal block (post-answer) ── */
-  .qp-reveal {
-    border-top: 1px solid #E5E7EB; padding: 20px;
-    animation: qpFadeIn 0.25s ease both;
+  /* ── Inline nav row — 4 equal pills ── */
+  .qp-inline-nav {
+    display: flex; align-items: stretch; gap: 8px;
+    padding: 12px 16px 16px; border-top: 1px solid #F3F4F6;
   }
-  .qp-reveal-label {
-    font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
-    color: ${BLUE}; margin-bottom: 10px;
+  .qp-nav-pill {
+    flex: 1; min-width: 0; border-radius: 10px; padding: 9px 6px;
+    border: 2px solid #E5E7EB; background: white; color: #4A5565;
+    cursor: pointer; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 3px;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
   }
-  .qp-reveal-explanation {
-    font-size: 0.9375rem; color: #1F1F1F; line-height: 1.75; margin-bottom: 14px;
+  .qp-nav-pill .pill-icon { font-size: 1rem; line-height: 1; }
+  .qp-nav-pill .pill-label { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.02em; white-space: nowrap; }
+  .qp-nav-pill:hover:not(:disabled) { border-color: ${SAFFRON}; color: ${SAFFRON}; }
+  .qp-nav-pill:disabled { opacity: 0.3; cursor: not-allowed; }
+  .qp-nav-pill.nav-primary { background: ${BLUE}; border-color: ${BLUE}; color: white; }
+  .qp-nav-pill.nav-primary:hover:not(:disabled) { background: #003E7E; border-color: #003E7E; }
+  .qp-nav-pill.nav-finish { background: ${SAFFRON}; border-color: ${SAFFRON}; color: white; }
+  .qp-nav-pill.nav-finish:hover:not(:disabled) { background: #E07E00; border-color: #E07E00; }
+
+  /* ── Right column (image — shares panel border) ── */
+  .qp-right-col {
+    border-left: 1px solid #E5E7EB;
+    display: flex; flex-direction: column;
   }
+  .qp-right-col-img {
+    flex: 1; width: 100%; display: flex; align-items: center; justify-content: center;
+    background: white; min-height: 200px;
+  }
+  .qp-right-col-img img { width: 100%; max-height: 480px; object-fit: contain; display: block; }
+  .qp-right-col-empty {
+    flex: 1; width: 100%; min-height: 200px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: #F9F9F7; color: #9CA3AF; font-size: 0.8125rem; gap: 8px;
+  }
+  @keyframes qpScrollPrompt {
+    0%   { opacity: 0; transform: translateY(-6px); }
+    20%  { opacity: 1; transform: translateY(0); }
+    70%  { opacity: 1; }
+    85%  { opacity: 0.55; }
+    92%  { opacity: 1; }
+    100% { opacity: 0.7; }
+  }
+  .qp-scroll-prompt {
+    padding: 10px 14px; text-align: center;
+    font-size: 0.8125rem; font-weight: 600; color: ${SAFFRON};
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    animation: qpScrollPrompt 2.2s ease forwards;
+    border-top: 1px solid #F3F4F6;
+    background: none; border-left: none; border-right: none; border-bottom: none;
+    cursor: pointer; width: 100%; text-decoration: none;
+  }
+  .qp-scroll-prompt:hover { color: #E07E00; }
+
+  /* ── Explanation panel — flash on reveal ── */
+  @keyframes qpExplainFlash {
+    0%   { background: #FEF3C7; box-shadow: 0 0 0 3px ${SAFFRON}50; }
+    55%  { background: #FEF3C7; box-shadow: 0 0 0 3px ${SAFFRON}20; }
+    100% { background: #F5F1EB; box-shadow: none; }
+  }
+  .qp-explain-section {
+    margin-top: 20px; background: #F5F1EB; border-radius: 14px; padding: 24px 28px;
+    animation: qpExplainFlash 1.4s ease both;
+    scroll-margin-top: 80px;
+  }
+  .qp-explain-label {
+    font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+    color: #0A0A0A; margin-bottom: 12px;
+  }
+  .qp-explain-text { font-size: 0.9375rem; color: #1F1F1F; line-height: 1.8; margin-bottom: 14px; }
+  .qp-explain-source { font-size: 0.8125rem; color: #6B6B6B; font-style: italic; margin-top: 10px; }
+
+  /* ── Shared reveal blocks (used in explain panel + review) ── */
   .qp-reveal-block { margin-bottom: 10px; }
   .qp-reveal-block-label { font-size: 0.75rem; font-weight: 700; color: #6B6B6B; text-transform: uppercase; letter-spacing: 0.05em; }
   .qp-reveal-block-value { font-size: 0.875rem; color: #1F1F1F; margin-top: 2px; line-height: 1.6; }
 
   /* ── Unanswered indicator ── */
   .qp-unanswered-badge {
-    margin: 0 20px 16px; padding: 10px 14px; border-radius: 8px;
+    margin-bottom: 16px; padding: 10px 14px; border-radius: 8px;
     background: #FFF3E0; border: 1px solid #FED7AA;
     font-size: 0.8125rem; color: #92400E; font-weight: 500;
     display: flex; align-items: center; gap: 8px;
   }
-
-  /* ── Navigation bar ── */
-  .qp-nav {
-    position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
-    background: white; border-top: 1px solid #E5E7EB;
-    padding: 12px 1.5rem; display: flex; align-items: center; gap: 10px;
-    max-width: 680px; margin: 0 auto;
-  }
-  /* full-width fixed needs left/right 0, but max-width centering trick: */
-  @media (min-width: 712px) {
-    .qp-nav { left: 50%; right: auto; transform: translateX(-50%); width: 680px; border-radius: 14px 14px 0 0; }
-  }
-  .qp-nav-btn {
-    flex: 1; border-radius: 999px; padding: 11px 0; font-size: 0.9375rem; font-weight: 700;
-    border: 2px solid #E5E7EB; background: white; color: #4A5565; cursor: pointer;
-    transition: border-color 0.15s, color 0.15s, background 0.15s;
-  }
-  .qp-nav-btn:hover:not(:disabled) { border-color: ${SAFFRON}; color: ${SAFFRON}; }
-  .qp-nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-  .qp-nav-btn.primary { background: ${SAFFRON}; border-color: ${SAFFRON}; color: white; }
-  .qp-nav-btn.primary:hover:not(:disabled) { background: #E07E00; border-color: #E07E00; color: white; }
-  .qp-nav-btn.finish  { background: ${BLUE};   border-color: ${BLUE};   color: white; }
-  .qp-nav-btn.finish:hover:not(:disabled) { background: #003E7E; border-color: #003E7E; }
 
   /* ── Confirmation overlay ── */
   .qp-overlay {
@@ -241,6 +289,99 @@ const styles = `
 
   .qp-loading { display: flex; align-items: center; justify-content: center; min-height: 60vh; font-size: 1rem; color: #6B6B6B; }
   .qp-error   { max-width: 480px; margin: 80px auto; text-align: center; color: ${RED}; font-size: 0.9375rem; padding: 1rem; }
+
+  /* ── Social strip (explain panel footer + score screen) ── */
+  .qp-social {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0 2px; border-top: 1px solid #E5E7EB; margin-top: 16px; gap: 8px;
+  }
+  .qp-social-left  { display: flex; align-items: center; gap: 10px; }
+  .qp-social-right { display: flex; align-items: center; gap: 14px; }
+  .qp-social-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: none; border: none; padding: 5px 0;
+    font-size: 0.9375rem; color: #4A5565; transition: color 0.2s;
+    font-family: 'Inter', system-ui, sans-serif; font-weight: 500; cursor: pointer;
+  }
+  .qp-social-btn:hover:not(:disabled)  { color: ${SAFFRON}; }
+  .qp-social-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .qp-social-btn.active   { color: ${SAFFRON}; }
+  .qp-social-btn.copied   { color: ${GREEN}; }
+  .qp-social-icon { font-size: 1.125rem; line-height: 1; display: flex; align-items: center; }
+
+  /* ── Edit button (admin/creator only) ── */
+  .qp-edit-btn {
+    display: flex; align-items: center; gap: 5px; background: none; border: none;
+    cursor: pointer; font-size: 0.8125rem; font-weight: 600; color: #9CA3AF;
+    padding: 4px 6px; border-radius: 6px; transition: color 0.15s, background 0.15s;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  .qp-edit-btn:hover { color: ${HERITAGE}; background: #F3F4F6; }
+
+  /* ── Edit slide-in panel ── */
+  .qp-edit-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 300;
+    animation: qpFadeIn 0.18s ease both;
+  }
+  .qp-edit-panel {
+    position: fixed; top: 0; right: 0; height: 100vh; width: min(580px, 100vw);
+    background: #fff; z-index: 301; display: flex; flex-direction: column;
+    box-shadow: -4px 0 32px rgba(0,0,0,0.14);
+    animation: qpSlideIn 0.22s ease both;
+  }
+  @keyframes qpSlideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+  .qp-edit-header {
+    padding: 16px 20px; border-bottom: 1px solid #E5E7EB; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  }
+  .qp-edit-header-title { font-family: 'Alumni Sans', sans-serif; font-size: 1.125rem; font-weight: 700; color: #0A0A0A; }
+  .qp-edit-header-sub   { font-size: 0.75rem; color: #9CA3AF; margin-top: 1px; }
+  .qp-edit-close {
+    background: none; border: none; cursor: pointer; font-size: 1.125rem;
+    color: #9CA3AF; padding: 4px 8px; border-radius: 6px;
+  }
+  .qp-edit-close:hover { color: #0A0A0A; background: #F3F4F6; }
+  .qp-edit-body { flex: 1; overflow-y: auto; padding: 18px 20px; }
+  .qp-edit-section-label {
+    font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase;
+    color: ${SAFFRON}; margin: 0 0 12px; padding-bottom: 6px; border-bottom: 1px solid #F3F4F6;
+  }
+  .qp-edit-field { margin-bottom: 14px; }
+  .qp-edit-field label {
+    display: block; font-size: 0.8125rem; font-weight: 600; color: #374151;
+    text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  .qp-edit-field textarea, .qp-edit-field input {
+    width: 100%; box-sizing: border-box;
+    border: 1.5px solid #E5E7EB; border-radius: 8px; padding: 8px 11px;
+    font-size: 0.9375rem; font-family: 'Nunito Sans', system-ui, sans-serif;
+    background: white; resize: vertical; outline: none; transition: border-color 0.15s;
+    color: #1F1F1F;
+  }
+  .qp-edit-field textarea:focus, .qp-edit-field input:focus { border-color: ${HERITAGE}; }
+  .qp-edit-divider { border: none; border-top: 1px solid #E5E7EB; margin: 18px 0 16px; }
+  .qp-edit-footer {
+    padding: 12px 20px; border-top: 1px solid #E5E7EB; flex-shrink: 0;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .qp-edit-msg { font-size: 0.875rem; flex: 1; }
+  .qp-edit-msg.ok  { color: #00924A; }
+  .qp-edit-msg.err { color: #DC2626; }
+  .qp-edit-save-btn {
+    padding: 9px 24px; border-radius: 10px; border: none;
+    background: ${HERITAGE}; color: white; cursor: pointer;
+    font-size: 0.9375rem; font-weight: 700; font-family: 'Inter', system-ui, sans-serif;
+    transition: opacity 0.15s;
+  }
+  .qp-edit-save-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .qp-edit-save-btn:not(:disabled):hover { opacity: 0.88; }
+  .qp-edit-cancel-btn {
+    padding: 9px 18px; border-radius: 10px; border: 1.5px solid #E5E7EB;
+    background: white; color: #4A5565; cursor: pointer;
+    font-size: 0.9375rem; font-weight: 600; font-family: 'Inter', system-ui, sans-serif;
+  }
+  .qp-edit-cancel-btn:hover { background: #F3F4F6; }
 `;
 
 const OPTION_LABELS = ["A", "B", "C", "D"];
@@ -262,13 +403,24 @@ export default function QuizPlayer({
   activePage,
   onSaveSettings,
   languages = [],
+  bookmarks = new Set(),
+  onToggleBookmark,
+  isAdmin = false,
+  isCreator = false,
 }) {
+  const canEdit = isAdmin || isCreator;
   const isTimed = !!(quiz?.question_time_limit);
   const quizTimeLimit = quiz?.time_limit || null; // overall quiz seconds
 
   // ── Shuffle questions + options on mount ─────────────────────────────────
   const [questions] = useState(() => {
-    const qs = quiz?.shuffle_questions ? shuffle(rawQuestions) : [...rawQuestions];
+    // Pool selection: always random; shuffle_questions controls display order
+    let qs = [...rawQuestions];
+    if (quiz?.question_pool_size && quiz.question_pool_size < qs.length) {
+      qs = shuffle(qs).slice(0, quiz.question_pool_size);
+    } else if (quiz?.shuffle_questions) {
+      qs = shuffle(qs);
+    }
     return qs.map(q => ({
       ...q,
       _options: shuffle([
@@ -280,19 +432,44 @@ export default function QuizPlayer({
     }));
   });
 
-  const [current,   setCurrent]   = useState(0);
+  const [current,     setCurrent]   = useState(0);
   // answers: Map<index, { chosen: string|null, isCorrect: bool|null, revealed: bool }>
-  const [answers,   setAnswers]   = useState(() => new Map());
-  const [phase,     setPhase]     = useState("quiz"); // 'quiz' | 'confirm_finish' | 'score'
-  const [saving,    setSaving]    = useState(false);
-  const [scoreData, setScoreData] = useState(null);
+  const [answers,     setAnswers]   = useState(() => new Map());
+  const [phase,       setPhase]     = useState("quiz"); // 'quiz' | 'confirm_finish' | 'score'
+  const [saving,      setSaving]    = useState(false);
+  const [scoreData,   setScoreData] = useState(null);
+  const [shareCopied, setShareCopied] = useState(false);
+
+  // Edit panel state
+  const [showEditPanel, setShowEditPanel] = useState(false);
+  const [editDraft,     setEditDraft]     = useState({});
+  const [editSaving,    setEditSaving]    = useState(false);
+  const [editMsg,       setEditMsg]       = useState("");
+
+  // ── Attempt count (max_attempts enforcement) ──────────────────────────────
+  const [attemptCount, setAttemptCount] = useState(user && quiz ? null : 0);
+  useEffect(() => {
+    if (!user || !quiz) return;
+    getAttemptCount(user.id, quiz.quiz_id).then(({ count }) => setAttemptCount(count));
+  }, []);
 
   // Timers
   const [qTimeLeft,    setQTimeLeft]    = useState(quiz?.question_time_limit || 0);
   const [quizTimeLeft, setQuizTimeLeft] = useState(quizTimeLimit || 0);
-  const qTimerRef   = useRef(null);
+  const qTimerRef    = useRef(null);
   const quizTimerRef = useRef(null);
   const startTimeRef = useRef(Date.now());
+  const explainRef   = useRef(null);
+
+  // Scroll explanation into view whenever an answer is revealed
+  useEffect(() => {
+    const currentAns = answers.get(current);
+    if (currentAns && currentAns.chosen !== null && explainRef.current) {
+      setTimeout(() => {
+        explainRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }, 80);
+    }
+  }, [answers, current]);
 
   const total = questions.length;
   const q     = questions[current];
@@ -402,9 +579,91 @@ export default function QuizPlayer({
 
     // Save attempt
     if (user) {
+      setAttemptCount(c => (c ?? 0) + 1); // increment eagerly so score screen reflects new count
       setSaving(true);
       saveQuizAttempt(user.id, quiz.quiz_id, earnedPoints, totalPoints, answersArr)
         .finally(() => setSaving(false));
+    }
+  }
+
+  // ── Edit panel ────────────────────────────────────────────────────────────
+  function openEditPanel() {
+    if (!q) return;
+    setEditDraft({
+      // Snippet translation fields (populated for Type 1 from question obj)
+      hook:             q.hook             || "",
+      explanation:      q.explanation      || "",
+      key_term:         q.key_term         || "",
+      key_term_meaning: q.key_term_meaning || "",
+      life_connection:  q.life_connection  || "",
+      quiz_recap:       q.quiz_recap       || "",
+      source_citation:  q.source_citation  || "",
+      // Question fields
+      question:         q.question         || "",
+      correct_option:   q.correct_option   || "",
+      wrong_option_1:   q.wrong_option_1   || "",
+      wrong_option_2:   q.wrong_option_2   || "",
+      wrong_option_3:   q.wrong_option_3   || "",
+    });
+    setEditMsg("");
+    setShowEditPanel(true);
+  }
+
+  async function saveEdit() {
+    if (editSaving || !q) return;
+    setEditSaving(true);
+    setEditMsg("");
+    const langId = q.language || settings?.languageId || DEFAULT_LANG_ID;
+    let failed = false;
+
+    if (q.question_type === "snippet" && q.snippet_id) {
+      // Save snippet translation
+      const { error: tErr } = await supabaseClient
+        .from("snippet_translations")
+        .upsert({
+          snippet_id:       q.snippet_id,
+          language:         langId,
+          hook:             editDraft.hook,
+          explanation:      editDraft.explanation,
+          key_term:         editDraft.key_term,
+          key_term_meaning: editDraft.key_term_meaning,
+          life_connection:  editDraft.life_connection,
+          quiz_recap:       editDraft.quiz_recap,
+          source_citation:  editDraft.source_citation,
+        }, { onConflict: "snippet_id,language" });
+      if (tErr) { setEditMsg("Translation save failed: " + tErr.message); failed = true; }
+
+      // Save question row
+      if (!failed) {
+        const { error: qErr } = await saveSnippetQuestion(q.snippet_id, langId, {
+          question:       editDraft.question,
+          correct_option: editDraft.correct_option,
+          wrong_option_1: editDraft.wrong_option_1,
+          wrong_option_2: editDraft.wrong_option_2,
+          wrong_option_3: editDraft.wrong_option_3,
+        });
+        if (qErr) { setEditMsg("Question save failed: " + qErr.message); failed = true; }
+      }
+    } else if (q.question_type === "standalone" && q.question_id) {
+      const { error: stErr } = await saveStandaloneQuestion(q.question_id, {
+        question:         editDraft.question,
+        correct_option:   editDraft.correct_option,
+        wrong_option_1:   editDraft.wrong_option_1,
+        wrong_option_2:   editDraft.wrong_option_2,
+        wrong_option_3:   editDraft.wrong_option_3,
+        explanation:      editDraft.explanation,
+        key_term:         editDraft.key_term,
+        key_term_meaning: editDraft.key_term_meaning,
+        life_connection:  editDraft.life_connection,
+        source_citation:  editDraft.source_citation,
+      });
+      if (stErr) { setEditMsg("Save failed: " + stErr.message); failed = true; }
+    }
+
+    setEditSaving(false);
+    if (!failed) {
+      setEditMsg("Saved!");
+      setTimeout(() => { setShowEditPanel(false); setEditMsg(""); }, 800);
     }
   }
 
@@ -423,290 +682,9 @@ export default function QuizPlayer({
     return m > 0 ? `${m}m ${s % 60}s` : `${s}s`;
   }
 
-  if (!quiz || total === 0) {
-    return (
-      <div className="qp-wrap">
-        <style>{globalStyles}{styles}</style>
-        <div className="qp-loading">No questions available for this quiz.</div>
-      </div>
-    );
-  }
-
-  // ── Score Screen ──────────────────────────────────────────────────────────
-  if (phase === "score" && scoreData) {
-    const { correct, wrong, skipped, passed } = scoreData;
-    const emoji = correct === total ? "🏆" : correct >= total / 2 ? "👍" : "📖";
-
-    return (
-      <div className="qp-wrap">
-        <style>{globalStyles}{styles}</style>
-        <div className="qp-topbar">
-          <button className="qp-back" onClick={onBack}>
-            <i className="ti ti-arrow-left" /> Back
-          </button>
-          <div className="qp-title">{quiz.title}</div>
-          <div style={{ width: 60 }} />
-        </div>
-
-        <div className="qp-score-wrap">
-          <div className="qp-score-card">
-            <div className="qp-score-emoji">{emoji}</div>
-            <div className="qp-score-title">Quiz Complete!</div>
-            <div className="qp-score-subtitle">{quiz.title}</div>
-
-            {passed !== null && (
-              <div className={`qp-pass-badge ${passed ? "pass" : "fail"}`}>
-                {passed ? "✓ Passed" : "✗ Not Passed"}
-              </div>
-            )}
-
-            <div className="qp-score-numbers">
-              <div className="qp-score-stat">
-                <div className="qp-score-stat-num correct">{correct}</div>
-                <div className="qp-score-stat-lbl">Correct</div>
-              </div>
-              <div className="qp-score-stat">
-                <div className="qp-score-stat-num wrong">{wrong}</div>
-                <div className="qp-score-stat-lbl">Wrong</div>
-              </div>
-              {skipped > 0 && (
-                <div className="qp-score-stat">
-                  <div className="qp-score-stat-num skipped">{skipped}</div>
-                  <div className="qp-score-stat-lbl">Skipped</div>
-                </div>
-              )}
-              <div className="qp-score-stat">
-                <div className="qp-score-stat-num" style={{ color: BLUE }}>{total}</div>
-                <div className="qp-score-stat-lbl">Total</div>
-              </div>
-            </div>
-
-            <div className="qp-score-actions">
-              {onRetake && (
-                <button className="qp-score-btn primary" onClick={onRetake}>
-                  Retake Quiz
-                </button>
-              )}
-              <button className="qp-score-btn secondary" onClick={onBack}>
-                Back to Lessons
-              </button>
-              <button className="qp-score-btn ghost" onClick={onDashboard}>
-                Go to Dashboard
-              </button>
-            </div>
-          </div>
-
-          {/* Answer review */}
-          <div className="qp-review-title">Answer Review</div>
-          {questions.map((qItem, i) => {
-            const a = scoreData.answersArr[i];
-            const isCorrect  = a.is_correct === true;
-            const isWrong    = a.is_correct === false;
-            const isSkipped  = a.is_correct === null;
-            const icon = isCorrect ? "✅" : isWrong ? "❌" : "⏭️";
-
-            return (
-              <div className="qp-review-item" key={qItem.question_id || i}>
-                <div className="qp-review-header">
-                  <div className="qp-review-icon">{icon}</div>
-                  <div className="qp-review-q">Q{i + 1}. {qItem.question}</div>
-                </div>
-                <div className="qp-review-answers">
-                  {isSkipped ? (
-                    <div className="qp-review-ans-row">
-                      <span className="qp-review-ans-label">Status: </span>
-                      <span className="qp-review-ans-val skipped">Not answered</span>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="qp-review-ans-row">
-                        <span className="qp-review-ans-label">Your answer: </span>
-                        <span className={`qp-review-ans-val ${isCorrect ? "correct" : "wrong"}`}>{a.chosen_option}</span>
-                      </div>
-                      {!isCorrect && (
-                        <div className="qp-review-ans-row">
-                          <span className="qp-review-ans-label">Correct answer: </span>
-                          <span className="qp-review-ans-val correct">{a.correct_option}</span>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-                {qItem.explanation && (
-                  <div className="qp-review-explanation">{qItem.explanation}</div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
-
-  // ── Quiz player ───────────────────────────────────────────────────────────
-  const progressPct = ((current) / total) * 100;
-  const qTimePct    = isTimed && quiz.question_time_limit ? (qTimeLeft / quiz.question_time_limit) * 100 : 100;
-  const quizTimePct = quizTimeLimit ? (quizTimeLeft / quizTimeLimit) * 100 : 100;
-  const isUrgent    = isTimed && qTimeLeft <= 5;
-
-  return (
-    <div className="qp-wrap">
-      <style>{globalStyles}{styles}</style>
-
-      {/* Top bar */}
-      <div className="qp-topbar">
-        <button className="qp-back" onClick={onBack}>
-          <i className="ti ti-arrow-left" /> Back
-        </button>
-        <div className="qp-title">{quiz.title}</div>
-        <div className="qp-counter">{current + 1} / {total}</div>
-      </div>
-
-      {/* Progress bar */}
-      <div className="qp-progress">
-        <div className="qp-progress-fill" style={{ width: `${progressPct}%` }} />
-      </div>
-
-      {/* Quiz-level timer bar */}
-      {quizTimeLimit > 0 && (
-        <div className="qp-quiz-timer">
-          <i className="ti ti-clock" />
-          <span>{formatTime(quizTimeLeft)} remaining</span>
-          <div className="qp-quiz-timer-bar">
-            <div className="qp-quiz-timer-fill" style={{ width: `${quizTimePct}%` }} />
-          </div>
-        </div>
-      )}
-
-      <div className="qp-body">
-
-        {/* Per-question timer */}
-        {isTimed && !isAnswered && (
-          <div className="qp-q-timer">
-            <i className="ti ti-hourglass" />
-            <span>{qTimeLeft}s</span>
-            <div className="qp-q-timer-bar">
-              <div className={`qp-q-timer-fill${isUrgent ? " urgent" : ""}`} style={{ width: `${qTimePct}%` }} />
-            </div>
-          </div>
-        )}
-
-        {/* Unanswered (timer expired) indicator */}
-        {isAnswered && ans?.chosen === null && (
-          <div className="qp-unanswered-badge">
-            <i className="ti ti-clock-x" /> Time expired — this question was not answered
-          </div>
-        )}
-
-        {/* Question card */}
-        <div className="qp-card" key={current}>
-          {q.asset?.file_path && (
-            <div className="qp-img">
-              <img src={q.asset.file_path} alt={q.asset.alt_text || ""} />
-            </div>
-          )}
-          <div className="qp-card-body">
-            <div className="qp-q-num">Question {current + 1}</div>
-            <div className="qp-question">{q.question}</div>
-          </div>
-
-          {/* Options */}
-          <div className="qp-options">
-            {q._options.map((opt, oi) => (
-              <button
-                key={opt.label}
-                className={`qp-option ${getOptionClass(opt)}`}
-                onClick={() => selectOption(opt.label, opt.isCorrect)}
-                disabled={isAnswered}
-              >
-                <span className="qp-option-marker">{OPTION_LABELS[oi]}</span>
-                {opt.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Reveal block */}
-          {isAnswered && ans?.chosen !== null && (q.explanation || q.key_term || q.life_connection || q.quiz_recap || q.source_citation) && (
-            <div className="qp-reveal">
-              <div className="qp-reveal-label">Explanation</div>
-              {q.explanation && <div className="qp-reveal-explanation">{q.explanation}</div>}
-              {q.key_term && (
-                <div className="qp-reveal-block">
-                  <div className="qp-reveal-block-label">Key Term</div>
-                  <div className="qp-reveal-block-value">
-                    <strong>{q.key_term}</strong>
-                    {q.key_term_meaning ? ` — ${q.key_term_meaning}` : ""}
-                  </div>
-                </div>
-              )}
-              {q.life_connection && (
-                <div className="qp-reveal-block">
-                  <div className="qp-reveal-block-label">Life Connection</div>
-                  <div className="qp-reveal-block-value">{q.life_connection}</div>
-                </div>
-              )}
-              {q.quiz_recap && (
-                <div className="qp-reveal-block">
-                  <div className="qp-reveal-block-label">Refresher</div>
-                  <div className="qp-reveal-block-value">{q.quiz_recap}</div>
-                </div>
-              )}
-              {q.source_citation && (
-                <div className="qp-reveal-block">
-                  <div className="qp-reveal-block-label">Source</div>
-                  <div className="qp-reveal-block-value" style={{ color: "#6B6B6B" }}>{q.source_citation}</div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <div className="qp-nav">
-        <button
-          className="qp-nav-btn"
-          onClick={goPrev}
-          disabled={current === 0 || isTimed}
-        >
-          ← Prev
-        </button>
-        <button
-          className="qp-nav-btn primary"
-          onClick={goNext}
-          disabled={current === total - 1}
-        >
-          Next →
-        </button>
-        <button
-          className="qp-nav-btn finish"
-          onClick={requestFinish}
-        >
-          Finish
-        </button>
-      </div>
-
-      {/* Finish confirmation overlay */}
-      {phase === "confirm_finish" && (
-        <div className="qp-overlay">
-          <div className="qp-confirm-card">
-            <div className="qp-confirm-icon">⚠️</div>
-            <div className="qp-confirm-title">Submit Quiz?</div>
-            <div className="qp-confirm-body">
-              You have <strong>{questions.reduce((n, _, i) => n + (answers.has(i) ? 0 : 1), 0)}</strong> unanswered question(s).
-              Unanswered questions will not count towards your score.
-            </div>
-            <div className="qp-confirm-btns">
-              <button className="qp-confirm-btn primary" onClick={finishQuiz}>
-                Submit Anyway
-              </button>
-              <button className="qp-confirm-btn cancel" onClick={() => setPhase("quiz")}>
-                Go Back &amp; Answer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+  // Share the quiz
+  function handleShareQuiz() {
+    const text = `${quiz?.title || "IndiYatra Quiz"}\n\n${APP_URL}`;
+    navigator.clipboard.writeText(text).then(() => {
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false),

@@ -12,6 +12,7 @@ import {
   checkActiveDrafts,
   loadContentRoles, assignContentRole, revokeContentRole,
   loadAllContentRoleAssignments, deleteAssignment,
+  getSnippetQuestion, saveSnippetQuestion,
 } from "../lib/auth";
 import { supabase } from "../lib/supabase";
 import { EMPTY } from "../config/appStrings";
@@ -378,6 +379,17 @@ function DraftEditForm({ draft, onClose, onSaved, showToast }) {
   const [imageUploading, setImageUploading] = useState(false);
   const [existingImage, setExistingImage] = useState(null); // { file_path, alt_text, attribution }
 
+  // Quiz question state (snippet translations only)
+  const [qFields,      setQFields]      = useState({
+    question:       saved.question       || "",
+    correct_option: saved.correct_option || "",
+    wrong_option_1: saved.wrong_option_1 || "",
+    wrong_option_2: saved.wrong_option_2 || "",
+    wrong_option_3: saved.wrong_option_3 || "",
+  });
+  const [qLoading, setQLoading] = useState(false);
+  const [qSaving,  setQSaving]  = useState(false);
+
   const [loading,    setLoading]    = useState(true);
   const [saving,     setSaving]     = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -416,6 +428,22 @@ function DraftEditForm({ draft, onClose, onSaved, showToast }) {
       if (isEnglish && draft.content_type === "snippet_translation") {
         const { data: asset } = await loadSnippetAsset(draft.content_id);
         if (asset) setExistingImage(asset);
+      }
+
+      // Load existing snippet_question for this snippet + language (if no draft_data already)
+      if (draft.content_type === "snippet_translation" && Object.keys(saved).filter(k => ["question","correct_option"].includes(k)).length === 0) {
+        setQLoading(true);
+        const { data: sq } = await getSnippetQuestion(draft.content_id, draft.language_id);
+        if (sq) {
+          setQFields({
+            question:       sq.question       || "",
+            correct_option: sq.correct_option || "",
+            wrong_option_1: sq.wrong_option_1 || "",
+            wrong_option_2: sq.wrong_option_2 || "",
+            wrong_option_3: sq.wrong_option_3 || "",
+          });
+        }
+        setQLoading(false);
       }
 
       setLoading(false);
@@ -495,12 +523,38 @@ function DraftEditForm({ draft, onClose, onSaved, showToast }) {
       base.image_alt_text    = imageAlt;
       base.image_attribution = imageAttrib;
     }
+    // Persist question field values in draft_data so they survive page reload
+    if (isSnippet && qFields.question) {
+      base.question       = qFields.question;
+      base.correct_option = qFields.correct_option;
+      base.wrong_option_1 = qFields.wrong_option_1;
+      base.wrong_option_2 = qFields.wrong_option_2;
+      base.wrong_option_3 = qFields.wrong_option_3;
+    }
     return base;
+  }
+
+  // Save snippet_questions directly to the live table (question edits bypass the draft workflow)
+  async function saveQuestionDirect() {
+    const hasQ = !!(qFields.question && qFields.correct_option &&
+      qFields.wrong_option_1 && qFields.wrong_option_2 && qFields.wrong_option_3);
+    if (!hasQ || !isSnippet) return;
+    setQSaving(true);
+    const { error } = await saveSnippetQuestion(draft.content_id, draft.language_id, {
+      question:       qFields.question,
+      correct_option: qFields.correct_option,
+      wrong_option_1: qFields.wrong_option_1,
+      wrong_option_2: qFields.wrong_option_2,
+      wrong_option_3: qFields.wrong_option_3,
+    });
+    setQSaving(false);
+    if (error) showToast("Question save failed: " + (error.message || "unknown error"));
   }
 
   async function handleSave() {
     setSaving(true);
     const { error } = await saveDraftData(draft.id, buildDraftData());
+    if (!error) await saveQuestionDirect();
     setSaving(false);
     if (error) { showToast("Save failed: " + (error.message || "unknown error")); return; }
     showToast("Draft saved ✓");
@@ -510,6 +564,7 @@ function DraftEditForm({ draft, onClose, onSaved, showToast }) {
   async function handleSubmit() {
     setSubmitting(true);
     const { error } = await submitDraft(draft.id, buildDraftData());
+    if (!error) await saveQuestionDirect();
     setSubmitting(false);
     if (error) { showToast("Submit failed: " + (error.message || "unknown error")); return; }
     showToast("Submitted for review ✓");
@@ -659,6 +714,45 @@ function DraftEditForm({ draft, onClose, onSaved, showToast }) {
                       Image is uploaded immediately and saved with the draft. It is applied to the live snippet when the supervisor publishes.
                     </div>
                   </div>
+                </>
+              )}
+
+              {/* Quiz Question section — snippet translations only */}
+              {isSnippet && (
+                <>
+                  <hr className="ep-section-divider" />
+                  <div style={{ fontWeight: 700, fontSize: "0.8125rem", color: "#101828", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 12, display: "flex", alignItems: "center", gap: 10 }}>
+                    Quiz Question
+                    <span style={{ fontWeight: 400, fontSize: "0.75rem", textTransform: "none", letterSpacing: 0, color: "#6B6B6B" }}>— saved live on draft save (not gated by approval)</span>
+                  </div>
+                  {qLoading ? (
+                    <p style={{ color: "#aaa", fontSize: "0.875rem" }}>Loading question…</p>
+                  ) : (
+                    <>
+                      {[
+                        { key: "question",       label: "Question",        rows: 3 },
+                        { key: "correct_option", label: "Correct Option ✓", rows: 2, green: true },
+                        { key: "wrong_option_1", label: "Wrong Option 1",  rows: 2 },
+                        { key: "wrong_option_2", label: "Wrong Option 2",  rows: 2 },
+                        { key: "wrong_option_3", label: "Wrong Option 3",  rows: 2 },
+                      ].map(({ key, label, rows, green }) => (
+                        <div className="ep-edit-field" key={key}>
+                          <label style={green ? { color: "#1a7a3a" } : undefined}>{label}</label>
+                          <textarea
+                            className={rows <= 2 ? "short" : "tall"}
+                            rows={rows}
+                            value={qFields[key] || ""}
+                            onChange={e => setQFields(prev => ({ ...prev, [key]: e.target.value }))}
+                            placeholder={key === "question" ? "Enter the question text…" : "Enter option text…"}
+                          />
+                        </div>
+                      ))}
+                      <div className="ep-tax-note" style={{ marginTop: -4, marginBottom: 8 }}>
+                        All five fields must be filled. Changes are saved directly to the live question table — no approval required.
+                        {qSaving && <span style={{ marginLeft: 8, color: "#FF8E00" }}>Saving…</span>}
+                      </div>
+                    </>
+                  )}
                 </>
               )}
 
@@ -1462,122 +1556,4 @@ function VerifierView({ showToast }) {
     <>
       <div className="ep-section">
         <div className="ep-section-title">Review Queue</div>
-        {loading ? <p style={{ color: "#aaa", textAlign: "center", padding: 32 }}>Loading…</p>
-        : drafts.length === 0 ? <EmptyState msg={EMPTY.review} />
-        : (
-          <div className="ep-table-wrap">
-            <table className="ep-table">
-              <thead><tr>
-                <th>Content</th><th>Type</th><th>Language</th><th>Editor</th>
-                <th>Role</th><th>Status</th><th>Actions</th>
-              </tr></thead>
-              <tbody>
-                {drafts.map(d => (
-                  <tr key={d.id}>
-                    <td style={{ fontFamily: "monospace", fontSize: "0.8125rem", color: "#1F1F1F" }}>{d.content_id}</td>
-                    <td><ContentTypeTag type={d.content_type} /></td>
-                    <td style={{ fontSize: "0.8125rem", color: "#1F1F1F" }}>{d.language_id || "—"}</td>
-                    <td style={{ fontSize: "0.875rem" }}>{d.editor_name || "—"}</td>
-                    <td><SubRoleBadge role={d.sub_role} /></td>
-                    <td><StatusBadge status={d.status} /></td>
-                    <td>
-                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                        {d.status === "submitted" && (
-                          <>
-                            <button className="ep-btn-sm ep-btn-approve"
-                              onClick={() => handleAction(d.id, "approved", "Verifier approved")}>✓ Approve</button>
-                            <button className="ep-btn-sm ep-btn-sendback"
-                              onClick={() => handleAction(d.id, "needs_revision", "Verifier requested revisions")}>↺ Revise</button>
-                          </>
-                        )}
-                        <button className="ep-btn-sm ep-btn-secondary" onClick={() => setLogDraftId(d.id)}>📋</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-      {logDraftId && <EventLogPanel draftId={logDraftId} onClose={() => setLogDraftId(null)} />}
-    </>
-  );
-}
-
-// ── Main EditorPage ───────────────────────────────────────────────────────────
-export default function EditorPage({
-  settings, onOpenSettings, onSaveSettings, onHome, onDashboard, onLikes, onBookmarks, onDiscover,
-  onAdmin, isAdmin, onResume, bookmarks, onToggleBookmark,
-  userEditorialRole, onEditor,
-  languages = [],
-  onBack,
-  activePage,
-}) {
-  const [toast, setToast] = useState("");
-  const toastRef = { current: null };
-
-  function showToast(msg) {
-    setToast(msg);
-    clearTimeout(toastRef.current);
-    toastRef.current = setTimeout(() => setToast(""), 2400);
-  }
-
-  // Prioritise explicit editorial role; fall back to supervisor for admin users
-  // with no editorial role. This prevents editors from seeing the supervisor view
-  // (because is_admin() returns true for ALL non-learner roles in this app).
-  const role = userEditorialRole || (isAdmin ? "supervisor" : "editor");
-  const roleMeta = {
-    supervisor: { label: "Supervisor" },
-    verifier:   { label: "Verifier"   },
-    editor:     { label: "Editor"     },
-  };
-  const rm = roleMeta[role] || roleMeta.editor;
-
-  const navLinks = [
-    { label: "Home",      onClick: onHome      },
-    { label: "Dashboard", onClick: onDashboard },
-    { label: "Discover",  onClick: onDiscover  },
-    { label: "Likes",     onClick: onLikes     },
-    { label: "Bookmarks", onClick: onBookmarks },
-  ];
-
-  return (
-    <>
-      <style>{globalStyles}</style>
-      <style>{EDITOR_STYLES}</style>
-      <PageHeader
-        navLinks={navLinks}
-        onHome={onHome}
-        onOpenSettings={onOpenSettings}
-        onResume={onResume}
-        isAdmin={isAdmin}
-        onAdmin={onAdmin}
-        userEditorialRole={userEditorialRole}
-        onEditor={onEditor}
-        activePage={activePage}
-        settings={settings}
-        onSaveSettings={onSaveSettings}
-        languages={languages}
-      />
-
-      <div className="editor-page">
-        <div className="ep-hero">
-          <div className="ep-role-badge">{rm.label}</div>
-          <h1>Editorial Workspace</h1>
-          <p>
-            {role === "supervisor" && "Assign tasks, track progress, and publish approved content."}
-            {role === "verifier"   && "Review submitted drafts and recommend them for approval."}
-            {role === "editor"     && "View your assigned tasks and work on translations and edits."}
-          </p>
-        </div>
-
-        {role === "supervisor" && <SupervisorView languages={languages} showToast={showToast} />}
-        {role === "verifier"   && <VerifierView showToast={showToast} />}
-        {role === "editor"     && <EditorView   showToast={showToast} />}
-      </div>
-
-      {toast && <div className="ep-toast">{toast}</div>}
-    </>
-  );
-}
+        {load

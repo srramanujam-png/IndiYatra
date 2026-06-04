@@ -908,6 +908,7 @@ export async function adminImportSnippetsFull(rows) {
   const stats = {
     snippetsCreated:      0,
     translationsCreated:  0,
+    translationsUpdated:  0,
     translationsSkipped:  0,
     assetsCreated:        0,
     lessonsCreated:       0,
@@ -947,11 +948,11 @@ export async function adminImportSnippetsFull(rows) {
       }
 
       let snippetId = importKeyMap[importKeyNum] !== undefined ? importKeyMap[importKeyNum] : null;
+      const dv = v => v !== undefined && String(v).trim() !== "" ? Number(v) : undefined;
 
       if (!snippetId) {
         snippetId = uuid();
         const coreRow = { snippet_id: snippetId, import_key: importKeyNum };
-        const dv = v => v !== undefined && String(v).trim() !== "" ? Number(v) : undefined;
         if (dv(row.difficulty_level) !== undefined) coreRow.difficulty_level = dv(row.difficulty_level);
         if (dv(row.snippet_value)    !== undefined) coreRow.snippet_value    = dv(row.snippet_value);
         const { error: coreErr } = await supabaseClient.from("snippet_core").insert(coreRow);
@@ -961,12 +962,21 @@ export async function adminImportSnippetsFull(rows) {
         }
         importKeyMap[importKeyNum] = snippetId;
         stats.snippetsCreated++;
+      } else {
+        // Existing snippet — update non-empty fields
+        const coreUpd = {};
+        if (dv(row.difficulty_level) !== undefined) coreUpd.difficulty_level = dv(row.difficulty_level);
+        if (dv(row.snippet_value)    !== undefined) coreUpd.snippet_value    = dv(row.snippet_value);
+        if (Object.keys(coreUpd).length > 0) {
+          await supabaseClient.from("snippet_core").update(coreUpd).eq("snippet_id", snippetId);
+        }
       }
 
       // ── Find or create asset, then link to snippet ──────────────────────
-      // Skip if this snippet already has an asset assigned (first row wins).
+      // If picture_url is provided in this row, create/find the asset and link
+      // it (last import wins). If blank, leave existing asset untouched.
       const picUrl = String(row.picture_url || "").trim();
-      if (picUrl && !assetLinkedSet.has(snippetId)) {
+      if (picUrl) {
         let assetId = assetMap[normalize(picUrl)];
         if (!assetId) {
           assetId = uuid();
@@ -988,18 +998,41 @@ export async function adminImportSnippetsFull(rows) {
           const { error: linkErr } = await supabaseClient
             .from("snippet_core")
             .update({ asset_id: assetId })
-            .eq("snippet_id", snippetId)
-            .is("asset_id", null);
+            .eq("snippet_id", snippetId);
           if (!linkErr) assetLinkedSet.add(snippetId);
         }
       }
 
-      // ── Insert translation (skip if already exists for this lang) ────────
+      // ── Upsert translation ────────────────────────────────────────────────
       const transKey = snippetId + ":" + langId;
+      const hookVal  = String(row.hook || "").trim() || (langId === "LANG_01" ? englishHook : "");
       if (transSet.has(transKey)) {
-        stats.translationsSkipped++;
+        // Partial update: only overwrite fields that have a value in this row
+        const upd = {};
+        if (hookVal) upd.hook = hookVal;
+        const strFields = [
+          ["explanation",      row.explanation],
+          ["key_term",         row.key_term],
+          ["key_term_meaning", row.key_term_meaning],
+          ["life_connection",  row.life_connection],
+          ["quiz_recap",       row.refresher_question],
+          ["source_citation",  row.source_reference],
+        ];
+        strFields.forEach(([col, val]) => {
+          if (String(val || "").trim()) upd[col] = String(val).trim();
+        });
+        if (Object.keys(upd).length > 0) {
+          const { error: updErr } = await supabaseClient
+            .from("snippet_translations")
+            .update(upd)
+            .eq("snippet_id", snippetId)
+            .eq("language", langId);
+          if (updErr) stats.errors.push("Update translation (" + snippetId + "/" + langId + "): " + updErr.message);
+          else stats.translationsUpdated++;
+        } else {
+          stats.translationsSkipped++;
+        }
       } else {
-        const hookVal = String(row.hook || "").trim() || (langId === "LANG_01" ? englishHook : "");
         const transRow = { snippet_translation_id: uuid(), snippet_id: snippetId, language: langId };
         if (hookVal)                              transRow.hook              = hookVal;
         if (String(row.explanation       || "").trim()) transRow.explanation       = String(row.explanation).trim();
@@ -1446,10 +1479,13 @@ export async function getQuizzesForLessons(lessonIds) {
 }
 
 export async function getQuizQuestions(quizId, languageId) {
+  // quiz_questions stores question_key (language-agnostic integer).
+  // We resolve to the right language row at runtime.
   const { data: refs, error: refErr } = await supabaseClient
     .from("quiz_questions")
-    .select("id, question_type, question_id, sort_order, points")
+    .select("id, question_type, question_key, sort_order, points")
     .eq("quiz_id", quizId)
+    .not("question_key", "is", null)
     .order("sort_order");
   if (refErr) { console.error("[getQuizQuestions] refs", refErr); return { data: [], error: refErr }; }
   if (!refs || refs.length === 0) return { data: [], error: null };
@@ -1457,18 +1493,20 @@ export async function getQuizQuestions(quizId, languageId) {
   const snippetRefs    = refs.filter(r => r.question_type === "snippet");
   const standaloneRefs = refs.filter(r => r.question_type === "standalone");
 
-  let snippetQMap = {};
+  // ── Type 1: snippet_questions ─────────────────────────────────────────────
+  let snippetQMap = {};   // question_key → enriched question row
   if (snippetRefs.length > 0) {
-    const ids = snippetRefs.map(r => r.question_id);
+    const keys = snippetRefs.map(r => r.question_key);
+
     const { data: sqRows, error: sqErr } = await supabaseClient
       .from("snippet_questions")
       .select("*")
-      .in("question_id", ids)
+      .in("question_key", keys)
       .eq("language", languageId);
     if (sqErr) console.error("[getQuizQuestions] snippet_questions", sqErr);
-    (sqRows || []).forEach(q => { snippetQMap[q.question_id] = q; });
+    (sqRows || []).forEach(q => { snippetQMap[q.question_key] = q; });
 
-    const snippetIds = [...new Set((sqRows || []).map(q => q.snippet_id))];
+    const snippetIds = [...new Set((sqRows || []).map(q => q.snippet_id).filter(Boolean))];
     if (snippetIds.length > 0) {
       const [coreRes, transRes] = await Promise.all([
         supabaseClient.from("snippet_core").select("snippet_id, asset_id").in("snippet_id", snippetIds),
@@ -1478,7 +1516,8 @@ export async function getQuizQuestions(quizId, languageId) {
       ]);
       const coreMap = {};
       (coreRes.data || []).forEach(c => { coreMap[c.snippet_id] = c; });
-      // Build transMap: prefer requested language, fall back to LANG_03
+
+      // Prefer requested language, fall back to LANG_03, then any available
       const allTransBySnippet = {};
       (transRes.data || []).forEach(t => {
         if (!allTransBySnippet[t.snippet_id]) allTransBySnippet[t.snippet_id] = {};
@@ -1494,82 +1533,18 @@ export async function getQuizQuestions(quizId, languageId) {
       let assetMap = {};
       if (assetIds.length > 0) {
         const { data: assets } = await supabaseClient
-          .from("asset_library")
-          .select("asset_id, file_path, alt_text")
-          .in("asset_id", assetIds);
+          .from("asset_library").select("asset_id, file_path, alt_text").in("asset_id", assetIds);
         (assets || []).forEach(a => { assetMap[a.asset_id] = a; });
       }
 
-      Object.keys(snippetQMap).forEach(qid => {
-        const sq = snippetQMap[qid];
+      Object.keys(snippetQMap).forEach(qkey => {
+        const sq    = snippetQMap[qkey];
         const core  = coreMap[sq.snippet_id]  || {};
         const trans = transMap[sq.snippet_id] || {};
         const asset = core.asset_id ? assetMap[core.asset_id] : null;
-        snippetQMap[qid] = { ...sq, asset, ...trans };
+        snippetQMap[qkey] = { ...sq, asset, ...trans };
       });
     }
   }
 
-  let standaloneQMap = {};
-  if (standaloneRefs.length > 0) {
-    const ids = standaloneRefs.map(r => r.question_id);
-    const { data: stRows, error: stErr } = await supabaseClient
-      .from("standalone_questions")
-      .select("*")
-      .in("question_id", ids)
-      .eq("language", languageId);
-    if (stErr) console.error("[getQuizQuestions] standalone_questions", stErr);
-
-    const assetIds = [...new Set((stRows || []).map(q => q.asset_id).filter(Boolean))];
-    let assetMap = {};
-    if (assetIds.length > 0) {
-      const { data: assets } = await supabaseClient
-        .from("asset_library")
-        .select("asset_id, file_path, alt_text")
-        .in("asset_id", assetIds);
-      (assets || []).forEach(a => { assetMap[a.asset_id] = a; });
-    }
-    (stRows || []).forEach(q => {
-      standaloneQMap[q.question_id] = { ...q, asset: q.asset_id ? assetMap[q.asset_id] : null };
-    });
-  }
-
-  const resolved = refs.map(ref => {
-    const q = ref.question_type === "snippet"
-      ? snippetQMap[ref.question_id]
-      : standaloneQMap[ref.question_id];
-    if (!q) return null;
-    return { ...q, question_type: ref.question_type, points: ref.points, _ref_id: ref.id };
-  }).filter(Boolean);
-
-  return { data: resolved, error: null };
-}
-
-export async function saveQuizAttempt(userId, quizId, score, maxScore, answers) {
-  const { data, error } = await supabaseClient
-    .from("quiz_attempts")
-    .insert({
-      profile_id:   userId,
-      quiz_id:      quizId,
-      score,
-      max_score:    maxScore,
-      started_at:   new Date().toISOString(),
-      completed_at: new Date().toISOString(),
-      answers,
-    })
-    .select()
-    .single();
-  if (error) console.error("[saveQuizAttempt]", error);
-  return { data, error };
-}
-
-export async function getAttemptCount(userId, quizId) {
-  const { count, error } = await supabaseClient
-    .from("quiz_attempts")
-    .select("id", { count: "exact", head: true })
-    .eq("profile_id", userId)
-    .eq("quiz_id", quizId)
-    .not("completed_at", "is", null);
-  if (error) console.error("[getAttemptCount]", error);
-  return { count: count || 0, error };
-}
+  // ── Type 2: standalone_questions ────────────────────�
