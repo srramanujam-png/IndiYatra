@@ -64,6 +64,38 @@ BEGIN
       quiz_recap        = EXCLUDED.quiz_recap,
       source_citation   = EXCLUDED.source_citation;
 
+    -- ── Publish quiz question if all five fields are present ───
+    -- question, correct_option, and three wrong options must all be
+    -- non-empty strings; if any are missing the block is skipped.
+    IF (v_data->>'question')       IS NOT NULL AND (v_data->>'question')       <> '' AND
+       (v_data->>'correct_option') IS NOT NULL AND (v_data->>'correct_option') <> '' AND
+       (v_data->>'wrong_option_1') IS NOT NULL AND (v_data->>'wrong_option_1') <> '' AND
+       (v_data->>'wrong_option_2') IS NOT NULL AND (v_data->>'wrong_option_2') <> '' AND
+       (v_data->>'wrong_option_3') IS NOT NULL AND (v_data->>'wrong_option_3') <> ''
+    THEN
+      INSERT INTO snippet_questions (
+        snippet_id, language,
+        question,
+        correct_option,
+        wrong_option_1, wrong_option_2, wrong_option_3
+      )
+      VALUES (
+        v_draft.content_id,
+        v_draft.language_id,
+        v_data->>'question',
+        v_data->>'correct_option',
+        v_data->>'wrong_option_1',
+        v_data->>'wrong_option_2',
+        v_data->>'wrong_option_3'
+      )
+      ON CONFLICT (snippet_id, language) DO UPDATE SET
+        question       = EXCLUDED.question,
+        correct_option = EXCLUDED.correct_option,
+        wrong_option_1 = EXCLUDED.wrong_option_1,
+        wrong_option_2 = EXCLUDED.wrong_option_2,
+        wrong_option_3 = EXCLUDED.wrong_option_3;
+    END IF;
+
     v_etype := 'snippet';
 
   ELSIF v_draft.content_type = 'lesson' THEN

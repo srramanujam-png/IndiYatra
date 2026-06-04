@@ -1547,4 +1547,460 @@ export async function getQuizQuestions(quizId, languageId) {
     }
   }
 
-  // ── Type 2: standalone_questions ────────────────────�
+  // ── Type 2: standalone_questions ──────────────────────────────────────────
+  let standaloneQMap = {};   // question_key → enriched question row
+  if (standaloneRefs.length > 0) {
+    const keys = standaloneRefs.map(r => r.question_key);
+
+    const { data: stRows, error: stErr } = await supabaseClient
+      .from("standalone_questions")
+      .select("*")
+      .in("question_key", keys)
+      .eq("language", languageId);
+    if (stErr) console.error("[getQuizQuestions] standalone_questions", stErr);
+
+    const assetIds = [...new Set((stRows || []).map(q => q.asset_id).filter(Boolean))];
+    let assetMap = {};
+    if (assetIds.length > 0) {
+      const { data: assets } = await supabaseClient
+        .from("asset_library").select("asset_id, file_path, alt_text").in("asset_id", assetIds);
+      (assets || []).forEach(a => { assetMap[a.asset_id] = a; });
+    }
+    (stRows || []).forEach(q => {
+      standaloneQMap[q.question_key] = { ...q, asset: q.asset_id ? assetMap[q.asset_id] : null };
+    });
+  }
+
+  const resolved = refs.map(ref => {
+    const q = ref.question_type === "snippet"
+      ? snippetQMap[ref.question_key]
+      : standaloneQMap[ref.question_key];
+    if (!q) return null;
+    return { ...q, question_type: ref.question_type, points: ref.points, _ref_id: ref.id };
+  }).filter(Boolean);
+
+  return { data: resolved, error: null };
+}
+
+export async function saveQuizAttempt(userId, quizId, score, maxScore, answers) {
+  const { data, error } = await supabaseClient
+    .from("quiz_attempts")
+    .insert({
+      profile_id:   userId,
+      quiz_id:      quizId,
+      score,
+      max_score:    maxScore,
+      started_at:   new Date().toISOString(),
+      completed_at: new Date().toISOString(),
+      answers,
+    })
+    .select()
+    .single();
+  if (error) console.error("[saveQuizAttempt] FAILED:", JSON.stringify(error));
+  else       console.log("[saveQuizAttempt] OK — id:", data?.id, "quiz_id:", data?.quiz_id);
+  return { data, error };
+}
+
+// ── Question bank import ──────────────────────────────────────────────────────
+//
+// adminImportQuestions(rows)
+//
+// Imports Type 1 (snippet-linked) questions from the "Questions" sheet of the
+// import template.
+//
+// Required columns: snippet_key, language, question, option_1–option_4
+// Optional columns: hint
+//
+// Rules:
+//   - snippet_key must match an existing snippet_core.import_key
+//   - option_1 is the CORRECT answer; option_2–4 are wrong answers
+//   - All four options must be non-empty
+//   - hint may be blank/null
+//   - Existing (snippet_id × language) pairs are silently skipped
+//
+// Returns { questionsCreated, questionsSkipped, errors[] }
+
+// adminImportQuestions(rows)
+//
+// Processes rows from the merged single-sheet import template.
+// Rows without question_key or question text are silently skipped.
+// Deduplication and upsert key: question_key (unique across both question tables).
+//
+// Required per question row: question_key, question, option_1–option_4
+// Optional: snippet_key (links to snippet → Type 1), language, hint
+//
+// Returns { questionsCreated, questionsUpdated, questionsSkipped, errors[] }
+
+export async function adminImportQuestions(rows) {
+  const normalize = s => String(s || "").trim().replace(/\s+/g, " ").toLowerCase();
+  const uuid = () => crypto.randomUUID();
+
+  // ── Load lookup data upfront ────────────────────────────────────────────────
+  const [langRes, snipCoreRes, existingSqRes, existingStRes, assetRes] = await Promise.all([
+    supabaseClient.from("languages").select("language_id, language"),
+    supabaseClient.from("snippet_core").select("snippet_id, import_key"),
+    supabaseClient.from("snippet_questions").select("question_key, language"),
+    supabaseClient.from("standalone_questions").select("question_key, language"),
+    supabaseClient.from("asset_library").select("asset_id, file_path"),
+  ]);
+
+  const langMap = {};
+  (langRes.data || []).forEach(r => { langMap[normalize(r.language)] = r.language_id; });
+
+  const importKeyMap = {};  // snippet import_key → snippet_id
+  (snipCoreRes.data || []).forEach(r => {
+    if (r.import_key != null) importKeyMap[r.import_key] = r.snippet_id;
+  });
+
+  // Keyed by "question_key:language" — same question_key can exist in multiple languages
+  const existingSqPairs = new Set(
+    (existingSqRes.data || []).filter(q => q.question_key != null).map(q => `${q.question_key}:${q.language}`)
+  );
+  const existingStPairs = new Set(
+    (existingStRes.data || []).filter(q => q.question_key != null).map(q => `${q.question_key}:${q.language}`)
+  );
+
+  // Asset dedup map (file_path → asset_id)
+  const assetMap = {};
+  (assetRes.data || []).forEach(a => { assetMap[normalize(a.file_path)] = a.asset_id; });
+
+  const stats = { questionsCreated: 0, questionsUpdated: 0, questionsSkipped: 0, errors: [] };
+  const processedSnippetIds = new Set();  // snippet_ids with new/updated questions this run
+
+  for (const row of rows) {
+    try {
+      // ── question_key — required, dedup/upsert key ──────────────────────────
+      const qKeyRaw = String(row.question_key || "").trim();
+      const qKeyNum = qKeyRaw !== "" && !isNaN(qKeyRaw) ? Number(qKeyRaw) : null;
+      if (qKeyNum === null) continue;  // no question_key → not a question row
+
+      // ── question text ──────────────────────────────────────────────────────
+      const question = String(row.question || "").trim();
+      if (!question) {
+        stats.errors.push(`question_key ${qKeyNum}: question text is blank`);
+        continue;
+      }
+
+      // ── options — all four required ────────────────────────────────────────
+      const opt1 = String(row.option_1 || "").trim();
+      const opt2 = String(row.option_2 || "").trim();
+      const opt3 = String(row.option_3 || "").trim();
+      const opt4 = String(row.option_4 || "").trim();
+      if (!opt1 || !opt2 || !opt3 || !opt4) {
+        stats.errors.push(`question_key ${qKeyNum}: all four options are required (option_1 is the correct answer)`);
+        continue;
+      }
+
+      // ── language ───────────────────────────────────────────────────────────
+      const langId = langMap[normalize(row.language || "English")];
+      if (!langId) {
+        stats.errors.push(`question_key ${qKeyNum}: unknown language "${row.language}"`);
+        continue;
+      }
+
+      // ── snippet_key → snippet_id (determines Type 1 vs Type 2) ────────────
+      const snipKeyRaw = String(row.snippet_key || "").trim();
+      const snipKeyNum = snipKeyRaw !== "" && !isNaN(snipKeyRaw) ? Number(snipKeyRaw) : null;
+      let snippetId = null;
+      if (snipKeyNum !== null) {
+        snippetId = importKeyMap[snipKeyNum] ?? null;
+        if (!snippetId) {
+          stats.errors.push(`question_key ${qKeyNum}: snippet_key ${snipKeyNum} not found — import snippets first`);
+          continue;
+        }
+      }
+
+      const hint = String(row.hint || "").trim() || null;
+      const isType2 = snippetId === null;
+
+      // ── Asset handling (Type 2 only) ───────────────────────────────────────
+      // Type 1 questions display the snippet's image at runtime; they don't
+      // get their own asset_id. Type 2 standalone questions carry their own image.
+      let assetId = null;
+      if (isType2) {
+        const picUrl = String(row.picture_url || "").trim();
+        if (picUrl) {
+          assetId = assetMap[normalize(picUrl)];
+          if (!assetId) {
+            assetId = uuid();
+            const { error: assetErr } = await supabaseClient.from("asset_library").insert({
+              asset_id:    assetId,
+              file_path:   picUrl,
+              asset_type:  "IMAGE",
+              alt_text:    String(row.picture_alt          || "").trim(),
+              attribution: String(row.picture_attribution  || "").trim(),
+            });
+            if (assetErr) {
+              stats.errors.push(`question_key ${qKeyNum}: asset create failed — ${assetErr.message}`);
+              assetId = null;
+            } else {
+              assetMap[normalize(picUrl)] = assetId;
+            }
+          }
+        }
+      }
+
+      if (isType2) {
+        // ────────────────────────────────────────────────────────────────────
+        // TYPE 2 — standalone_questions
+        // ────────────────────────────────────────────────────────────────────
+        const expFields = {
+          ...(String(row.explanation      || "").trim() && { explanation:      String(row.explanation).trim() }),
+          ...(String(row.key_term         || "").trim() && { key_term:         String(row.key_term).trim() }),
+          ...(String(row.key_term_meaning || "").trim() && { key_term_meaning: String(row.key_term_meaning).trim() }),
+          ...(String(row.life_connection  || "").trim() && { life_connection:  String(row.life_connection).trim() }),
+          ...(String(row.source_reference || "").trim() && { source_citation:  String(row.source_reference).trim() }),
+        };
+
+        const stPairKey = `${qKeyNum}:${langId}`;
+        if (existingStPairs.has(stPairKey)) {
+          const upd = {
+            question,
+            correct_option: opt1, wrong_option_1: opt2, wrong_option_2: opt3, wrong_option_3: opt4,
+            ...expFields,
+          };
+          if (hint !== null) upd.hint = hint;
+          if (assetId)       upd.asset_id = assetId;
+
+          const { error } = await supabaseClient
+            .from("standalone_questions").update(upd)
+            .eq("question_key", qKeyNum).eq("language", langId);
+          if (error) stats.errors.push(`question_key ${qKeyNum} (${row.language}): ${error.message}`);
+          else stats.questionsUpdated++;
+        } else {
+          const insertRow = {
+            question_key: qKeyNum, language: langId, question,
+            correct_option: opt1, wrong_option_1: opt2, wrong_option_2: opt3, wrong_option_3: opt4,
+            hint,
+            ...expFields,
+          };
+          if (assetId) insertRow.asset_id = assetId;
+
+          const { error } = await supabaseClient.from("standalone_questions").insert(insertRow);
+          if (error) stats.errors.push(`question_key ${qKeyNum} (${row.language}): ${error.message}`);
+          else { existingStPairs.add(stPairKey); stats.questionsCreated++; }
+        }
+      } else {
+        // ────────────────────────────────────────────────────────────────────
+        // TYPE 1 — snippet_questions
+        // ────────────────────────────────────────────────────────────────────
+        const sqPairKey = `${qKeyNum}:${langId}`;
+        if (existingSqPairs.has(sqPairKey)) {
+          const upd = {
+            snippet_id: snippetId, question,
+            correct_option: opt1, wrong_option_1: opt2, wrong_option_2: opt3, wrong_option_3: opt4,
+          };
+          if (hint !== null) upd.hint = hint;
+
+          const { error } = await supabaseClient
+            .from("snippet_questions").update(upd)
+            .eq("question_key", qKeyNum).eq("language", langId);
+          if (error) stats.errors.push(`question_key ${qKeyNum} (${row.language}): ${error.message}`);
+          else { stats.questionsUpdated++; processedSnippetIds.add(snippetId); }
+        } else {
+          const insertRow = {
+            question_key: qKeyNum, snippet_id: snippetId, language: langId, question,
+            correct_option: opt1, wrong_option_1: opt2, wrong_option_2: opt3, wrong_option_3: opt4,
+            hint,
+          };
+
+          const { error } = await supabaseClient.from("snippet_questions").insert(insertRow);
+          if (error) stats.errors.push(`question_key ${qKeyNum} (${row.language}): ${error.message}`);
+          else { existingSqPairs.add(sqPairKey); stats.questionsCreated++; processedSnippetIds.add(snippetId); }
+        }
+      }
+    } catch (e) {
+      stats.errors.push("Unexpected error: " + (e.message || String(e)));
+    }
+  }
+
+  // ── Auto-wire quizzes after questions are saved ───────────────────────────
+  if (stats.questionsCreated > 0 || stats.questionsUpdated > 0) {
+    const wireErrors = await adminWireQuizzes(processedSnippetIds);
+    stats.errors.push(...wireErrors);
+    stats.quizSetsCreated  = wireErrors._quizSetsCreated  || 0;
+    stats.quizLinksCreated = wireErrors._quizLinksCreated || 0;
+  }
+
+  return stats;
+}
+
+// adminWireQuizzes(snippetIds)
+//
+// For each snippet_id in the set:
+//   1. Find which lessons it belongs to (via lesson_snippet_mapping)
+//   2. Ensure each lesson has a quiz_set (create one if missing)
+//   3. Add any new question_keys to quiz_questions (idempotent)
+//
+// Returns an error array (with hidden _quizSetsCreated / _quizLinksCreated counts).
+
+export async function adminWireQuizzes(snippetIds) {
+  const errors = [];
+  errors._quizSetsCreated  = 0;
+  errors._quizLinksCreated = 0;
+
+  if (!snippetIds || snippetIds.size === 0) return errors;
+
+  const snippetArr = [...snippetIds];
+
+  // ── 1. Find lessons for these snippets ────────────────────────────────────
+  const { data: mappings, error: mapErr } = await supabaseClient
+    .from("lesson_snippet_mapping")
+    .select("lesson_id, snippet_id")
+    .in("snippet_id", snippetArr);
+  if (mapErr) { errors.push("Wire: lesson_snippet_mapping fetch failed — " + mapErr.message); return errors; }
+  if (!mappings?.length) return errors;
+
+  const lessonIds = [...new Set(mappings.map(m => m.lesson_id))];
+
+  // snippetIds grouped by lesson
+  const lessonSnippets = {};
+  mappings.forEach(m => {
+    if (!lessonSnippets[m.lesson_id]) lessonSnippets[m.lesson_id] = new Set();
+    lessonSnippets[m.lesson_id].add(m.snippet_id);
+  });
+
+  // ── 2. Find/create quiz_sets ──────────────────────────────────────────────
+  const { data: existingSets } = await supabaseClient
+    .from("quiz_sets").select("quiz_id, lesson_id").in("lesson_id", lessonIds);
+
+  const lessonToQuizId = {};
+  (existingSets || []).forEach(qs => { lessonToQuizId[qs.lesson_id] = qs.quiz_id; });
+
+  const newLessonIds = lessonIds.filter(id => !lessonToQuizId[id]);
+  if (newLessonIds.length) {
+    const { data: lessons } = await supabaseClient
+      .from("lessons").select("lesson_id, lesson_name").in("lesson_id", newLessonIds);
+
+    for (const lesson of (lessons || [])) {
+      const quizId = crypto.randomUUID();
+      const { error } = await supabaseClient.from("quiz_sets").insert({
+        quiz_id:           quizId,
+        lesson_id:         lesson.lesson_id,
+        title:             lesson.lesson_name || "Quiz",
+        is_published:      true,
+        shuffle_questions: false,
+      });
+      if (error) {
+        errors.push(`Wire: create quiz_set for lesson ${lesson.lesson_id} — ${error.message}`);
+      } else {
+        lessonToQuizId[lesson.lesson_id] = quizId;
+        errors._quizSetsCreated++;
+      }
+    }
+  }
+
+  // ── 3. Wire question_keys to quiz_questions ───────────────────────────────
+  // One entry per (quiz_id, question_key) regardless of language.
+  const quizIds = Object.values(lessonToQuizId);
+  const { data: existingLinks } = await supabaseClient
+    .from("quiz_questions").select("quiz_id, question_key")
+    .in("quiz_id", quizIds).not("question_key", "is", null);
+
+  const existingPairs = new Set(
+    (existingLinks || []).map(r => `${r.quiz_id}:${r.question_key}`)
+  );
+
+  // Fetch question_keys for all processed snippets (deduplicated by question_key — language-agnostic)
+  const { data: qRows } = await supabaseClient
+    .from("snippet_questions")
+    .select("question_key, snippet_id")
+    .in("snippet_id", snippetArr)
+    .not("question_key", "is", null);
+
+  // One entry per snippet+question_key (ignore language duplicates)
+  const uniqueByKey = {};
+  (qRows || []).forEach(q => {
+    const k = `${q.snippet_id}:${q.question_key}`;
+    if (!uniqueByKey[k]) uniqueByKey[k] = q;
+  });
+
+  const toInsert = [];
+  for (const [lessonId, quizId] of Object.entries(lessonToQuizId)) {
+    const snippets = lessonSnippets[lessonId];
+    if (!snippets) continue;
+    let sortOrder = 0;
+    for (const q of Object.values(uniqueByKey)) {
+      if (!snippets.has(q.snippet_id)) continue;
+      const pair = `${quizId}:${q.question_key}`;
+      if (existingPairs.has(pair)) continue;
+      toInsert.push({ quiz_id: quizId, question_type: "snippet", question_key: q.question_key, sort_order: sortOrder++, points: 1 });
+      existingPairs.add(pair);
+    }
+  }
+
+  // Batch insert in chunks of 500
+  const CHUNK = 500;
+  for (let i = 0; i < toInsert.length; i += CHUNK) {
+    const { error } = await supabaseClient.from("quiz_questions").insert(toInsert.slice(i, i + CHUNK));
+    if (error) errors.push("Wire: quiz_questions insert — " + error.message);
+    else errors._quizLinksCreated += toInsert.slice(i, i + CHUNK).length;
+  }
+
+  return errors;
+}
+
+// getNextQuestionKey()
+// Returns the next available question_key integer (MAX across both question
+// tables + 1). Shared namespace ensures a question_key is unique regardless
+// of whether it belongs to a Type 1 or Type 2 question.
+export async function getNextQuestionKey() {
+  const [sq, st] = await Promise.all([
+    supabaseClient.from("snippet_questions").select("question_key").order("question_key", { ascending: false }).limit(1),
+    supabaseClient.from("standalone_questions").select("question_key").order("question_key", { ascending: false }).limit(1),
+  ]);
+  const maxSq = sq.data?.[0]?.question_key ?? 0;
+  const maxSt = st.data?.[0]?.question_key ?? 0;
+  return Math.max(maxSq, maxSt) + 1;
+}
+
+export async function getAttemptCount(userId, quizId) {
+  const { count, error } = await supabaseClient
+    .from("quiz_attempts")
+    .select("id", { count: "exact", head: true })
+    .eq("profile_id", userId)
+    .eq("quiz_id", quizId)
+    .not("completed_at", "is", null);
+  if (error) console.error("[getAttemptCount]", error);
+  return { count: count || 0, error };
+}
+
+// ── Inline snippet / question edit helpers ────────────────────────────────────
+
+// Fetch the snippet_questions row for a given snippet + language.
+export async function getSnippetQuestion(snippetId, languageId) {
+  const { data, error } = await supabaseClient
+    .from("snippet_questions")
+    .select("*")
+    .eq("snippet_id", snippetId)
+    .eq("language", languageId)
+    .maybeSingle();
+  if (error) console.error("[getSnippetQuestion]", error);
+  return { data: data || null, error };
+}
+
+// Upsert a snippet_questions row (create or update by snippet_id + language).
+export async function saveSnippetQuestion(snippetId, languageId, questionData) {
+  const { data, error } = await supabaseClient
+    .from("snippet_questions")
+    .upsert(
+      { snippet_id: snippetId, language: languageId, ...questionData },
+      { onConflict: "snippet_id,language" }
+    )
+    .select()
+    .single();
+  if (error) console.error("[saveSnippetQuestion]", error);
+  return { data, error };
+}
+
+// Update a standalone_questions row by question_id.
+export async function saveStandaloneQuestion(questionId, questionData) {
+  const { data, error } = await supabaseClient
+    .from("standalone_questions")
+    .update({ ...questionData })
+    .eq("question_id", questionId)
+    .select()
+    .single();
+  if (error) console.error("[saveStandaloneQuestion]", error);
+  return { data, error };
+}

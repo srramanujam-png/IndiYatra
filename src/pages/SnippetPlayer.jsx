@@ -1317,4 +1317,108 @@ export default function SnippetPlayer({
 
                 {/* Quiz Question section */}
                 <div style={{ borderTop: "1px solid #E5E7EB", margin: "18px 0 14px" }} />
-                <div style={{ fontSize: "0.6875rem", fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase", color:
+                <div style={{ fontSize: "0.6875rem", fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase", color: HERITAGE, marginBottom: 12 }}>
+                  Quiz Question <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0, color: "#9CA3AF" }}>— optional</span>
+                </div>
+                {editQuestionLoading ? (
+                  <div style={{ color: "#9CA3AF", fontSize: "0.875rem", padding: "8px 0" }}>Loading question…</div>
+                ) : (
+                  <>
+                    {[
+                      { key: "question",       label: "Question",        rows: 2 },
+                      { key: "correct_option", label: "Correct Option",  rows: 1 },
+                      { key: "wrong_option_1", label: "Wrong Option 1",  rows: 1 },
+                      { key: "wrong_option_2", label: "Wrong Option 2",  rows: 1 },
+                      { key: "wrong_option_3", label: "Wrong Option 3",  rows: 1 },
+                    ].map(({ key, label, rows }) => (
+                      <div className="edit-field-group" key={key}>
+                        <label className="edit-field-label" style={{ color: key === "correct_option" ? "#00924A" : undefined }}>
+                          {label}
+                        </label>
+                        <textarea
+                          className="edit-field-input"
+                          rows={rows}
+                          value={editSnipDraft[key] || ""}
+                          onChange={e => setEditSnipDraft(prev => ({ ...prev, [key]: e.target.value }))}
+                        />
+                      </div>
+                    ))}
+                    <div style={{ fontSize: "0.75rem", color: "#9CA3AF", marginTop: -8, marginBottom: 8 }}>
+                      All five question fields must be filled to save the question.
+                    </div>
+                  </>
+                )}
+              </div>
+              <div className="edit-panel-footer">
+                {editMsg && <span className={"edit-panel-msg" + (editMsg.startsWith("Save failed") ? " err" : "")}>{editMsg}</span>}
+                <button className="edit-cancel-btn" onClick={() => setShowEditPanel(false)}>Cancel</button>
+                <button className="edit-save-btn" onClick={saveEditSnippet} disabled={editSaving}>
+                  {editSaving ? "Saving…" : "Save"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Completion modal */}
+        {done && (
+          <div className="completion-overlay">
+            <div className="completion-card">
+              {playlistMode ? (
+                <>
+                  <div className="comp-emoji">{isDiscoverPlaylist ? "\u{1F9ED}" : "\u2665"}</div>
+                  <div className="comp-title">{isDiscoverPlaylist ? PLAYER.discoverComplete : PLAYER.likesComplete}</div>
+                  <div className="comp-subtitle">You've reviewed all <strong>{snippets.length}</strong> snippet{snippets.length !== 1 ? "s" : ""} in <strong>{playlistLabel || "this playlist"}</strong>.</div>
+                  <button className="comp-btn comp-primary" onClick={backToPlaylist}>{isDiscoverPlaylist ? "Back to Discover" : "Back to Likes"}</button>
+                  <button className="comp-btn comp-secondary" onClick={() => { setCurrent(0); setDone(false); }}>Review Again</button>
+                  <button className="comp-btn comp-dashboard" onClick={onDashboard}>Go to Dashboard</button>
+                </>
+              ) : (
+                <>
+                  <div className="comp-emoji">🎉</div>
+                  <div className="comp-title">Lesson Complete!</div>
+                  <div className="comp-subtitle">You've finished <strong>{lesson?.lesson_name}</strong>.</div>
+
+                  <div className="comp-points">
+                    <span className="comp-points-icon">🪙</span>
+                    <span className="comp-points-value">+{totalPoints}</span>
+                    <span className="comp-points-label">{PLAYER.dharmaPoints}</span>
+                  </div>
+
+                  {earnedBadges.length > 0 && (
+                    <div className="comp-badges">
+                      <div className="comp-badges-title">Badges Earned</div>
+                      {earnedBadges.map((b, i) => {
+                        const meta = BADGE_META[b.type] || { emoji: "🏅", label: b.type };
+                        return (
+                          <div className="comp-badge-row" key={i}>
+                            <span className="comp-badge-emoji">{meta.emoji}</span>
+                            <span className="comp-badge-text"><strong>{meta.label}</strong> — {b.name}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {nextLesson && (
+                    <button className="comp-btn comp-next" onClick={() => onNextLesson(nextLesson)}>
+                      Next: {nextLesson.lesson_name} →
+                    </button>
+                  )}
+                  {lessonQuiz && onTakeQuiz && (
+                    <button className="comp-btn comp-quiz" onClick={onTakeQuiz}>
+                      🎯 Take the Quiz
+                    </button>
+                  )}
+                  <button className="comp-btn comp-primary" onClick={onBackToLessons}>Back to Lessons</button>
+                  <button className="comp-btn comp-dashboard" onClick={onDashboard}>Go to Dashboard</button>
+                  <button className="comp-btn comp-secondary" onClick={() => { setCurrent(0); setDone(false); }}>Review Again</button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}

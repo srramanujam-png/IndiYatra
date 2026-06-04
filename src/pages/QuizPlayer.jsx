@@ -687,4 +687,554 @@ export default function QuizPlayer({
     const text = `${quiz?.title || "IndiYatra Quiz"}\n\n${APP_URL}`;
     navigator.clipboard.writeText(text).then(() => {
       setShareCopied(true);
-      setTimeout(() => setShareCopied(false),
+      setTimeout(() => setShareCopied(false), 2000);
+    });
+  }
+
+  // Scroll so explanation peeks in at the bottom while options stay visible
+  function scrollToExplain() {
+    if (!explainRef.current) return;
+    const rect = explainRef.current.getBoundingClientRect();
+    // Position the top of the explanation at ~70% down the viewport
+    const target = window.scrollY + rect.top - window.innerHeight * 0.68;
+    window.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
+  }
+
+  // ── Loading attempt count ─────────────────────────────────────────────────
+  if (attemptCount === null) {
+    return (
+      <div className="qp-wrap">
+        <style>{globalStyles}{styles}</style>
+        <div className="qp-loading">Loading…</div>
+      </div>
+    );
+  }
+
+  // ── Max attempts reached ──────────────────────────────────────────────────
+  if (quiz?.max_attempts && attemptCount >= quiz.max_attempts) {
+    return (
+      <div className="qp-wrap">
+        <style>{globalStyles}{styles}</style>
+        <div className="qp-topbar">
+          <button className="qp-back" onClick={onBack}><i className="ti ti-arrow-left" /> Back</button>
+          <div className="qp-title">{quiz.title}</div>
+          <div style={{ width: 60 }} />
+        </div>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"center", flex:1, padding:"2rem 1rem" }}>
+          <div className="qp-score-card" style={{ maxWidth:360 }}>
+            <div className="qp-score-emoji">🔒</div>
+            <div className="qp-score-title">Max Attempts Reached</div>
+            <div className="qp-score-subtitle">
+              You've used all {quiz.max_attempts} attempt{quiz.max_attempts !== 1 ? "s" : ""} for this quiz.
+            </div>
+            <div className="qp-score-actions">
+              <button className="qp-score-btn secondary" onClick={onBack}>Back to Lessons</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!quiz || total === 0) {
+    return (
+      <div className="qp-wrap">
+        <style>{globalStyles}{styles}</style>
+        <div className="qp-loading">No questions available for this quiz.</div>
+      </div>
+    );
+  }
+
+  // ── Score Screen ──────────────────────────────────────────────────────────
+  if (phase === "score" && scoreData) {
+    const { correct, wrong, skipped, passed } = scoreData;
+    const emoji = correct === total ? "🏆" : correct >= total / 2 ? "👍" : "📖";
+
+    return (
+      <div className="qp-wrap">
+        <style>{globalStyles}{styles}</style>
+        <div className="qp-topbar">
+          <button className="qp-back" onClick={onBack}>
+            <i className="ti ti-arrow-left" /> Back
+          </button>
+          <div className="qp-title">{quiz.title}</div>
+          <div style={{ width: 60 }} />
+        </div>
+
+        <div className="qp-score-wrap">
+          <div className="qp-score-card">
+            <div className="qp-score-emoji">{emoji}</div>
+            <div className="qp-score-title">Quiz Complete!</div>
+            <div className="qp-score-subtitle">{quiz.title}</div>
+
+            {passed !== null && (
+              <>
+                <div className={`qp-pass-badge ${passed ? "pass" : "fail"}`}>
+                  {passed ? "✓ Passed" : "✗ Not Passed"}
+                </div>
+                <div style={{ fontSize:"0.8125rem", color:"#6B6B6B", marginBottom:16 }}>
+                  {Math.round(scoreData.earnedPoints / scoreData.totalPoints * 100)}% scored
+                  {quiz.pass_percent ? ` · ${quiz.pass_percent}% to pass` : ""}
+                </div>
+              </>
+            )}
+            {quiz.max_attempts && (
+              <div style={{ fontSize:"0.8125rem", color:"#6B6B6B", marginBottom:8 }}>
+                Attempt {Math.min(attemptCount, quiz.max_attempts)} of {quiz.max_attempts}
+              </div>
+            )}
+
+            <div className="qp-score-numbers">
+              <div className="qp-score-stat">
+                <div className="qp-score-stat-num correct">{correct}</div>
+                <div className="qp-score-stat-lbl">Correct</div>
+              </div>
+              <div className="qp-score-stat">
+                <div className="qp-score-stat-num wrong">{wrong}</div>
+                <div className="qp-score-stat-lbl">Wrong</div>
+              </div>
+              {skipped > 0 && (
+                <div className="qp-score-stat">
+                  <div className="qp-score-stat-num skipped">{skipped}</div>
+                  <div className="qp-score-stat-lbl">Skipped</div>
+                </div>
+              )}
+              <div className="qp-score-stat">
+                <div className="qp-score-stat-num" style={{ color: BLUE }}>{total}</div>
+                <div className="qp-score-stat-lbl">Total</div>
+              </div>
+            </div>
+
+            {/* Social strip on score screen */}
+            <div className="qp-social" style={{justifyContent:"center", gap:24, borderTop:"1px solid #E5E7EB", paddingTop:16}}>
+              <button className="qp-social-btn" disabled title="Coming soon">
+                <span className="qp-social-icon"><i className="ti ti-thumb-up" /></span>
+                <span>Like</span>
+              </button>
+              <button className="qp-social-btn" disabled title="Coming soon">
+                <span className="qp-social-icon"><i className="ti ti-message-circle" /></span>
+                <span>Comment</span>
+              </button>
+              <button
+                className={"qp-social-btn" + (bookmarks.has("quiz:" + quiz?.quiz_id) ? " active" : "") + (!user || user.is_anonymous ? " disabled" : "")}
+                disabled={!user || user.is_anonymous}
+                title={!user || user.is_anonymous ? "Sign in to bookmark" : "Bookmark this quiz"}
+                onClick={() => onToggleBookmark?.("quiz", String(quiz?.quiz_id), quiz?.title || "Quiz")}
+              >
+                <span className="qp-social-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill={bookmarks.has("quiz:" + quiz?.quiz_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                </span>
+                <span>Save</span>
+              </button>
+              <button
+                className={"qp-social-btn" + (shareCopied ? " copied" : "")}
+                onClick={handleShareQuiz}
+                title={shareCopied ? "Copied!" : "Share quiz"}
+              >
+                <span className="qp-social-icon">
+                  {shareCopied
+                    ? <i className="ti ti-check" />
+                    : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                  }
+                </span>
+                <span>{shareCopied ? "Copied!" : "Share"}</span>
+              </button>
+            </div>
+
+            <div className="qp-score-actions">
+              {onRetake && !(quiz.max_attempts && attemptCount >= quiz.max_attempts) && (
+                <button className="qp-score-btn primary" onClick={onRetake}>
+                  Retake Quiz
+                </button>
+              )}
+              <button className="qp-score-btn secondary" onClick={onBack}>
+                Back to Lessons
+              </button>
+              <button className="qp-score-btn ghost" onClick={onDashboard}>
+                Go to Dashboard
+              </button>
+            </div>
+          </div>
+
+          {/* Answer review */}
+          <div className="qp-review-title">Answer Review</div>
+          {questions.map((qItem, i) => {
+            const a = scoreData.answersArr[i];
+            const isCorrect  = a.is_correct === true;
+            const isWrong    = a.is_correct === false;
+            const isSkipped  = a.is_correct === null;
+            const icon = isCorrect ? "✅" : isWrong ? "❌" : "⏭️";
+
+            return (
+              <div className="qp-review-item" key={qItem.question_id || i}>
+                <div className="qp-review-header">
+                  <div className="qp-review-icon">{icon}</div>
+                  <div className="qp-review-q">Q{i + 1}. {qItem.question}</div>
+                </div>
+                <div className="qp-review-answers">
+                  {isSkipped ? (
+                    <div className="qp-review-ans-row">
+                      <span className="qp-review-ans-label">Status: </span>
+                      <span className="qp-review-ans-val skipped">Not answered</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="qp-review-ans-row">
+                        <span className="qp-review-ans-label">Your answer: </span>
+                        <span className={`qp-review-ans-val ${isCorrect ? "correct" : "wrong"}`}>{a.chosen_option}</span>
+                      </div>
+                      {!isCorrect && (
+                        <div className="qp-review-ans-row">
+                          <span className="qp-review-ans-label">Correct answer: </span>
+                          <span className="qp-review-ans-val correct">{a.correct_option}</span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+                {(qItem.explanation || qItem.key_term || qItem.life_connection || qItem.quiz_recap || qItem.source_citation) && (
+                  <div className="qp-review-explanation">
+                    {qItem.explanation && <p style={{margin:"0 0 8px"}}>{qItem.explanation}</p>}
+                    {qItem.key_term && <p style={{margin:"0 0 4px",fontSize:"0.8125rem"}}><strong>Key Term:</strong> {qItem.key_term}{qItem.key_term_meaning ? ` — ${qItem.key_term_meaning}` : ""}</p>}
+                    {qItem.life_connection && <p style={{margin:"0 0 4px",fontSize:"0.8125rem"}}><strong>Life Connection:</strong> {qItem.life_connection}</p>}
+                    {qItem.quiz_recap && <p style={{margin:"0 0 4px",fontSize:"0.8125rem"}}><strong>Refresher:</strong> {qItem.quiz_recap}</p>}
+                    {qItem.source_citation && <p style={{margin:"0",fontSize:"0.75rem",color:"#6B6B6B"}}>{qItem.source_citation}</p>}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Quiz player ───────────────────────────────────────────────────────────
+  const qTimePct    = isTimed && quiz.question_time_limit ? (qTimeLeft / quiz.question_time_limit) * 100 : 100;
+  const quizTimePct = quizTimeLimit ? (quizTimeLeft / quizTimeLimit) * 100 : 100;
+  const isUrgent    = isTimed && qTimeLeft <= 5;
+
+  return (
+    <div className="qp-wrap">
+      <style>{globalStyles}{styles}</style>
+
+      {/* Top bar */}
+      <div className="qp-topbar">
+        <button className="qp-back" onClick={onBack}>
+          <i className="ti ti-arrow-left" /> Back
+        </button>
+        <div className="qp-title">{quiz.title} ({current + 1}/{total})</div>
+        <div style={{ width: 60 }} />
+      </div>
+
+      {/* Segmented progress bar */}
+      <div className="qp-progress-segs">
+        {questions.map((_, i) => (
+          <div
+            key={i}
+            className={`qp-progress-seg${i < current ? " done" : i === current ? " current" : ""}`}
+          />
+        ))}
+      </div>
+
+      {/* Quiz-level timer bar */}
+      {quizTimeLimit > 0 && (
+        <div className="qp-quiz-timer">
+          <i className="ti ti-clock" />
+          <span>{formatTime(quizTimeLeft)} remaining</span>
+          <div className="qp-quiz-timer-bar">
+            <div className="qp-quiz-timer-fill" style={{ width: `${quizTimePct}%` }} />
+          </div>
+        </div>
+      )}
+
+      <div className="qp-body">
+
+        {/* Per-question timer */}
+        {isTimed && !isAnswered && (
+          <div className="qp-q-timer">
+            <i className="ti ti-hourglass" />
+            <span>{qTimeLeft}s</span>
+            <div className="qp-q-timer-bar">
+              <div className={`qp-q-timer-fill${isUrgent ? " urgent" : ""}`} style={{ width: `${qTimePct}%` }} />
+            </div>
+          </div>
+        )}
+
+        {/* Unanswered (timer expired) indicator */}
+        {isAnswered && ans?.chosen === null && (
+          <div className="qp-unanswered-badge">
+            <i className="ti ti-clock-x" /> Time expired — this question was not answered
+          </div>
+        )}
+
+        {/* Two-column layout */}
+        <div className="qp-main" key={current}>
+
+          {/* Left column: question card + options + inline nav */}
+          <div className="qp-card">
+            <div className="qp-card-body">
+              <div className="qp-q-num" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span>Question {current + 1}</span>
+                {canEdit && (
+                  <button className="qp-edit-btn" onClick={openEditPanel} title="Edit this question">
+                    <i className="ti ti-pencil" /> Edit
+                  </button>
+                )}
+              </div>
+              <div className="qp-question">{q.question}</div>
+            </div>
+
+            {/* Options */}
+            <div className="qp-options">
+              {q._options.map((opt, oi) => (
+                <button
+                  key={opt.label}
+                  className={`qp-option ${getOptionClass(opt)}`}
+                  onClick={() => selectOption(opt.label, opt.isCorrect)}
+                  disabled={isAnswered}
+                >
+                  <span className="qp-option-marker">{OPTION_LABELS[oi]}</span>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Inline navigation — 4 equal pills */}
+            <div className="qp-inline-nav">
+              <button className="qp-nav-pill" disabled title="Hints coming soon">
+                <i className="ti ti-bulb pill-icon" />
+                <span className="pill-label">Hint</span>
+              </button>
+              <button
+                className="qp-nav-pill nav-primary"
+                onClick={goPrev}
+                disabled={current === 0 || isTimed}
+              >
+                <i className="ti ti-arrow-left pill-icon" />
+                <span className="pill-label">Previous</span>
+              </button>
+              <button
+                className="qp-nav-pill nav-finish"
+                onClick={requestFinish}
+              >
+                <i className="ti ti-flag-3 pill-icon" />
+                <span className="pill-label">Finish Quiz</span>
+              </button>
+              <button
+                className="qp-nav-pill nav-primary"
+                onClick={goNext}
+                disabled={current === total - 1}
+              >
+                <i className="ti ti-arrow-right pill-icon" />
+                <span className="pill-label">Next</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Right column: image */}
+          <div className="qp-right-col">
+            {q.asset?.file_path ? (
+              <div className="qp-right-col-img">
+                <img src={q.asset.file_path} alt={q.asset.alt_text || ""} />
+              </div>
+            ) : (
+              <div className="qp-right-col-empty">
+                <i className="ti ti-photo" style={{ fontSize: "2rem" }} />
+                <span>No image</span>
+              </div>
+            )}
+            {isAnswered && ans?.chosen !== null && (
+              <button className="qp-scroll-prompt" key={current} onClick={scrollToExplain}>
+                <i className="ti ti-arrow-down" />
+                Scroll below for explanation
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Explanation panel — full width, flashes in after answering */}
+        {isAnswered && ans?.chosen !== null && (
+          <div className="qp-explain-section" ref={explainRef}>
+            <div className="qp-explain-label">Question Reference and Explanation</div>
+            {q.explanation
+              ? <div className="qp-explain-text">{q.explanation}</div>
+              : <div className="qp-explain-text" style={{ color: "#9CA3AF", fontStyle: "italic" }}>No explanation available.</div>
+            }
+            {q.key_term && (
+              <div className="qp-reveal-block">
+                <div className="qp-reveal-block-label">Key Term</div>
+                <div className="qp-reveal-block-value">
+                  <strong>{q.key_term}</strong>{q.key_term_meaning ? ` — ${q.key_term_meaning}` : ""}
+                </div>
+              </div>
+            )}
+            {q.life_connection && (
+              <div className="qp-reveal-block">
+                <div className="qp-reveal-block-label">Life Connection</div>
+                <div className="qp-reveal-block-value">{q.life_connection}</div>
+              </div>
+            )}
+            {q.quiz_recap && (
+              <div className="qp-reveal-block">
+                <div className="qp-reveal-block-label">Refresher</div>
+                <div className="qp-reveal-block-value">{q.quiz_recap}</div>
+              </div>
+            )}
+            {q.source_citation && (
+              <div className="qp-explain-source">Source: {q.source_citation}</div>
+            )}
+
+            {/* Social strip */}
+            <div className="qp-social">
+              <div className="qp-social-left">
+                <button
+                  className="qp-social-btn"
+                  disabled
+                  title="Coming soon"
+                >
+                  <span className="qp-social-icon"><i className="ti ti-thumb-up" /></span>
+                  <span>Like</span>
+                </button>
+                <button
+                  className="qp-social-btn"
+                  disabled
+                  title="Coming soon"
+                >
+                  <span className="qp-social-icon"><i className="ti ti-message-circle" /></span>
+                  <span>Comment</span>
+                </button>
+              </div>
+              <div className="qp-social-right">
+                <button
+                  className={"qp-social-btn" + (bookmarks.has("quiz:" + quiz?.quiz_id) ? " active" : "") + (!user || user.is_anonymous ? " disabled" : "")}
+                  disabled={!user || user.is_anonymous}
+                  title={!user || user.is_anonymous ? "Sign in to bookmark" : bookmarks.has("quiz:" + quiz?.quiz_id) ? "Remove bookmark" : "Bookmark this quiz"}
+                  onClick={() => onToggleBookmark?.("quiz", String(quiz?.quiz_id), quiz?.title || "Quiz")}
+                >
+                  <span className="qp-social-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill={bookmarks.has("quiz:" + quiz?.quiz_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                  </span>
+                </button>
+                <button
+                  className={"qp-social-btn" + (shareCopied ? " copied" : "")}
+                  onClick={handleShareQuiz}
+                  title={shareCopied ? "Copied!" : "Share quiz"}
+                >
+                  <span className="qp-social-icon">
+                    {shareCopied
+                      ? <i className="ti ti-check" />
+                      : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                    }
+                  </span>
+                  <span>{shareCopied ? "Copied!" : "Share"}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
+
+      {/* Edit panel (admin/creator) */}
+      {showEditPanel && canEdit && q && (
+        <>
+          <div className="qp-edit-overlay" onClick={() => setShowEditPanel(false)} />
+          <div className="qp-edit-panel">
+            <div className="qp-edit-header">
+              <div>
+                <div className="qp-edit-header-title">Edit Question</div>
+                <div className="qp-edit-header-sub">
+                  {q.question_type === "snippet" ? "Type 1 — snippet-linked" : "Type 2 — standalone"}
+                  {q.snippet_id ? ` · ${q.snippet_id}` : ""}
+                </div>
+              </div>
+              <button className="qp-edit-close" onClick={() => setShowEditPanel(false)}>✕</button>
+            </div>
+
+            <div className="qp-edit-body">
+              {/* Question fields — always shown */}
+              <div className="qp-edit-section-label">Quiz Question</div>
+              {[
+                { key: "question",       label: "Question",        rows: 3 },
+                { key: "correct_option", label: "Correct Option ✓", rows: 2, green: true },
+                { key: "wrong_option_1", label: "Wrong Option 1",  rows: 2 },
+                { key: "wrong_option_2", label: "Wrong Option 2",  rows: 2 },
+                { key: "wrong_option_3", label: "Wrong Option 3",  rows: 2 },
+              ].map(({ key, label, rows, green }) => (
+                <div className="qp-edit-field" key={key}>
+                  <label style={green ? { color: "#00924A" } : undefined}>{label}</label>
+                  <textarea
+                    rows={rows}
+                    value={editDraft[key] || ""}
+                    onChange={e => setEditDraft(prev => ({ ...prev, [key]: e.target.value }))}
+                  />
+                </div>
+              ))}
+
+              {/* Snippet translation fields — Type 1 or Type 2 with explanation */}
+              <hr className="qp-edit-divider" />
+              <div className="qp-edit-section-label">
+                {q.question_type === "snippet" ? "Snippet Content" : "Explanation & Context"}
+              </div>
+              {[
+                ...(q.question_type === "snippet" ? [
+                  { key: "hook",             label: "Hook (headline)",     rows: 2 },
+                ] : []),
+                { key: "explanation",      label: "Explanation",         rows: 5 },
+                { key: "key_term",         label: "Key Term",            rows: 1 },
+                { key: "key_term_meaning", label: "Key Term Meaning",    rows: 2 },
+                { key: "life_connection",  label: "Life Connection",     rows: 3 },
+                ...(q.question_type === "snippet" ? [
+                  { key: "quiz_recap",     label: "Refresher Questions", rows: 2 },
+                ] : []),
+                { key: "source_citation",  label: "Source / Citation",   rows: 1 },
+              ].map(({ key, label, rows }) => (
+                <div className="qp-edit-field" key={key}>
+                  <label>{label}</label>
+                  <textarea
+                    rows={rows}
+                    value={editDraft[key] || ""}
+                    onChange={e => setEditDraft(prev => ({ ...prev, [key]: e.target.value }))}
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div className="qp-edit-footer">
+              {editMsg && (
+                <span className={"qp-edit-msg " + (editMsg === "Saved!" ? "ok" : "err")}>{editMsg}</span>
+              )}
+              <button className="qp-edit-cancel-btn" onClick={() => setShowEditPanel(false)}>Cancel</button>
+              <button className="qp-edit-save-btn" onClick={saveEdit} disabled={editSaving}>
+                {editSaving ? "Saving…" : "Save Changes"}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Finish confirmation overlay */}
+      {phase === "confirm_finish" && (
+        <div className="qp-overlay">
+          <div className="qp-confirm-card">
+            <div className="qp-confirm-icon">⚠️</div>
+            <div className="qp-confirm-title">Submit Quiz?</div>
+            <div className="qp-confirm-body">
+              You have <strong>{questions.reduce((n, _, i) => n + (answers.has(i) ? 0 : 1), 0)}</strong> unanswered question(s).
+              Unanswered questions will not count towards your score.
+            </div>
+            <div className="qp-confirm-btns">
+              <button className="qp-confirm-btn primary" onClick={finishQuiz}>
+                Submit Anyway
+              </button>
+              <button className="qp-confirm-btn cancel" onClick={() => setPhase("quiz")}>
+                Go Back &amp; Answer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

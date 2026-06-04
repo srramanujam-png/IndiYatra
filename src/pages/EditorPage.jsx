@@ -12,7 +12,7 @@ import {
   checkActiveDrafts,
   loadContentRoles, assignContentRole, revokeContentRole,
   loadAllContentRoleAssignments, deleteAssignment,
-  getSnippetQuestion, saveSnippetQuestion,
+  getSnippetQuestion,
 } from "../lib/auth";
 import { supabase } from "../lib/supabase";
 import { EMPTY } from "../config/appStrings";
@@ -388,7 +388,6 @@ function DraftEditForm({ draft, onClose, onSaved, showToast }) {
     wrong_option_3: saved.wrong_option_3 || "",
   });
   const [qLoading, setQLoading] = useState(false);
-  const [qSaving,  setQSaving]  = useState(false);
 
   const [loading,    setLoading]    = useState(true);
   const [saving,     setSaving]     = useState(false);
@@ -534,27 +533,13 @@ function DraftEditForm({ draft, onClose, onSaved, showToast }) {
     return base;
   }
 
-  // Save snippet_questions directly to the live table (question edits bypass the draft workflow)
-  async function saveQuestionDirect() {
-    const hasQ = !!(qFields.question && qFields.correct_option &&
-      qFields.wrong_option_1 && qFields.wrong_option_2 && qFields.wrong_option_3);
-    if (!hasQ || !isSnippet) return;
-    setQSaving(true);
-    const { error } = await saveSnippetQuestion(draft.content_id, draft.language_id, {
-      question:       qFields.question,
-      correct_option: qFields.correct_option,
-      wrong_option_1: qFields.wrong_option_1,
-      wrong_option_2: qFields.wrong_option_2,
-      wrong_option_3: qFields.wrong_option_3,
-    });
-    setQSaving(false);
-    if (error) showToast("Question save failed: " + (error.message || "unknown error"));
-  }
+  // Question fields are included in draft_data via buildDraftData().
+  // They are written to snippet_questions only when the supervisor publishes
+  // the draft — same approval gate as the snippet translation itself.
 
   async function handleSave() {
     setSaving(true);
     const { error } = await saveDraftData(draft.id, buildDraftData());
-    if (!error) await saveQuestionDirect();
     setSaving(false);
     if (error) { showToast("Save failed: " + (error.message || "unknown error")); return; }
     showToast("Draft saved ✓");
@@ -564,7 +549,6 @@ function DraftEditForm({ draft, onClose, onSaved, showToast }) {
   async function handleSubmit() {
     setSubmitting(true);
     const { error } = await submitDraft(draft.id, buildDraftData());
-    if (!error) await saveQuestionDirect();
     setSubmitting(false);
     if (error) { showToast("Submit failed: " + (error.message || "unknown error")); return; }
     showToast("Submitted for review ✓");
@@ -748,8 +732,7 @@ function DraftEditForm({ draft, onClose, onSaved, showToast }) {
                         </div>
                       ))}
                       <div className="ep-tax-note" style={{ marginTop: -4, marginBottom: 8 }}>
-                        All five fields must be filled. Changes are saved directly to the live question table — no approval required.
-                        {qSaving && <span style={{ marginLeft: 8, color: "#FF8E00" }}>Saving…</span>}
+                        All five fields must be filled. Question is published to the live table when the supervisor approves and publishes this draft.
                       </div>
                     </>
                   )}
@@ -1556,4 +1539,122 @@ function VerifierView({ showToast }) {
     <>
       <div className="ep-section">
         <div className="ep-section-title">Review Queue</div>
-        {load
+        {loading ? <p style={{ color: "#aaa", textAlign: "center", padding: 32 }}>Loading…</p>
+        : drafts.length === 0 ? <EmptyState msg={EMPTY.review} />
+        : (
+          <div className="ep-table-wrap">
+            <table className="ep-table">
+              <thead><tr>
+                <th>Content</th><th>Type</th><th>Language</th><th>Editor</th>
+                <th>Role</th><th>Status</th><th>Actions</th>
+              </tr></thead>
+              <tbody>
+                {drafts.map(d => (
+                  <tr key={d.id}>
+                    <td style={{ fontFamily: "monospace", fontSize: "0.8125rem", color: "#1F1F1F" }}>{d.content_id}</td>
+                    <td><ContentTypeTag type={d.content_type} /></td>
+                    <td style={{ fontSize: "0.8125rem", color: "#1F1F1F" }}>{d.language_id || "—"}</td>
+                    <td style={{ fontSize: "0.875rem" }}>{d.editor_name || "—"}</td>
+                    <td><SubRoleBadge role={d.sub_role} /></td>
+                    <td><StatusBadge status={d.status} /></td>
+                    <td>
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        {d.status === "submitted" && (
+                          <>
+                            <button className="ep-btn-sm ep-btn-approve"
+                              onClick={() => handleAction(d.id, "approved", "Verifier approved")}>✓ Approve</button>
+                            <button className="ep-btn-sm ep-btn-sendback"
+                              onClick={() => handleAction(d.id, "needs_revision", "Verifier requested revisions")}>↺ Revise</button>
+                          </>
+                        )}
+                        <button className="ep-btn-sm ep-btn-secondary" onClick={() => setLogDraftId(d.id)}>📋</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+      {logDraftId && <EventLogPanel draftId={logDraftId} onClose={() => setLogDraftId(null)} />}
+    </>
+  );
+}
+
+// ── Main EditorPage ───────────────────────────────────────────────────────────
+export default function EditorPage({
+  settings, onOpenSettings, onSaveSettings, onHome, onDashboard, onLikes, onBookmarks, onDiscover,
+  onAdmin, isAdmin, onResume, bookmarks, onToggleBookmark,
+  userEditorialRole, onEditor,
+  languages = [],
+  onBack,
+  activePage,
+}) {
+  const [toast, setToast] = useState("");
+  const toastRef = { current: null };
+
+  function showToast(msg) {
+    setToast(msg);
+    clearTimeout(toastRef.current);
+    toastRef.current = setTimeout(() => setToast(""), 2400);
+  }
+
+  // Prioritise explicit editorial role; fall back to supervisor for admin users
+  // with no editorial role. This prevents editors from seeing the supervisor view
+  // (because is_admin() returns true for ALL non-learner roles in this app).
+  const role = userEditorialRole || (isAdmin ? "supervisor" : "editor");
+  const roleMeta = {
+    supervisor: { label: "Supervisor" },
+    verifier:   { label: "Verifier"   },
+    editor:     { label: "Editor"     },
+  };
+  const rm = roleMeta[role] || roleMeta.editor;
+
+  const navLinks = [
+    { label: "Home",      onClick: onHome      },
+    { label: "Dashboard", onClick: onDashboard },
+    { label: "Discover",  onClick: onDiscover  },
+    { label: "Likes",     onClick: onLikes     },
+    { label: "Bookmarks", onClick: onBookmarks },
+  ];
+
+  return (
+    <>
+      <style>{globalStyles}</style>
+      <style>{EDITOR_STYLES}</style>
+      <PageHeader
+        navLinks={navLinks}
+        onHome={onHome}
+        onOpenSettings={onOpenSettings}
+        onResume={onResume}
+        isAdmin={isAdmin}
+        onAdmin={onAdmin}
+        userEditorialRole={userEditorialRole}
+        onEditor={onEditor}
+        activePage={activePage}
+        settings={settings}
+        onSaveSettings={onSaveSettings}
+        languages={languages}
+      />
+
+      <div className="editor-page">
+        <div className="ep-hero">
+          <div className="ep-role-badge">{rm.label}</div>
+          <h1>Editorial Workspace</h1>
+          <p>
+            {role === "supervisor" && "Assign tasks, track progress, and publish approved content."}
+            {role === "verifier"   && "Review submitted drafts and recommend them for approval."}
+            {role === "editor"     && "View your assigned tasks and work on translations and edits."}
+          </p>
+        </div>
+
+        {role === "supervisor" && <SupervisorView languages={languages} showToast={showToast} />}
+        {role === "verifier"   && <VerifierView showToast={showToast} />}
+        {role === "editor"     && <EditorView   showToast={showToast} />}
+      </div>
+
+      {toast && <div className="ep-toast">{toast}</div>}
+    </>
+  );
+}
