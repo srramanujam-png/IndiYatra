@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { supabaseClient, SAFFRON, HERITAGE, GREEN, DEFAULT_LANG_ID } from "../lib/supabase";
-import { saveQuizAttempt, getAttemptCount, saveSnippetQuestion, saveStandaloneQuestion } from "../lib/auth";
+import { SAFFRON, HERITAGE, GREEN, DEFAULT_LANG_ID } from "../lib/supabase";
+import { supabaseClient, saveQuizAttempt, getAttemptCount, saveSnippetQuestion, saveStandaloneQuestion } from "../lib/auth";
 import PageHeader from "../components/PageHeader";
 import { globalStyles } from "../styles/global";
 import { APP_URL } from "../config/appStrings";
