@@ -5,7 +5,7 @@ import { globalStyles } from "../styles/global";
 import { useAuthContext } from "../contexts/AuthContext";
 import PageHeader from "../components/PageHeader";
 import { SkeletonBookmarkList } from "../components/Skeletons";
-import { APP_FOOTER, SIGNIN, EMPTY } from "../config/appStrings";
+import { SIGNIN, EMPTY } from "../config/appStrings";
 
 const BM_ICON = (size = 28, color = "#FF8E00") => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill={color} stroke={color}
@@ -348,7 +348,6 @@ export default function BookmarksPage({
         </>
       )}
 
-      <footer className="footer">{APP_FOOTER(new Date().getFullYear())}</footer>
     </>
   );
 }

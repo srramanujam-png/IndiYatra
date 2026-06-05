@@ -5,7 +5,7 @@ import { globalStyles } from "../styles/global";
 import { useAuthContext } from "../contexts/AuthContext";
 import PageHeader from "../components/PageHeader";
 import { SkeletonLikeGrid } from "../components/Skeletons";
-import { APP_FOOTER, SIGNIN, EMPTY } from "../config/appStrings";
+import { SIGNIN, EMPTY } from "../config/appStrings";
 
 const styles = `
   .likes-hero {
@@ -280,7 +280,6 @@ export default function LikesPage({ settings, onBack, onOpenSettings, onResume, 
         </>
       )}
 
-      <footer className="footer">{APP_FOOTER(new Date().getFullYear())}</footer>
     </>
   );
 }

@@ -3,7 +3,7 @@ import { supabase, SAFFRON, HERITAGE, GREEN, logoUrl } from "../lib/supabase";
 import { globalStyles } from "../styles/global";
 import PageHeader from "../components/PageHeader";
 import { SkeletonCourseGrid } from "../components/Skeletons";
-import { APP_FOOTER, FALLBACK } from "../config/appStrings";
+import { FALLBACK } from "../config/appStrings";
 import { AuthContext } from "../contexts/AuthContext";
 
 const TEAL    = "#4AADA8";
@@ -337,7 +337,6 @@ export default function HomePage({
         </div>
       </section>
 
-      <footer className="footer">{APP_FOOTER(new Date().getFullYear())}</footer>
     </>
   );
 }

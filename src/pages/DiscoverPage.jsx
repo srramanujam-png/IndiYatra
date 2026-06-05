@@ -3,7 +3,7 @@ import { supabase, SAFFRON, HERITAGE, GREEN, DEFAULT_LANG_CODE } from "../lib/su
 import { globalStyles } from "../styles/global";
 import PageHeader from "../components/PageHeader";
 import { SkeletonDiscoverResults } from "../components/Skeletons";
-import { APP_FOOTER, EMPTY } from "../config/appStrings";
+import { EMPTY } from "../config/appStrings";
 
 // Colour per content type — brand colours only
 const TYPE_META = {
@@ -542,8 +542,5 @@ export default function DiscoverPage({
         )}
       </div>
 
-      <footer className="footer">
-        {APP_FOOTER(new Date().getFullYear())}
-      </footer>
     </>
   );}
