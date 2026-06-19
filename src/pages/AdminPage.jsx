@@ -7,7 +7,7 @@ import {
   adminGetUsers, adminGetBadgeCounts, adminGetTokens,
   adminToggleBadge, adminUpdateBadge, adminAddBadge, adminDeleteBadge,
   adminAwardToken,
-  adminImportSnippetsFull, adminDryRunImport,
+  adminImportSnippetsFull, adminDryRunImport, adminImportQuestions, getNextQuestionKey,
   adminGetTokensRaw, adminUpdateTokenRow, adminDeleteTokenRow, adminSaveOrder,
   adminGetTokenCatalogue, adminAddTokenType, adminUpdateTokenType, adminDeleteTokenType,
   adminAddTerm, adminUpdateTerm, adminDeleteTerm,
@@ -236,8 +236,9 @@ export default function AdminPage({
   const [catMsg,              setCatMsg]              = useState("");
 
   // ── Import ────────────────────────────────��──────────────────────────────────
-  const [importFile,    setImportFile]    = useState(null);
-  const [nextSnippetKey, setNextSnippetKey] = useState(null);
+  const [importFile,      setImportFile]      = useState(null);
+  const [nextSnippetKey,  setNextSnippetKey]  = useState(null);
+  const [nextQuestionKey, setNextQuestionKey] = useState(null);
   const [importSheets,  setImportSheets]  = useState(null);   // { Snippets: [...], Lessons: [...], Mapping: [...] }
   const [importRunning, setImportRunning] = useState(false);
   const [importMsg,     setImportMsg]     = useState("");
@@ -787,6 +788,11 @@ export default function AdminPage({
     setNextSnippetKey(maxKey + 1);
   }
 
+  async function fetchNextQuestionKey() {
+    const next = await getNextQuestionKey();
+    setNextQuestionKey(next);
+  }
+
   function handleImportFile(e) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -804,8 +810,7 @@ export default function AdminPage({
         const sheetName = wb.SheetNames.includes("Snippets") ? "Snippets" : wb.SheetNames[0];
         if (!sheetName) { setImportMsg("The file has no sheets."); return; }
         const rawRows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { defval: "" });
-        // Normalise header names: trim, lowercase, spaces → underscores.
-        // This lets spreadsheets use "Module", "Lesson", "English Hook" etc.
+        // Normalise header names: trim, lowercase, spaces → underscores
         const rows = rawRows.map(r => {
           const out = {};
           for (const [k, v] of Object.entries(r))
@@ -822,46 +827,91 @@ export default function AdminPage({
   }
 
   async function handleImportAll() {
-    if (!importSheets?.Snippets?.length) return;
+    const rows = importSheets?.Snippets || [];
+    if (!rows.length) return;
     setImportRunning(true);
     setImportResults(null);
     setImportMsg("");
-    const stats = await adminImportSnippetsFull(importSheets.Snippets);
-    setImportResults(stats);
-    setImportMsg(stats.errors.length
-      ? "Import finished with " + stats.errors.length + " error(s) — see details below."
+
+    // Step 1: snippets first (creates snippet_ids needed by question import)
+    const snippetRows = rows.filter(r => String(r.english_hook || "").trim());
+    let combined = { errors: [] };
+    if (snippetRows.length) {
+      const stats = await adminImportSnippetsFull(snippetRows);
+      Object.assign(combined, stats);
+      combined.errors = stats.errors || [];
+    }
+
+    // Step 2: questions (any row with a question_key and question text)
+    const qStats = await adminImportQuestions(rows);
+    combined.questionsCreated = qStats.questionsCreated;
+    combined.questionsUpdated = qStats.questionsUpdated;
+    combined.questionsSkipped = qStats.questionsSkipped;
+    combined.errors = [...(combined.errors || []), ...(qStats.errors || [])];
+
+    setImportResults(combined);
+    setImportMsg(combined.errors.length
+      ? "Import finished with " + combined.errors.length + " error(s) — see details below."
       : "Import complete ✓");
     setImportRunning(false);
   }
 
   async function handleValidate() {
-    if (!importSheets?.Snippets?.length) return;
+    const rows = importSheets?.Snippets || [];
+    // Only rows with english_hook contain snippet data to validate;
+    // question-only rows (have question_key but no english_hook) skip snippet validation.
+    const snippetRows = rows.filter(r => String(r.english_hook || "").trim());
+    if (!snippetRows.length) {
+      // Questions-only re-import — auto-pass
+      setValidateResults({ counts: { ok: 0, warn: 0, error: 0, total: 0 }, rowIssues: [], resolutions: {} });
+      setValidated(true);
+      return;
+    }
     setValidateRunning(true);
     setValidateResults(null);
     setValidated(false);
-    const results = await adminDryRunImport(importSheets.Snippets);
+    const results = await adminDryRunImport(snippetRows);
     setValidateResults(results);
     setValidated(results.counts.error === 0);
     setValidateRunning(false);
   }
 
   async function downloadTemplate() {
+    // Single merged sheet: snippet fields + question fields in each row.
+    // A row may have snippet data only, question data only, or both.
     const COLS = [
-      "english_hook","difficulty_level","snippet_value",
+      // ── Snippet fields ─────────────────────────────────────────────────────
+      "snippet_key",         // stable integer — dedup key for snippets
+      "english_hook",        // required for snippet rows
+      "difficulty_level",
+      "snippet_value",
       "picture_url","picture_alt","picture_attribution",
-      "language","hook","explanation","key_term","key_term_meaning",
+      "language",
+      "hook","explanation","key_term","key_term_meaning",
       "life_connection","refresher_question","source_reference",
       "lesson","module","theme","level","course","order_index",
+      // ── Question fields ────────────────────────────────────────────────────
+      "question_key",        // stable integer — dedup key for questions (shared namespace across Type 1 + 2)
+      "question",
+      "hint",                // optional — leave blank if none
+      "option_1",            // CORRECT answer
+      "option_2","option_3","option_4",  // wrong answers
     ];
     const EXAMPLE = [
+      "1",                   // snippet_key
       "The stone chariot stands at Hampi","3","10",
       "https://example.com/hampi.jpg","Stone Chariot at Hampi","Archaeological Survey of India",
-      "English","The stone chariot stands at Hampi",
+      "English",
+      "The stone chariot stands at Hampi",
       "The stone chariot is a famous monument in Hampi.",
       "Chariot","A vehicle used in ancient India",
       "Architecture connects us to our past.",
       "What is the stone chariot made of?","Source: ASI records",
       "Hampi Heritage","Architecture Module","Sacred Geography","Preparatory","Heritage Course","1",
+      "1",                   // question_key
+      "What material is the stone chariot at Hampi carved from?",
+      "Think about ancient Indian architecture",
+      "Granite","Sandstone","Limestone","Marble",
     ];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([COLS, EXAMPLE]), "Snippets");
@@ -874,21 +924,37 @@ export default function AdminPage({
         supabaseClient.from("courses").select("course_name").order("course_name"),
       ]);
       const refRows = [
-        ["Field", "Valid values — copy these exactly into the Snippets sheet (fuzzy matching tolerates minor typos)"],
+        ["Field", "Notes"],
+        [],
+        ["── Lookup values ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────", ""],
         ["language",       (langR.data  || []).map(r => r.language).join(", ")],
         ["level",          (levelR.data || []).map(r => r.title).join(", ")],
         ["course",         (courseR.data|| []).map(r => r.course_name).join(", ")],
         [],
+        ["── Snippet fields ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────", ""],
+        ["snippet_key",      "Stable integer. Dedup key for snippets. Required for snippet rows. Use 'Check next snippet_key' in the import tab."],
+        ["english_hook",     "English version of the hook — required for snippet rows. Used to identify the snippet conceptually."],
         ["difficulty_level", "1  2  3  4  5  (1 = easiest, 5 = hardest)"],
         ["snippet_value",    "Dharma points awarded for this snippet (number)"],
         ["order_index",      "Position of this snippet within the lesson (1, 2, 3, …)"],
-        ["picture_url",      "Direct public URL to the image (https://…). Leave blank if none."],
+        ["picture_url",      "Direct public URL to the image (https://…). Leave blank if none. On re-import, replaces the existing image."],
         ["picture_alt",      "Alt text / caption for the image"],
         ["picture_attribution", "Credit line, e.g. Archaeological Survey of India"],
         [],
         ["module",  "Free text. If it does not exist it will be created and linked to the theme/level/course above."],
         ["theme",   "Free text. If it does not exist it will be created."],
         ["lesson",  "Free text. If it does not exist it will be created and linked to the module above."],
+        [],
+        ["── Question fields ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────", ""],
+        ["question_key", "Stable integer. Dedup/upsert key for questions. Shared namespace across Type 1 and Type 2. Use 'Check next question_key' in the import tab."],
+        ["question",     "The question text shown to the learner."],
+        ["option_1",     "CORRECT answer — always put the right answer here."],
+        ["option_2–4",   "Wrong answers — all three required, none can be blank."],
+        ["hint",         "Optional hint shown to learner on request (may carry a score penalty). Leave blank if none."],
+        [],
+        ["── Re-import behaviour ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────", ""],
+        ["Snippets",   "If snippet_key already exists: non-empty cells overwrite the existing value. Blank cells are ignored."],
+        ["Questions",  "If question_key already exists: all question fields are overwritten with the new values."],
         [],
         ["Note", "Spelling variations in any lookup field are tolerated (fuzzy matching). Unrecognised language names are the only hard error — validate the file in the Admin Import tab before importing."],
       ];
@@ -1788,24 +1854,35 @@ export default function AdminPage({
                   <div className="page-section-title">Import from Excel</div>
                 </div>
                 <p style={{ color: "#555", marginBottom: 16, fontSize: "0.9rem" }}>
-                  Add new snippets from an <strong>.xlsx</strong> file. The <code>snippet_key</code> column
-                  is a stable integer ID that groups translations and enables reliable re-imports.
-                  Lookup fields (lesson, module, theme, course, language) must match exactly (case-insensitive).
-                  Existing (snippet × language) pairs are skipped.
+                  Import snippets and/or Type 1 questions from a single <strong>.xlsx</strong> file ("Snippets" sheet).
+                  Use <code>snippet_key</code> as a stable ID for snippets and <code>question_key</code> for questions — both enable reliable re-imports and upserts.
+                  On re-import, non-empty snippet fields overwrite existing values; question rows are fully replaced by <code>question_key</code>.
+                  Rows with only question fields (no <code>english_hook</code>) skip snippet processing.
                 </p>
 
-                {/* ── Next snippet key banner ── */}
-                {nextSnippetKey === null
-                  ? <div style={{ marginBottom: 16 }}><button className="btn-secondary" style={{ fontSize: "0.8rem", padding: "5px 14px" }} onClick={fetchNextSnippetKey}>Check next snippet key</button></div>
-                  : (
-                  <div style={{ marginBottom: 20, padding: "10px 16px", background: "#f0f7ff", border: "1px solid #c0d8f0", borderRadius: 10, display: "flex", alignItems: "center", gap: 10 }}>
-                    <i className="ti ti-key" style={{ color: "#00509E", fontSize: "1.1rem" }} />
-                    <span style={{ fontSize: "0.9rem", color: "#1F1F1F" }}>
-                      Next available <strong>snippet_key</strong>: <strong style={{ color: "#00509E", fontSize: "1.1rem" }}>{nextSnippetKey}</strong>
-                      <span style={{ color: "#6B6B6B", marginLeft: 8 }}>— start your next Excel batch from this number</span>
-                    </span>
-                  </div>
-                )}
+                {/* ── Next key banners ── */}
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
+                  {nextSnippetKey === null
+                    ? <button className="btn-secondary" style={{ fontSize: "0.8rem", padding: "5px 14px" }} onClick={fetchNextSnippetKey}>Check next snippet_key</button>
+                    : (
+                    <div style={{ padding: "10px 16px", background: "#f0f7ff", border: "1px solid #c0d8f0", borderRadius: 10, display: "flex", alignItems: "center", gap: 10 }}>
+                      <i className="ti ti-key" style={{ color: "#00509E", fontSize: "1.1rem" }} />
+                      <span style={{ fontSize: "0.9rem", color: "#1F1F1F" }}>
+                        Next <strong>snippet_key</strong>: <strong style={{ color: "#00509E", fontSize: "1.1rem" }}>{nextSnippetKey}</strong>
+                      </span>
+                    </div>
+                  )}
+                  {nextQuestionKey === null
+                    ? <button className="btn-secondary" style={{ fontSize: "0.8rem", padding: "5px 14px" }} onClick={fetchNextQuestionKey}>Check next question_key</button>
+                    : (
+                    <div style={{ padding: "10px 16px", background: "#f0f7ff", border: "1px solid #c0d8f0", borderRadius: 10, display: "flex", alignItems: "center", gap: 10 }}>
+                      <i className="ti ti-question-mark" style={{ color: "#00509E", fontSize: "1.1rem" }} />
+                      <span style={{ fontSize: "0.9rem", color: "#1F1F1F" }}>
+                        Next <strong>question_key</strong>: <strong style={{ color: "#00509E", fontSize: "1.1rem" }}>{nextQuestionKey}</strong>
+                      </span>
+                    </div>
+                  )}
+                </div>
 
                 {/* ── Step 1: Download template ── */}
                 <div style={{ marginBottom: 20, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
@@ -1813,7 +1890,7 @@ export default function AdminPage({
                     ⬇ Download Template
                   </button>
                   <span style={{ fontSize: "0.8rem", color: "#6B6B6B" }}>
-                    Includes a Reference sheet with valid language, level, and course names.
+                    Single "Snippets" sheet with all columns + a Reference sheet. Fill snippet fields, question fields, or both per row.
                   </span>
                 </div>
 
@@ -1959,7 +2036,15 @@ export default function AdminPage({
                       onClick={handleImportAll}
                       disabled={importRunning}
                     >
-                      {importRunning ? "Importing…" : "⬆ Import " + (importSheets?.Snippets?.length || 0) + " rows"}
+                      {importRunning ? "Importing…" : (() => {
+                        const rows = importSheets?.Snippets || [];
+                        const s = rows.filter(r => String(r.english_hook || "").trim()).length;
+                        const q = rows.filter(r => String(r.question_key || "").trim() && String(r.question || "").trim()).length;
+                        const parts = [];
+                        if (s) parts.push(s + " snippet" + (s !== 1 ? "s" : ""));
+                        if (q) parts.push(q + " question" + (q !== 1 ? "s" : ""));
+                        return "⬆ Import " + (parts.join(" + ") || "0 rows");
+                      })()}
                     </button>
 
                   </div>
@@ -1974,17 +2059,23 @@ export default function AdminPage({
                     {(() => {
                       const r = importResults;
                       const statItems = [
-                        { label: "Snippets created",      val: r.snippetsCreated },
-                        { label: "Translations added",    val: r.translationsCreated },
-                        { label: "Translations skipped",  val: r.translationsSkipped, dim: true },
-                        { label: "Images linked",         val: r.assetsCreated },
-                        { label: "Fuzzy matches used",    val: r.fuzzyMatches,         dim: true },
-                        { label: "Lessons created",       val: r.lessonsCreated },
-                        { label: "Modules created",       val: r.modulesCreated },
-                        { label: "Themes created",        val: r.themesCreated },
-                        { label: "Levels created",        val: r.levelsCreated },
-                        { label: "Courses created",       val: r.coursesCreated },
-                        { label: "Mappings created",      val: r.mappingsCreated },
+                        { label: "Snippets created",        val: r.snippetsCreated },
+                        { label: "Translations added",      val: r.translationsCreated },
+                        { label: "Translations updated",    val: r.translationsUpdated },
+                        { label: "Translations skipped",    val: r.translationsSkipped,  dim: true },
+                        { label: "Images linked",           val: r.assetsCreated },
+                        { label: "Fuzzy matches used",      val: r.fuzzyMatches,          dim: true },
+                        { label: "Lessons created",         val: r.lessonsCreated },
+                        { label: "Modules created",         val: r.modulesCreated },
+                        { label: "Themes created",          val: r.themesCreated },
+                        { label: "Levels created",          val: r.levelsCreated },
+                        { label: "Courses created",         val: r.coursesCreated },
+                        { label: "Mappings created",        val: r.mappingsCreated },
+                        { label: "Questions created",       val: r.questionsCreated },
+                        { label: "Questions updated",       val: r.questionsUpdated },
+                        { label: "Questions skipped",       val: r.questionsSkipped,      dim: true },
+                        { label: "Quiz sets created",       val: r.quizSetsCreated },
+                        { label: "Quiz links created",      val: r.quizLinksCreated },
                       ].filter(s => s.val > 0 || !s.dim);
                       return (
                         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 24px", marginBottom: 16 }}>

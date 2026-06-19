@@ -1,0 +1,101 @@
+snippet_key,category_id,tag_ids,notes
+334,CAT_005,TERM_067|TERM_026|TERM_008,Pre-monsoon shower phenomena explained as meteorological science and regional geography
+335,CAT_005,TERM_067|TERM_008|TERM_032,Halley's scientific explanation of monsoon causes and comet discovery — primary subject is science/astronomy
+336,CAT_012,TERM_012|TERM_035|TERM_062,Vassa monastic monsoon retreat is primarily about Buddhist and Jain monastic tradition
+337,CAT_005,TERM_067|TERM_058|TERM_011,Varshamana rain-gauge in Arthashastra — primary subject is ancient applied science
+338,CAT_005,TERM_067|TERM_026|TERM_048,Thar desert's role in monsoon mechanics — physical geography and science
+339,CAT_002,TERM_034|TERM_002|TERM_062,Rig Vedic Frog Hymn and frog worship for rains — primary subject is a Vedic hymn
+340,CAT_005,TERM_075|TERM_067|TERM_030,Hippalus wind enabling direct sea trade route to India — trade and applied science of monsoon winds
+341,CAT_005,TERM_067|TERM_008|TERM_026,El Nino phenomenon and its monsoon connection — meteorological science
+342,CAT_005,TERM_075|TERM_067|TERM_046,"Monsooned Malabar coffee process and GI tag — applied system, trade and produce"
+307,CAT_010,TERM_074|TERM_027|TERM_034,Vaishno Devi pilgrimage cave shrine — sacred place and pilgrimage
+308,CAT_010,TERM_074|TERM_027|TERM_071,Amarnath Yatra to the ice Lingam cave — pilgrimage to a sacred place
+309,CAT_010,TERM_074|TERM_010|TERM_071,Pandharpur Wari pilgrimage tradition to Vithoba temple — pilgrimage and bhakti
+310,CAT_006,TERM_020|TERM_027|TERM_071,Puri Jagannath Rath Yatra festival and origin of word juggernaut — primarily a festival
+311,CAT_010,TERM_074|TERM_069|TERM_048,Hemkund Sahib trekking pilgrimage — Sikh sacred place in the Himalayas
+312,CAT_010,TERM_074|TERM_062|TERM_071,Sabarimala Ayyappa pilgrimage with 41-day vratham — pilgrimage and ritual
+313,CAT_010,TERM_074|TERM_071|TERM_027,Original Char Dham across four directions of India — pilgrimage geography
+314,CAT_012,TERM_035|TERM_074|TERM_071,Navanu Yatra at Palitana Shatrunjaya — primarily a Jain pilgrimage tradition
+315,CAT_010,TERM_074|TERM_038|TERM_034,Kashi Panchkroshi pilgrimage circuit and kroshi measure — sacred geography
+316,CAT_010,TERM_063|TERM_074|TERM_027,"Narmada Parikrama, longest river-circumambulation pilgrimage — sacred river"
+317,CAT_010,TERM_074|TERM_063|TERM_062,Kanwar Yatra carrying Ganga water to Shiva temples — pilgrimage and ritual
+318,CAT_010,TERM_074|TERM_047|TERM_063,Gangasagar Mela bathing pilgrimage at Ganga delta — pilgrimage mela and sacred river
+390,CAT_010,TERM_038|TERM_034|TERM_027,Kankhal as origin of Shakti Peetha tradition near Haridwar — sacred place
+391,CAT_010,TERM_038|TERM_071|TERM_027,"Kamakhya, greatest Shakti Peetha in Assam — sacred place and temple"
+392,CAT_010,TERM_038|TERM_071|TERM_027,Vindhyachala Shakti Peetha near Mirzapur — sacred place of Devi worship
+393,CAT_010,TERM_056|TERM_038|TERM_051,Mysore named after Mahisha defeated by Devi Chamundeshwari — place and its sacred origin
+394,CAT_010,TERM_038|TERM_071|TERM_037,"Tuljapur Bhavani Shakti Peetha, family deity of Shivaji — sacred place with historical ties"
+395,CAT_010,TERM_038|TERM_071|TERM_062,Gadhakalika Devi Peetha in Ujjain linked to Kalidasa — sacred place
+396,CAT_010,TERM_038|TERM_056|TERM_027,"Kanyakumari, southernmost Shakti Peetha protecting Bharatvarsha — sacred place"
+397,CAT_010,TERM_038|TERM_074|TERM_013,"Hinglaj Devi, westernmost Shakti Peetha in Balochistan — sacred place and pilgrimage"
+398,CAT_010,TERM_038|TERM_071|TERM_027,Devi Vimala Shakti Peeth within Puri Jagannath temple — sacred place
+399,CAT_010,TERM_038|TERM_019|TERM_041,"Sharada Pith, northernmost Peetha and ancient temple university — sacred place and learning"
+400,CAT_010,TERM_038|TERM_071|TERM_062,"Nartiang, easternmost Shakti Peeth in Meghalaya — sacred place and rituals"
+401,CAT_010,TERM_038|TERM_056|TERM_027,Nainital named from Devi's eye Shakti Peeth — sacred place
+107,CAT_009,TERM_037|TERM_027|TERM_003,Kanishka's Rabatak inscription invoking Nana/Devi — primarily about a king and historical evidence
+108,CAT_001,TERM_027|TERM_003|TERM_031,Saptamatrika worship evidence from Mohenjodaro seal — antiquity of Devi/goddess worship
+109,CAT_001,TERM_027|TERM_003|TERM_062,Baghor archaeological Devi worship with continuing practice — antiquity of goddess worship
+110,CAT_002,TERM_034|TERM_027|TERM_042,"Devi Sukta in Rig Veda, earliest literary reference to Devi — primarily a sacred text"
+111,CAT_002,TERM_034|TERM_027|TERM_011,Durga Saptashati / Devi Mahatmyam from Markandeya Purana — primarily a sacred work
+112,CAT_007,TERM_071|TERM_004|TERM_027,Chausat Yogini circular temples — primarily about temple architecture and form
+113,CAT_006,TERM_020|TERM_027|TERM_062,Raj Jat pilgrimage-procession of Nanda Devi — Devi festival/procession
+114,CAT_006,TERM_020|TERM_062|TERM_027,Navapatrika form of Durga worship with nine plants — ritual within the festival
+115,CAT_008,TERM_027|TERM_046|TERM_031,"Shitala Devi, goddess warding disease — primarily about a specific deity"
+116,CAT_006,TERM_020|TERM_027|TERM_034,Chaitra Navratri coinciding with Rama Navami and new year — festival
+117,CAT_006,TERM_020|TERM_027|TERM_062,"Three divisions of Navratri honoring Durga, Lakshmi, Saraswati — festival structure"
+118,CAT_006,TERM_020|TERM_034|TERM_027,Akalabodhan untimely Navratri invocation for Rama — festival and its mythic origin
+119,CAT_006,TERM_020|TERM_050|TERM_062,Birendra Krishna Bhadra's Chandipath radio rendition for Mahalaya — festival custom and music
+120,CAT_006,TERM_020|TERM_062|TERM_077,"Ayudha Puja, worship of tools and weapons on last Navratri day — festival ritual"
+121,CAT_006,TERM_020|TERM_021|TERM_062,Golu/Kolu doll display during Navratri — festival folk art tradition
+122,CAT_006,TERM_020|TERM_015|TERM_027,Kullu Dussehra gathering of district devtas — regional festival
+123,CAT_006,TERM_020|TERM_021|TERM_025,Bathukamma flower-stack worship of Devi in Telangana — festival folk art
+124,CAT_006,TERM_020|TERM_062|TERM_022,Dashain Navratri in Nepal with tika and rituals — festival
+125,CAT_006,TERM_020|TERM_062|TERM_027,Makhar Utsava form of Navratri worship — festival with decorated swing-seat
+126,CAT_007,TERM_068|TERM_031|TERM_027,Earliest Mahishasuramardini sculpture from Kushana period — primarily sculpture/iconography
+127,CAT_006,TERM_020|TERM_042|TERM_062,Kamasutra's first literary reference to Diwali as Yaksha-ratri — festival history
+128,CAT_006,TERM_020|TERM_037|TERM_011,King Harshavardhana's Nagananda on Diwali lamp festival — festival history
+129,CAT_006,TERM_020|TERM_051|TERM_034,Bhaubij/Bhaidooj honoring Yama and Yami — Diwali-linked festival
+130,CAT_006,TERM_020|TERM_051|TERM_030,Al Beruni's account of Diwali and King Bali — festival as recorded by foreigner
+131,CAT_006,TERM_020|TERM_051|TERM_027,South Indian Diwali and Krishna-Satyabhama killing Narakasura — festival mythology
+132,CAT_006,TERM_020|TERM_027|TERM_062,Kali Puja on Diwali night in Bengal — festival and Devi worship
+133,CAT_006,TERM_020|TERM_027|TERM_051,Govardhan Puja / Annakoot after Diwali — festival
+134,CAT_006,TERM_020|TERM_046|TERM_027,Dhanteras as Ayurveda Day worshipping Dhanvantari — festival and Ayurveda
+135,CAT_012,TERM_035|TERM_020|TERM_051,Diwali commemorating Mahavira's Nirvana — primarily Jain tradition
+136,CAT_012,TERM_069|TERM_020|TERM_030,Diwali as Bandi Chhor Diwas for Guru Hargobind — primarily Sikh tradition
+137,CAT_006,TERM_020|TERM_068|TERM_051,Diwali gambling celebrating Shiva-Parvati dice game — festival and its sculpture motif
+138,CAT_006,TERM_020|TERM_037|TERM_030,Gujarati New Year marking Vikramaditya's coronation — festival and history
+139,CAT_006,TERM_020|TERM_002|TERM_062,"Kukkur Tihar, dog-worship day of Diwali in Nepal — festival and animal worship"
+140,CAT_010,TERM_056|TERM_034|TERM_051,Nandigram near Ayodhya and its Ramayana-Diwali link — sacred place
+86,CAT_010,TERM_071|TERM_074|TERM_051,Gokarna twisted linga legend with Ganesha — sacred coastal place
+87,CAT_010,TERM_071|TERM_063|TERM_051,Srirangam origin where Ganesha set down Ranganatha deity — sacred place
+88,CAT_010,TERM_071|TERM_074|TERM_027,Ashtavinayak circuit of eight Ganapati temples — pilgrimage temples
+89,CAT_010,TERM_071|TERM_062|TERM_027,Mukkuruni Vinayagar's 72 kg modak offering at Madurai — temple and ritual
+90,CAT_010,TERM_071|TERM_063|TERM_009,Uchhi Pillayar Rockfort Ganapati temple at Tiruchirapalli — sacred place
+91,CAT_010,TERM_071|TERM_058|TERM_027,Ganapati temple maintained by Madras Regiment — temple and its custodianship
+92,CAT_010,TERM_071|TERM_056|TERM_027,Ganesh Tok hilltop temple in Gangtok — sacred place
+93,CAT_009,TERM_020|TERM_061|TERM_030,Tilak starting public Sarvajanik Ganpati as patriotic movement — historical reformer and event
+94,CAT_010,TERM_071|TERM_013|TERM_027,Lenyadri rock-cut cave Ganapati temple — sacred cave place
+95,CAT_013,TERM_020|TERM_056|TERM_030,Ganesh Chaturthi as national holiday in Mauritius — diaspora culture
+96,CAT_010,TERM_071|TERM_068|TERM_009,Dholkal Ganesh hilltop deity destroyed and restored — sacred place
+97,CAT_007,TERM_068|TERM_071|TERM_013,Unakoti rock-cut Saivite carvings in Tripura — primarily sculpture site
+98,CAT_010,TERM_071|TERM_056|TERM_027,Mount Bromo Ganesha at volcano edge in Java — sacred place abroad
+99,CAT_002,TERM_034|TERM_027|TERM_042,Earliest literary reference to Ganapati word in Rig Veda — primarily textual reference
+100,CAT_001,TERM_003|TERM_031|TERM_027,Earliest Ganapati-like plaque from Luristan — antiquity of the deity's form
+101,CAT_007,TERM_068|TERM_071|TERM_012,Early Ganapati depiction on Sri Lankan stupa frieze — sculpture
+102,CAT_009,TERM_018|TERM_071|TERM_027,Ganesha as family deity of Peshwas — primarily about a dynasty
+103,CAT_010,TERM_056|TERM_012|TERM_031,Soshin Kangiten dual Ganesha worship in Japan — sacred form abroad
+104,CAT_010,TERM_071|TERM_056|TERM_027,Trinetra Ganapati in Ranthambore Fort national park — sacred place
+105,CAT_010,TERM_071|TERM_044|TERM_062,Torana Ganapati at Sringeri matha — temple form and ritual
+106,CAT_008,TERM_010|TERM_050|TERM_071,Samarth Ramdas composing the Ganpati aarti 'Sukhkarta Dukhharta' — primarily about a saint
+536,CAT_013,TERM_075|TERM_030|TERM_051,Maruti car named after Hanuman and the Suzuki venture — modern culture and history
+537,CAT_008,TERM_051|TERM_034|TERM_027,"Anjaneya, Hanuman's name from mother Anjana, and his birth — primarily about the deity"
+538,CAT_008,TERM_051|TERM_034|TERM_027,Origin of the name Hanuman from the broken jaw story — deity lore
+539,CAT_008,TERM_051|TERM_034|TERM_009,Hanuman on Arjuna's chariot flag in Mahabharata — deity in epic
+540,CAT_008,TERM_051|TERM_034|TERM_010,Hanuman granted immortality as Chiranjeevi — deity lore
+541,CAT_008,TERM_051|TERM_010|TERM_071,Hanuman's names Chiranjeevi and Sankat Mochan and Tulsidas prayers — deity and bhakti
+542,CAT_010,TERM_071|TERM_056|TERM_051,Hanuman Garhi temple in Ayodhya as protector — sacred place
+543,CAT_008,TERM_051|TERM_034|TERM_002,"Makardhwaja, Hanuman's son born from sweat — deity lore"
+544,CAT_010,TERM_056|TERM_018|TERM_051,Kishkinda identified with Hampi on the Tungabhadra — sacred place and Vijayanagara history
+545,CAT_010,TERM_071|TERM_056|TERM_051,Panchamukhi Hanuman temple at Rameshwaram — sacred place
+546,CAT_010,TERM_071|TERM_048|TERM_051,Jakhu temple at Shimla from Hanuman's Sanjeevani journey — sacred place
+547,CAT_010,TERM_071|TERM_048|TERM_051,Hanuman Tok temple at Gangtok cared for by the Army — sacred place

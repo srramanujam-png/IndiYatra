@@ -36,9 +36,17 @@ export const AUTH = {
 };
 
 // -- Share message defaults --------------------------------------------------
-// Tokens: {dharma} {lessons} {name}
-export const DEFAULT_SHARE_MSG =
-  `I've earned {dharma} Dharma Points and completed {lessons} lessons on ${APP_NAME}! Join me at ${APP_URL}`;
+// Tokens: {name} {snippets} {lessons} {quizzes} {score} {dharma} {trees}
+// Option 1 — with quiz score
+export const DEFAULT_SHARE_MSG_WITH_SCORE =
+  `IndiYatra is a wonderful learning app for Indian Heritage, History and Culture. I have read {snippets} stories and completed {lessons} lessons. I have tried {quizzes} quizzes. My average score is {score}.\n\nEverytime I learn, I win seeds and plants and my forest of knowledge grows. I have sown {dharma} dharma seeds and my forest has {trees} thriving trees. Try yourself at learn.indiyatra.in`;
+
+// Option 2 — without quiz score
+export const DEFAULT_SHARE_MSG_NO_SCORE =
+  `IndiYatra is a wonderful learning app for Indian Heritage, History and Culture. I have read {snippets} stories and completed {lessons} lessons. I have tried {quizzes} quizzes.\n\nEverytime I learn, I win seeds and plants and my forest of knowledge grows. I have sown {dharma} dharma seeds and my forest has {trees} thriving trees. Try yourself at learn.indiyatra.in`;
+
+// Alias — used by existing code that imports DEFAULT_SHARE_MSG
+export const DEFAULT_SHARE_MSG = DEFAULT_SHARE_MSG_WITH_SCORE;
 
 // Plain text -- used for per-snippet share
 export const DEFAULT_SNIPPET_SHARE_MSG =

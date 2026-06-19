@@ -15,6 +15,11 @@ export async function supabase(table, query = "") {
       "Content-Type": "application/json",
     },
   });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    console.error(`Supabase error [${res.status}] on ${table}:`, err);
+    return [];
+  }
   return res.json();
 }
 

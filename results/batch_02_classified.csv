@@ -1,0 +1,101 @@
+snippet_key,category_id,tag_ids,notes
+195,CAT_006,TERM_020|TERM_010|TERM_054|TERM_056,Primary subject is the Sindhi new year festival Cheti Chand and worship of Jhulelal
+196,CAT_006,TERM_020|TERM_069|TERM_030|TERM_056,Primary subject is the Baisakhi festival and the founding of the Khalsa panth in Sikh history
+197,CAT_006,TERM_020|TERM_008|TERM_054|TERM_062,Primary subject is the Parsi new year festival Navroz/Pateti and calendar systems
+198,CAT_006,TERM_020|TERM_062|TERM_027|TERM_056,Primary subject is the Kashmiri new year Navreh festival and worship of Ma Sharika
+199,CAT_006,TERM_020|TERM_062|TERM_056|TERM_008,Primary subject is the Gujarati new year festival Bestu Varas and its customs
+200,CAT_006,TERM_020|TERM_021|TERM_056|TERM_062,Primary subject is the tribal Sarhul spring new year festival of Jharkhand
+201,CAT_005,TERM_008|TERM_020|TERM_067|TERM_026,Primary subject is the astronomical spring equinox basis of Indian new years
+202,CAT_005,TERM_008|TERM_030|TERM_037|TERM_018,Primary subject is the Saka and Vikram calendar eras and their historical basis
+203,CAT_005,TERM_008|TERM_045|TERM_067|TERM_062,Primary subject is the luni-solar calendar adjustment via adhikmaas (intercalary month)
+159,CAT_001,TERM_027|TERM_051|TERM_031|TERM_020,"Primary subject is Randal Maa as wife of Surya, her mythology and iconography"
+160,CAT_006,TERM_020|TERM_070|TERM_056,Primary subject is the Makar Sankranti/Uttarayan kite flying celebration
+161,CAT_005,TERM_003|TERM_053|TERM_031|TERM_056,Primary subject is neolithic rock painting depiction of Surya at Singanpur
+162,CAT_007,TERM_068|TERM_031|TERM_013|TERM_012,Primary subject is the earliest sculptural depictions of Surya in Bhaja caves and Bodh Gaya
+163,CAT_005,TERM_008|TERM_020|TERM_067,Primary subject is the astronomical meaning of makar (Capricorn) in Makar Sankranti
+164,CAT_005,TERM_008|TERM_020|TERM_067|TERM_030,Primary subject is dating the origin of Makar Sankranti via precession astronomy
+165,CAT_006,TERM_020|TERM_062|TERM_002|TERM_056,Primary subject is the Tamil Pongal harvest festival and its meaning
+166,CAT_010,TERM_074|TERM_047|TERM_063|TERM_064,Primary subject is the Gangasagar Mela pilgrimage at the Ganga delta
+167,CAT_006,TERM_070|TERM_020|TERM_002|TERM_003,Primary subject is the Jallikattu bull-taming sport during Sankranti
+168,CAT_001,TERM_027|TERM_036|TERM_034|TERM_064,Primary subject is the unique association of Surya with knowledge in Indian civilization
+169,CAT_001,TERM_027|TERM_051|TERM_034|TERM_031,Primary subject is the theological evolution of Vishnu from a Rig Vedic form of Surya
+170,CAT_002,TERM_034|TERM_027|TERM_064|TERM_009,Primary subject is the Aditya Hridaya Stotram from the Ramayana
+402,CAT_009,TERM_030|TERM_037|TERM_058|TERM_056,Primary subject is the accession of the princely state of Junagadh to India
+403,CAT_009,TERM_030|TERM_037|TERM_058|TERM_056,Primary subject is the Bhopal ruler's bid to stay independent during integration
+404,CAT_009,TERM_030|TERM_037|TERM_058|TERM_056,Primary subject is the princely state of Travancore and its accession
+405,CAT_009,TERM_030|TERM_037|TERM_058|TERM_056,Primary subject is the Jodhpur Maharaja's decision during the integration of states
+406,CAT_009,TERM_030|TERM_037|TERM_058|TERM_056,Primary subject is the Indore ruler's reluctant Instrument of Accession
+407,CAT_009,TERM_030|TERM_037|TERM_058|TERM_056,Primary subject is the Cochin Maharaja's cooperation in accession
+408,CAT_009,TERM_030|TERM_037|TERM_076|TERM_058,Primary subject is Sadul Singh of Bikaner persuading princes to accede
+409,CAT_009,TERM_030|TERM_037|TERM_009|TERM_058,Primary subject is Operation Polo and the integration of Hyderabad state
+410,CAT_009,TERM_030|TERM_037|TERM_058|TERM_018,Primary subject is Baroda being the first state to sign the Instrument of Accession
+411,CAT_009,TERM_030|TERM_037|TERM_058|TERM_040,Primary subject is the Privy Purse policy offered to princes during integration
+378,CAT_009,TERM_061|TERM_030|TERM_006|TERM_011,Primary subject is Tolstoy's influence on Gandhi and his ashram in South Africa
+379,CAT_009,TERM_061|TERM_030|TERM_006|TERM_056,Primary subject is the funding and founding of Gandhi's Sevagram ashram
+380,CAT_009,TERM_061|TERM_030|TERM_078|TERM_056,Primary subject is Kasturba Gandhi's last days at Aga Khan Palace
+381,CAT_009,TERM_061|TERM_030|TERM_056|TERM_019,Primary subject is Gandhi's first Indian satyagraha at Champaran
+382,CAT_009,TERM_061|TERM_030|TERM_056,Primary subject is Gandhi's location and peace work on Independence day
+383,CAT_009,TERM_061|TERM_030|TERM_056|TERM_076,Primary subject is Patel's first encounter with Gandhi in Ahmedabad
+384,CAT_009,TERM_019|TERM_061|TERM_030|TERM_011,Primary subject is Gandhi's speech on India's traditional education system
+385,CAT_009,TERM_061|TERM_030|TERM_056|TERM_033,"Primary subject is Khan Abdul Ghaffar Khan, the Frontier Gandhi"
+386,CAT_009,TERM_076|TERM_030|TERM_061,Primary subject is Netaji Bose's wartime tribute to Gandhi from Rangoon
+387,CAT_009,TERM_061|TERM_030|TERM_056,Primary subject is Gandhi adopting his signature dhoti attire at Madurai
+388,CAT_009,TERM_019|TERM_033|TERM_030|TERM_061,Primary subject is Gandhi inaugurating Banaras Hindu University
+389,CAT_009,TERM_078|TERM_030|TERM_005|TERM_061,"Primary subject is Homai Vyarawalla, India's first woman photojournalist"
+269,CAT_009,TERM_076|TERM_030|TERM_009|TERM_056,Primary subject is Shivaji's escape from Aurangzeb at Agra
+270,CAT_009,TERM_037|TERM_030|TERM_018|TERM_056,"Primary subject is Venkoji's conquest of Thanjavur, the southern Maratha extent"
+271,CAT_009,TERM_009|TERM_030|TERM_004|TERM_056,Primary subject is the Gingee fort and Maratha military hold in Tamil Nadu
+272,CAT_009,TERM_037|TERM_030|TERM_009|TERM_056,Primary subject is Shivaji's reception by the Golconda Sultan during his Dakshin campaign
+273,CAT_009,TERM_009|TERM_030|TERM_077|TERM_056,Primary subject is the battle of Bassein against the Portuguese
+274,CAT_009,TERM_009|TERM_030|TERM_037|TERM_018,Primary subject is the Nizam's twin surrenders to Bajirao Peshwa
+275,CAT_009,TERM_030|TERM_009|TERM_018|TERM_026,Primary subject is the northernmost extent of the Maratha empire
+276,CAT_009,TERM_009|TERM_030|TERM_056|TERM_018,Primary subject is the Maratha ditch in Kolkata dug against Maratha raids
+277,CAT_009,TERM_009|TERM_030|TERM_037|TERM_018,Primary subject is the Maratha revival after the third battle of Panipat
+278,CAT_009,TERM_009|TERM_030|TERM_077|TERM_018,Primary subject is the battle of Assaye in the second Anglo-Maratha war
+279,CAT_009,TERM_009|TERM_030|TERM_060|TERM_056,Primary subject is the Maratha conflict with the African Siddis of Janjira
+280,CAT_009,TERM_009|TERM_030|TERM_018|TERM_056,Primary subject is the brief Maratha naval conflict with the Dutch
+281,CAT_009,TERM_018|TERM_030|TERM_009|TERM_037,Primary subject is the Maratha confederacy and its component dynasties
+282,CAT_010,TERM_074|TERM_004|TERM_071|TERM_018,Primary subject is Maratha architectural patronage at the Kashi pilgrimage site
+343,CAT_009,TERM_030|TERM_073|TERM_011|TERM_058,Primary subject is the Italian unification's inspiration on Indian revolutionaries
+344,CAT_009,TERM_030|TERM_076|TERM_056|TERM_009,Primary subject is the Chapekar brothers' assassination of a British officer
+345,CAT_009,TERM_061|TERM_030|TERM_076|TERM_056,Primary subject is Aurobindo Ghose as the first leader of the revolutionary movement
+346,CAT_009,TERM_030|TERM_076|TERM_033|TERM_019,Primary subject is Shyamji Verma's India House hostel for revolutionaries in London
+347,CAT_009,TERM_011|TERM_030|TERM_076|TERM_073,Primary subject is Savarkar's book reframing 1857 as a war of independence
+348,CAT_009,TERM_078|TERM_030|TERM_076|TERM_056,Primary subject is Bhikaji Cama unfurling the first Indian flag
+349,CAT_009,TERM_076|TERM_030|TERM_009|TERM_056,"Primary subject is Rash Behari Bose, Netaji's revolutionary mentor"
+350,CAT_009,TERM_030|TERM_076|TERM_075|TERM_056,Primary subject is the Ghadar movement and the Komagata Maru incident
+351,CAT_009,TERM_030|TERM_076|TERM_056|TERM_009,Primary subject is the Cellular Jail Kaala Paani penal colony in the Andamans
+352,CAT_009,TERM_030|TERM_076|TERM_072|TERM_056,Primary subject is the Rampa rebellion behind the film RRR
+353,CAT_009,TERM_030|TERM_076|TERM_009|TERM_042,Primary subject is the Kakori train robbery and Bismil's revolutionary song
+354,CAT_009,TERM_076|TERM_030|TERM_009|TERM_073,Primary subject is Chandrashekhar Azad's last stand at Alfred Park
+355,CAT_009,TERM_076|TERM_030|TERM_077|TERM_072,Primary subject is Surya Sen and the Chittagong armoury raid
+356,CAT_009,TERM_076|TERM_030|TERM_009|TERM_058,Primary subject is Subhash Bose's escape and the founding of the INA
+357,CAT_009,TERM_030|TERM_009|TERM_076|TERM_056,Primary subject is the 1946 Royal Indian Navy mutiny
+171,CAT_009,TERM_058|TERM_030|TERM_034|TERM_039,Primary subject is the ancient origin of gana (republic) in Indian polity
+172,CAT_009,TERM_058|TERM_030|TERM_034|TERM_040,Primary subject is the Vedic origin of sabha (council) in Indian polity
+173,CAT_012,TERM_012|TERM_058|TERM_030|TERM_064,Primary subject is how republican traditions shaped the Buddhist sangha
+174,CAT_009,TERM_058|TERM_030|TERM_018|TERM_056,Primary subject is the Lichchhavi republic and the Vajji confederacy
+175,CAT_012,TERM_012|TERM_058|TERM_030|TERM_064,Primary subject is the Sakya republic in which Buddha was born
+176,CAT_009,TERM_018|TERM_058|TERM_030|TERM_037,Primary subject is the Gupta dynasty's rise and fall in relation to republics
+177,CAT_009,TERM_058|TERM_030|TERM_003|TERM_018,Primary subject is the Uttaramerur inscriptions on village democracy
+178,CAT_003,TERM_058|TERM_011|TERM_009|TERM_030,Primary subject is Kautilya's Arthashastra advice on overcoming republics
+179,CAT_009,TERM_058|TERM_009|TERM_027|TERM_030,Primary subject is the Yaudheya republic halting Alexander and Kartikeya worship
+180,CAT_009,TERM_058|TERM_051|TERM_030|TERM_018,Primary subject is the Andhaka Vrishni republic led by Krishna
+219,CAT_010,TERM_071|TERM_034|TERM_050|TERM_038,Primary subject is the Kanak Mahal temple complex in Ayodhya
+220,CAT_010,TERM_071|TERM_034|TERM_038|TERM_051,Primary subject is the Bharat Milap temple site in Chitrakoot
+221,CAT_010,TERM_056|TERM_034|TERM_073|TERM_042,Primary subject is Ramtek's connection to Rama and the poet Kalidasa
+222,CAT_010,TERM_074|TERM_034|TERM_051|TERM_056,Primary subject is the valid site of Jatayu's slaying in the Ramayana
+223,CAT_010,TERM_038|TERM_034|TERM_027|TERM_051,Primary subject is the Yedeshwari Shakti temple near Solapur and its legend
+224,CAT_010,TERM_071|TERM_034|TERM_068|TERM_051,Primary subject is the Kabandha sculpture revered as Basavanna near Hubli
+225,CAT_010,TERM_038|TERM_034|TERM_051|TERM_071,Primary subject is Anjeyanadri near Hampi as the birthplace of Hanuman
+226,CAT_010,TERM_071|TERM_034|TERM_062|TERM_051,Primary subject is the Ramanathaswamy temple closed on Dussehra
+227,CAT_010,TERM_056|TERM_004|TERM_030,Primary subject is the bascule bridge at Rameswaram
+228,CAT_010,TERM_034|TERM_013|TERM_051|TERM_056,Primary subject is the Istripuram caves in Sri Lanka linked to the Ramayana
+229,CAT_010,TERM_071|TERM_034|TERM_051|TERM_030,"Primary subject is the Koneswaram temple of Trincomalee, the Dakshin Kailasha"
+230,CAT_010,TERM_048|TERM_034|TERM_051|TERM_056,Primary subject is Dronagiri in Uttarakhand where Hanuman is not worshipped
+231,CAT_010,TERM_071|TERM_034|TERM_051|TERM_012,Primary subject is the Kelaniya temple in Sri Lanka and its Vibhishana connection
+232,CAT_010,TERM_074|TERM_034|TERM_051|TERM_066,"Primary subject is Vilvahari Teertha, the cremation site of Dasaratha"
+233,CAT_010,TERM_038|TERM_034|TERM_062|TERM_051,Primary subject is Makhaura Dham and the putreshti yajna of Dasaratha
+331,CAT_002,TERM_042|TERM_073|TERM_026|TERM_063,Primary subject is Kalidasa's Meghadutam set in the monsoon
+332,CAT_010,TERM_026|TERM_048|TERM_056|TERM_067,"Primary subject is Mawsynaram in Meghalaya, the wettest place on earth"
+333,CAT_005,TERM_075|TERM_026|TERM_067|TERM_020,Primary subject is ancient mariners using monsoon winds for the Bali Yatra

@@ -5,7 +5,7 @@ import PageHeader from "../components/PageHeader";
 import { SkeletonBadges } from "../components/Skeletons";
 import { supabaseClient } from "../lib/auth";
 import { useAuthContext } from "../contexts/AuthContext";
-import { APP_URL, APP_SHARE_LOGO, PLAYER, DEFAULT_SHARE_MSG, FOREST_TOKENS as FOREST_TOKEN_DEFS } from "../config/appStrings";
+import { APP_URL, APP_SHARE_LOGO, PLAYER, DEFAULT_SHARE_MSG, DEFAULT_SHARE_MSG_WITH_SCORE, DEFAULT_SHARE_MSG_NO_SCORE, FOREST_TOKENS as FOREST_TOKEN_DEFS } from "../config/appStrings";
 
 // Off-brand colours removed — using brand constants only
 
@@ -14,7 +14,32 @@ const styles = `
   .dash-hero {
     background: white; border: 1px solid #E5E7EB; border-radius: 12px;
     padding: 24px 20px; margin-bottom: 24px;
+    display: flex; align-items: stretch; gap: 0;
   }
+  .dash-hero-left { flex: 1 1 0; min-width: 0; }
+  .dash-hero-right {
+    display: none;
+    border-left: 1px solid #F3F4F6; padding-left: 28px; margin-left: 28px;
+    flex-direction: column; justify-content: center; flex-shrink: 0;
+  }
+  .dash-nav-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px;
+  }
+  @media (min-width: 900px) { .dash-hero-right { display: flex; } }
+  .dash-nav-label {
+    font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #9CA3AF; margin-bottom: 4px;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  .dash-nav-link {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.875rem; color: #374151; text-decoration: none;
+    font-family: 'Nunito Sans', system-ui, sans-serif; font-weight: 600;
+    padding: 5px 0; border-radius: 6px; transition: color 0.15s; cursor: pointer;
+    background: none; border: none;
+  }
+  .dash-nav-link:hover { color: #FF8E00; }
+  .dash-nav-link i { font-size: 1rem; width: 18px; text-align: center; }
 
   /* ── Course chip ── */
   .dash-course-chip {
@@ -53,8 +78,12 @@ const styles = `
     border-color: ${SAFFRON}; color: ${SAFFRON}; background: ${SAFFRON}08;
   }
   .dash-scope-pill-icon { font-size: 1rem; line-height: 1; }
-  .dash-scope-pill-chevron { font-size: 0.6875rem; color: #4A5565; margin-left: 2px; }
+  .dash-scope-pill-chevron { font-size: 1rem; color: #4A5565; margin-left: 4px; line-height: 1; }
   .dash-scope-pill.open .dash-scope-pill-chevron { color: ${SAFFRON}; }
+  .dash-scope-hint {
+    font-size: 0.75rem; color: #9CA3AF; margin-top: 7px;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
   .dash-dropdown-backdrop { position: fixed; inset: 0; z-index: 199; }
   .dash-dropdown {
     position: absolute; top: calc(100% + 6px); left: 0; z-index: 200;
@@ -162,6 +191,79 @@ const styles = `
   .act-total td { font-weight: 700; color: #101828; border-top: 2px solid #E5E7EB !important; }
   .act-nonzero { font-weight: 700; color: ${HERITAGE} !important; }
 
+  /* ── Activity bar charts (mobile) ── */
+  .act-charts { display: none; grid-template-columns: 1fr 1fr; gap: 16px 12px; }
+  .act-chart-head {
+    display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;
+  }
+  .act-chart-label {
+    font-size: 0.625rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.07em; color: #4A5565; font-family: 'Inter', system-ui, sans-serif;
+  }
+  .act-chart-total {
+    font-family: 'Oswald', sans-serif; font-size: 1.125rem; font-weight: 700; color: ${HERITAGE};
+    line-height: 1;
+  }
+  .act-chart-bars {
+    display: flex; align-items: flex-end; gap: 3px; height: 52px;
+  }
+  .act-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; height: 100%; }
+  .act-bar-track { flex: 1; width: 100%; display: flex; align-items: flex-end; }
+  .act-bar-fill {
+    width: 100%; border-radius: 3px 3px 0 0; min-height: 2px;
+  }
+  .act-bar-day {
+    font-size: 0.5625rem; color: #C4C9D4; font-weight: 600;
+    font-family: 'Inter', system-ui, sans-serif; line-height: 1;
+  }
+  .act-bar-day.today { color: ${SAFFRON}; }
+
+  /* ── Quiz Performance table ── */
+  .qperf-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+  .qperf-table th {
+    font-size: 0.6875rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.06em; color: #4A5565; padding: 0 0 10px;
+    text-align: right; font-family: 'Inter', system-ui, sans-serif;
+  }
+  .qperf-table th:first-child { text-align: left; }
+  .qperf-table td {
+    padding: 11px 0; border-top: 1px solid #E5E7EB;
+    text-align: right; color: #4A5565; font-family: 'Nunito Sans', system-ui, sans-serif;
+    font-size: 0.875rem;
+  }
+  .qperf-table td:first-child { text-align: left; font-weight: 600; color: #101828; }
+  .qperf-num { font-weight: 700; color: ${HERITAGE}; font-family: 'Oswald', sans-serif; font-size: 1rem; }
+  .qperf-num.dim { color: #aaa; font-weight: 400; font-size: 0.875rem; font-family: 'Nunito Sans', sans-serif; }
+  .qperf-score {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 3px 10px; border-radius: 999px;
+    font-size: 0.75rem; font-weight: 700; letter-spacing: 0.03em;
+    line-height: 1; white-space: nowrap;
+  }
+  .qperf-score.good { background: #EDFBF3; color: #065F3E; }
+  .qperf-score.ok   { background: #FFF3E0; color: #92400E; }
+  .qperf-score.low  { background: #FEF2F2; color: #7F1D1D; }
+  .qperf-score.none { background: #F3F4F6; color: #9CA3AF; }
+  .qperf-rank { font-size: 0.8125rem; color: #4A5565; }
+  .qperf-rank strong { color: ${HERITAGE}; font-family: 'Oswald', sans-serif; font-size: 1rem; font-weight: 700; }
+
+  /* ── Quiz perf mobile stack ── */
+  .qperf-stack { display: none; }
+  .qperf-stack-row {
+    padding: 12px 0; border-top: 1px solid #E5E7EB;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .qperf-stack-row:first-child { border-top: none; }
+  .qperf-stack-name { font-weight: 700; color: #101828; font-size: 0.9375rem; }
+  .qperf-stack-stats {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  }
+  .qperf-stack-item {
+    font-size: 0.75rem; color: #4A5565;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  .qperf-stack-item span { font-weight: 700; color: ${HERITAGE}; font-family: 'Oswald', sans-serif; font-size: 0.9rem; }
+
   /* ── Badges ── */
   .badge-level-label {
     font-size: 0.625rem; font-weight: 600; letter-spacing: 0.08em;
@@ -206,7 +308,7 @@ const styles = `
     font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.125rem; font-weight: 500;
     color: ${GREEN}; margin-bottom: 14px;
   }
-  .share-stat-row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 12px; }
+  .share-stat-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; justify-content: space-evenly; }
   .share-stat { text-align: center; }
   .share-stat-val {
     font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.625rem;
@@ -273,6 +375,23 @@ const styles = `
     font-family: 'Inter', system-ui, sans-serif;
   }
   .share-reset-btn:hover { color: #101828; border-color: #B5D7D5; }
+  .share-score-toggle {
+    display: inline-flex; align-items: center; gap: 8px; margin-bottom: 10px;
+    font-size: 0.8125rem; color: #6B7280; font-family: 'Inter', system-ui, sans-serif;
+    cursor: pointer; user-select: none;
+  }
+  .share-score-toggle input[type="checkbox"] { display: none; }
+  .share-toggle-track {
+    position: relative; width: 36px; height: 20px; border-radius: 10px;
+    background: #D1D5DB; transition: background 0.2s; flex-shrink: 0;
+  }
+  .share-toggle-track::after {
+    content: ''; position: absolute; top: 3px; left: 3px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: white; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .share-score-toggle input:checked + .share-toggle-track { background: #FF8E00; }
+  .share-score-toggle input:checked + .share-toggle-track::after { transform: translateX(16px); }
   .share-msg-text {
     font-size: 0.9375rem; color: #4A5565; line-height: 1.6; margin-top: 4px;
     font-style: italic; font-family: 'Nunito Sans', system-ui, sans-serif;
@@ -422,9 +541,12 @@ const styles = `
     .prog-table-wrap { display: none; }
     .prog-stack      { display: block; }
     .act-table-wrap  { display: none; }
-    .act-stack       { display: block; }
+    .act-stack       { display: none; }
+    .act-charts      { display: grid; }
     .forest-token-sub { display: none; }
     .share-msg-text  { font-size: 0.875rem; }
+    .qperf-table     { display: none; }
+    .qperf-stack     { display: block; }
   }
   @media (max-width: 480px) {
     .dash-title  { font-size: 1.625rem; }
@@ -512,6 +634,44 @@ function buildActivityFromCompletions(completions, lessonProgress, rawTokensData
   });
 }
 
+// ─── Gauge chart helper ──────────────────────────────────────────────────────
+function GaugeChart({ pct, label, sub, color }) {
+  const cx = 50, cy = 56, r = 42, sw = 9;
+  const p  = Math.max(0, Math.min(100, pct || 0));
+  // Arc from (cx-r, cy) clockwise through top to end point
+  const trackPath = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`;
+  let   fillPath  = null;
+  if (p > 0 && p < 100) {
+    const ang = Math.PI * (1 - p / 100);
+    const ex  = (cx + r * Math.cos(ang)).toFixed(2);
+    const ey  = (cy - r * Math.sin(ang)).toFixed(2);
+    fillPath  = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${ex} ${ey}`;
+  } else if (p === 100) {
+    fillPath = trackPath; // full arc
+  }
+  const fillColor  = p === 0 ? "#E5E7EB" : p === 100 ? GREEN : color;
+  const textColor  = p === 0 ? "#9CA3AF" : fillColor;
+  return (
+    <div style={{ textAlign: "center" }}>
+      <svg viewBox="0 0 100 62" style={{ width: "100%", maxWidth: 140, display: "block", margin: "0 auto" }}>
+        <path d={trackPath} fill="none" stroke="#F3F4F6" strokeWidth={sw} strokeLinecap="round" />
+        {fillPath && <path d={fillPath} fill="none" stroke={fillColor} strokeWidth={sw} strokeLinecap="round" />}
+        <text x={cx} y={cy - 4} textAnchor="middle" fill={textColor}
+          fontSize="17" fontWeight="700" fontFamily="'Oswald','Arial Narrow',sans-serif">
+          {p}%
+        </text>
+      </svg>
+      <div style={{
+        fontSize: "0.75rem", fontWeight: 700, color: "#101828",
+        fontFamily: "'Nunito Sans',system-ui,sans-serif",
+        lineHeight: 1.3, marginTop: 2, padding: "0 4px",
+        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+      }} title={label}>{label}</div>
+      {sub && <div style={{ fontSize: "0.625rem", color: "#6B6B6B", marginTop: 1 }}>{sub}</div>}
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function DashboardPage({ course, settings, onBack, onOpenSettings, onResume, languages = [], onSaveSettings, onLikes, onBookmarks, onDiscover, isAdmin, onAdmin, userEditorialRole, onEditor, activePage }) {
   const auth    = useAuthContext();
@@ -539,6 +699,13 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   const [leaderboardVisible, setLeaderboardVisible] = useState(false);
 
+  // ── Quiz performance ──────────────────────────────────────────────────────
+  const [rawQuizSets,      setRawQuizSets]      = useState([]);
+  const [rawQuizQuestions, setRawQuizQuestions] = useState([]);
+  const [rawUserAttempts,  setRawUserAttempts]  = useState([]);
+  const [quizRanks,        setQuizRanks]        = useState([]);
+
+  const [includeScore,    setIncludeScore]   = useState(() => localStorage.getItem("indiyatra_share_include_score") !== "false");
   const [shareMessage,    setShareMessage]   = useState(() => localStorage.getItem("indiyatra_share_message") || DEFAULT_SHARE_MSG);
   const [shareMsgDraft,   setShareMsgDraft]  = useState(shareMessage);
   const [showShareSettings, setShowShareSettings] = useState(false);
@@ -549,7 +716,7 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
       try {
         // Fetch this user's completions + in-progress lesson positions
         if (user && !user.is_anonymous) {
-          const [{ data: compData }, { data: progData }, { data: likesData }, { data: tokenData }, { data: earnedData }] = await Promise.all([
+          const [{ data: compData }, { data: progData }, { data: likesData }, { data: tokenData }, { data: earnedData }, { data: attemptsData }] = await Promise.all([
             supabaseClient
               .from("lesson_completions")
               .select("lesson_id, course_id, points_earned, completed_at, snippet_count")
@@ -570,6 +737,12 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
               .from("user_badges")
               .select("badge_id")
               .eq("profile_id", user.id),
+            supabaseClient
+              .from("quiz_attempts")
+              .select("quiz_id, score, max_score, answers, completed_at")
+              .eq("profile_id", user.id)
+              .not("completed_at", "is", null)
+              .order("completed_at", { ascending: false }),
           ]);
           setCompletions(compData || []);
           setLessonProgress(progData || []);
@@ -579,10 +752,15 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
           setForestTokens(tmap);
           setRawTokensData(tokenData || []);
           setEarnedBadgeIds(new Set((earnedData || []).map(b => b.badge_id)));
+          setRawUserAttempts(attemptsData || []);
+          // Ranks fetched separately so a missing RPC never blocks the rest of the data
+          supabaseClient.rpc("get_quiz_ranks", { p_profile_id: user.id })
+            .then(({ data }) => setQuizRanks(data || []))
+            .catch(() => setQuizRanks([]));
         }
         // Fetch all public structural data in parallel
         // Public structural data — use anon supabase() helper (matches CoursePage pattern)
-        const [lessonCount, themesData, modulesData, lessonsData, coursesData, mappingData, badgesData] = await Promise.all([
+        const [lessonCount, themesData, modulesData, lessonsData, coursesData, mappingData, badgesData, quizSetsData, quizQuestionsData] = await Promise.all([
           supabase("lessons", "?select=lesson_id"),
           supabase("themes",  "?select=*&order=theme_id"),
           supabase("modules",  "?select=module_id,theme_id,level_id,course_id"),
@@ -590,6 +768,8 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
           supabase("courses",  "?select=course_id,course_name,snippet_count&order=course_id"),
           supabase("lesson_snippet_mapping", "?select=lesson_id"),
           supabase("badges", "?select=*&is_active=eq.true&order=sort_order"),
+          supabase("quiz_sets", "?select=quiz_id,lesson_id&is_published=eq.true"),
+          supabase("quiz_questions", "?select=quiz_id,question_key&question_key=not.is.null"),
         ]);
         // safeArray: supabase() returns error objects on failure (truthy but not arrays)
         const sa = v => Array.isArray(v) ? v : [];
@@ -600,12 +780,30 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
         setRawCourses(sa(coursesData));
         setRawMapping(sa(mappingData));
         setAllBadges(sa(badgesData));
+        setRawQuizSets(sa(quizSetsData));
+        setRawQuizQuestions(sa(quizQuestionsData));
       } catch (e) {
         console.warn("DashboardPage fetchData:", e);
       }
     }
     fetchData();
   }, [user?.id]);
+
+  // Re-fetch quiz attempts + ranks every time the user returns to the dashboard
+  // (the main fetchData only runs on mount, so stale data persists after a quiz)
+  useEffect(() => {
+    if (!user || user.is_anonymous || activePage !== "dashboard") return;
+    supabaseClient
+      .from("quiz_attempts")
+      .select("quiz_id, score, max_score, answers, completed_at")
+      .eq("profile_id", user.id)
+      .not("completed_at", "is", null)
+      .order("completed_at", { ascending: false })
+      .then(({ data }) => setRawUserAttempts(data || []));
+    supabaseClient.rpc("get_quiz_ranks", { p_profile_id: user.id })
+      .then(({ data }) => setQuizRanks(data || []))
+      .catch(() => {});
+  }, [activePage, user?.id]);
 
   // ── Derived values ──────────────────────────────────────────────────────────
   const displayName = profile?.display_name
@@ -817,6 +1015,90 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
   const streakData       = buildStreakFromCompletions(scopedCompletions);
   const activityData     = buildActivityFromCompletions(scopedCompletions, scopedProgress, rawTokensData);
 
+  // ── Quiz performance derived values ────────────────────────────────────────
+  // Last attempt per quiz (rawUserAttempts is already ordered desc by completed_at)
+  const lastAttemptByQuiz = {};
+  rawUserAttempts.forEach(a => { if (!lastAttemptByQuiz[a.quiz_id]) lastAttemptByQuiz[a.quiz_id] = a; });
+
+  // Unique question_keys per quiz (quiz_questions already has UNIQUE(quiz_id, question_key))
+  const questionsPerQuiz = {};
+  rawQuizQuestions.forEach(qq => { questionsPerQuiz[qq.quiz_id] = (questionsPerQuiz[qq.quiz_id] || 0) + 1; });
+
+  // lesson_id → { courseId, themeId } for all lessons (not just snippet-mapped ones)
+  const quizLessonMeta = {};
+  rawLessons.forEach(l => {
+    const modId = l.module_id;
+    quizLessonMeta[l.lesson_id] = { courseId: courseByModule[modId], themeId: themeByModule[modId] };
+  });
+
+  // Rank lookup: "course:id" or "theme:id" → { user_rank, total_users }
+  const rankMap = {};
+  quizRanks.forEach(r => { rankMap[`${r.scope_type}:${r.scope_id}`] = r; });
+
+  function ordinalSuffix(n) {
+    const v = n % 100;
+    return n + (["th","st","nd","rd"][(v - 20) % 10] || ["th","st","nd","rd"][v] || "th");
+  }
+
+  function buildQuizPerfByCourse() {
+    const cmap = {};
+    rawCourses.forEach(c => { cmap[c.course_id] = { id: c.course_id, name: c.course_name, totalQuizzes: 0, triedQuizzes: 0, totalQuestions: 0, triedQuestions: 0, totalScore: 0, totalMaxScore: 0 }; });
+    rawQuizSets.forEach(qs => {
+      const meta = quizLessonMeta[qs.lesson_id];
+      const row  = meta?.courseId ? cmap[meta.courseId] : null;
+      if (!row) return;
+      row.totalQuizzes++;
+      row.totalQuestions += questionsPerQuiz[qs.quiz_id] || 0;
+      const att = lastAttemptByQuiz[qs.quiz_id];
+      if (att) {
+        row.triedQuizzes++;
+        row.triedQuestions += (att.answers || []).filter(a => a.chosen_option !== null).length;
+        row.totalScore    += att.score     || 0;
+        row.totalMaxScore += att.max_score || 0;
+      }
+    });
+    return rawCourses
+      .map(c => {
+        const row = cmap[c.course_id];
+        if (!row || row.totalQuizzes === 0) return null;
+        const scorePct  = row.totalMaxScore > 0 ? Math.round(row.totalScore / row.totalMaxScore * 100) : null;
+        const rankEntry = rankMap[`course:${c.course_id}`];
+        return { ...row, scorePct, rank: rankEntry?.user_rank ?? null, totalUsers: rankEntry?.total_users ?? null };
+      }).filter(Boolean);
+  }
+
+  function buildQuizPerfByTheme() {
+    const courseId = _courseId;
+    const tmap = {};
+    rawThemes.forEach(t => { tmap[t.theme_id] = { id: t.theme_id, name: t.title, totalQuizzes: 0, triedQuizzes: 0, totalQuestions: 0, triedQuestions: 0, totalScore: 0, totalMaxScore: 0 }; });
+    rawQuizSets.forEach(qs => {
+      const meta = quizLessonMeta[qs.lesson_id];
+      if (!meta?.themeId || !tmap[meta.themeId]) return;
+      if (courseId && meta.courseId !== courseId) return;
+      const row = tmap[meta.themeId];
+      row.totalQuizzes++;
+      row.totalQuestions += questionsPerQuiz[qs.quiz_id] || 0;
+      const att = lastAttemptByQuiz[qs.quiz_id];
+      if (att) {
+        row.triedQuizzes++;
+        row.triedQuestions += (att.answers || []).filter(a => a.chosen_option !== null).length;
+        row.totalScore    += att.score     || 0;
+        row.totalMaxScore += att.max_score || 0;
+      }
+    });
+    const order = rawThemes.map(t => t.theme_id);
+    return Object.values(tmap)
+      .filter(t => t.totalQuizzes > 0)
+      .sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id))
+      .map(t => {
+        const scorePct  = t.totalMaxScore > 0 ? Math.round(t.totalScore / t.totalMaxScore * 100) : null;
+        const rankEntry = rankMap[`theme:${t.id}`];
+        return { ...t, scorePct, rank: rankEntry?.user_rank ?? null, totalUsers: rankEntry?.total_users ?? null };
+      });
+  }
+
+  const quizPerfRows = scope !== "all" ? buildQuizPerfByTheme() : buildQuizPerfByCourse();
+
   const activeDays = streakData.filter(l => l > 0).length;
   let bestStreak = 0, cur = 0;
   for (const l of streakData) {
@@ -841,10 +1123,11 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
   const overallLesTotal = progressRows.reduce((s, r) => s + r.lesTotal, 0);
   const overallPct      = pct(overallLesDone, overallLesTotal);
 
+  const dharmaTokens = forestTokens["dharma"] || 0;
   const STATS = [
     {
       key: "dharma",  icon: <i className="ti ti-diamond" />,  label: PLAYER.dharmaPoints,
-      value: String(totalDharma), sub: null,
+      value: dharmaTokens.toLocaleString(), sub: null,
     },
     {
       key: "lessons", icon: <i className="ti ti-book-2" />, label: "Lessons Completed",
@@ -862,13 +1145,23 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
 
   const FOREST_TOKENS = FOREST_TOKEN_DEFS.filter(t => t.type !== "dharma");
   const totalPlants = FOREST_TOKENS.reduce((s, t) => s + (forestTokens[t.type] || 0), 0);
-  const dharmaTokens = forestTokens["dharma"] || 0;
+
+  const quizzesAttempted = Object.keys(lastAttemptByQuiz).length;
+  const allLastAttempts  = Object.values(lastAttemptByQuiz);
+  const _totalScore    = allLastAttempts.reduce((s, a) => s + (a.score || 0), 0);
+  const _totalMaxScore = allLastAttempts.reduce((s, a) => s + (a.max_score || 0), 0);
+  const avgScorePct    = _totalMaxScore > 0 ? Math.round(_totalScore / _totalMaxScore * 100) : null;
+  const avgScoreText   = avgScorePct !== null ? `${avgScorePct}%` : "—";
 
   function renderShareText(tmpl) {
     return (tmpl || DEFAULT_SHARE_MSG)
-      .replace("{dharma}",  String(totalDharma))
-      .replace("{lessons}", String(lessonsCompleted))
-      .replace("{name}",    displayName);
+      .replace("{name}",      displayName)
+      .replace("{snippets}",  String(snippetsViewed))
+      .replace("{lessons}",   String(lessonsCompleted))
+      .replace("{quizzes}",   String(quizzesAttempted))
+      .replace("{score}",     avgScoreText)
+      .replace("{dharma}",    String(dharmaTokens))
+      .replace("{trees}",     String(totalPlants));
   }
   function handleShareSave() {
     localStorage.setItem("indiyatra_share_message", shareMsgDraft);
@@ -876,10 +1169,25 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
     setShowShareSettings(false);
   }
   function handleShareReset() {
-    setShareMsgDraft(DEFAULT_SHARE_MSG);
+    setShareMsgDraft(includeScore ? DEFAULT_SHARE_MSG_WITH_SCORE : DEFAULT_SHARE_MSG_NO_SCORE);
+  }
+  function handleToggleScore(val) {
+    setIncludeScore(val);
+    localStorage.setItem("indiyatra_share_include_score", String(val));
+    const newDefault = val ? DEFAULT_SHARE_MSG_WITH_SCORE : DEFAULT_SHARE_MSG_NO_SCORE;
+    setShareMsgDraft(newDefault);
+    setShareMessage(newDefault);
+    localStorage.setItem("indiyatra_share_message", newDefault);
   }
   function handleCopyLink() {
     navigator.clipboard.writeText(APP_URL).then(() => {
+      setCopyDone(true);
+      setTimeout(() => setCopyDone(false), 2000);
+    });
+  }
+  function handleCopyShare() {
+    const text = renderShareText(shareMessage);
+    navigator.clipboard.writeText(text + "\n\n" + APP_URL).then(() => {
       setCopyDone(true);
       setTimeout(() => setCopyDone(false), 2000);
     });
@@ -953,6 +1261,7 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
 
         {/* ── Welcome Hero ── */}
         <div className="dash-hero">
+          <div className="dash-hero-left">
           <div className="dash-title">Welcome back, {displayName}</div>
           <div className="dash-subtitle">{subtitleText}</div>
           {activeDropdown && <div className="dash-dropdown-backdrop" onClick={() => setActiveDropdown(null)} />}
@@ -981,6 +1290,19 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
                 ))}
               </div>
             )}
+          <div className="dash-scope-hint">Filter your dashboard by a specific course</div>
+          </div>
+          </div>{/* end .dash-hero-left */}
+          <div className="dash-hero-right">
+            <div className="dash-nav-label">Jump to</div>
+            <div className="dash-nav-grid">
+              <a className="dash-nav-link" href="#sec-streak"><i className="ti ti-flame" style={{color:"#FF8E00"}} />Learning Streak</a>
+              <a className="dash-nav-link" href="#sec-progress"><i className="ti ti-chart-line" style={{color:"#00509E"}} />Progress</a>
+              <a className="dash-nav-link" href="#sec-activity"><i className="ti ti-activity" style={{color:"#00509E"}} />Recent Activity</a>
+              <a className="dash-nav-link" href="#sec-forest"><i className="ti ti-trees" style={{color:"#00924A"}} />Your Forest</a>
+              <a className="dash-nav-link" href="#sec-quiz"><i className="ti ti-chart-bar" style={{color:"#00509E"}} />Quiz Performance</a>
+              <a className="dash-nav-link" href="#sec-share"><i className="ti ti-share" style={{color:"#FF8E00"}} />Share Your Yatra</a>
+            </div>
           </div>
         </div>{/* end .dash-hero */}
 
@@ -1009,7 +1331,7 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
         </div>
 
         {/* ── Streak Heatmap ── */}
-        <div className="dash-section">
+        <div id="sec-streak" className="dash-section">
           <div className="dash-section-head">
             <div className="page-section-title"><i className="ti ti-flame" style={{color: "#FF8E00", marginRight: 6}} />Learning Streak</div>
             <div className="dash-section-meta">Last 60 days</div>
@@ -1043,7 +1365,7 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
         </div>
 
         {/* ── Course Progress (scope-aware) ── */}
-        <div className="dash-section">
+        <div id="sec-progress" className="dash-section">
           <div className="dash-section-head">
             <div className="page-section-title">
               {scope !== "all" ? "Course Progress by Theme" : "Progress by Course"}
@@ -1056,77 +1378,21 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
               No progress data yet — complete a lesson to see your stats here.
             </div>
           ) : (
-            <div className="prog-table-wrap"><table className="prog-table">
-              <thead>
-                <tr>
-                  <th style={{ textAlign: "left" }}>
-                    {scope !== "all" ? "Theme" : "Course"}
-                  </th>
-                  <th>{scope !== "all" ? "Modules" : "Themes"}</th>
-                  <th>Lessons</th>
-                  <th>Snippets</th>
-                </tr>
-              </thead>
-              <tbody>
-                {progressRows.map(row => {
-                  const col1Done  = scope !== "all" ? row.modDone  : row.themDone;
-                  const col1Total = scope !== "all" ? row.modTotal : row.themTotal;
-                  const col1Pct   = pct(col1Done, col1Total);
-                  const lesPct    = pct(row.lesDone,  row.lesTotal);
-                  const snpPct    = pct(row.snpDone,  row.snpTotal);
-                  const barColor  = (p) => p === 100 ? GREEN : SAFFRON;
-                  return (
-                    <tr key={row.id}>
-                      <td className="prog-theme-name">{row.label}</td>
-                      <td>
-                        <div className="prog-bar-wrap">
-                          <div className="prog-bar">
-                            <div className="prog-bar-fill" style={{ width: col1Pct + "%", background: barColor(col1Pct) }} />
-                          </div>
-                          <span className="prog-pct" style={{ color: barColor(col1Pct) }}>{col1Pct}%</span>
-                          <span className="prog-counts">({col1Done}/{col1Total})</span>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="prog-bar-wrap">
-                          <div className="prog-bar">
-                            <div className="prog-bar-fill" style={{ width: lesPct + "%", background: barColor(lesPct) }} />
-                          </div>
-                          <span className="prog-pct" style={{ color: barColor(lesPct) }}>{lesPct}%</span>
-                          <span className="prog-counts">({row.lesDone}/{row.lesTotal})</span>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="prog-bar-wrap">
-                          <div className="prog-bar">
-                            <div className="prog-bar-fill" style={{ width: snpPct + "%", background: barColor(snpPct) }} />
-                          </div>
-                          <span className="prog-pct" style={{ color: barColor(snpPct) }}>{snpPct}%</span>
-                          <span className="prog-counts">({row.snpDone}/{row.snpTotal})</span>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table></div>
-          )}
-          {/* Stacked view — shown at ≤600px via CSS */}
-          {progressRows.length > 0 && (
-            <div className="prog-stack">
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
+              gap: "16px 8px",
+            }}>
               {progressRows.map(row => {
-                const lesPct   = pct(row.lesDone, row.lesTotal);
-                const barColor = lesPct === 100 ? GREEN : SAFFRON;
+                const lesPct = pct(row.lesDone, row.lesTotal);
                 return (
-                  <div className="prog-stack-row" key={row.id}>
-                    <div className="prog-stack-name">{row.label}</div>
-                    <div className="prog-stack-bar-wrap">
-                      <div className="prog-stack-bar">
-                        <div className="prog-stack-fill" style={{ width: lesPct + "%", background: barColor }} />
-                      </div>
-                      <span className="prog-stack-pct" style={{ color: barColor }}>{lesPct}%</span>
-                    </div>
-                  </div>
+                  <GaugeChart
+                    key={row.id}
+                    pct={lesPct}
+                    color={SAFFRON}
+                    label={row.label}
+                    sub={`${row.lesDone}/${row.lesTotal} lessons`}
+                  />
                 );
               })}
             </div>
@@ -1134,7 +1400,7 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
         </div>
 
         {/* ── Recent Activity ── */}
-        <div className="dash-section">
+        <div id="sec-activity" className="dash-section">
           <div className="dash-section-head">
             <div className="page-section-title">Recent Activity</div>
             <div className="dash-section-meta">Last 7 days</div>
@@ -1171,31 +1437,55 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
               </tr>
             </tbody>
           </table></div>
-          {/* Stacked view — shown at ≤600px via CSS */}
-          <div className="act-stack">
-            {activityData.map(a => (
-              <div className="act-stack-row" key={a.date}>
-                <div>
-                  <span className={"act-stack-day" + (a.today ? " today" : "")}>{a.day}</span>
-                  <span className="act-stack-date">{a.date}</span>
-                </div>
-                <div className="act-stack-pills">
-                  {a.lessons === 0 && a.dharma === 0 ? (
-                    <span className="act-pill act-pill-none">No activity</span>
-                  ) : (
-                    <>
-                      {a.lessons > 0 && <span className="act-pill act-pill-lesson">{a.lessons} lesson{a.lessons !== 1 ? "s" : ""}</span>}
-                      {a.dharma  > 0 && <span className="act-pill act-pill-dharma">{a.dharma} pts</span>}
-                    </>
-                  )}
-                </div>
+          {/* Bar charts — shown at ≤600px via CSS */}
+          {(() => {
+            const chartDays = [...activityData].reverse(); // oldest → newest left to right
+            const METRICS = [
+              { key: "lessons",  label: "Lessons",       color: HERITAGE },
+              { key: "dharma",   label: "Dharma",        color: SAFFRON  },
+              { key: "snippets", label: "Snippets",      color: GREEN    },
+              { key: "plants",   label: "Plants 🌿",     color: "#00924A"},
+            ];
+            return (
+              <div className="act-charts">
+                {METRICS.map(m => {
+                  const vals   = chartDays.map(a => a[m.key]);
+                  const maxVal = Math.max(...vals, 1);
+                  const total  = vals.reduce((s, v) => s + v, 0);
+                  return (
+                    <div key={m.key}>
+                      <div className="act-chart-head">
+                        <span className="act-chart-label">{m.label}</span>
+                        <span className="act-chart-total" style={{ color: m.color }}>{total}</span>
+                      </div>
+                      <div className="act-chart-bars">
+                        {chartDays.map(a => (
+                          <div className="act-bar-col" key={a.date}>
+                            <div className="act-bar-track">
+                              <div
+                                className="act-bar-fill"
+                                style={{
+                                  height: `${Math.max((a[m.key] / maxVal) * 100, a[m.key] > 0 ? 8 : 0)}%`,
+                                  background: a.today ? m.color : m.color + "66",
+                                }}
+                              />
+                            </div>
+                            <div className={"act-bar-day" + (a.today ? " today" : "")}>
+                              {a.today ? "•" : a.date.split(" ")[1]}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-          </div>
+            );
+          })()}
         </div>
 
         {/* ── Your Forest ── */}
-        <div className="dash-section">
+        <div id="sec-forest" className="dash-section">
           <div className="dash-section-head">
             <div className="page-section-title"><i className="ti ti-trees" style={{color: "#00924A", marginRight: 6}} />Your Forest</div>
             <div className="dash-section-meta">{totalPlants} plant{totalPlants !== 1 ? "s" : ""} grown</div>
@@ -1210,169 +1500,124 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
                   return (
                     <div className="forest-token" key={t.type}>
                       <div className="forest-token-icon">{t.icon}</div>
-                      <div className={"forest-token-count" + (count === 0 ? " zero" : "")}>{count}</div>
+                      <div className={`forest-token-count${count === 0 ? " zero" : ""}`}>{count}</div>
                       <div className="forest-token-label">{t.label}</div>
-                      <div className="forest-token-sub">{t.sub}</div>
+                      {t.sub && <div className="forest-token-sub">{t.sub}</div>}
                     </div>
                   );
                 })}
               </div>
               {dharmaTokens > 0 && (
-                <div className="forest-dharma">✦ {dharmaTokens.toLocaleString()} dharma seeds gathered</div>
+                <div className="forest-dharma">
+                  <i className="ti ti-diamond" style={{marginRight:6}} />
+                  {dharmaTokens.toLocaleString()} Dharma Seeds
+                </div>
               )}
             </>
           )}
         </div>
 
-        {/* ── Earned Badges ── */}
-        <div className="dash-section">
-          <div className="dash-section-head">
-            <div className="page-section-title"><i className="ti ti-trophy" style={{color: "#FF8E00", marginRight: 6}} />Earned Badges</div>
-            <div className="dash-section-meta">{earnedBadgeIds.size}/{allBadges.length} earned</div>
-          </div>
-          {allBadges.length === 0 ? (
-            <SkeletonBadges count={3} />
-          ) : (
-            <div className="badge-cards">
-              {allBadges.map(badge => {
-                const isEarned = earnedBadgeIds.has(badge.badge_id);
-                return (
-                  <div key={badge.badge_id} className={"badge-card" + (isEarned ? " earned" : " locked")} title={badge.description || ""}>
-                    <div className="badge-card-icon">{badge.badge_icon}</div>
-                    <div className="badge-card-name">{badge.badge_name}</div>
-                    <div className="badge-card-desc">{badge.description}</div>
-                    {isEarned
-                      ? <div className="badge-card-earned-tag">✓ Earned</div>
-                      : <div className="badge-card-locked-tag">Locked</div>
-                    }
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-{/* ── Community Leaderboard ── */}
-        <div className="dash-section">
-          <div className="dash-section-head">
-            <div className="page-section-title">
-              <i className="ti ti-trophy" style={{ color: SAFFRON, marginRight: 6 }} />
-              Community Leaderboard
-            </div>
-            <button
-              type="button"
-              className={"lb-show-btn" + (leaderboardVisible ? " open" : "")}
-              onClick={handleShowLeaderboard}
-            >
-              {leaderboardVisible ? "Hide" : "Show"}
-            </button>
-          </div>
-
-          {leaderboardVisible && (
-            leaderboardLoading ? (
-              <div style={{ color: "#4A5565", fontSize: "0.875rem", padding: "12px 0", fontFamily: "'Nunito Sans', system-ui" }}>
-                Loading leaderboard…
+        {/* ── Quiz Performance ── */}
+        {quizPerfRows.length > 0 && (
+          <div className="dash-section">
+            <div className="dash-section-head" id="sec-quiz">
+              <div className="page-section-title">
+                <i className="ti ti-chart-bar" style={{color: HERITAGE, marginRight: 6}} />
+                Quiz Performance
               </div>
-            ) : !leaderboard || leaderboard.length === 0 ? (
-              <div className="lb-empty">No activity yet — be the first on the board!</div>
-            ) : (
-              <>
-                <div className="lb-table-wrap">
-                  <table className="lb-table">
-                    <thead>
-                      <tr>
-                        <th>#</th>
-                        <th>Name</th>
-                        <th>Plants 🌿</th>
-                        <th>Lessons</th>
-                        <th>Snippets</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {leaderboard.map((row, i) => {
-                        const isMe = row.is_current_user;
-                        // Detect gap: user row appended outside top 25
-                        const prevRank = i > 0 ? leaderboard[i - 1].rank : null;
-                        const hasGap  = prevRank !== null && row.rank - prevRank > 1;
-                        const medal   = row.rank === 1 ? "🥇"
-                                      : row.rank === 2 ? "🥈"
-                                      : row.rank === 3 ? "🥉"
-                                      : row.rank;
-                        return (
-                          <>
-                            {hasGap && (
-                              <tr key={`gap-${row.profile_id}`}>
-                                <td colSpan={5} style={{ textAlign: "center", padding: "6px 0", fontSize: "0.75rem", color: "#4A5565", borderTop: "1px dashed #E5E7EB" }}>· · ·</td>
-                              </tr>
-                            )}
-                            <tr key={row.profile_id} className={isMe ? "lb-row-me" : ""}>
-                              <td><span className="lb-rank-medal">{medal}</span></td>
-                              <td>{row.display_name}{isMe ? " (you)" : ""}</td>
-                              <td>{Number(row.plant_tokens).toLocaleString()}</td>
-                              <td>{Number(row.lessons_completed).toLocaleString()}</td>
-                              <td>{Number(row.snippets_read).toLocaleString()}</td>
-                            </tr>
-                          </>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+              <div className="dash-section-meta">
+                {quizPerfRows.reduce((s, r) => s + r.triedQuizzes, 0)} attempted
+              </div>
+            </div>
+            <table className="qperf-table">
+              <thead>
+                <tr>
+                  <th>{scope !== "all" ? "Theme" : "Course"}</th>
+                  <th>Tried</th>
+                  <th>Score</th>
+                  <th>Rank</th>
+                </tr>
+              </thead>
+              <tbody>
+                {quizPerfRows.map(row => (
+                  <tr key={row.id}>
+                    <td>{row.name}</td>
+                    <td>
+                      <span className="qperf-num">{row.triedQuizzes}</span>
+                      <span style={{color:"#9CA3AF"}}> / {row.totalQuizzes}</span>
+                    </td>
+                    <td>
+                      {row.scorePct !== null
+                        ? <span className={`qperf-score ${row.scorePct >= 70 ? "good" : row.scorePct >= 40 ? "ok" : "low"}`}>{row.scorePct}%</span>
+                        : <span className="qperf-score none">—</span>
+                      }
+                    </td>
+                    <td>
+                      {row.rank
+                        ? <span className="qperf-rank"><strong>{ordinalSuffix(row.rank)}</strong>{row.totalUsers ? ` / ${row.totalUsers}` : ""}</span>
+                        : <span className="qperf-num dim">—</span>
+                      }
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="qperf-stack">
+              {quizPerfRows.map(row => (
+                <div className="qperf-stack-row" key={row.id}>
+                  <div className="qperf-stack-name">{row.name}</div>
+                  <div className="qperf-stack-stats">
+                    <span className="qperf-stack-item">Tried: <span>{row.triedQuizzes}/{row.totalQuizzes}</span></span>
+                    {row.scorePct !== null && (
+                      <span className={`qperf-score ${row.scorePct >= 70 ? "good" : row.scorePct >= 40 ? "ok" : "low"}`}>{row.scorePct}%</span>
+                    )}
+                    {row.rank && (
+                      <span className="qperf-stack-item">Rank: <span>{ordinalSuffix(row.rank)}</span></span>
+                    )}
+                  </div>
                 </div>
-                <div className="lb-note">
-                  Plants (tulsi, ashoka, lotus, peepal, banyan) are lifetime totals.
-                  {_courseId
-                    ? " Lessons and snippets shown for this course only."
-                    : " Lessons and snippets shown across all courses."}
-                </div>
-              </>
-            )
-          )}
-        </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ── Share Your Yatra ── */}
-        <div className="dash-section">
+        <div id="sec-share" className="dash-section">
           <div className="dash-section-head share-section-head">
-            <div className="page-section-title">Share Your Yatra</div>
+            <div className="page-section-title">
+              <i className="ti ti-share" style={{color: SAFFRON, marginRight: 6}} />
+              Share Your Yatra
+            </div>
             <div className="share-head-toolbar">
               <button
-                type="button"
-                className={"share-toolbar-btn" + (canShare ? " active" : "")}
-                disabled={!canShare}
-                aria-label="Share on WhatsApp"
-                title="Share on WhatsApp"
-                onClick={canShare ? () => window.open("https://wa.me/?text=" + encodeURIComponent(shareText), "_blank") : undefined}>
-                <i className="ti ti-brand-whatsapp" aria-hidden="true" />
-              </button>
-              <button
-                type="button"
-                className={"share-toolbar-btn" + (canShare ? " active" : "")}
-                disabled={!canShare}
-                aria-label="Share on X"
-                title="Share on X"
-                onClick={canShare ? () => window.open("https://twitter.com/intent/tweet?text=" + encodeURIComponent(shareText), "_blank") : undefined}>
-                <i className="ti ti-brand-x" aria-hidden="true" />
-              </button>
-              <button
-                type="button"
-                className={"share-toolbar-btn" + (canShare ? " active" : "") + (copyDone ? " copied" : "")}
-                disabled={!canShare}
-                aria-label={copyDone ? "Copied" : "Copy link"}
-                title={copyDone ? "Copied" : "Copy link"}
-                onClick={canShare ? handleCopyLink : undefined}>
-                <i className={"ti " + (copyDone ? "ti-check" : "ti-link")} aria-hidden="true" />
-              </button>
-              <button
-                type="button"
                 className={"share-toolbar-btn share-edit" + (showShareSettings ? " open" : "")}
-                aria-label="Edit share message"
-                title="Edit share message"
-                onClick={() => { setShareMsgDraft(shareMessage); setShowShareSettings(v => !v); }}>
-                <i className="ti ti-pencil" aria-hidden="true" />
+                onClick={() => setShowShareSettings(v => !v)}
+                title="Edit message"
+              >
+                <i className="ti ti-pencil" />
               </button>
+              <button
+                className={"share-toolbar-btn" + (canShare ? " active" : "") + (copyDone ? " copied" : "")}
+                onClick={canShare ? handleCopyShare : undefined}
+                title={canShare ? (copyDone ? "Copied!" : "Copy message") : "Sign in to share"}
+              >
+                <i className={copyDone ? "ti ti-check" : "ti ti-copy"} />
+              </button>
+              {canShare && (
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(shareText + "\n\n" + APP_URL)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="share-toolbar-btn active"
+                  style={{textDecoration:"none", display:"inline-flex", alignItems:"center", justifyContent:"center"}}
+                  title="Share on WhatsApp"
+                >
+                  <i className="ti ti-brand-whatsapp" />
+                </a>
+              )}
             </div>
           </div>
 
-          {/* Settings panel */}
           {showShareSettings && (
             <div className="share-settings">
               <div className="share-settings-label">Customise your message</div>
@@ -1380,14 +1625,11 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
                 className="share-textarea"
                 value={shareMsgDraft}
                 onChange={e => setShareMsgDraft(e.target.value)}
+                rows={4}
               />
               <div className="share-tokens">
-                <span>Insert:</span>
-                {["{dharma}", "{lessons}", "{name}"].map(tok => (
-                  <span key={tok} className="share-token"
-                    onClick={() => setShareMsgDraft(d => d + " " + tok)}>
-                    {tok}
-                  </span>
+                {["{name}","{snippets}","{lessons}","{quizzes}","{score}","{dharma}","{trees}"].map(tok => (
+                  <span key={tok} className="share-token" onClick={() => setShareMsgDraft(d => d + tok)}>{tok}</span>
                 ))}
               </div>
               <div className="share-settings-row">
@@ -1399,24 +1641,60 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
 
           <div className="share-inner">
             <div className="share-preview">
-              <div className="share-preview-logo">{APP_SHARE_LOGO}</div>
+              <div className="share-preview-logo">🪷 IndiYatra</div>
+              <label className="share-score-toggle">
+                <input
+                  type="checkbox"
+                  checked={includeScore}
+                  onChange={e => handleToggleScore(e.target.checked)}
+                />
+                <span className="share-toggle-track" />
+                Include quiz score
+              </label>
               <div className="share-stat-row">
                 <div className="share-stat">
-                  <div className="share-stat-val">{totalDharma}</div>
-                  <div className="share-stat-lbl">Dharma Pts</div>
+                  <div className="share-stat-val">{snippetsViewed}</div>
+                  <div className="share-stat-lbl">Stories Read</div>
                 </div>
                 <div className="share-stat">
                   <div className="share-stat-val">{lessonsCompleted}</div>
-                  <div className="share-stat-lbl">Lessons</div>
+                  <div className="share-stat-lbl">Lessons Done</div>
                 </div>
+                {quizzesAttempted > 0 && (
+                  <div className="share-stat">
+                    <div className="share-stat-val">{quizzesAttempted}</div>
+                    <div className="share-stat-lbl">Quizzes Tried</div>
+                  </div>
+                )}
+                {includeScore && avgScorePct !== null && (
+                  <div className="share-stat">
+                    <div className="share-stat-val">{avgScorePct}%</div>
+                    <div className="share-stat-lbl">Avg Score</div>
+                  </div>
+                )}
+                {dharmaTokens > 0 && (
+                  <div className="share-stat">
+                    <div className="share-stat-val">{dharmaTokens.toLocaleString()}</div>
+                    <div className="share-stat-lbl">Dharma Seeds</div>
+                  </div>
+                )}
+                {totalPlants > 0 && (
+                  <div className="share-stat">
+                    <div className="share-stat-val">{totalPlants}</div>
+                    <div className="share-stat-lbl">Thriving Trees</div>
+                  </div>
+                )}
               </div>
               <div className="share-msg-text">{shareText}</div>
+              <div className="share-footer-txt">{APP_URL}</div>
             </div>
-
           </div>
+          {!canShare && (
+            <div className="share-coming">Sign in to share your Yatra</div>
+          )}
         </div>
 
-      </div>
+      </div>{/* end .page-wrap */}
     </>
   );
 }

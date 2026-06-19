@@ -21,6 +21,7 @@ import DiscoverPage   from "./pages/DiscoverPage";
 import GatewayPage    from "./pages/GatewayPage";
 import CourseNavigatorPage from "./pages/CourseNavigatorPage";
 import QuizPlayer from "./pages/QuizPlayer";
+import AppFooter from "./components/AppFooter";
 const AdminPage  = lazy(() => import("./pages/AdminPage"));
 const EditorPage = lazy(() => import("./pages/EditorPage"));
 
@@ -51,7 +52,9 @@ export default function App() {
   const [navDirection, setNavDirection]         = useState("none");
   const snippetAdvanceTimer = useRef(null);
   const toastTimer = useRef(null);
-  const lastVisitedRouteRef = useRef(null); // stays in sync; profile state is stale after login
+  const lastVisitedRouteRef = useRef(null);
+  const hasRedirectedOnLoginRef = useRef(false); // stays in sync; profile state is stale after login
+  const redirectResetTimer = useRef(null);        // debounces guard reset on transient SIGNED_OUT
 
   const [bookmarks,    setBookmarks]    = useState(new Set());
   const [toastMsg,     setToastMsg]     = useState("");
@@ -180,8 +183,24 @@ export default function App() {
   }, [user?.id]);
 
   // Redirect returning users (those with a saved route) to Dashboard on login.
-  // Fires only when profile first loads (profile?.id dependency), not on page changes.
+  // Guard with a ref so token-refresh events (which briefly null+restore profile)
+  // don't re-trigger the redirect while the user is actively using the app.
   useEffect(() => {
+    if (!profile?.id) {
+      // Profile cleared -- could be a genuine sign-out OR a transient SIGNED_OUT
+      // event that immediately resolves with SIGNED_IN (e.g. after a network
+      // blip or Supabase reconnect). Debounce the guard reset by 3 s: if the
+      // profile comes back within that window, the guard stays set and no
+      // unwanted redirect fires.
+      redirectResetTimer.current = setTimeout(() => {
+        hasRedirectedOnLoginRef.current = false;
+      }, 3000);
+      return;
+    }
+    // Profile is present -- cancel any pending guard reset.
+    clearTimeout(redirectResetTimer.current);
+    if (hasRedirectedOnLoginRef.current) return; // already redirected this session
+    hasRedirectedOnLoginRef.current = true;
     if (profile?.last_visited_route && (page === "home" || page === "gateway")) {
       goForward("dashboard");
     }
@@ -539,6 +558,8 @@ export default function App() {
   };
 
   const commonProps = {
+    user,
+    profile,
     settings,
     onOpenSettings: () => goForward("settings"),
     onHome:      () => goBack("home"),
@@ -832,6 +853,7 @@ export default function App() {
       <style>{transitionStyles}</style>
       <div key={page} className={`page-enter-${navDirection}`} style={{ display: "block", width: "100%" }}>
         {renderPage()}
+        {!["player", "quiz", "gateway"].includes(page) && <AppFooter />}
       </div>
 
       {showAuthModal && (

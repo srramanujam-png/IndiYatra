@@ -1974,23 +1974,36 @@ export async function getSnippetQuestion(snippetId, languageId) {
     .select("*")
     .eq("snippet_id", snippetId)
     .eq("language", languageId)
-    .maybeSingle();
+    .limit(1);
   if (error) console.error("[getSnippetQuestion]", error);
-  return { data: data || null, error };
+  return { data: (data && data[0]) || null, error };
 }
 
-// Upsert a snippet_questions row (create or update by snippet_id + language).
+// Save a snippet_questions row.
+// If questionData contains a question_id, UPDATE that row.
+// Otherwise INSERT a new row.
 export async function saveSnippetQuestion(snippetId, languageId, questionData) {
-  const { data, error } = await supabaseClient
-    .from("snippet_questions")
-    .upsert(
-      { snippet_id: snippetId, language: languageId, ...questionData },
-      { onConflict: "snippet_id,language" }
-    )
-    .select()
-    .single();
-  if (error) console.error("[saveSnippetQuestion]", error);
-  return { data, error };
+  const { question_id, ...fields } = questionData;
+  if (question_id) {
+    // Update existing row by PK
+    const { data, error } = await supabaseClient
+      .from("snippet_questions")
+      .update({ ...fields })
+      .eq("question_id", question_id)
+      .select()
+      .single();
+    if (error) console.error("[saveSnippetQuestion update]", error);
+    return { data, error };
+  } else {
+    // Insert new row
+    const { data, error } = await supabaseClient
+      .from("snippet_questions")
+      .insert({ snippet_id: snippetId, language: languageId, ...fields })
+      .select()
+      .single();
+    if (error) console.error("[saveSnippetQuestion insert]", error);
+    return { data, error };
+  }
 }
 
 // Update a standalone_questions row by question_id.

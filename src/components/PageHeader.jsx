@@ -462,14 +462,14 @@ export default function PageHeader({
 
           {isAdmin && onAdmin && (
             <button className="hdr-nav-admin" onClick={onAdmin} type="button" title="Admin">
-              <IcKey />
+              <i className="ti ti-key" style={{fontSize:20}} />
               <span className="hdr-nav-text">Admin</span>
             </button>
           )}
 
           {userEditorialRole && onEditor && (
             <button className="hdr-nav-editor" onClick={onEditor} type="button" title="Editor">
-              <IcPencil />
+              <i className="ti ti-pencil" style={{fontSize:20}} />
             </button>
           )}
         </nav>
@@ -513,12 +513,12 @@ export default function PageHeader({
               )}
               {isAdmin && onAdmin && (
                 <button className="mob-icon-btn blue" onClick={onAdmin} type="button" title="Admin">
-                  <IcKey />
+                  <i className="ti ti-key" style={{fontSize:20}} />
                 </button>
               )}
               {userEditorialRole && onEditor && (
                 <button className="mob-icon-btn purple" onClick={onEditor} type="button" title="Editor">
-                  <IcPencil />
+                  <i className="ti ti-pencil" style={{fontSize:20}} />
                 </button>
               )}
             </div>

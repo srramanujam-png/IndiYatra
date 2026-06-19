@@ -75,7 +75,7 @@ const styles = `
     font-family: 'Nunito Sans', system-ui, sans-serif;
     font-size: 0.8125rem; color: #6B7280; line-height: 1.5;
   }
-  .hp-panel { background: ${TEAL_BG}; padding: 48px 1.5rem 64px; }
+  .hp-panel { background: #F8F8F6; padding: 48px 1.5rem 64px; }
   .hp-panel-inner { max-width: 1100px; margin: 0 auto; }
   .hp-panel-header {
     display: flex; align-items: center; justify-content: space-between;
@@ -136,7 +136,7 @@ const styles = `
     font-size: 2rem; background: ${SAFFRON}10;
   }
   .hp-card-body {
-    padding: 14px 16px 16px;
+    padding: 14px 16px 12px;
     display: flex; flex-direction: column; flex: 1;
   }
   .hp-card-title {
@@ -151,15 +151,17 @@ const styles = `
     color: #6B7280; margin-bottom: 14px;
   }
   .hp-card-meta span { display: flex; align-items: center; gap: 3px; }
+  .hp-card-footer {
+    background: ${TEAL}; padding: 11px 16px; margin-top: auto;
+    transition: background 0.18s;
+  }
+  .hp-course-card:hover .hp-card-footer { background: #3d9994; }
   .hp-card-cta {
-    margin-top: auto; width: 100%; padding: 8px 0;
-    background: transparent; color: ${TEAL};
-    border: 1.5px solid ${TEAL}88; border-radius: 8px;
+    width: 100%; background: transparent; border: none; color: white;
     font-family: 'Inter', system-ui, sans-serif;
     font-size: 0.8125rem; font-weight: 600; cursor: pointer;
-    transition: background 0.18s, color 0.18s, border-color 0.18s;
+    padding: 0; letter-spacing: 0.02em;
   }
-  .hp-card-cta:hover { background: ${TEAL}; color: white; border-color: ${TEAL}; }
   @media (max-width: 900px) {
     .hp-hero-inner { grid-template-columns: 1fr; gap: 36px; }
     .hp-subline { max-width: 100%; }
@@ -168,7 +170,7 @@ const styles = `
     .hp-hero { padding: 36px 1rem 36px; }
     .hp-panel { padding: 32px 1rem 48px; }
     .hp-cards-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
-    .hp-card-body { padding: 10px 12px 12px; }
+    .hp-card-body { padding: 10px 12px 10px; }
     .hp-card-title { font-size: 0.875rem; }
   }
   @media (max-width: 380px) { .hp-cards-grid { grid-template-columns: 1fr; } }
@@ -322,6 +324,8 @@ export default function HomePage({
                           <span>👥 {learners.toLocaleString()}</span>
                         )}
                       </div>
+                    </div>
+                    <div className="hp-card-footer">
                       <button
                         className="hp-card-cta"
                         onClick={e => { e.stopPropagation(); onCourseClick(course); }}

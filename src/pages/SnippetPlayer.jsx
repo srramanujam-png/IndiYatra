@@ -64,29 +64,39 @@ const styles = `
     overflow: hidden;
   }
 
-  /* ── Desktop two-column layout ── */
-  .snip-2col { display: block; }
-  /* Mobile: hook needs padding since it's no longer inside snip-body */
-  .snip-left-col .snip-hook { padding: 16px 20px 12px; }
+  /* ── Two-block two-column layout ── */
+  /* TOP BLOCK: hook left (mobile order 1) | image right (mobile order 2) */
+  .snip-top-block { display: flex; flex-direction: column; border-bottom: 1px solid #E5E7EB; }
+  .snip-top-left  { padding: 20px 20px 16px; order: 1; }
+  .snip-top-right { order: 2; }
+
+  /* BOTTOM BLOCK: explanation+citation left (mobile order 3) | key terms right (mobile order 4) */
+  .snip-bottom-block { display: flex; flex-direction: column; }
+  .snip-bottom-left  { padding: 20px 20px 16px; order: 1; border-bottom: 1px solid #E5E7EB; }
+  .snip-bottom-right { padding: 16px 20px 16px; order: 2; display: flex; flex-direction: column; gap: 12px; }
+
   @media (min-width: 900px) {
-    .snip-2col { display: grid; grid-template-columns: 42% 58%; }
-    .snip-left-col {
+    .snip-top-block { display: grid; grid-template-columns: 1fr 1fr; }
+    .snip-top-left  {
+      padding: 28px 28px 24px; order: 0;
       border-right: 1px solid #E5E7EB;
-      display: flex; flex-direction: column;
+      display: flex; flex-direction: column; justify-content: center;
     }
-    .snip-left-col .snip-img {
-      border-radius: 0; flex-shrink: 0;
-      max-height: 400px; justify-content: center; background: white;
+    .snip-top-right { order: 0; }
+    .snip-top-right .snip-img {
+      border-radius: 0; max-height: none; height: 100%; min-height: 240px;
     }
-    .snip-left-col .snip-img img {
-      width: auto; max-width: 100%; max-height: 400px; object-fit: contain;
+    .snip-top-right .snip-img img {
+      width: 100%; height: 100%; max-height: 400px; object-fit: cover;
       -webkit-mask-image: none; mask-image: none;
     }
-    .snip-left-col .snip-header-band { border-radius: 0; flex-shrink: 0; }
-    .snip-left-col .snip-hook {
-      padding: 20px 24px 16px; border-bottom: 1px solid #E5E7EB; border-top: none;
+    .snip-top-right .snip-header-band { border-radius: 0; height: 100%; min-height: 240px; }
+    .snip-bottom-block { display: grid; grid-template-columns: 1fr 1fr; }
+    .snip-bottom-left  {
+      padding: 24px 28px; order: 0;
+      border-right: 1px solid #E5E7EB; border-bottom: none;
     }
-    .snip-right-col { padding: 20px 24px 16px; }
+    .snip-bottom-right { padding: 24px 28px; order: 0; }
   }
   @keyframes snippetFadeIn {
     from { opacity: 0; }
@@ -112,12 +122,10 @@ const styles = `
     position: relative; width: 100%;
     background: transparent;
     display: flex; align-items: center; justify-content: center;
-    max-height: 340px; border-radius: 10px 10px 0 0; overflow: hidden;
+    max-height: 300px; overflow: hidden;
   }
   .snip-img img {
-    display: block; width: 100%; max-height: 340px; object-fit: contain;
-    -webkit-mask-image: linear-gradient(to right, transparent 0px, black 20px, black calc(100% - 20px), transparent 100%);
-    mask-image: linear-gradient(to right, transparent 0px, black 20px, black calc(100% - 20px), transparent 100%);
+    display: block; width: 100%; max-height: 300px; object-fit: contain;
   }
   .snip-diff {
     position: absolute; bottom: 10px; right: 10px;
@@ -131,7 +139,7 @@ const styles = `
     position: relative; width: 100%; height: 160px;
     background: transparent;
     display: flex; align-items: center; justify-content: center;
-    overflow: hidden; border-radius: 10px 10px 0 0;
+    overflow: hidden;
   }
   .snip-header-ornament {
     font-size: 4.5rem; opacity: 0.15; user-select: none; pointer-events: none;
@@ -141,7 +149,51 @@ const styles = `
     background: rgba(0,0,0,0.45); color: white; border-radius: 999px;
     padding: 3px 10px; font-size: 0.6875rem; font-weight: 500; letter-spacing: 0.04em;
     text-transform: capitalize; font-family: 'Inter', system-ui, sans-serif;
+    border: none; cursor: pointer; display: flex; align-items: center; gap: 4px;
+    transition: background 0.15s;
   }
+  .snip-lang-badge:hover { background: rgba(0,0,0,0.65); }
+
+  /* Language picker modal */
+  .lang-picker-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+    display: flex; align-items: flex-start; justify-content: center;
+    padding: 5vh 1rem 2rem; animation: fadeIn 0.2s ease; overflow-y: auto;
+  }
+  .lang-picker-card {
+    background: white; border-radius: 16px; padding: 32px 28px;
+    max-width: 380px; width: 100%;
+    animation: fadeUp 0.35s ease both;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    margin: 0 auto;
+  }
+  .lang-picker-title {
+    font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.5rem; font-weight: 500;
+    color: ${HERITAGE}; margin-bottom: 6px; text-align: center;
+  }
+  .lang-picker-sub {
+    font-size: 0.9375rem; color: #4A5565; margin-bottom: 20px; line-height: 1.6;
+    font-family: 'Nunito Sans', system-ui, sans-serif; text-align: center;
+  }
+  .lang-picker-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .lang-picker-opt {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border-radius: 12px; border: 1px solid #E5E7EB;
+    background: white; cursor: pointer; text-align: left; width: 100%;
+    font-family: 'Inter', system-ui, sans-serif; font-size: 0.9375rem; font-weight: 500;
+    color: #101828; transition: border-color 0.15s, background 0.15s;
+  }
+  .lang-picker-opt:hover { border-color: ${HERITAGE}; background: #F0F6FF; }
+  .lang-picker-opt.active { border-color: ${HERITAGE}; background: #EEF5FF; color: ${HERITAGE}; }
+  .lang-picker-checkmark { color: ${HERITAGE}; font-size: 1rem; }
+  .lang-picker-cancel {
+    display: block; width: 100%; padding: 12px 20px; border-radius: 12px; border: none;
+    background: #F3F4F6; color: #4A5565; cursor: pointer;
+    font-family: 'Inter', system-ui, sans-serif; font-size: 0.875rem; font-weight: 500;
+    transition: background 0.15s; min-height: 44px;
+  }
+  .lang-picker-cancel:hover { background: #E5E7EB; }
 
   /* Body */
   .snip-body { padding: 20px 24px 16px; }
@@ -178,7 +230,7 @@ const styles = `
   .snip-quiz-label { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: ${BLUE}; margin-bottom: 6px; font-family: 'Inter', system-ui, sans-serif; }
   .snip-quiz-text  { font-size: 1rem; color: #1a2a4a; line-height: 1.7; font-family: 'Nunito Sans', system-ui, sans-serif; }
 
-  .snip-citation { font-size: 0.75rem; color: #4A5565; font-style: italic; text-align: right; margin-top: 8px; font-family: 'Nunito Sans', system-ui, sans-serif; }
+  .snip-citation { font-size: 0.75rem; color: #4A5565; font-style: italic; text-align: left; margin-top: 16px; padding-top: 12px; border-top: 1px solid #E5E7EB; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .snip-empty    { text-align: center; padding: 48px 24px; font-family: 'Oswald', sans-serif; font-size: 1.25rem; color: #4A5565; }
 
   /* Bottom nav */
@@ -491,7 +543,9 @@ const styles = `
     .player-body { padding: 12px 0.75rem 115px; }
     .snip-hook { font-size: 1.375rem; }
     .snip-explanation { font-size: 0.9375rem; }
-    .snip-body { padding: 16px 14px 12px; }
+    .snip-top-left { padding: 14px 14px 12px; }
+    .snip-bottom-left { padding: 14px 14px 12px; }
+    .snip-bottom-right { padding: 12px 14px 14px; }
     .pnav-btn  { padding: 8px 16px; font-size: 0.8125rem; }
     .player-nav { padding: 10px 1rem; bottom: 0; }
     .player-nav-links { display: none !important; }
@@ -514,6 +568,8 @@ export default function SnippetPlayer({
   snippetShareMsg = DEFAULT_SNIPPET_SHARE_MSG,
   lessonQuiz = null,
   onTakeQuiz = null,
+  languages = [],
+  onSaveSettings,
 }) {
   const playlistMode       = !!(playlistSnippetIds && playlistSnippetIds.length > 0);
   const backToPlaylist      = onBackToDiscover || onBackToLikes;
@@ -536,6 +592,7 @@ export default function SnippetPlayer({
   const [commentsSnipId,  setCommentsSnipId]  = useState(null);
   const [sharePopoverId,  setSharePopoverId]  = useState(null); // snippet_id or null
   const [shareCopied,     setShareCopied]     = useState(false);
+  const [showLangPicker,  setShowLangPicker]  = useState(false);
   const [commentDraft,    setCommentDraft]    = useState("");
   const [commentPosting,  setCommentPosting]  = useState(false);
   const [editingCommentId, setEditingCommentId] = useState(null);
@@ -679,6 +736,10 @@ export default function SnippetPlayer({
   const snip     = snippets[current];
   const trans    = snip ? (translations[snip.snippet_id] || {}) : {};
   const asset    = snip ? assets[snip.asset_id] : null;
+  // Map language ID (e.g. "LANG_03") → display name (e.g. "English")
+  const langName = trans.language
+    ? (languages.find(l => l.language_id === trans.language)?.language || trans.language)
+    : null;
   const isLast   = current === total - 1;
   const progress = total > 0 ? ((current + 1) / total) * 100 : 0;
 
@@ -790,6 +851,7 @@ export default function SnippetPlayer({
       if (data) {
         setEditSnipDraft(prev => ({
           ...prev,
+          question_id:    data.question_id    || null,
           question:       data.question       || "",
           correct_option: data.correct_option || "",
           wrong_option_1: data.wrong_option_1 || "",
@@ -836,6 +898,7 @@ export default function SnippetPlayer({
       editSnipDraft.wrong_option_1 && editSnipDraft.wrong_option_2 && editSnipDraft.wrong_option_3);
     if (hasQuestion) {
       const { error: qErr } = await saveSnippetQuestion(snip.snippet_id, langId, {
+        question_id:    editSnipDraft.question_id    || undefined,
         question:       editSnipDraft.question,
         correct_option: editSnipDraft.correct_option,
         wrong_option_1: editSnipDraft.wrong_option_1,
@@ -955,14 +1018,18 @@ export default function SnippetPlayer({
                   transition: isDragging ? "none" : "transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94)",
                 }}
               >
-                {/* Two-column wrapper (grid on desktop, block on mobile) */}
-                <div className="snip-2col">
-
-                  {/* LEFT COLUMN — hook on top, image below */}
-                  <div className="snip-left-col">
-                    {trans.hook && (
+                {/* TOP BLOCK: hook left | image right */}
+                <div className="snip-top-block">
+                  <div className="snip-top-left">
+                    {trans.hook ? (
                       <div className="snip-hook fs-heading">{trans.hook}</div>
-                    )}
+                    ) : !trans.explanation ? (
+                      <div style={{ textAlign: "center", padding: "24px 0", color: "#bbb", fontSize: 15 }}>
+                        Content for this snippet is coming soon.
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="snip-top-right">
                     {asset ? (
                       <div className="snip-img">
                         <img
@@ -971,7 +1038,7 @@ export default function SnippetPlayer({
                           onError={e => { e.target.style.display = "none"; }}
                         />
                         {trans.language && (
-                          <div className="snip-lang-badge">{trans.language}</div>
+                          <button className="snip-lang-badge" onClick={() => setShowLangPicker(true)} title="Change language"><i className="ti ti-language" aria-hidden="true" />{langName}</button>
                         )}
                         {snip.difficulty_level && (
                           <div className="snip-diff">{DIFFICULTY_STARS[snip.difficulty_level]}</div>
@@ -981,7 +1048,7 @@ export default function SnippetPlayer({
                       <div className="snip-header-band">
                         <div className="snip-header-ornament">&#127963;</div>
                         {trans.language && (
-                          <div className="snip-lang-badge">{trans.language}</div>
+                          <button className="snip-lang-badge" onClick={() => setShowLangPicker(true)} title="Change language"><i className="ti ti-language" aria-hidden="true" />{langName}</button>
                         )}
                         {snip.difficulty_level && (
                           <div className="snip-diff">{DIFFICULTY_STARS[snip.difficulty_level]}</div>
@@ -989,46 +1056,40 @@ export default function SnippetPlayer({
                       </div>
                     )}
                   </div>
+                </div>
 
-                  {/* RIGHT COLUMN — explanation + all content blocks */}
-                  <div className="snip-right-col snip-body">
-                    {trans.explanation && <div className="snip-explanation fs-body">{trans.explanation}</div>}
-
+                {/* BOTTOM BLOCK: explanation + citation left | key term, life, refresher right */}
+                {(trans.explanation || trans.key_term || trans.life_connection || trans.quiz_recap || trans.source_citation) && (
+                  <div className="snip-bottom-block">
+                    <div className="snip-bottom-left">
+                      {trans.explanation && <div className="snip-explanation fs-body">{trans.explanation}</div>}
+                      {trans.source_citation && <div className="snip-citation">{trans.source_citation}</div>}
+                    </div>
                     {(trans.key_term || trans.life_connection || trans.quiz_recap) && (
-                      <div className="snip-divider" />
-                    )}
-
-                    {trans.key_term && (
-                      <div className="snip-key-term">
-                        <div className="snip-kt-label">Key Term</div>
-                        <div className="snip-kt-word">{trans.key_term}</div>
-                        {trans.key_term_meaning && <div className="snip-kt-meaning fs-body">{trans.key_term_meaning}</div>}
-                      </div>
-                    )}
-
-                    {trans.life_connection && (
-                      <div className="snip-life">
-                        <div className="snip-life-label">Life Connection</div>
-                        <div className="snip-life-text fs-body">{trans.life_connection}</div>
-                      </div>
-                    )}
-
-                    {trans.quiz_recap && (
-                      <div className="snip-quiz">
-                        <div className="snip-quiz-label">Refresher Questions</div>
-                        <div className="snip-quiz-text fs-body">{trans.quiz_recap}</div>
-                      </div>
-                    )}
-
-                    {trans.source_citation && <div className="snip-citation">{trans.source_citation}</div>}
-
-                    {!trans.hook && !trans.explanation && (
-                      <div style={{ textAlign: "center", padding: "24px 0", color: "#bbb", fontSize: 15 }}>
-                        Content for this snippet is coming soon.
+                      <div className="snip-bottom-right">
+                        {trans.key_term && (
+                          <div className="snip-key-term">
+                            <div className="snip-kt-label">Key Term</div>
+                            <div className="snip-kt-word">{trans.key_term}</div>
+                            {trans.key_term_meaning && <div className="snip-kt-meaning fs-body">{trans.key_term_meaning}</div>}
+                          </div>
+                        )}
+                        {trans.life_connection && (
+                          <div className="snip-life">
+                            <div className="snip-life-label">Life Connection</div>
+                            <div className="snip-life-text fs-body">{trans.life_connection}</div>
+                          </div>
+                        )}
+                        {trans.quiz_recap && (
+                          <div className="snip-quiz">
+                            <div className="snip-quiz-label">Refresher Questions</div>
+                            <div className="snip-quiz-text fs-body">{trans.quiz_recap}</div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
-                </div>{/* end snip-2col */}
+                )}
 
                 {/* Social strip — full width, outside the grid */}
                 <div className="snip-social">
@@ -1124,6 +1185,40 @@ export default function SnippetPlayer({
             <button className={"pnav-btn " + (isLast ? "pnav-finish" : "pnav-next")} onClick={goNext}>
               {isLast ? "Finish ✓" : "Next →"}
             </button>
+          </div>
+        )}
+
+        {/* Language picker */}
+        {showLangPicker && (
+          <div className="lang-picker-overlay" onClick={() => setShowLangPicker(false)}>
+            <div className="lang-picker-card" onClick={e => e.stopPropagation()}>
+              <div className="lang-picker-title">Reading language</div>
+              <div className="lang-picker-sub">Snippets will load in your chosen language where available.</div>
+              <div className="lang-picker-list">
+                {languages.map(l => {
+                  const isActive = settings?.languageId === l.language_id;
+                  return (
+                    <button
+                      key={l.language_id}
+                      className={"lang-picker-opt" + (isActive ? " active" : "")}
+                      onClick={() => {
+                        onSaveSettings && onSaveSettings({
+                          ...settings,
+                          languageId: l.language_id,
+                          languageCode: l.language_code,
+                          languageName: l.language,
+                        });
+                        setShowLangPicker(false);
+                      }}
+                    >
+                      {l.language}
+                      {isActive && <span className="lang-picker-checkmark">✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+              <button className="lang-picker-cancel" onClick={() => setShowLangPicker(false)}>Cancel</button>
+            </div>
           </div>
         )}
 
