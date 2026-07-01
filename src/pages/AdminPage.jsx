@@ -970,11 +970,11 @@ export default function AdminPage({
   const categories = terms.filter(t => t.type === "category");
   const tags = terms.filter(t => t.type === "tag");
   const navLinks = [
-    { label: "Home",      onClick: onHome },
-    { label: "Discover",  onClick: onDiscover },
-    { label: "Dashboard", onClick: onDashboard },
-    { label: "Likes",     onClick: onLikes },
-    { label: "Bookmarks", onClick: onBookmarks },
+    { label: "Home",        onClick: onHome         },
+    { label: "All Courses", onClick: onAllCourses   },
+    { label: "For You",     onClick: onForYou       },
+    { label: "Dashboard",   onClick: onDashboard    },
+    { label: "Discover",    onClick: onDiscover     },
   ];
 
   // ── Content sub-tab columns config ───────────────────────────────────────────

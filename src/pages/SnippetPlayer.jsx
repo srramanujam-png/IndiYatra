@@ -4,6 +4,7 @@ import { useAuthContext } from "../contexts/AuthContext";
 import { supabaseClient, loadUserLikes, insertLike, deleteLike, postComment, deleteComment, adminDeleteComment, editComment, getSnippetQuestion, saveSnippetQuestion } from "../lib/auth";
 import { globalStyles } from "../styles/global";
 import { DEFAULT_SNIPPET_SHARE_MSG, APP_URL, PLAYER, SIGNIN } from "../config/appStrings";
+import { useViewTracking } from "../hooks/useViewTracking";
 
 const BLUE = "#00509E";
 
@@ -235,7 +236,7 @@ const styles = `
 
   /* Bottom nav */
   .player-nav {
-    position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
     background: #FFFFFF; border-top: 1px solid #E5E7EB; padding: 12px 1.5rem;
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
   }
@@ -539,6 +540,54 @@ const styles = `
   .edit-save-btn:disabled { opacity: 0.45; cursor: not-allowed; }
   .edit-save-btn:not(:disabled):hover { opacity: 0.88; }
 
+  /* ── Mobile cover mode ── */
+  .snip-tap-hint { display: none; }
+  @media (max-width: 899px) {
+    .snip-bottom-block { display: none !important; }
+    .snip-top-block { cursor: pointer; }
+    .snip-tap-hint {
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      padding: 6px 16px 14px;
+      font-size: 0.75rem; font-weight: 500; color: #9CA3AF;
+      font-family: 'Inter', system-ui, sans-serif; letter-spacing: 0.02em;
+      user-select: none; pointer-events: none;
+    }
+  }
+
+  /* ── Reveal sheet (mobile tap-to-reveal) ── */
+  .reveal-overlay {
+    position: fixed; inset: 0; z-index: 140;
+    background: rgba(0,0,0,0.35);
+    animation: fadeIn 0.2s ease;
+  }
+  .reveal-sheet {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 145;
+    background: white; border-radius: 20px 20px 0 0;
+    max-height: 78vh;
+    display: flex; flex-direction: column;
+    animation: slideUp 0.3s cubic-bezier(0.25,0.46,0.45,0.94) both;
+    overflow: hidden;
+    touch-action: pan-y;
+  }
+  @media (min-width: 900px) {
+    .reveal-overlay, .reveal-sheet { display: none !important; }
+  }
+  .reveal-sheet-handle {
+    width: 40px; height: 4px; background: #E5E7EB; border-radius: 2px;
+    margin: 12px auto 0; flex-shrink: 0;
+  }
+  .reveal-sheet-header {
+    padding: 14px 20px 14px; flex-shrink: 0;
+    border-bottom: 1px solid #E5E7EB;
+    font-family: 'Oswald', 'Arial Narrow', sans-serif;
+    font-size: 1.375rem; font-weight: 500;
+    color: ${HERITAGE}; line-height: 1.3;
+  }
+  .reveal-sheet-body {
+    flex: 1; overflow-y: auto; padding: 16px 20px 32px;
+    overscroll-behavior: contain;
+  }
+
   @media (max-width: 480px) {
     .player-body { padding: 12px 0.75rem 115px; }
     .snip-hook { font-size: 1.375rem; }
@@ -600,6 +649,7 @@ export default function SnippetPlayer({
 
   // Snippet inline edit state
   const [showEditPanel,       setShowEditPanel]       = useState(false);
+  const [sheetOpen,          setSheetOpen]          = useState(false);
   const [editSnipDraft,       setEditSnipDraft]       = useState({});
   const [editSaving,          setEditSaving]          = useState(false);
   const [editMsg,             setEditMsg]             = useState("");
@@ -747,6 +797,7 @@ export default function SnippetPlayer({
   const nextLesson = !playlistMode && currentLessonIdx >= 0 ? allLessons[currentLessonIdx + 1] : null;
 
   function goNext() {
+    setSheetOpen(false);
     if (loading) return;
     if (!isLast) {
       setSnippetDir("next");
@@ -761,6 +812,7 @@ export default function SnippetPlayer({
   }
 
   function goPrev() {
+    setSheetOpen(false);
     if (loading || current === 0) return;
     setSnippetDir("prev");
     setCurrent(c => c - 1);
@@ -931,6 +983,13 @@ export default function SnippetPlayer({
     setCommentPosting(false);
   }
 
+  // ── View tracking (active reading time for recommendations) ───────────────────
+  useViewTracking({
+    userId:   user && !user.is_anonymous ? user.id : null,
+    lessonId: !playlistMode ? lesson?.lesson_id : null,
+    enabled:  !playlistMode,
+  });
+
   // ── Keyboard shortcuts ──────────────────────────────────────────────────────
   useEffect(() => {
     function onKeyDown(e) {
@@ -1018,8 +1077,8 @@ export default function SnippetPlayer({
                   transition: isDragging ? "none" : "transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94)",
                 }}
               >
-                {/* TOP BLOCK: hook left | image right */}
-                <div className="snip-top-block">
+                {/* TOP BLOCK: hook + image cover — tap opens reveal sheet on mobile */}
+                <div className="snip-top-block" onClick={() => setSheetOpen(true)}>
                   <div className="snip-top-left">
                     {trans.hook ? (
                       <div className="snip-hook fs-heading">{trans.hook}</div>
@@ -1056,6 +1115,11 @@ export default function SnippetPlayer({
                       </div>
                     )}
                   </div>
+                </div>
+
+                {/* Tap-to-read hint — mobile only, CSS hidden on desktop */}
+                <div className="snip-tap-hint">
+                  <i className="ti ti-chevrons-up" style={{fontSize:'0.9rem'}} /> Tap to read
                 </div>
 
                 {/* BOTTOM BLOCK: explanation + citation left | key term, life, refresher right */}
@@ -1156,6 +1220,52 @@ export default function SnippetPlayer({
                 <div className="swipe-hint">
                   <span>← swipe to navigate →</span>
                 </div>
+              )}
+
+              {/* ── Reveal sheet — mobile tap-to-read (CSS hidden on desktop) ── */}
+              {sheetOpen && (
+                <>
+                  <div
+                    className="reveal-overlay"
+                    onClick={() => setSheetOpen(false)}
+                  />
+                  <div
+                    className="reveal-sheet"
+                    onTouchStart={e => { e.stopPropagation(); onTouchStart(e); }}
+                    onTouchMove={e => { e.stopPropagation(); onTouchMove(e); }}
+                    onTouchEnd={e => { e.stopPropagation(); onTouchEnd(e); }}
+                  >
+                    <div className="reveal-sheet-handle" />
+                    <div className="reveal-sheet-header fs-heading">{trans.hook}</div>
+                    <div className="reveal-sheet-body">
+                      {trans.explanation && <div className="snip-explanation fs-body">{trans.explanation}</div>}
+                      {trans.source_citation && <div className="snip-citation">{trans.source_citation}</div>}
+                      {(trans.key_term || trans.life_connection || trans.quiz_recap) && (
+                        <div style={{display:'flex', flexDirection:'column', gap:'12px', marginTop: trans.explanation ? '16px' : '0'}}>
+                          {trans.key_term && (
+                            <div className="snip-key-term">
+                              <div className="snip-kt-label">Key Term</div>
+                              <div className="snip-kt-word">{trans.key_term}</div>
+                              {trans.key_term_meaning && <div className="snip-kt-meaning fs-body">{trans.key_term_meaning}</div>}
+                            </div>
+                          )}
+                          {trans.life_connection && (
+                            <div className="snip-life">
+                              <div className="snip-life-label">Life Connection</div>
+                              <div className="snip-life-text fs-body">{trans.life_connection}</div>
+                            </div>
+                          )}
+                          {trans.quiz_recap && (
+                            <div className="snip-quiz">
+                              <div className="snip-quiz-label">Refresher Questions</div>
+                              <div className="snip-quiz-text fs-body">{trans.quiz_recap}</div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
               )}
             </>
           )}

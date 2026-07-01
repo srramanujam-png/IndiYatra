@@ -512,11 +512,11 @@ export default function DiscoverPage({
         onSaveSettings={onSaveSettings}
         languages={languages}
         navLinks={[
-          { label: "Home",      onClick: navOnHome },
-          { label: "Discover",  onClick: onDiscover || (() => {}) },
-          { label: "Dashboard", onClick: onDashboard },
-          { label: "Likes",     onClick: onLikes },
-          { label: "Bookmarks", onClick: onBookmarks },
+          { label: "Home",        onClick: navOnHome               },
+          { label: "All Courses", onClick: onAllCourses            },
+          { label: "For You",     onClick: onForYou                },
+          { label: "Dashboard",   onClick: onDashboard             },
+          { label: "Discover",    onClick: onDiscover || (() => {}) },
         ]}
       />
 

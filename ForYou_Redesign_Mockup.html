@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IndiYatra — For You Redesign Mockup</title>
+<style>
+  /* ── Reset & Base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #F0EDE8;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 64px;
+  }
+
+  /* ── Design tokens ── */
+  :root {
+    --saffron: #FF8E00;
+    --heritage: #00509E;
+    --green: #2E7D32;
+    --border: #E5E7EB;
+    --bg-light: #F9FAFB;
+    --text-dark: #101828;
+    --text-mid: #4A5565;
+    --text-light: #6B7280;
+    --radius: 14px;
+  }
+
+  /* ── Page chrome ── */
+  .page-label {
+    font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    color: #8B7355; margin-bottom: 8px; text-align: center;
+  }
+  .page-title {
+    font-size: 22px; font-weight: 800; color: #3D2B00; margin-bottom: 4px; text-align: center;
+  }
+  .page-sub {
+    font-size: 13px; color: #7A6A50; margin-bottom: 32px; text-align: center;
+  }
+
+  /* ── Annotation strip ── */
+  .annotation {
+    background: #3D2B00; color: #FFDEA0; font-size: 11px; font-weight: 600;
+    padding: 6px 14px; border-radius: 999px; margin-bottom: 24px;
+    letter-spacing: .04em;
+  }
+
+  /* ── Two-phone layout ── */
+  .phones-row {
+    display: flex; gap: 48px; align-items: flex-start; flex-wrap: wrap; justify-content: center;
+  }
+  .phone-block { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .phone-caption {
+    font-size: 12px; font-weight: 700; color: #5A4520; text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+
+  /* ── Phone shell ── */
+  .phone {
+    width: 375px;
+    background: #fff;
+    border-radius: 44px;
+    box-shadow: 0 2px 0 #C0B8AE, 0 8px 32px rgba(0,0,0,0.18), 0 0 0 1px #D8D0C8;
+    overflow: hidden;
+    position: relative;
+  }
+  .phone-notch {
+    height: 36px; background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    border-bottom: 1px solid #F3F4F6;
+    position: relative;
+  }
+  .notch-pill {
+    width: 120px; height: 30px; background: #0A0A0A; border-radius: 0 0 18px 18px;
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  }
+  .phone-status {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 18px; height: 36px; font-size: 11px; font-weight: 700; color: #0A0A0A;
+    position: relative; z-index: 1;
+  }
+  .status-time { font-size: 14px; font-weight: 800; }
+  .status-icons { display: flex; gap: 4px; align-items: center; }
+  .status-icons span { font-size: 13px; }
+
+  /* ── App header ── */
+  .app-header {
+    height: 52px; background: rgba(255,255,255,0.97);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 16px;
+  }
+  .app-logo { font-size: 15px; font-weight: 800; color: var(--text-dark); letter-spacing: -.3px; }
+  .app-logo span { color: var(--saffron); }
+  .header-icons { display: flex; gap: 10px; align-items: center; }
+  .hicon {
+    width: 32px; height: 32px; border-radius: 999px; background: #F3F4F6;
+    display: flex; align-items: center; justify-content: center; font-size: 14px;
+  }
+
+  /* ── Hero strip ── */
+  .page-hero {
+    padding: 12px 16px 10px;
+    border-bottom: 1px solid var(--border);
+    background: #fff;
+  }
+  .hero-title {
+    font-size: 18px; font-weight: 800; color: var(--text-dark);
+    letter-spacing: -.3px; line-height: 1.2;
+  }
+  .hero-sub { font-size: 12px; color: var(--text-mid); margin-top: 2px; }
+
+  /* ── Main layout: sidebar + content ── */
+  .fy-layout {
+    display: flex;
+    height: 480px;
+    overflow: hidden;
+  }
+
+  /* ── Sidebar ── */
+  .fy-sidebar {
+    width: 88px;
+    min-width: 88px;
+    border-right: 1px solid var(--border);
+    background: #FAFAF8;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+  .fy-sidebar::-webkit-scrollbar { display: none; }
+
+  .sidebar-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 4px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    transition: background 0.15s;
+    position: relative;
+    text-align: center;
+  }
+  .sidebar-btn:hover { background: none; }
+  .sidebar-btn:hover .sb-icon { background: #E5E7EB; }
+  .sidebar-btn.active { background: none; }
+  .sidebar-btn.active::before { display: none; }
+  .sb-icon {
+    width: 48px; height: 48px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    background: #F3F4F6;
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+  .sidebar-btn.active .sb-icon {
+    background: var(--saffron);
+    box-shadow: 0 2px 8px rgba(255,142,0,0.35);
+  }
+  .sb-label {
+    font-size: 8.5px; font-weight: 700; letter-spacing: .02em; color: var(--text-mid);
+    line-height: 1.2; max-width: 72px;
+  }
+  .sidebar-btn.active .sb-label { color: var(--saffron); }
+
+  /* All Courses button has expansion sub-items */
+  .sidebar-btn.courses-active { background: none; }
+  .sidebar-btn.courses-active::before { display: none; }
+  .sidebar-btn.courses-active .sb-icon {
+    background: var(--heritage);
+    box-shadow: 0 2px 8px rgba(0,80,158,0.3);
+  }
+  .sidebar-btn.courses-active .sb-label { color: var(--heritage); }
+
+  /* Sub-items under All Courses */
+  .courses-tree {
+    width: 100%;
+    background: #F5F8FF;
+    border-top: 1px solid #DDEAFF;
+    padding: 4px 0;
+  }
+  .tree-item {
+    display: flex; align-items: center; gap: 5px;
+    padding: 7px 8px 7px 10px;
+    cursor: pointer; border: none; background: none; width: 100%;
+    font-size: 9px; font-weight: 600; color: var(--heritage);
+    text-align: left; transition: background 0.15s;
+    line-height: 1.3;
+  }
+  .tree-item:hover { background: rgba(0,80,158,0.06); }
+  .tree-item.selected { background: rgba(0,80,158,0.1); color: #003A72; font-weight: 700; }
+  .tree-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--heritage); flex-shrink: 0;
+    opacity: 0.5;
+  }
+  .tree-item.selected .tree-dot { opacity: 1; }
+
+  /* Level badge */
+  .level-badge {
+    font-size: 8px; font-weight: 800; border-radius: 999px;
+    padding: 1px 5px; flex-shrink: 0; text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .level-1 { background: #E6F1FB; color: #185FA5; }
+  .level-2 { background: #EAF3DE; color: #3B6D11; }
+  .level-3 { background: #FAEEDA; color: #854F0B; }
+
+  .tree-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ── Main content panel ── */
+  .fy-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: #FAFAF7;
+  }
+  .fy-content::-webkit-scrollbar { display: none; }
+
+  /* ── Section panels (shown/hidden) ── */
+  .section-panel { display: none; padding: 14px 12px; }
+  .section-panel.visible { display: block; }
+
+  .sec-head {
+    font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--text-light); margin-bottom: 10px;
+  }
+
+  /* Resume card */
+  .resume-card {
+    background: white; border: 1px solid var(--border);
+    border-left: 3px solid var(--saffron);
+    border-radius: 0 12px 12px 0;
+    padding: 12px 14px;
+  }
+  .resume-tag {
+    font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--saffron); margin-bottom: 4px;
+  }
+  .resume-name {
+    font-size: 14px; font-weight: 800; color: var(--text-dark); margin-bottom: 8px; line-height: 1.3;
+  }
+  .prog-bar { height: 4px; background: #F3F4F6; border-radius: 2px; margin-bottom: 5px; }
+  .prog-fill { height: 4px; background: var(--saffron); border-radius: 2px; }
+  .resume-meta { font-size: 10px; color: var(--text-mid); margin-bottom: 10px; }
+  .resume-cta {
+    background: var(--saffron); color: white; border: none; border-radius: 20px;
+    padding: 8px 18px; font-size: 12px; font-weight: 700; cursor: pointer; width: 100%;
+  }
+
+  /* Lesson cards (carousel style) */
+  .lesson-cards { display: flex; flex-direction: column; gap: 8px; }
+  .lesson-card {
+    display: flex; gap: 10px; align-items: center;
+    background: white; border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 12px; cursor: pointer;
+  }
+  .lesson-thumb {
+    width: 40px; height: 40px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .lesson-info { flex: 1; min-width: 0; }
+  .lesson-name { font-size: 12px; font-weight: 700; color: var(--text-dark); line-height: 1.3; }
+  .lesson-sub { font-size: 10px; color: var(--text-mid); margin-top: 2px; }
+  .lesson-chip {
+    font-size: 9px; font-weight: 700; border-radius: 999px;
+    padding: 2px 7px; white-space: nowrap; flex-shrink: 0;
+  }
+  .chip-heritage { background: #EEF5FF; color: var(--heritage); }
+  .chip-green { background: #E8F5E9; color: var(--green); }
+  .chip-saffron { background: #FFF4E5; color: var(--saffron); }
+
+  /* My Likes / Bookmarks list */
+  .list-item {
+    display: flex; align-items: center; gap: 10px;
+    background: white; border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 12px; margin-bottom: 7px; cursor: pointer;
+  }
+  .list-icon {
+    width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+  }
+  .list-body { flex: 1; min-width: 0; }
+  .list-title { font-size: 12px; font-weight: 700; color: var(--text-dark); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .list-meta { font-size: 10px; color: var(--text-mid); margin-top: 1px; }
+  .list-arrow { font-size: 12px; color: #D1D5DB; }
+
+  /* ── All Courses main panel ── */
+  .courses-panel { padding: 14px 12px; }
+
+  /* Module gauges */
+  .module-gauges-head {
+    font-size: 10px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
+    color: var(--text-light); margin-bottom: 10px;
+  }
+  .module-gauges {
+    display: flex; gap: 10px; margin-bottom: 16px;
+    overflow-x: auto; padding-bottom: 4px;
+  }
+  .module-gauges::-webkit-scrollbar { display: none; }
+
+  .gauge-btn {
+    flex: 0 0 72px;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    background: white; border: 1.5px solid var(--border); border-radius: 12px;
+    padding: 10px 6px 8px; cursor: pointer;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .gauge-btn:hover { border-color: var(--saffron); transform: translateY(-1px); }
+  .gauge-btn.active { border-color: var(--saffron); background: #FFF8EE; }
+
+  .gauge-wrap { position: relative; width: 48px; height: 48px; }
+  .gauge-svg { width: 48px; height: 48px; transform: rotate(-135deg); }
+  .gauge-track { fill: none; stroke: #E5E7EB; stroke-width: 4; stroke-linecap: round; }
+  .gauge-fill { fill: none; stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset .4s; }
+  .gauge-pct {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 800; color: var(--text-dark);
+  }
+  .gauge-name {
+    font-size: 9px; font-weight: 700; color: var(--text-dark); text-align: center; line-height: 1.3;
+    max-width: 66px; overflow: hidden; display: -webkit-box;
+    -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  .gauge-meta { font-size: 8px; color: var(--text-light); }
+
+  /* Lessons list in courses panel */
+  .lessons-head {
+    font-size: 10px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
+    color: var(--text-light); margin-bottom: 8px;
+  }
+  .lesson-row {
+    display: flex; align-items: center; gap: 8px;
+    background: white; border: 1px solid var(--border); border-radius: 10px;
+    padding: 8px 10px; margin-bottom: 6px;
+  }
+  .lr-num {
+    width: 22px; height: 22px; border-radius: 50%; background: #F3F4F6;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 800; color: var(--text-mid); flex-shrink: 0;
+  }
+  .lr-num.done { background: #E8F5E9; color: var(--green); }
+  .lr-num.resume { background: #FFF4E5; color: var(--saffron); }
+  .lr-info { flex: 1; min-width: 0; }
+  .lr-name { font-size: 11px; font-weight: 700; color: var(--text-dark); line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lr-sub { font-size: 9px; color: var(--text-mid); margin-top: 1px; }
+  .lr-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .lr-btn {
+    border-radius: 999px; padding: 4px 9px;
+    font-size: 9px; font-weight: 800; cursor: pointer; border: 1.5px solid;
+    white-space: nowrap; transition: background 0.15s, color 0.15s;
+  }
+  .lr-btn.read { border-color: var(--saffron); color: var(--saffron); background: transparent; }
+  .lr-btn.read:hover { background: var(--saffron); color: white; }
+  .lr-btn.quiz { border-color: var(--heritage); color: var(--heritage); background: transparent; }
+  .lr-btn.quiz:hover { background: var(--heritage); color: white; }
+  .lr-btn.done { border-color: var(--green); color: var(--green); }
+
+  /* ── Bottom nav ── */
+  .bottom-nav {
+    height: 56px; background: white; border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-around;
+    padding: 0 8px;
+  }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    flex: 1; cursor: pointer;
+  }
+  .nav-icon { font-size: 18px; }
+  .nav-label { font-size: 9px; font-weight: 700; color: var(--text-light); }
+  .nav-item.active .nav-label { color: var(--saffron); }
+  .nav-item.active .nav-icon { filter: none; }
+
+  /* ── Annotation callouts ── */
+  .callouts {
+    margin-top: 16px;
+    max-width: 375px;
+    width: 100%;
+  }
+  .callout {
+    display: flex; gap: 8px; align-items: flex-start;
+    background: white; border-radius: 10px;
+    padding: 8px 12px; margin-bottom: 6px;
+    border-left: 3px solid var(--saffron);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .callout.blue { border-left-color: var(--heritage); }
+  .callout.green { border-left-color: var(--green); }
+  .callout-num {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--saffron); color: white;
+    font-size: 9px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+  }
+  .callout.blue .callout-num { background: var(--heritage); }
+  .callout.green .callout-num { background: var(--green); }
+  .callout-text { font-size: 11px; color: #3D2B00; line-height: 1.5; }
+  .callout-text b { font-weight: 800; }
+
+  /* ── Divider ── */
+  .section-div {
+    width: 1px; height: 480px; background: linear-gradient(to bottom, transparent, #C0B8AE, transparent);
+    align-self: stretch; margin: 0;
+    display: none;
+  }
+
+  /* Sidebar section divider */
+  .sb-divider {
+    height: 1px; background: var(--border); margin: 4px 10px;
+  }
+</style>
+</head>
+<body>
+
+<p class="page-label">IndiYatra · Mobile UI</p>
+<h1 class="page-title">For You — Redesign Mockup</h1>
+<p class="page-sub">Sidebar navigation + All Courses integration</p>
+
+<!-- ══════════════════════════════════════════════ -->
+<!--  SCREEN 1: For You with sidebar (section view) -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="phones-row">
+
+  <!-- Phone 1: Default "Resume" selected -->
+  <div class="phone-block">
+    <div class="phone-caption">① For You — Sidebar View</div>
+    <div class="phone">
+      <div class="phone-status">
+        <span class="status-time">9:41</span>
+        <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+      </div>
+      <div class="app-header">
+        <div class="app-logo">Indi<span>Yatra</span></div>
+        <div class="header-icons">
+          <div class="hicon">🔍</div>
+          <div class="hicon">⚙️</div>
+          <div class="hicon" style="background:#FF8E00; color:white; font-size:12px; font-weight:800;">G</div>
+        </div>
+      </div>
+
+      <!-- Hero -->
+      <div class="page-hero">
+        <div class="hero-title">✦ For You</div>
+        <div class="hero-sub">Picked for you based on your interests and activity.</div>
+      </div>
+
+      <!-- Sidebar + Content -->
+      <div class="fy-layout">
+
+        <!-- Sidebar -->
+        <div class="fy-sidebar">
+
+          <button class="sidebar-btn active" onclick="selectSection('resume', this)">
+            <div class="sb-icon">▶</div>
+            <span class="sb-label">Resume</span>
+          </button>
+
+          <button class="sidebar-btn" onclick="selectSection('interest', this)">
+            <div class="sb-icon">✦</div>
+            <span class="sb-label">Based on Interest</span>
+          </button>
+
+          <button class="sidebar-btn" onclick="selectSection('liked', this)">
+            <div class="sb-icon">♥</div>
+            <span class="sb-label">Most Liked</span>
+          </button>
+
+          <button class="sidebar-btn" onclick="selectSection('bookmarked', this)">
+            <div class="sb-icon">🔖</div>
+            <span class="sb-label">Most Bookmarked</span>
+          </button>
+
+          <div class="sb-divider"></div>
+
+          <button class="sidebar-btn" onclick="selectSection('mylikes', this)">
+            <div class="sb-icon">❤️</div>
+            <span class="sb-label">My Likes</span>
+          </button>
+
+          <button class="sidebar-btn" onclick="selectSection('mybookmarks', this)">
+            <div class="sb-icon">📌</div>
+            <span class="sb-label">My Bookmarks</span>
+          </button>
+
+          <div class="sb-divider"></div>
+
+          <button class="sidebar-btn" id="courses-btn" onclick="toggleCourses(this)">
+            <div class="sb-icon">📚</div>
+            <span class="sb-label">All Courses</span>
+          </button>
+
+          <!-- Courses tree (hidden by default) -->
+          <div class="courses-tree" id="courses-tree" style="display:none;">
+            <!-- Course -->
+            <div style="padding: 5px 8px 3px; font-size:8px; font-weight:800; color:#6B7280; letter-spacing:.06em; text-transform:uppercase;">Indian Heritage</div>
+
+            <!-- Level 1 -->
+            <button class="tree-item" onclick="selectLevel('LEVEL_001')">
+              <span class="level-badge level-1">L1</span>
+              <span class="tree-label">Foundations</span>
+            </button>
+            <!-- Themes under L1 (expanded) -->
+            <div id="level-001-themes" style="display:none;">
+              <button class="tree-item selected" onclick="selectTheme('ancient-india')" style="padding-left:16px;">
+                <div class="tree-dot"></div>
+                <span class="tree-label">Ancient India</span>
+              </button>
+              <button class="tree-item" onclick="selectTheme('classical-arts')" style="padding-left:16px;">
+                <div class="tree-dot"></div>
+                <span class="tree-label">Classical Arts</span>
+              </button>
+              <button class="tree-item" onclick="selectTheme('epics')" style="padding-left:16px;">
+                <div class="tree-dot"></div>
+                <span class="tree-label">Epics & Mythology</span>
+              </button>
+            </div>
+
+            <!-- Level 2 -->
+            <button class="tree-item" onclick="selectLevel('LEVEL_002')">
+              <span class="level-badge level-2">L2</span>
+              <span class="tree-label">Exploration</span>
+            </button>
+            <!-- Level 3 -->
+            <button class="tree-item" onclick="selectLevel('LEVEL_003')">
+              <span class="level-badge level-3">L3</span>
+              <span class="tree-label">Mastery</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Content panels -->
+        <div class="fy-content">
+
+          <!-- Resume -->
+          <div class="section-panel visible" id="panel-resume">
+            <div class="sec-head">Continue where you left off</div>
+            <div class="resume-card">
+              <div class="resume-tag">▶ Resume Yatra</div>
+              <div class="resume-name">The Vedic Period & Early Civilisations</div>
+              <div class="prog-bar"><div class="prog-fill" style="width:65%"></div></div>
+              <div class="resume-meta">Snippet 7 of 11 · Ancient India</div>
+              <button class="resume-cta">Continue →</button>
+            </div>
+          </div>
+
+          <!-- Based on Interest -->
+          <div class="section-panel" id="panel-interest">
+            <div class="sec-head">Based on your interests</div>
+            <div class="lesson-cards">
+              <div class="lesson-card">
+                <div class="lesson-thumb" style="background:#EEF5FF;">🏛️</div>
+                <div class="lesson-info">
+                  <div class="lesson-name">Architecture of the Gupta Era</div>
+                  <div class="lesson-sub">Ancient India · 8 snippets</div>
+                </div>
+                <span class="lesson-chip chip-heritage">Liked 243×</span>
+              </div>
+              <div class="lesson-card">
+                <div class="lesson-thumb" style="background:#FFF3E8;">🪔</div>
+                <div class="lesson-info">
+                  <div class="lesson-name">Diwali: Light, Legend & Meaning</div>
+                  <div class="lesson-sub">Festivals · 6 snippets</div>
+                </div>
+                <span class="lesson-chip chip-saffron">Recommended</span>
+              </div>
+              <div class="lesson-card">
+                <div class="lesson-thumb" style="background:#E8F8F0;">🌿</div>
+                <div class="lesson-info">
+                  <div class="lesson-name">Ayurveda: Ancient Science of Life</div>
+                  <div class="lesson-sub">Classical Sciences · 9 snippets</div>
+                </div>
+                <span class="lesson-chip chip-green">New</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Most Liked -->
+          <div class="section-panel" id="panel-liked">
+            <div class="sec-head">Most liked by others</div>
+            <div class="lesson-cards">
+              <div class="lesson-card">
+                <div class="lesson-thumb" style="background:#EEF5FF;">🎭</div>
+                <div class="lesson-info">
+                  <div class="lesson-name">Bharatanatyam: The Language of Gesture</div>
+                  <div class="lesson-sub">Classical Arts · 7 snippets</div>
+                </div>
+                <span class="lesson-chip chip-heritage">1.2k ♥</span>
+              </div>
+              <div class="lesson-card">
+                <div class="lesson-thumb" style="background:#FFF8E1;">🏺</div>
+                <div class="lesson-info">
+                  <div class="lesson-name">The Harappan Civilisation</div>
+                  <div class="lesson-sub">Ancient India · 10 snippets</div>
+                </div>
+                <span class="lesson-chip chip-heritage">847 ♥</span>
+              </div>
+              <div class="lesson-card">
+                <div class="lesson-thumb" style="background:#F3EEFF;">🎨</div>
+                <div class="lesson-info">
+                  <div class="lesson-name">Miniature Painting Traditions</div>
+                  <div class="lesson-sub">Visual Arts · 8 snippets</div>
+                </div>
+                <span class="lesson-chip chip-heritage">612 ♥</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Most Bookmarked -->
+          <div class="section-panel" id="panel-bookmarked">
+            <div class="sec-head">Most saved by others</div>
+            <div class="lesson-cards">
+              <div class="lesson-card">
+                <div class="lesson-thumb" style="background:#E8F8F0;">🌊</div>
+                <div class="lesson-info">
+                  <div class="lesson-name">The Ganga: Sacred & Historical River</div>
+                  <div class="lesson-sub">Geography & Culture · 9 snippets</div>
+                </div>
+                <span class="lesson-chip chip-green">934 🔖</span>
+              </div>
+              <div class="lesson-card">
+                <div class="lesson-thumb" style="background:#FFF0F0;">🌸</div>
+                <div class="lesson-info">
+                  <div class="lesson-name">The Mahabharata: Core Themes</div>
+                  <div class="lesson-sub">Epics & Mythology · 12 snippets</div>
+                </div>
+                <span class="lesson-chip chip-green">781 🔖</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- My Likes -->
+          <div class="section-panel" id="panel-mylikes">
+            <div class="sec-head">My likes</div>
+            <div class="list-item">
+              <div class="list-icon" style="background:#EEF5FF;">🏛️</div>
+              <div class="list-body">
+                <div class="list-title">Architecture of the Gupta Era</div>
+                <div class="list-meta">Liked today · Ancient India</div>
+              </div>
+              <span class="list-arrow">›</span>
+            </div>
+            <div class="list-item">
+              <div class="list-icon" style="background:#FFF3E8;">🪔</div>
+              <div class="list-body">
+                <div class="list-title">Diwali: Light, Legend & Meaning</div>
+                <div class="list-meta">Liked 2 days ago · Festivals</div>
+              </div>
+              <span class="list-arrow">›</span>
+            </div>
+            <div class="list-item">
+              <div class="list-icon" style="background:#F3EEFF;">🎨</div>
+              <div class="list-body">
+                <div class="list-title">Miniature Painting Traditions</div>
+                <div class="list-meta">Liked last week · Visual Arts</div>
+              </div>
+              <span class="list-arrow">›</span>
+            </div>
+          </div>
+
+          <!-- My Bookmarks -->
+          <div class="section-panel" id="panel-mybookmarks">
+            <div class="sec-head">My bookmarks</div>
+            <div class="list-item">
+              <div class="list-icon" style="background:#E8F8F0;">📖</div>
+              <div class="list-body">
+                <div class="list-title">The Ganga: Sacred & Historical River</div>
+                <div class="list-meta">Lesson · Saved today</div>
+              </div>
+              <span class="list-arrow">›</span>
+            </div>
+            <div class="list-item">
+              <div class="list-icon" style="background:#FFF8E1;">✦</div>
+              <div class="list-body">
+                <div class="list-title">The concept of Dharma explained</div>
+                <div class="list-meta">Snippet · Saved 3 days ago</div>
+              </div>
+              <span class="list-arrow">›</span>
+            </div>
+          </div>
+
+          <!-- All Courses panel (module gauges + lessons) -->
+          <div class="section-panel" id="panel-courses">
+            <div class="courses-panel" style="padding:0;">
+              <div style="padding: 10px 12px 0;">
+                <div style="font-size:10px; color:#6B7280; margin-bottom:2px;">Level 1 · Foundations</div>
+                <div style="font-size:14px; font-weight:800; color:var(--text-dark); margin-bottom:10px;">Ancient India</div>
+
+                <!-- Module progress gauges -->
+                <div class="module-gauges-head">Module Progress</div>
+                <div class="module-gauges" id="gauges-row">
+
+                  <div class="gauge-btn active" onclick="selectModule(this, 'vedic')">
+                    <div class="gauge-wrap">
+                      <svg class="gauge-svg" viewBox="0 0 48 48">
+                        <!-- 270° arc: circumference of r=18 circle = 113.1, 75% of that = 84.8 -->
+                        <circle class="gauge-track" cx="24" cy="24" r="18"
+                          stroke-dasharray="84.8 28.3" stroke-dashoffset="0"/>
+                        <circle class="gauge-fill" cx="24" cy="24" r="18"
+                          stroke="#FF8E00"
+                          stroke-dasharray="84.8 28.3"
+                          stroke-dashoffset="29.7"/><!-- 35% done -->
+                      </svg>
+                      <div class="gauge-pct">35%</div>
+                    </div>
+                    <div class="gauge-name">Vedic Period</div>
+                    <div class="gauge-meta">4 lessons</div>
+                  </div>
+
+                  <div class="gauge-btn" onclick="selectModule(this, 'empires')">
+                    <div class="gauge-wrap">
+                      <svg class="gauge-svg" viewBox="0 0 48 48">
+                        <circle class="gauge-track" cx="24" cy="24" r="18"
+                          stroke-dasharray="84.8 28.3"/>
+                        <circle class="gauge-fill" cx="24" cy="24" r="18"
+                          stroke="#2E7D32"
+                          stroke-dasharray="84.8 28.3"
+                          stroke-dashoffset="17"/><!-- 80% done -->
+                      </svg>
+                      <div class="gauge-pct">80%</div>
+                    </div>
+                    <div class="gauge-name">Empires & Dynasties</div>
+                    <div class="gauge-meta">5 lessons</div>
+                  </div>
+
+                  <div class="gauge-btn" onclick="selectModule(this, 'philosophy')">
+                    <div class="gauge-wrap">
+                      <svg class="gauge-svg" viewBox="0 0 48 48">
+                        <circle class="gauge-track" cx="24" cy="24" r="18"
+                          stroke-dasharray="84.8 28.3"/>
+                        <circle class="gauge-fill" cx="24" cy="24" r="18"
+                          stroke="#E5E7EB"
+                          stroke-dasharray="84.8 28.3"
+                          stroke-dashoffset="84.8"/><!-- 0% done -->
+                      </svg>
+                      <div class="gauge-pct">0%</div>
+                    </div>
+                    <div class="gauge-name">Philosophy & Thought</div>
+                    <div class="gauge-meta">3 lessons</div>
+                  </div>
+
+                  <div class="gauge-btn" onclick="selectModule(this, 'trade')">
+                    <div class="gauge-wrap">
+                      <svg class="gauge-svg" viewBox="0 0 48 48">
+                        <circle class="gauge-track" cx="24" cy="24" r="18"
+                          stroke-dasharray="84.8 28.3"/>
+                        <circle class="gauge-fill" cx="24" cy="24" r="18"
+                          stroke="#00509E"
+                          stroke-dasharray="84.8 28.3"
+                          stroke-dashoffset="42.4"/><!-- 50% done -->
+                      </svg>
+                      <div class="gauge-pct">50%</div>
+                    </div>
+                    <div class="gauge-name">Trade Routes</div>
+                    <div class="gauge-meta">4 lessons</div>
+                  </div>
+
+                </div><!-- end gauges -->
+
+                <!-- Lessons list for selected module -->
+                <div class="lessons-head" id="module-label">Vedic Period — Lessons</div>
+
+                <div id="lessons-list">
+                  <div class="lesson-row">
+                    <div class="lr-num done">✓</div>
+                    <div class="lr-info">
+                      <div class="lr-name">The Vedic Period & Early Civilisations</div>
+                      <div class="lr-sub">8 snippets · Completed</div>
+                    </div>
+                    <div class="lr-actions">
+                      <button class="lr-btn read done">Review</button>
+                      <button class="lr-btn quiz">Quiz</button>
+                    </div>
+                  </div>
+                  <div class="lesson-row">
+                    <div class="lr-num resume">▶</div>
+                    <div class="lr-info">
+                      <div class="lr-name">The Rig Veda: Hymns & Significance</div>
+                      <div class="lr-sub">7 snippets · In progress</div>
+                    </div>
+                    <div class="lr-actions">
+                      <button class="lr-btn read" style="background:var(--saffron);color:white;border-color:var(--saffron);">Resume →</button>
+                      <button class="lr-btn quiz">Quiz</button>
+                    </div>
+                  </div>
+                  <div class="lesson-row">
+                    <div class="lr-num">3</div>
+                    <div class="lr-info">
+                      <div class="lr-name">Aryan Migration: Fact & Debate</div>
+                      <div class="lr-sub">6 snippets</div>
+                    </div>
+                    <div class="lr-actions">
+                      <button class="lr-btn read">Start →</button>
+                      <button class="lr-btn quiz" disabled style="opacity:0.35;">Quiz</button>
+                    </div>
+                  </div>
+                  <div class="lesson-row">
+                    <div class="lr-num">4</div>
+                    <div class="lr-info">
+                      <div class="lr-name">Society & Caste in the Vedic Age</div>
+                      <div class="lr-sub">9 snippets</div>
+                    </div>
+                    <div class="lr-actions">
+                      <button class="lr-btn read">Start →</button>
+                      <button class="lr-btn quiz" disabled style="opacity:0.35;">Quiz</button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /.fy-content -->
+      </div><!-- /.fy-layout -->
+
+      <!-- Bottom nav -->
+      <div class="bottom-nav">
+        <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+        <div class="nav-item active"><div class="nav-icon">✦</div><div class="nav-label" style="color:var(--saffron);">For You</div></div>
+        <div class="nav-item"><div class="nav-icon">🔭</div><div class="nav-label">Discover</div></div>
+        <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Dashboard</div></div>
+      </div>
+
+    </div><!-- /.phone -->
+
+    <!-- Callouts for Phone 1 -->
+    <div class="callouts">
+      <div class="callout">
+        <div class="callout-num">1</div>
+        <div class="callout-text"><b>Sidebar navigation</b> — compact icon + label buttons replace the old scroll-down layout. Active section highlighted with saffron accent.</div>
+      </div>
+      <div class="callout">
+        <div class="callout-num">2</div>
+        <div class="callout-text"><b>Divider</b> separates "global" sections (Most Liked, Most Bookmarked) from personal sections (My Likes, My Bookmarks).</div>
+      </div>
+      <div class="callout blue">
+        <div class="callout-num" style="background:var(--heritage);">3</div>
+        <div class="callout-text"><b>All Courses</b> button at the bottom of the sidebar — tap to expand the course tree inline below it.</div>
+      </div>
+    </div>
+
+  </div><!-- /.phone-block -->
+
+
+  <!-- Phone 2: All Courses selected + tree expanded -->
+  <div class="phone-block">
+    <div class="phone-caption">② All Courses — Selected State</div>
+    <div class="phone">
+      <div class="phone-status">
+        <span class="status-time">9:41</span>
+        <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+      </div>
+      <div class="app-header">
+        <div class="app-logo">Indi<span>Yatra</span></div>
+        <div class="header-icons">
+          <div class="hicon">🔍</div>
+          <div class="hicon">⚙️</div>
+          <div class="hicon" style="background:#FF8E00; color:white; font-size:12px; font-weight:800;">G</div>
+        </div>
+      </div>
+
+      <div class="page-hero">
+        <div class="hero-title">✦ For You</div>
+        <div class="hero-sub">Picked for you based on your interests and activity.</div>
+      </div>
+
+      <div class="fy-layout">
+
+        <!-- Sidebar (courses expanded state) -->
+        <div class="fy-sidebar">
+          <button class="sidebar-btn" style="opacity:0.5;">
+            <div class="sb-icon">▶</div>
+            <span class="sb-label">Resume</span>
+          </button>
+          <button class="sidebar-btn" style="opacity:0.5;">
+            <div class="sb-icon">✦</div>
+            <span class="sb-label">Based on Interest</span>
+          </button>
+          <button class="sidebar-btn" style="opacity:0.5;">
+            <div class="sb-icon">♥</div>
+            <span class="sb-label">Most Liked</span>
+          </button>
+          <button class="sidebar-btn" style="opacity:0.5;">
+            <div class="sb-icon">🔖</div>
+            <span class="sb-label">Most Bookmarked</span>
+          </button>
+          <div class="sb-divider"></div>
+          <button class="sidebar-btn" style="opacity:0.5;">
+            <div class="sb-icon">❤️</div>
+            <span class="sb-label">My Likes</span>
+          </button>
+          <button class="sidebar-btn" style="opacity:0.5;">
+            <div class="sb-icon">📌</div>
+            <span class="sb-label">My Bookmarks</span>
+          </button>
+          <div class="sb-divider"></div>
+
+          <!-- All Courses: active + expanded -->
+          <button class="sidebar-btn courses-active">
+            <div class="sb-icon" style="background:var(--heritage); font-size:18px; border-radius:50%; box-shadow:0 2px 8px rgba(0,80,158,0.3);">📚</div>
+            <span class="sb-label" style="color:var(--heritage);">All Courses</span>
+          </button>
+
+          <!-- Expanded tree -->
+          <div class="courses-tree" style="display:block;">
+            <div style="padding: 5px 8px 3px; font-size:8px; font-weight:800; color:#6B7280; letter-spacing:.06em; text-transform:uppercase;">Indian Heritage</div>
+
+            <!-- Level 1 expanded -->
+            <button class="tree-item" style="background:rgba(0,80,158,0.05);">
+              <span class="level-badge level-1">L1</span>
+              <span class="tree-label">Foundations</span>
+            </button>
+            <!-- Themes -->
+            <button class="tree-item selected" style="padding-left:16px;">
+              <div class="tree-dot"></div>
+              <span class="tree-label">Ancient India</span>
+            </button>
+            <button class="tree-item" style="padding-left:16px;">
+              <div class="tree-dot"></div>
+              <span class="tree-label">Classical Arts</span>
+            </button>
+            <button class="tree-item" style="padding-left:16px;">
+              <div class="tree-dot"></div>
+              <span class="tree-label">Epics & Mythology</span>
+            </button>
+            <!-- Level 2 collapsed -->
+            <button class="tree-item">
+              <span class="level-badge level-2">L2</span>
+              <span class="tree-label">Exploration</span>
+            </button>
+            <button class="tree-item">
+              <span class="level-badge level-3">L3</span>
+              <span class="tree-label">Mastery</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Main: Module gauges + lessons -->
+        <div class="fy-content">
+          <div class="section-panel visible" style="padding:0;">
+            <div style="padding: 12px 12px 0;">
+              <div style="font-size:10px; color:#6B7280; margin-bottom:2px;">Level 1 · Foundations</div>
+              <div style="font-size:14px; font-weight:800; color:var(--text-dark); margin-bottom:10px; letter-spacing:-.3px;">Ancient India</div>
+
+              <div class="module-gauges-head">Module Progress</div>
+              <div class="module-gauges">
+                <!-- Gauge 1: Vedic Period, 35%, saffron -->
+                <div class="gauge-btn active">
+                  <div class="gauge-wrap">
+                    <svg class="gauge-svg" viewBox="0 0 48 48">
+                      <circle class="gauge-track" cx="24" cy="24" r="18" stroke-dasharray="84.8 28.3"/>
+                      <circle class="gauge-fill" cx="24" cy="24" r="18" stroke="#FF8E00"
+                        stroke-dasharray="84.8 28.3" stroke-dashoffset="55.1"/>
+                    </svg>
+                    <div class="gauge-pct">35%</div>
+                  </div>
+                  <div class="gauge-name">Vedic Period</div>
+                  <div class="gauge-meta">4 lessons</div>
+                </div>
+                <!-- Gauge 2: Empires, 80%, green -->
+                <div class="gauge-btn">
+                  <div class="gauge-wrap">
+                    <svg class="gauge-svg" viewBox="0 0 48 48">
+                      <circle class="gauge-track" cx="24" cy="24" r="18" stroke-dasharray="84.8 28.3"/>
+                      <circle class="gauge-fill" cx="24" cy="24" r="18" stroke="#2E7D32"
+                        stroke-dasharray="84.8 28.3" stroke-dashoffset="17"/>
+                    </svg>
+                    <div class="gauge-pct">80%</div>
+                  </div>
+                  <div class="gauge-name">Empires & Dynasties</div>
+                  <div class="gauge-meta">5 lessons</div>
+                </div>
+                <!-- Gauge 3: Philosophy, 0% -->
+                <div class="gauge-btn">
+                  <div class="gauge-wrap">
+                    <svg class="gauge-svg" viewBox="0 0 48 48">
+                      <circle class="gauge-track" cx="24" cy="24" r="18" stroke-dasharray="84.8 28.3"/>
+                      <circle class="gauge-fill" cx="24" cy="24" r="18" stroke="#D1D5DB"
+                        stroke-dasharray="84.8 28.3" stroke-dashoffset="84.8"/>
+                    </svg>
+                    <div class="gauge-pct" style="color:#9CA3AF;">0%</div>
+                  </div>
+                  <div class="gauge-name">Philosophy & Thought</div>
+                  <div class="gauge-meta">3 lessons</div>
+                </div>
+                <!-- Gauge 4: Trade, 50%, heritage -->
+                <div class="gauge-btn">
+                  <div class="gauge-wrap">
+                    <svg class="gauge-svg" viewBox="0 0 48 48">
+                      <circle class="gauge-track" cx="24" cy="24" r="18" stroke-dasharray="84.8 28.3"/>
+                      <circle class="gauge-fill" cx="24" cy="24" r="18" stroke="#00509E"
+                        stroke-dasharray="84.8 28.3" stroke-dashoffset="42.4"/>
+                    </svg>
+                    <div class="gauge-pct">50%</div>
+                  </div>
+                  <div class="gauge-name">Trade Routes</div>
+                  <div class="gauge-meta">4 lessons</div>
+                </div>
+              </div>
+
+              <div class="lessons-head">Vedic Period — Lessons</div>
+
+              <!-- Lessons -->
+              <div class="lesson-row">
+                <div class="lr-num done">✓</div>
+                <div class="lr-info">
+                  <div class="lr-name">The Vedic Period & Early Civilisations</div>
+                  <div class="lr-sub">8 snippets · Completed</div>
+                </div>
+                <div class="lr-actions">
+                  <button class="lr-btn read done">Review</button>
+                  <button class="lr-btn quiz">Quiz</button>
+                </div>
+              </div>
+              <div class="lesson-row" style="border: 1.5px solid var(--saffron);">
+                <div class="lr-num resume">▶</div>
+                <div class="lr-info">
+                  <div class="lr-name">The Rig Veda: Hymns & Significance</div>
+                  <div class="lr-sub">7 snippets · In progress</div>
+                </div>
+                <div class="lr-actions">
+                  <button class="lr-btn read" style="background:var(--saffron);color:white;border-color:var(--saffron);">Resume →</button>
+                  <button class="lr-btn quiz">Quiz</button>
+                </div>
+              </div>
+              <div class="lesson-row">
+                <div class="lr-num">3</div>
+                <div class="lr-info">
+                  <div class="lr-name">Aryan Migration: Fact & Debate</div>
+                  <div class="lr-sub">6 snippets</div>
+                </div>
+                <div class="lr-actions">
+                  <button class="lr-btn read">Start →</button>
+                  <button class="lr-btn quiz" disabled style="opacity:0.3;">Quiz</button>
+                </div>
+              </div>
+              <div class="lesson-row">
+                <div class="lr-num">4</div>
+                <div class="lr-info">
+                  <div class="lr-name">Society & Caste in the Vedic Age</div>
+                  <div class="lr-sub">9 snippets</div>
+                </div>
+                <div class="lr-actions">
+                  <button class="lr-btn read">Start →</button>
+                  <button class="lr-btn quiz" disabled style="opacity:0.3;">Quiz</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /.fy-layout -->
+
+      <div class="bottom-nav">
+        <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+        <div class="nav-item active"><div class="nav-icon">✦</div><div class="nav-label" style="color:var(--saffron);">For You</div></div>
+        <div class="nav-item"><div class="nav-icon">🔭</div><div class="nav-label">Discover</div></div>
+        <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Dashboard</div></div>
+      </div>
+    </div><!-- /.phone -->
+
+    <!-- Callouts for Phone 2 -->
+    <div class="callouts">
+      <div class="callout blue">
+        <div class="callout-num" style="background:var(--heritage);">4</div>
+        <div class="callout-text"><b>All Courses expands</b> in-place: Course → Levels accordion → Themes. One branch open at a time. Heritage blue accent marks the active selection.</div>
+      </div>
+      <div class="callout">
+        <div class="callout-num">5</div>
+        <div class="callout-text"><b>Module gauges</b> — speedometer-arc buttons. Color encodes progress: gray (0%), saffron (1–49%), heritage (50–74%), green (75%+).</div>
+      </div>
+      <div class="callout green">
+        <div class="callout-num" style="background:var(--green);">6</div>
+        <div class="callout-text"><b>Lessons list</b> below gauges — each row shows completion state + <b>Read</b> (saffron) and <b>Quiz</b> (heritage) action buttons. Disabled Quiz = no quiz available yet.</div>
+      </div>
+    </div>
+
+  </div><!-- /.phone-block -->
+
+</div><!-- /.phones-row -->
+
+
+<!-- ── Behaviour summary ── -->
+<div style="max-width:800px; margin:48px auto 0; background:white; border-radius:16px; padding:24px 28px; box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+  <div style="font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#8B7355; margin-bottom:14px;">Interaction Behaviour Summary</div>
+  <table style="width:100%; border-collapse:collapse; font-size:12px;">
+    <thead>
+      <tr style="border-bottom:2px solid #F3F4F6;">
+        <th style="text-align:left; padding:8px 10px; color:#3D2B00; font-weight:800;">Action</th>
+        <th style="text-align:left; padding:8px 10px; color:#3D2B00; font-weight:800;">Sidebar</th>
+        <th style="text-align:left; padding:8px 10px; color:#3D2B00; font-weight:800;">Main Panel</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid #F3F4F6;">
+        <td style="padding:8px 10px; color:#4A5565;">Tap any sidebar button (Resume, Interest, etc.)</td>
+        <td style="padding:8px 10px; color:#4A5565;">Button highlights saffron; courses tree collapses</td>
+        <td style="padding:8px 10px; color:#4A5565;">Shows the relevant block (card / carousel / list)</td>
+      </tr>
+      <tr style="border-bottom:1px solid #F3F4F6;">
+        <td style="padding:8px 10px; color:#4A5565;">Tap <b>All Courses</b></td>
+        <td style="padding:8px 10px; color:#4A5565;">Highlights heritage blue; tree expands below</td>
+        <td style="padding:8px 10px; color:#4A5565;">Shows module gauges + lessons for selected theme</td>
+      </tr>
+      <tr style="border-bottom:1px solid #F3F4F6;">
+        <td style="padding:8px 10px; color:#4A5565;">Tap a Level in tree</td>
+        <td style="padding:8px 10px; color:#4A5565;">Level expands showing its themes; others collapse</td>
+        <td style="padding:8px 10px; color:#4A5565;">Shows level-overview (stats + theme cards)</td>
+      </tr>
+      <tr style="border-bottom:1px solid #F3F4F6;">
+        <td style="padding:8px 10px; color:#4A5565;">Tap a Theme in tree</td>
+        <td style="padding:8px 10px; color:#4A5565;">Theme highlighted; stays open in its level</td>
+        <td style="padding:8px 10px; color:#4A5565;">Shows module gauges + lesson list for that theme</td>
+      </tr>
+      <tr style="border-bottom:1px solid #F3F4F6;">
+        <td style="padding:8px 10px; color:#4A5565;">Tap a Module gauge</td>
+        <td style="padding:8px 10px; color:#4A5565;">No change</td>
+        <td style="padding:8px 10px; color:#4A5565;">Lesson list updates to show that module's lessons</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 10px; color:#4A5565;">Tap Read / Resume / Review</td>
+        <td style="padding:8px 10px; color:#4A5565;">No change</td>
+        <td style="padding:8px 10px; color:#4A5565;">Opens lesson in snippet player</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+  // ── Sidebar section switching (Phone 1) ──
+  function selectSection(id, btn) {
+    // Clear active from all sidebar buttons in phone 1
+    const sidebarBtns = document.querySelectorAll('.fy-sidebar .sidebar-btn:not(#courses-btn)');
+    document.querySelectorAll('.fy-sidebar .sidebar-btn').forEach(b => {
+      b.classList.remove('active', 'courses-active');
+    });
+    btn.classList.add('active');
+
+    // Hide all panels
+    document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('visible'));
+
+    // Show target panel
+    const panel = document.getElementById('panel-' + id);
+    if (panel) panel.classList.add('visible');
+
+    // Collapse courses tree if not courses
+    document.getElementById('courses-tree').style.display = 'none';
+  }
+
+  function toggleCourses(btn) {
+    const tree = document.getElementById('courses-tree');
+    const isOpen = tree.style.display !== 'none';
+
+    // Toggle tree
+    tree.style.display = isOpen ? 'none' : 'block';
+
+    // Update button
+    document.querySelectorAll('.fy-sidebar .sidebar-btn').forEach(b => b.classList.remove('active', 'courses-active'));
+    if (!isOpen) {
+      btn.classList.add('courses-active');
+      // Show courses panel
+      document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('visible'));
+      document.getElementById('panel-courses').classList.add('visible');
+      // Expand level 1 themes
+      document.getElementById('level-001-themes').style.display = 'block';
+    } else {
+      btn.classList.remove('courses-active');
+      document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('visible'));
+      document.getElementById('panel-resume').classList.add('visible');
+      document.querySelectorAll('.fy-sidebar .sidebar-btn')[0].classList.add('active');
+    }
+  }
+
+  function selectLevel(levelId) {
+    const themesEl = document.getElementById('level-001-themes');
+    if (levelId === 'LEVEL_001') {
+      themesEl.style.display = themesEl.style.display === 'none' ? 'block' : 'none';
+    } else {
+      themesEl.style.display = 'none';
+    }
+  }
+
+  function selectTheme(themeId) {
+    document.querySelectorAll('.tree-item').forEach(t => t.classList.remove('selected'));
+    event.target.closest('.tree-item').classList.add('selected');
+  }
+
+  // ── Gauge selection (Phone 1 courses panel) ──
+  const moduleData = {
+    vedic: {
+      label: 'Vedic Period — Lessons',
+      lessons: [
+        { num: '✓', cls: 'done', name: 'The Vedic Period & Early Civilisations', sub: '8 snippets · Completed', read: 'Review', readDone: true, quiz: true },
+        { num: '▶', cls: 'resume', name: 'The Rig Veda: Hymns & Significance', sub: '7 snippets · In progress', read: 'Resume →', readActive: true, quiz: true },
+        { num: '3', cls: '', name: 'Aryan Migration: Fact & Debate', sub: '6 snippets', read: 'Start →', quiz: false },
+        { num: '4', cls: '', name: 'Society & Caste in the Vedic Age', sub: '9 snippets', read: 'Start →', quiz: false },
+      ]
+    },
+    empires: {
+      label: 'Empires & Dynasties — Lessons',
+      lessons: [
+        { num: '✓', cls: 'done', name: 'The Maurya Empire', sub: '10 snippets · Completed', read: 'Review', readDone: true, quiz: true },
+        { num: '✓', cls: 'done', name: 'Ashoka: The Philosopher King', sub: '9 snippets · Completed', read: 'Review', readDone: true, quiz: true },
+        { num: '✓', cls: 'done', name: 'The Gupta Golden Age', sub: '8 snippets · Completed', read: 'Review', readDone: true, quiz: true },
+        { num: '✓', cls: 'done', name: 'Chola Dynasty & Maritime Power', sub: '7 snippets · Completed', read: 'Review', readDone: true, quiz: true },
+        { num: '5', cls: '', name: 'Vijayanagara: Last Great Empire', sub: '8 snippets', read: 'Start →', quiz: false },
+      ]
+    },
+    philosophy: {
+      label: 'Philosophy & Thought — Lessons',
+      lessons: [
+        { num: '1', cls: '', name: 'Upanishads: The Inner Teaching', sub: '7 snippets', read: 'Start →', quiz: false },
+        { num: '2', cls: '', name: 'Buddhism: Origins & Core Ideas', sub: '8 snippets', read: 'Start →', quiz: false },
+        { num: '3', cls: '', name: 'Jainism & Non-Violence', sub: '6 snippets', read: 'Start →', quiz: false },
+      ]
+    },
+    trade: {
+      label: 'Trade Routes — Lessons',
+      lessons: [
+        { num: '✓', cls: 'done', name: 'Silk Road: India\'s Role', sub: '8 snippets · Completed', read: 'Review', readDone: true, quiz: true },
+        { num: '✓', cls: 'done', name: 'Spice Trade & the West', sub: '7 snippets · Completed', read: 'Review', readDone: true, quiz: true },
+        { num: '3', cls: '', name: 'Maritime Trade Networks', sub: '9 snippets', read: 'Start →', quiz: false },
+        { num: '4', cls: '', name: 'Merchants & Guilds in Ancient India', sub: '6 snippets', read: 'Start →', quiz: false },
+      ]
+    }
+  };
+
+  function selectModule(btn, moduleId) {
+    document.querySelectorAll('#gauges-row .gauge-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const data = moduleData[moduleId];
+    if (!data) return;
+    document.getElementById('module-label').textContent = data.label;
+    const list = document.getElementById('lessons-list');
+    list.innerHTML = data.lessons.map((l, i) => `
+      <div class="lesson-row" ${l.cls === 'resume' ? 'style="border:1.5px solid var(--saffron);"' : ''}>
+        <div class="lr-num ${l.cls}">${l.num}</div>
+        <div class="lr-info">
+          <div class="lr-name">${l.name}</div>
+          <div class="lr-sub">${l.sub}</div>
+        </div>
+        <div class="lr-actions">
+          <button class="lr-btn read ${l.readDone ? 'done' : ''}" ${l.readActive ? 'style="background:var(--saffron);color:white;border-color:var(--saffron);"' : ''}>${l.read}</button>
+          <button class="lr-btn quiz" ${!l.quiz ? 'disabled style="opacity:0.3;"' : ''}>Quiz</button>
+        </div>
+      </div>
+    `).join('');
+  }
+</script>
+
+</body>
+</html>

@@ -21,6 +21,7 @@ import DiscoverPage   from "./pages/DiscoverPage";
 import GatewayPage    from "./pages/GatewayPage";
 import CourseNavigatorPage from "./pages/CourseNavigatorPage";
 import QuizPlayer from "./pages/QuizPlayer";
+import ForYouPage from "./pages/ForYouPage";
 import AppFooter from "./components/AppFooter";
 const AdminPage  = lazy(() => import("./pages/AdminPage"));
 const EditorPage = lazy(() => import("./pages/EditorPage"));
@@ -202,7 +203,7 @@ export default function App() {
     if (hasRedirectedOnLoginRef.current) return; // already redirected this session
     hasRedirectedOnLoginRef.current = true;
     if (profile?.last_visited_route && (page === "home" || page === "gateway")) {
-      goForward("dashboard");
+      goForward("for-you");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.id]);
@@ -544,6 +545,44 @@ export default function App() {
     goForward("player");
   }
 
+  // Opens a lesson directly by lesson_id (used by ForYouPage recommendations/carousels)
+  async function handleOpenLessonById(lessonId) {
+    try {
+      const lessons = await supabase("lessons", `?lesson_id=eq.${lessonId}&select=*`);
+      if (!Array.isArray(lessons) || !lessons.length) return;
+      const lesson = lessons[0];
+      const mods = await supabase("modules", `?module_id=eq.${lesson.module_id}&select=*`);
+      const mod = Array.isArray(mods) && mods.length ? mods[0] : null;
+      const themes = mod
+        ? await supabase("themes", `?theme_id=eq.${mod.theme_id}&select=*`)
+        : null;
+      const theme = Array.isArray(themes) && themes.length ? themes[0] : null;
+      setSelectedLesson(lesson);
+      if (mod)   setSelectedModule(mod);
+      if (theme) setSelectedTheme(theme);
+      if (mod?.level_id) setSelectedLevelId(mod.level_id);
+      setEarnedBadges([]);
+      setPlaylistSnippetIds(null);
+      setPlayerReturnPage("for-you");
+      setLessonQuiz(null);
+      getQuizForLesson(lessonId).then(({ data }) => setLessonQuiz(data || null));
+      if (user && !user.is_anonymous) {
+        saveLastVisited({
+          lesson_id:   lesson.lesson_id,
+          module_id:   mod?.module_id  ?? null,
+          level_id:    mod?.level_id   ?? null,
+          course_id:   selectedCourse?.course_id   ?? null,
+          course_name: selectedCourse?.course_name ?? null,
+          theme_id:    mod?.theme_id   ?? null,
+          theme_title: theme?.title    ?? null,
+        });
+      }
+      goForward("player");
+    } catch (e) {
+      console.warn("handleOpenLessonById:", e);
+    }
+  }
+
   async function handleSignOut() {
     try { await signOut(); } catch (e) { console.warn("signOut:", e); }
     setPage("home");
@@ -562,7 +601,9 @@ export default function App() {
     profile,
     settings,
     onOpenSettings: () => goForward("settings"),
-    onHome:      () => goBack("home"),
+    onHome:       () => goBack("home"),
+    onForYou:     () => goForward("for-you"),
+    onAllCourses: () => goForward("home"), // placeholder until All Courses page (Task 3)
     onDashboard: () => goForward("dashboard"),
     onLikes:     () => goForward("likes"),
     onBookmarks: () => goForward("bookmarks"),
@@ -755,6 +796,24 @@ export default function App() {
               goForward("modules");
             }}
             onBack={() => goBack("home")}
+          />
+        );
+      case "for-you":
+        return (
+          <ForYouPage
+            {...commonProps}
+            onBack={() => goBack("home")}
+            lessonProgress={lessonProgress}
+            onPlaySnippet={(snippetIds, startIndex) => {
+              setPlaylistSnippetIds(snippetIds);
+              setPlaylistStartIndex(startIndex);
+              setPlaylistSource("likes");
+              setPlaylistLabel("\u2665 My Likes");
+              setPlayerReturnPage("for-you");
+              goForward("player");
+            }}
+            onNavigate={handleBookmarkNavigate}
+            onOpenLesson={handleOpenLessonById}
           />
         );
       case "dashboard":

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { logoUrl } from "../lib/supabase";
 import { useAuthContext } from "../contexts/AuthContext";
 import { APP_NAME } from "../config/appStrings";
@@ -13,6 +13,10 @@ const S = {
   fill: "none", stroke: "currentColor",
   strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round",
 };
+
+/* ── Tabler icon wrappers (for bottom nav + top nav) ─────────── */
+const IcBooks  = () => <i className="ti ti-books"    style={{fontSize:20,lineHeight:1,display:'flex'}} />;
+const IcForYou = () => <i className="ti ti-sparkles" style={{fontSize:20,lineHeight:1,display:'flex'}} />;
 
 /* ── Individual SVG icons ─────────────────────────────────────── */
 const IcHome = () => (
@@ -64,11 +68,13 @@ const IcPlay = () => (
 
 /* Label -> icon component */
 const LABEL_IC = {
-  Home:      IcHome,
-  Discover:  IcSearch,
-  Dashboard: IcChart,
-  Likes:     IcHeart,
-  Bookmarks: IcBookmark,
+  Home:          IcHome,
+  "All Courses": IcBooks,
+  "For You":     IcForYou,
+  Discover:      IcSearch,
+  Dashboard:     IcChart,
+  Likes:         IcHeart,
+  Bookmarks:     IcBookmark,
 };
 
 const FONT_OPTIONS = [
@@ -246,6 +252,35 @@ const headerStyles = `
     transition: color 0.12s; font-family: 'Inter', system-ui, sans-serif;
   }
 
+  /* ── Mini language / font-size dropdowns ─────────────────── */
+  .hdr-mini-wrap { position: relative; flex-shrink: 0; }
+  .hdr-mini-dd {
+    position: absolute; top: calc(100% + 8px); right: 0;
+    background: #fff; border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.14);
+    z-index: 501; border: 1px solid #E5E7EB;
+    animation: ddDown 0.18s ease both;
+    min-width: 160px; overflow: hidden;
+  }
+  .hdr-mini-dd-title {
+    padding: 10px 14px 6px;
+    font-size: 11px; font-weight: 600; color: #4A5565;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    font-family: 'Inter', system-ui, sans-serif; display: block;
+  }
+  .hdr-mini-font-btns { display: flex; gap: 6px; padding: 4px 12px 12px; }
+  .hdr-mini-lang-list { max-height: 220px; overflow-y: auto; padding: 4px 0 8px; }
+  .hdr-mini-lang-btn {
+    display: flex; align-items: center; gap: 8px;
+    width: 100%; padding: 7px 14px;
+    background: none; border: none; text-align: left;
+    font-size: 14px; color: #101828; cursor: pointer;
+    font-family: 'Nunito Sans', system-ui, sans-serif;
+    transition: color 0.12s;
+  }
+  .hdr-mini-lang-btn:hover { color: #FF8E00; }
+  .hdr-mini-lang-btn.active { color: #FF8E00; font-weight: 700; }
+
   /* ── Mobile avatar chip ───────────────────────────────────── */
   .mob-av-wrap { position: relative; margin-left: 3px; }
   .mob-av {
@@ -264,10 +299,13 @@ const headerStyles = `
 /* ── Page -> active tab map ───────────────────────────────────── */
 const PAGE_TO_TAB = {
   home: "Home", course: "Home", modules: "Home", lessons: "Home", player: "Home",
-  discover: "Discover",
-  dashboard: "Dashboard",
-  likes: "Likes",
-  bookmarks: "Bookmarks",
+  "for-you":      "For You",
+  "all-courses":  "All Courses",
+  navigator:      "All Courses",
+  discover:       "Discover",
+  dashboard:      "Dashboard",
+  likes:          "Likes",
+  bookmarks:      "Bookmarks",
 };
 
 /* ── Shared profile dropdown content ─────────────────────────── */
@@ -372,11 +410,19 @@ export default function PageHeader({
   settings, onSaveSettings, languages = [],
 }) {
   const auth = useAuthContext();
-  const [avatarOpen, setAvatarOpen] = useState(false);
-  const [mobDdOpen,  setMobDdOpen]  = useState(false);
-  const [imgError,   setImgError]   = useState(false);
-  const avatarWrapRef = useRef(null);
-  const mobAvatarRef  = useRef(null);
+  const [avatarOpen,   setAvatarOpen]   = useState(false);
+  const [mobDdOpen,    setMobDdOpen]    = useState(false);
+  const [imgError,     setImgError]     = useState(false);
+  const [dLangOpen,    setDLangOpen]    = useState(false);
+  const [dFontOpen,    setDFontOpen]    = useState(false);
+  const [mLangOpen,    setMLangOpen]    = useState(false);
+  const [mFontOpen,    setMFontOpen]    = useState(false);
+  const avatarWrapRef  = useRef(null);
+  const mobAvatarRef   = useRef(null);
+  const dLangRef       = useRef(null);
+  const dFontRef       = useRef(null);
+  const mLangRef       = useRef(null);
+  const mFontRef       = useRef(null);
 
   const user    = auth?.user;
   const profile = auth?.profile;
@@ -415,6 +461,62 @@ export default function PageHeader({
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
   }, [mobDdOpen]);
+
+  /* Close mini-dropdowns on outside click */
+  useEffect(() => {
+    if (!dLangOpen) return;
+    const h = e => { if (dLangRef.current && !dLangRef.current.contains(e.target)) setDLangOpen(false); };
+    document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h);
+  }, [dLangOpen]);
+  useEffect(() => {
+    if (!dFontOpen) return;
+    const h = e => { if (dFontRef.current && !dFontRef.current.contains(e.target)) setDFontOpen(false); };
+    document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h);
+  }, [dFontOpen]);
+  useEffect(() => {
+    if (!mLangOpen) return;
+    const h = e => { if (mLangRef.current && !mLangRef.current.contains(e.target)) setMLangOpen(false); };
+    document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h);
+  }, [mLangOpen]);
+  useEffect(() => {
+    if (!mFontOpen) return;
+    const h = e => { if (mFontRef.current && !mFontRef.current.contains(e.target)) setMFontOpen(false); };
+    document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h);
+  }, [mFontOpen]);
+
+  const LangDD = ({ setter }) => (
+    <div className="hdr-mini-dd">
+      <span className="hdr-mini-dd-title">Language</span>
+      <div className="hdr-mini-lang-list">
+        {(languages || []).map(l => (
+          <button key={l.language_id}
+            className={"hdr-mini-lang-btn" + (settings?.languageId === l.language_id ? " active" : "")}
+            onClick={() => {
+              onSaveSettings && onSaveSettings({ ...settings, languageId: l.language_id, languageCode: l.language_code, languageName: l.language });
+              setter(false);
+            }}>
+            <span style={{width:14,flexShrink:0}}>{settings?.languageId === l.language_id ? "\u2713" : ""}</span>
+            {l.language}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  const FontDD = ({ setter }) => (
+    <div className="hdr-mini-dd" style={{minWidth:180}}>
+      <span className="hdr-mini-dd-title">Text Size</span>
+      <div className="hdr-mini-font-btns">
+        {FONT_OPTIONS.map(f => (
+          <button key={f.key}
+            className={"prof-font-btn" + (settings?.fontSize === f.key ? " active" : "")}
+            onClick={() => { onSaveSettings && onSaveSettings({ ...settings, fontSize: f.key }); setter(false); }}>
+            {f.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 
   const dropdownProps = { auth, settings, onSaveSettings, languages, onOpenSettings, isGuest, rawLabel };
 
@@ -474,8 +576,23 @@ export default function PageHeader({
           )}
         </nav>
 
-        {/* ── Desktop: avatar ─────────────────────────────────── */}
-        <div className="header-right hdr-desktop">
+        {/* ── Desktop: language + font + avatar ───────────────── */}
+        <div className="header-right hdr-desktop" style={{display:"flex",alignItems:"center",gap:"4px"}}>
+          <div className="hdr-mini-wrap" ref={dLangRef}>
+            <button className="mob-icon-btn" type="button" title="Language"
+              onClick={() => { setDLangOpen(o => !o); setDFontOpen(false); }}>
+              <i className="ti ti-language" style={{fontSize:18}} />
+            </button>
+            {dLangOpen && <LangDD setter={setDLangOpen} />}
+          </div>
+          <div className="hdr-mini-wrap" ref={dFontRef}>
+            <button className="mob-icon-btn" type="button" title="Text Size"
+              onClick={() => { setDFontOpen(o => !o); setDLangOpen(false); }}
+              style={{fontFamily:"'Alumni Sans',serif",fontWeight:700,fontSize:15}}>
+              Aa
+            </button>
+            {dFontOpen && <FontDD setter={setDFontOpen} />}
+          </div>
           {user ? (
             <div className="auth-avatar-wrap" ref={avatarWrapRef}>
               <button
@@ -523,6 +640,25 @@ export default function PageHeader({
               )}
             </div>
           )}
+
+          {/* Language button */}
+          <div className="hdr-mini-wrap" ref={mLangRef}>
+            <button className="mob-icon-btn" type="button" title="Language"
+              onClick={() => { setMLangOpen(o => !o); setMFontOpen(false); }}>
+              <i className="ti ti-language" style={{fontSize:18}} />
+            </button>
+            {mLangOpen && <LangDD setter={setMLangOpen} />}
+          </div>
+
+          {/* Font Size button */}
+          <div className="hdr-mini-wrap" ref={mFontRef}>
+            <button className="mob-icon-btn" type="button" title="Text Size"
+              onClick={() => { setMFontOpen(o => !o); setMLangOpen(false); }}
+              style={{fontFamily:"'Alumni Sans',serif",fontWeight:700,fontSize:15}}>
+              Aa
+            </button>
+            {mFontOpen && <FontDD setter={setMFontOpen} />}
+          </div>
 
           {/* Avatar chip */}
           <div className="mob-av-wrap" ref={mobAvatarRef}>

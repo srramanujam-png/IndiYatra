@@ -242,11 +242,11 @@ export default function HomePage({
         onSaveSettings={onSaveSettings}
         languages={languages}
         navLinks={[
-          { label: "Home",      onClick: () => {} },
-          { label: "Discover",  onClick: onDiscover },
-          { label: "Dashboard", onClick: onDashboard },
-          { label: "Likes",     onClick: onLikes },
-          { label: "Bookmarks", onClick: onBookmarks },
+          { label: "Home",        onClick: () => {}       },
+          { label: "All Courses", onClick: onAllCourses   },
+          { label: "For You",     onClick: onForYou       },
+          { label: "Dashboard",   onClick: onDashboard    },
+          { label: "Discover",    onClick: onDiscover     },
         ]}
       />
 

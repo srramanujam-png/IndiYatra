@@ -6,6 +6,7 @@ import { SkeletonBadges } from "../components/Skeletons";
 import { supabaseClient } from "../lib/auth";
 import { useAuthContext } from "../contexts/AuthContext";
 import { APP_URL, APP_SHARE_LOGO, PLAYER, DEFAULT_SHARE_MSG, DEFAULT_SHARE_MSG_WITH_SCORE, DEFAULT_SHARE_MSG_NO_SCORE, FOREST_TOKENS as FOREST_TOKEN_DEFS } from "../config/appStrings";
+import RecommendationsRail from "../components/RecommendationsRail";
 
 // Off-brand colours removed — using brand constants only
 
@@ -1243,11 +1244,11 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
         onSaveSettings={onSaveSettings}
         languages={languages}
         navLinks={[
-          { label: "Home",      onClick: onBack },
-          { label: "Discover",  onClick: onDiscover },
-          { label: "Dashboard", onClick: () => {} },
-          { label: "Likes",      onClick: onLikes },
-          { label: "Bookmarks", onClick: onBookmarks },
+          { label: "Home",        onClick: onBack         },
+          { label: "All Courses", onClick: onAllCourses   },
+          { label: "For You",     onClick: onForYou       },
+          { label: "Dashboard",   onClick: () => {}       },
+          { label: "Discover",    onClick: onDiscover     },
         ]}
       />
 
@@ -1329,6 +1330,12 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
           {/* Ghost card — balances the 3-column grid on mobile (2 rows of 3) */}
           <div className="stat-card stat-ghost" aria-hidden="true" />
         </div>
+
+        {/* ── Recommendations Rail ── */}
+        <RecommendationsRail
+          userId={user && !user.is_anonymous ? user.id : null}
+          onOpenLesson={onResume}
+        />
 
         {/* ── Streak Heatmap ── */}
         <div id="sec-streak" className="dash-section">

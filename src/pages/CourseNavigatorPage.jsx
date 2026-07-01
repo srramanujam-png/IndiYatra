@@ -752,11 +752,11 @@ export default function CourseNavigatorPage({
         onSaveSettings={onSaveSettings}
         languages={languages}
         navLinks={[
-          { label: "Home", onClick: onBack },
-          { label: "Discover", onClick: onDiscover },
-          { label: "Dashboard", onClick: onDashboard },
-          { label: "Likes", onClick: onLikes },
-          { label: "Bookmarks", onClick: onBookmarks },
+          { label: "Home",        onClick: onBack         },
+          { label: "All Courses", onClick: onAllCourses   },
+          { label: "For You",     onClick: onForYou       },
+          { label: "Dashboard",   onClick: onDashboard    },
+          { label: "Discover",    onClick: onDiscover     },
         ]}
       />
       <div className="breadcrumb">
