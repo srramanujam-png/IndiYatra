@@ -129,7 +129,7 @@ const styles = `
 `;
 
 export default function BookmarksPage({
-  settings, onBack, onOpenSettings, onDashboard, onLikes, onBookmarks, onDiscover, onResume,
+  settings, onBack, onOpenSettings, onDashboard, onLikes, onBookmarks, onDiscover, onForYou, onAllCourses, onResume,
   onToggleBookmark,
   onNavigate,
   isAdmin, onAdmin, userEditorialRole, onEditor,
@@ -227,7 +227,7 @@ export default function BookmarksPage({
         languages={languages}
         navLinks={[
           { label: "Home",        onClick: onBack         },
-          { label: "All Courses", onClick: onAllCourses   },
+          { label: "Courses", onClick: onAllCourses   },
           { label: "For You",     onClick: onForYou       },
           { label: "Dashboard",   onClick: onDashboard    },
           { label: "Discover",    onClick: onDiscover     },

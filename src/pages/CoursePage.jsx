@@ -116,7 +116,7 @@ function getState(done, total) {
   return "none";
 }
 
-export default function CoursePage({ course, settings, completedLessons = new Set(), onThemeClick, onBack, onOpenSettings, onDashboard, onLikes, onBookmarks, onDiscover, onResume, bookmarks = new Set(), onToggleBookmark, userEditorialRole, onEditor, isAdmin, onAdmin, activePage, onSaveSettings, languages = [] }) {
+export default function CoursePage({ course, settings, completedLessons = new Set(), onThemeClick, onBack, onOpenSettings, onDashboard, onLikes, onBookmarks, onDiscover, onForYou, onAllCourses, onResume, bookmarks = new Set(), onToggleBookmark, userEditorialRole, onEditor, isAdmin, onAdmin, activePage, onSaveSettings, languages = [] }) {
   const [levels, setLevels]       = useState([]);
   const [themes, setThemes]       = useState([]);
   const [modules, setModules]     = useState([]);
@@ -199,7 +199,7 @@ export default function CoursePage({ course, settings, completedLessons = new Se
         settings={settings}
         onSaveSettings={onSaveSettings}
         languages={languages}
-        navLinks={[{ label: "Home", onClick: onBack }, { label: "All Courses", onClick: onAllCourses }, { label: "For You", onClick: onForYou }, { label: "Dashboard", onClick: onDashboard }, { label: "Discover", onClick: onDiscover }]}
+        navLinks={[{ label: "Home", onClick: onBack }, { label: "Courses", onClick: onAllCourses }, { label: "For You", onClick: onForYou }, { label: "Dashboard", onClick: onDashboard }, { label: "Discover", onClick: onDiscover }]}
       />
 
       <div className="breadcrumb">

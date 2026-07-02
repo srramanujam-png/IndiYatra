@@ -1584,7 +1584,7 @@ function VerifierView({ showToast }) {
 
 // ── Main EditorPage ───────────────────────────────────────────────────────────
 export default function EditorPage({
-  settings, onOpenSettings, onSaveSettings, onHome, onDashboard, onLikes, onBookmarks, onDiscover,
+  settings, onOpenSettings, onSaveSettings, onHome, onDashboard, onLikes, onBookmarks, onDiscover, onForYou, onAllCourses,
   onAdmin, isAdmin, onResume, bookmarks, onToggleBookmark,
   userEditorialRole, onEditor,
   languages = [],
@@ -1613,7 +1613,7 @@ export default function EditorPage({
 
   const navLinks = [
     { label: "Home",        onClick: onHome         },
-    { label: "All Courses", onClick: onAllCourses   },
+    { label: "Courses", onClick: onAllCourses   },
     { label: "For You",     onClick: onForYou       },
     { label: "Dashboard",   onClick: onDashboard    },
     { label: "Discover",    onClick: onDiscover     },

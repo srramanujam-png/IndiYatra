@@ -100,7 +100,7 @@ const styles = `
   .likes-signin-btn:hover { opacity: 0.9; }
 `;
 
-export default function LikesPage({ settings, onBack, onOpenSettings, onResume, onDashboard, onLikes, onBookmarks, onDiscover, onPlaySnippet, isAdmin, onAdmin, userEditorialRole, onEditor, activePage, onSaveSettings, languages = [] }) {
+export default function LikesPage({ settings, onBack, onOpenSettings, onResume, onDashboard, onLikes, onBookmarks, onDiscover, onForYou, onAllCourses, onPlaySnippet, isAdmin, onAdmin, userEditorialRole, onEditor, activePage, onSaveSettings, languages = [] }) {
   const { user, onSignIn } = useAuthContext();
   const [likes,    setLikes]    = useState([]);
   const [assets,   setAssets]   = useState({});
@@ -177,7 +177,7 @@ export default function LikesPage({ settings, onBack, onOpenSettings, onResume, 
         languages={languages}
         navLinks={[
           { label: "Home",        onClick: onBack         },
-          { label: "All Courses", onClick: onAllCourses   },
+          { label: "Courses", onClick: onAllCourses   },
           { label: "For You",     onClick: onForYou       },
           { label: "Dashboard",   onClick: onDashboard    },
           { label: "Discover",    onClick: onDiscover     },

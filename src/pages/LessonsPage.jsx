@@ -92,7 +92,7 @@ const styles = `
   }
 `;
 
-export default function LessonsPage({ course, theme, module, levelId, settings, completedLessons = new Set(), onLessonClick, onQuizClick, onBack, onBackToCourse, onBackToModules, onOpenSettings, onLessonsLoaded, onDashboard, onLikes, onBookmarks, onDiscover, onResume, bookmarks = new Set(), onToggleBookmark, userEditorialRole, onEditor, isAdmin, onAdmin, activePage, onSaveSettings, languages = [] }) {
+export default function LessonsPage({ course, theme, module, levelId, settings, completedLessons = new Set(), onLessonClick, onQuizClick, onBack, onBackToCourse, onBackToModules, onOpenSettings, onLessonsLoaded, onDashboard, onLikes, onBookmarks, onDiscover, onForYou, onAllCourses, onResume, bookmarks = new Set(), onToggleBookmark, userEditorialRole, onEditor, isAdmin, onAdmin, activePage, onSaveSettings, languages = [] }) {
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [quizMap,  setQuizMap]  = useState({});   // lesson_id → quiz_sets row
@@ -129,7 +129,7 @@ export default function LessonsPage({ course, theme, module, levelId, settings, 
         settings={settings}
         onSaveSettings={onSaveSettings}
         languages={languages}
-        navLinks={[{ label: "Home", onClick: onBack }, { label: "All Courses", onClick: onAllCourses }, { label: "For You", onClick: onForYou }, { label: "Dashboard", onClick: onDashboard }, { label: "Discover", onClick: onDiscover }]}
+        navLinks={[{ label: "Home", onClick: onBack }, { label: "Courses", onClick: onAllCourses }, { label: "For You", onClick: onForYou }, { label: "Dashboard", onClick: onDashboard }, { label: "Discover", onClick: onDiscover }]}
       />
 
       <div className="breadcrumb">

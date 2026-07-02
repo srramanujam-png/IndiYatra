@@ -196,7 +196,7 @@ const BENEFITS = [
 
 export default function HomePage({
   settings, onCourseClick, onOpenSettings, onDashboard,
-  onLikes, onBookmarks, onDiscover, onResume,
+  onLikes, onBookmarks, onDiscover, onForYou, onAllCourses, onResume,
   isAdmin, onAdmin, userEditorialRole, onEditor,
   activePage, onSaveSettings, languages = [],
 }) {
@@ -243,7 +243,7 @@ export default function HomePage({
         languages={languages}
         navLinks={[
           { label: "Home",        onClick: () => {}       },
-          { label: "All Courses", onClick: onAllCourses   },
+          { label: "Courses", onClick: onAllCourses   },
           { label: "For You",     onClick: onForYou       },
           { label: "Dashboard",   onClick: onDashboard    },
           { label: "Discover",    onClick: onDiscover     },

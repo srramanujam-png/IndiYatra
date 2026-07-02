@@ -115,6 +115,8 @@ export const globalStyles = `
   @keyframes fadeIn       { from { opacity:0; } to { opacity:1; } }
   @keyframes slideInRight { from { transform:translateX(100%); } to { transform:translateX(0); } }
 
+  /* base display for mobile-only elements; desktop media query overrides to none */
+  .hdr-mobile { display: flex; align-items: center; }
   @media (max-width: 1024px) { .hdr-desktop { display: none !important; } }
   @media (min-width: 1025px) { .hdr-mobile  { display: none !important; } }
 

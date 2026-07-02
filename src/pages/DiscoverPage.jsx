@@ -235,7 +235,7 @@ const styles = `
 
 export default function DiscoverPage({
   settings, onBack, onOpenSettings, onHome, onDashboard, onResume,
-  onLikes, onBookmarks, onDiscover, onNavigate, onPlaySnippet,
+  onLikes, onBookmarks, onDiscover, onForYou, onAllCourses, onNavigate, onPlaySnippet,
   isAdmin, onAdmin, userEditorialRole, onEditor,
   activePage, onSaveSettings, languages = [],
 }) {
@@ -513,7 +513,7 @@ export default function DiscoverPage({
         languages={languages}
         navLinks={[
           { label: "Home",        onClick: navOnHome               },
-          { label: "All Courses", onClick: onAllCourses            },
+          { label: "Courses", onClick: onAllCourses            },
           { label: "For You",     onClick: onForYou                },
           { label: "Dashboard",   onClick: onDashboard             },
           { label: "Discover",    onClick: onDiscover || (() => {}) },

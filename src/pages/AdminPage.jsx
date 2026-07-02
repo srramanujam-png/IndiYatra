@@ -129,7 +129,7 @@ const styles = `
 
 export default function AdminPage({
   settings, onOpenSettings, onSaveSettings, onHome, onDashboard, onLikes,
-  onBookmarks, onDiscover, onResume, bookmarks, onToggleBookmark,
+  onBookmarks, onDiscover, onForYou, onAllCourses, onResume, bookmarks, onToggleBookmark,
   isAdmin, onAdmin, userEditorialRole, onEditor,
   activePage, languages = [],
 }) {
@@ -971,7 +971,7 @@ export default function AdminPage({
   const tags = terms.filter(t => t.type === "tag");
   const navLinks = [
     { label: "Home",        onClick: onHome         },
-    { label: "All Courses", onClick: onAllCourses   },
+    { label: "Courses", onClick: onAllCourses   },
     { label: "For You",     onClick: onForYou       },
     { label: "Dashboard",   onClick: onDashboard    },
     { label: "Discover",    onClick: onDiscover     },

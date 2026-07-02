@@ -223,7 +223,7 @@ export default function CourseNavigatorPage({
   onDashboard,
   onLikes,
   onBookmarks,
-  onDiscover,
+  onDiscover, onForYou, onAllCourses,
   onResume,
   userEditorialRole,
   onEditor,
@@ -753,7 +753,7 @@ export default function CourseNavigatorPage({
         languages={languages}
         navLinks={[
           { label: "Home",        onClick: onBack         },
-          { label: "All Courses", onClick: onAllCourses   },
+          { label: "Courses", onClick: onAllCourses   },
           { label: "For You",     onClick: onForYou       },
           { label: "Dashboard",   onClick: onDashboard    },
           { label: "Discover",    onClick: onDiscover     },

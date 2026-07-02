@@ -602,7 +602,7 @@ export default function ForYouPage({
 
   const navLinks = [
     { label: "Home",        onClick: onBack                  },
-    { label: "All Courses", onClick: onAllCourses            },
+    { label: "Courses", onClick: onAllCourses            },
     { label: "For You",     onClick: onForYou  || (() => {}) },
     { label: "Dashboard",   onClick: onDashboard             },
     { label: "Discover",    onClick: onDiscover              },

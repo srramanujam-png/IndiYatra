@@ -108,7 +108,7 @@ export default function SettingsPage({
   onDashboard,
   onLikes,
   onBookmarks,
-  onDiscover,
+  onDiscover, onForYou, onAllCourses,
   onOpenSettings,
   onResume,
   languages,
@@ -209,7 +209,7 @@ export default function SettingsPage({
 
   const navLinks = [
     { label: "Home",        onClick: onHome         },
-    { label: "All Courses", onClick: onAllCourses   },
+    { label: "Courses", onClick: onAllCourses   },
     { label: "For You",     onClick: onForYou       },
     { label: "Dashboard",   onClick: onDashboard    },
     { label: "Discover",    onClick: onDiscover     },

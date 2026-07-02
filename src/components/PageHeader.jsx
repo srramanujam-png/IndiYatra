@@ -69,7 +69,7 @@ const IcPlay = () => (
 /* Label -> icon component */
 const LABEL_IC = {
   Home:          IcHome,
-  "All Courses": IcBooks,
+  "Courses":     IcBooks,
   "For You":     IcForYou,
   Discover:      IcSearch,
   Dashboard:     IcChart,
@@ -221,6 +221,14 @@ const headerStyles = `
   .mob-icon-btn.purple  { color: #00509E; }
   .mob-header-icons { display: flex; align-items: center; gap: 2px; }
 
+  /* ── Named mobile header sections ──────────────────────────── */
+  .hdr-mob-center {
+    flex: 1; display: flex; justify-content: center; align-items: center; gap: 2px;
+  }
+  .hdr-mob-right  {
+    display: flex; align-items: center; gap: 2px; flex-shrink: 0;
+  }
+
   /* ── Bottom tab bar ───────────────────────────────────────── */
   .btm-nav {
     position: fixed; bottom: 0; left: 0; right: 0;
@@ -300,8 +308,8 @@ const headerStyles = `
 const PAGE_TO_TAB = {
   home: "Home", course: "Home", modules: "Home", lessons: "Home", player: "Home",
   "for-you":      "For You",
-  "all-courses":  "All Courses",
-  navigator:      "All Courses",
+  "all-courses":  "Courses",
+  navigator:      "Courses",
   discover:       "Discover",
   dashboard:      "Dashboard",
   likes:          "Likes",
@@ -617,29 +625,27 @@ export default function PageHeader({
           )}
         </div>
 
-        {/* ── Mobile: logo already rendered above, then icon btns + avatar ── */}
-        <div className="hdr-mobile" style={{ display: "flex", alignItems: "center", gap: "4px", marginLeft: "auto" }}>
-
-          {/* Conditional icon buttons */}
-          {(hasResume || (isAdmin && onAdmin) || (userEditorialRole && onEditor)) && (
-            <div className="mob-header-icons">
-              {hasResume && (
-                <button className="mob-icon-btn saffron" onClick={onResume} type="button" title="Resume Yatra">
-                  <IcPlay />
-                </button>
-              )}
-              {isAdmin && onAdmin && (
-                <button className="mob-icon-btn blue" onClick={onAdmin} type="button" title="Admin">
-                  <i className="ti ti-key" style={{fontSize:20}} />
-                </button>
-              )}
-              {userEditorialRole && onEditor && (
-                <button className="mob-icon-btn purple" onClick={onEditor} type="button" title="Editor">
-                  <i className="ti ti-pencil" style={{fontSize:20}} />
-                </button>
-              )}
-            </div>
+        {/* ── Mobile center: Resume / Admin / Edit ────────────────── */}
+        <div className="hdr-mobile hdr-mob-center">
+          {hasResume && (
+            <button className="mob-icon-btn saffron" onClick={onResume} type="button" title="Resume Yatra">
+              <IcPlay />
+            </button>
           )}
+          {isAdmin && onAdmin && (
+            <button className="mob-icon-btn blue" onClick={onAdmin} type="button" title="Admin">
+              <i className="ti ti-key" style={{fontSize:20}} />
+            </button>
+          )}
+          {userEditorialRole && onEditor && (
+            <button className="mob-icon-btn purple" onClick={onEditor} type="button" title="Editor">
+              <i className="ti ti-pencil" style={{fontSize:20}} />
+            </button>
+          )}
+        </div>
+
+        {/* ── Mobile right: Language / Font / Avatar ───────────────── */}
+        <div className="hdr-mobile hdr-mob-right">
 
           {/* Language button */}
           <div className="hdr-mini-wrap" ref={mLangRef}>

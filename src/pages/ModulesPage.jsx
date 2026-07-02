@@ -107,7 +107,7 @@ function getState(done, total) {
   return "none";
 }
 
-export default function ModulesPage({ course, theme, levelId, settings, completedLessons = new Set(), onModuleClick, onBack, onBackToCourse, onOpenSettings, onDashboard, onLikes, onBookmarks, onDiscover, onResume, bookmarks = new Set(), onToggleBookmark, userEditorialRole, onEditor, isAdmin, onAdmin, activePage, onSaveSettings, languages = [] }) {
+export default function ModulesPage({ course, theme, levelId, settings, completedLessons = new Set(), onModuleClick, onBack, onBackToCourse, onOpenSettings, onDashboard, onLikes, onBookmarks, onDiscover, onForYou, onAllCourses, onResume, bookmarks = new Set(), onToggleBookmark, userEditorialRole, onEditor, isAdmin, onAdmin, activePage, onSaveSettings, languages = [] }) {
   const [modules, setModules]       = useState([]);
   const [assets, setAssets]         = useState({});
   const [lessonsByModule, setLessonsByModule] = useState({});
@@ -161,7 +161,7 @@ export default function ModulesPage({ course, theme, levelId, settings, complete
         settings={settings}
         onSaveSettings={onSaveSettings}
         languages={languages}
-        navLinks={[{ label: "Home", onClick: onBack }, { label: "All Courses", onClick: onAllCourses }, { label: "For You", onClick: onForYou }, { label: "Dashboard", onClick: onDashboard }, { label: "Discover", onClick: onDiscover }]}
+        navLinks={[{ label: "Home", onClick: onBack }, { label: "Courses", onClick: onAllCourses }, { label: "For You", onClick: onForYou }, { label: "Dashboard", onClick: onDashboard }, { label: "Discover", onClick: onDiscover }]}
       />
 
       <div className="breadcrumb">

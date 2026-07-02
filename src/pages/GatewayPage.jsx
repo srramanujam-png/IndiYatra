@@ -248,7 +248,7 @@ export default function GatewayPage({
   onPlayMostSaved,
   onSurpriseMe,
   // commonProps passed through from App.jsx
-  onHome, onDashboard, onLikes, onBookmarks, onDiscover,
+  onHome, onDashboard, onLikes, onBookmarks, onDiscover, onForYou, onAllCourses,
   onAdmin, onEditor, onResume, onOpenSettings, isAdmin, isCreator, userEditorialRole,
   activePage, onSaveSettings, languages, bookmarks, onToggleBookmark,
 }) {
@@ -372,7 +372,7 @@ export default function GatewayPage({
           settings={settings}
           navLinks={[
             { label: "Home",        onClick: onHome         },
-            { label: "All Courses", onClick: onAllCourses   },
+            { label: "Courses", onClick: onAllCourses   },
             { label: "For You",     onClick: onForYou       },
             { label: "Dashboard",   onClick: onDashboard    },
             { label: "Discover",    onClick: onDiscover     },

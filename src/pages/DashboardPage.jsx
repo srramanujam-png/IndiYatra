@@ -674,7 +674,7 @@ function GaugeChart({ pct, label, sub, color }) {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function DashboardPage({ course, settings, onBack, onOpenSettings, onResume, languages = [], onSaveSettings, onLikes, onBookmarks, onDiscover, isAdmin, onAdmin, userEditorialRole, onEditor, activePage }) {
+export default function DashboardPage({ course, settings, onBack, onOpenSettings, onResume, languages = [], onSaveSettings, onLikes, onBookmarks, onDiscover, onForYou, onAllCourses, isAdmin, onAdmin, userEditorialRole, onEditor, activePage }) {
   const auth    = useAuthContext();
   const user    = auth?.user;
   const profile = auth?.profile;
@@ -913,7 +913,7 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
       });
   }
 
-  // ── "All Courses" view: Progress by Course ────────────────────────────────
+  // ── "Courses" view: Progress by Course ────────────────────────────────
   // modules.course_id is now reliable — all totals and done counts use it directly.
   function buildCourseProgress() {
     if (rawCourses.length === 0) return [];
@@ -1245,7 +1245,7 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
         languages={languages}
         navLinks={[
           { label: "Home",        onClick: onBack         },
-          { label: "All Courses", onClick: onAllCourses   },
+          { label: "Courses", onClick: onAllCourses   },
           { label: "For You",     onClick: onForYou       },
           { label: "Dashboard",   onClick: () => {}       },
           { label: "Discover",    onClick: onDiscover     },
@@ -1271,8 +1271,8 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
               onClick={() => setActiveDropdown(activeDropdown === 'scope' ? null : 'scope')}>
               <i className="ti ti-books dash-scope-pill-icon" />
               {scope === "all"
-                ? "All Courses"
-                : (rawCourses.find(c => c.course_id === scope)?.course_name || "All Courses")}
+                ? "Courses"
+                : (rawCourses.find(c => c.course_id === scope)?.course_name || "Courses")}
               <span className="dash-scope-pill-chevron">▾</span>
             </div>
             {activeDropdown === 'scope' && (
