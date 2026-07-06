@@ -1498,13 +1498,24 @@ export async function getQuizQuestions(quizId, languageId) {
   if (snippetRefs.length > 0) {
     const keys = snippetRefs.map(r => r.question_key);
 
-    const { data: sqRows, error: sqErr } = await supabaseClient
+    // Fetch all languages for these keys, then prefer requested lang → LANG_03 → any
+    const { data: sqAllRows, error: sqErr } = await supabaseClient
       .from("snippet_questions")
       .select("*")
-      .in("question_key", keys)
-      .eq("language", languageId);
+      .in("question_key", keys);
     if (sqErr) console.error("[getQuizQuestions] snippet_questions", sqErr);
-    (sqRows || []).forEach(q => { snippetQMap[q.question_key] = q; });
+    const sqByKeyLang = {};
+    (sqAllRows || []).forEach(q => {
+      if (!sqByKeyLang[q.question_key]) sqByKeyLang[q.question_key] = {};
+      sqByKeyLang[q.question_key][q.language] = q;
+    });
+    const sqRows = [];
+    keys.forEach(k => {
+      const langs = sqByKeyLang[k] || {};
+      const best = langs[languageId] || langs["LANG_03"] || Object.values(langs)[0];
+      if (best) sqRows.push(best);
+    });
+    sqRows.forEach(q => { snippetQMap[q.question_key] = q; });
 
     const snippetIds = [...new Set((sqRows || []).map(q => q.snippet_id).filter(Boolean))];
     if (snippetIds.length > 0) {
@@ -1552,12 +1563,23 @@ export async function getQuizQuestions(quizId, languageId) {
   if (standaloneRefs.length > 0) {
     const keys = standaloneRefs.map(r => r.question_key);
 
-    const { data: stRows, error: stErr } = await supabaseClient
+    // Fetch all languages, prefer requested lang → LANG_03 → any
+    const { data: stAllRows, error: stErr } = await supabaseClient
       .from("standalone_questions")
       .select("*")
-      .in("question_key", keys)
-      .eq("language", languageId);
+      .in("question_key", keys);
     if (stErr) console.error("[getQuizQuestions] standalone_questions", stErr);
+    const stByKeyLang = {};
+    (stAllRows || []).forEach(q => {
+      if (!stByKeyLang[q.question_key]) stByKeyLang[q.question_key] = {};
+      stByKeyLang[q.question_key][q.language] = q;
+    });
+    const stRows = [];
+    keys.forEach(k => {
+      const langs = stByKeyLang[k] || {};
+      const best = langs[languageId] || langs["LANG_03"] || Object.values(langs)[0];
+      if (best) stRows.push(best);
+    });
 
     const assetIds = [...new Set((stRows || []).map(q => q.asset_id).filter(Boolean))];
     let assetMap = {};

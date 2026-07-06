@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Discover — Redesign Options</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Nunito+Sans:wght@400;600;700&family=Inter:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #00509E; --secondary: #00924A; --accent: #FF8E00;
+    --bg: #FFFFFF; --bg-alt: #B5D7D5; --text-main: #101828;
+    --text-body: #4A5565; --border: #E5E7EB; --border-muted: #F3F4F6;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: 'Nunito Sans', system-ui, sans-serif; background: #FAFAFA; color: var(--text-main); padding-bottom: 80px; }
+
+  .option {
+    max-width: 1000px; margin: 40px auto; background: white;
+    border: 1px solid var(--border); border-radius: 16px; padding: 32px;
+  }
+  .option-label {
+    display: inline-block; background: var(--primary); color: white;
+    font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 600;
+    padding: 4px 12px; border-radius: 6px; margin-bottom: 6px;
+  }
+  .option-title { font-family: 'Oswald', sans-serif; font-size: 1.5rem; font-weight: 500; margin-bottom: 4px; }
+  .option-note { color: var(--text-body); font-size: 0.875rem; margin-bottom: 24px; }
+
+  .zone-label {
+    font-family: 'Inter', sans-serif; font-size: 0.6875rem; font-weight: 600;
+    color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.09em; margin: 20px 0 10px;
+  }
+
+  /* ══ OPTION A: Uniform chips + count badges ══ */
+  .a-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .a-chip {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 7px 8px 7px 14px; border-radius: 999px;
+    border: 1px solid var(--border); background: white;
+    font-size: 0.875rem; font-weight: 600; color: var(--text-main);
+    font-family: 'Nunito Sans', sans-serif; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .a-chip .n {
+    font-family: 'Inter', sans-serif; font-size: 0.6875rem; font-weight: 600;
+    background: var(--border-muted); color: var(--text-body);
+    padding: 2px 7px; border-radius: 999px;
+  }
+  .a-chip:hover { border-color: var(--primary); color: var(--primary); }
+  .a-chip.active { background: var(--primary); border-color: var(--primary); color: white; }
+  .a-chip.active .n { background: rgba(255,255,255,0.25); color: white; }
+  .a-chip.hot { border-color: #FF8E0055; background: #FF8E000D; }
+
+  /* ══ OPTION B: Category cards with nested tags ══ */
+  .b-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; }
+  .b-card {
+    border: 1px solid var(--border); border-radius: 12px; padding: 18px;
+    transition: box-shadow 0.15s;
+  }
+  .b-card:hover { box-shadow: 0 4px 16px rgba(16,24,40,0.07); }
+  .b-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .b-card-icon {
+    width: 36px; height: 36px; border-radius: 9px; display: flex;
+    align-items: center; justify-content: center; font-size: 1.1rem;
+  }
+  .b-card-title { font-family: 'Oswald', sans-serif; font-weight: 500; font-size: 1.0625rem; }
+  .b-card-count { font-family: 'Inter', sans-serif; font-size: 0.75rem; color: var(--text-body); }
+  .b-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .b-tag {
+    font-size: 0.8125rem; font-weight: 600; color: var(--text-body);
+    background: var(--border-muted); border: none; padding: 5px 11px;
+    border-radius: 6px; cursor: pointer; font-family: 'Nunito Sans', sans-serif;
+  }
+  .b-tag:hover { background: var(--primary); color: white; }
+  .b-more { font-size: 0.8125rem; font-weight: 700; color: var(--primary); background: none; border: none; padding: 5px 4px; cursor: pointer; }
+
+  /* ══ OPTION C: Ranked list with popularity bars ══ */
+  .c-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 40px; }
+  .c-row {
+    display: flex; align-items: center; gap: 12px; padding: 9px 10px;
+    border-radius: 8px; cursor: pointer; border: none; background: none;
+    width: 100%; text-align: left; font-family: 'Nunito Sans', sans-serif;
+  }
+  .c-row:hover { background: var(--border-muted); }
+  .c-name { font-size: 0.9375rem; font-weight: 600; color: var(--text-main); flex: 0 0 150px; }
+  .c-bar-track { flex: 1; height: 6px; background: var(--border-muted); border-radius: 3px; }
+  .c-bar { height: 100%; border-radius: 3px; background: var(--primary); }
+  .c-n { font-family: 'Inter', sans-serif; font-size: 0.75rem; color: var(--text-body); flex: 0 0 30px; text-align: right; }
+
+  /* ══ OPTION D: Two-tier — featured tiles + compact index ══ */
+  .d-featured { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 8px; }
+  .d-tile {
+    position: relative; border: none; border-radius: 12px; padding: 18px 16px 14px;
+    text-align: left; cursor: pointer; color: white; overflow: hidden;
+    font-family: 'Nunito Sans', sans-serif; min-height: 86px;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    transition: transform 0.15s;
+  }
+  .d-tile:hover { transform: translateY(-2px); }
+  .d-tile-name { font-family: 'Oswald', sans-serif; font-weight: 500; font-size: 1.0625rem; }
+  .d-tile-n { font-family: 'Inter', sans-serif; font-size: 0.75rem; opacity: 0.85; }
+  .d-index { display: flex; flex-wrap: wrap; gap: 6px 4px; }
+  .d-word {
+    border: none; background: none; cursor: pointer; padding: 4px 10px;
+    font-family: 'Nunito Sans', sans-serif; font-size: 0.875rem; font-weight: 600;
+    color: var(--text-body); border-radius: 999px;
+  }
+  .d-word:hover { color: var(--primary); background: #00509E0D; }
+  .d-word::after { content: attr(data-n); font-family: 'Inter', sans-serif; font-size: 0.6875rem; color: #9CA3AF; margin-left: 5px; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ OPTION A ═══════════ -->
+<div class="option">
+  <span class="option-label">Option A</span>
+  <div class="option-title">Uniform Chips + Count Badges</div>
+  <p class="option-note">One font size everywhere. Popularity shown by a small count badge and a subtle saffron tint on top tags — not by font size. Calm, scannable, easiest to build.</p>
+
+  <div class="zone-label">Categories</div>
+  <div class="a-row">
+    <button class="a-chip active">Art &amp; Architecture <span class="n">62</span></button>
+    <button class="a-chip">Philosophy <span class="n">48</span></button>
+    <button class="a-chip">History <span class="n">45</span></button>
+    <button class="a-chip">Literature <span class="n">33</span></button>
+    <button class="a-chip">Science <span class="n">21</span></button>
+  </div>
+
+  <div class="zone-label">Popular tags</div>
+  <div class="a-row">
+    <button class="a-chip hot">Temples <span class="n">44</span></button>
+    <button class="a-chip hot">Ramayana <span class="n">41</span></button>
+    <button class="a-chip hot">Vedas <span class="n">38</span></button>
+    <button class="a-chip">Classical Dance <span class="n">24</span></button>
+    <button class="a-chip">Yoga <span class="n">22</span></button>
+    <button class="a-chip">Ayurveda <span class="n">19</span></button>
+    <button class="a-chip">Chola Dynasty <span class="n">14</span></button>
+    <button class="a-chip">Bhakti Movement <span class="n">12</span></button>
+    <button class="a-chip">Sanskrit <span class="n">11</span></button>
+    <button class="a-chip">Festivals <span class="n">9</span></button>
+    <button class="a-chip">Mughal Era <span class="n">7</span></button>
+    <button class="a-chip">Folk Music <span class="n">4</span></button>
+  </div>
+</div>
+
+<!-- ═══════════ OPTION B ═══════════ -->
+<div class="option">
+  <span class="option-label">Option B</span>
+  <div class="option-title">Category Cards with Nested Tags</div>
+  <p class="option-note">Tags grouped under their category in cards — gives structure and hierarchy instead of one flat cloud. Best if tags map cleanly to categories.</p>
+
+  <div class="b-grid">
+    <div class="b-card">
+      <div class="b-card-head">
+        <div class="b-card-icon" style="background:#00509E15;">🛕</div>
+        <div><div class="b-card-title">Art &amp; Architecture</div><div class="b-card-count">62 items</div></div>
+      </div>
+      <div class="b-tags">
+        <button class="b-tag">Temples</button><button class="b-tag">Cave Art</button>
+        <button class="b-tag">Sculpture</button><button class="b-tag">Forts</button>
+        <button class="b-more">+6 more</button>
+      </div>
+    </div>
+    <div class="b-card">
+      <div class="b-card-head">
+        <div class="b-card-icon" style="background:#00924A15;">📜</div>
+        <div><div class="b-card-title">Philosophy</div><div class="b-card-count">48 items</div></div>
+      </div>
+      <div class="b-tags">
+        <button class="b-tag">Vedas</button><button class="b-tag">Upanishads</button>
+        <button class="b-tag">Yoga</button><button class="b-tag">Bhakti Movement</button>
+        <button class="b-more">+4 more</button>
+      </div>
+    </div>
+    <div class="b-card">
+      <div class="b-card-head">
+        <div class="b-card-icon" style="background:#FF8E0015;">🏺</div>
+        <div><div class="b-card-title">History</div><div class="b-card-count">45 items</div></div>
+      </div>
+      <div class="b-tags">
+        <button class="b-tag">Chola Dynasty</button><button class="b-tag">Mughal Era</button>
+        <button class="b-tag">Indus Valley</button><button class="b-tag">Mauryas</button>
+        <button class="b-more">+5 more</button>
+      </div>
+    </div>
+    <div class="b-card">
+      <div class="b-card-head">
+        <div class="b-card-icon" style="background:#00509E15;">📖</div>
+        <div><div class="b-card-title">Literature</div><div class="b-card-count">33 items</div></div>
+      </div>
+      <div class="b-tags">
+        <button class="b-tag">Ramayana</button><button class="b-tag">Mahabharata</button>
+        <button class="b-tag">Sanskrit</button><button class="b-tag">Sangam Poetry</button>
+        <button class="b-more">+3 more</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ OPTION C ═══════════ -->
+<div class="option">
+  <span class="option-label">Option C</span>
+  <div class="option-title">Ranked List with Popularity Bars</div>
+  <p class="option-note">Data-forward: tags sorted by count with a quiet bar showing relative popularity. Very tidy; works well when counts matter to the learner.</p>
+
+  <div class="zone-label">Tags by popularity</div>
+  <div class="c-cols">
+    <button class="c-row"><span class="c-name">Temples</span><span class="c-bar-track"><span class="c-bar" style="width:100%"></span></span><span class="c-n">44</span></button>
+    <button class="c-row"><span class="c-name">Ramayana</span><span class="c-bar-track"><span class="c-bar" style="width:93%"></span></span><span class="c-n">41</span></button>
+    <button class="c-row"><span class="c-name">Vedas</span><span class="c-bar-track"><span class="c-bar" style="width:86%"></span></span><span class="c-n">38</span></button>
+    <button class="c-row"><span class="c-name">Classical Dance</span><span class="c-bar-track"><span class="c-bar" style="width:55%"></span></span><span class="c-n">24</span></button>
+    <button class="c-row"><span class="c-name">Yoga</span><span class="c-bar-track"><span class="c-bar" style="width:50%"></span></span><span class="c-n">22</span></button>
+    <button class="c-row"><span class="c-name">Ayurveda</span><span class="c-bar-track"><span class="c-bar" style="width:43%"></span></span><span class="c-n">19</span></button>
+    <button class="c-row"><span class="c-name">Chola Dynasty</span><span class="c-bar-track"><span class="c-bar" style="width:32%"></span></span><span class="c-n">14</span></button>
+    <button class="c-row"><span class="c-name">Bhakti Movement</span><span class="c-bar-track"><span class="c-bar" style="width:27%"></span></span><span class="c-n">12</span></button>
+    <button class="c-row"><span class="c-name">Sanskrit</span><span class="c-bar-track"><span class="c-bar" style="width:25%"></span></span><span class="c-n">11</span></button>
+    <button class="c-row"><span class="c-name">Festivals</span><span class="c-bar-track"><span class="c-bar" style="width:20%"></span></span><span class="c-n">9</span></button>
+  </div>
+</div>
+
+<!-- ═══════════ OPTION D ═══════════ -->
+<div class="option">
+  <span class="option-label">Option D</span>
+  <div class="option-title">Two-Tier: Featured Tiles + Compact Index</div>
+  <p class="option-note">Top 4–6 tags become bold brand-coloured tiles (the "hero" tier); everything else sits below as a quiet, uniform text index. Keeps visual excitement but contains it.</p>
+
+  <div class="zone-label">Trending topics</div>
+  <div class="d-featured">
+    <button class="d-tile" style="background:linear-gradient(135deg,#00509E,#003A73);"><span class="d-tile-name">Temples</span><span class="d-tile-n">44 snippets</span></button>
+    <button class="d-tile" style="background:linear-gradient(135deg,#FF8E00,#E07000);"><span class="d-tile-name">Ramayana</span><span class="d-tile-n">41 snippets</span></button>
+    <button class="d-tile" style="background:linear-gradient(135deg,#00924A,#006B36);"><span class="d-tile-name">Vedas</span><span class="d-tile-n">38 snippets</span></button>
+    <button class="d-tile" style="background:linear-gradient(135deg,#003A73,#00509E);"><span class="d-tile-name">Classical Dance</span><span class="d-tile-n">24 snippets</span></button>
+  </div>
+
+  <div class="zone-label">All tags</div>
+  <div class="d-index">
+    <button class="d-word" data-n="22">Yoga</button>
+    <button class="d-word" data-n="19">Ayurveda</button>
+    <button class="d-word" data-n="14">Chola Dynasty</button>
+    <button class="d-word" data-n="12">Bhakti Movement</button>
+    <button class="d-word" data-n="11">Sanskrit</button>
+    <button class="d-word" data-n="9">Festivals</button>
+    <button class="d-word" data-n="7">Mughal Era</button>
+    <button class="d-word" data-n="6">Indus Valley</button>
+    <button class="d-word" data-n="5">Sangam Poetry</button>
+    <button class="d-word" data-n="4">Folk Music</button>
+    <button class="d-word" data-n="4">Cave Art</button>
+    <button class="d-word" data-n="3">Forts</button>
+  </div>
+</div>
+
+</body>
+</html>

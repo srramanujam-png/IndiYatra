@@ -201,4 +201,81 @@ export const globalStyles = `
     .page-section-title { font-size: 1.125rem; }
     .btn-primary, .btn-outline { font-size: 0.8125rem; padding: 10px 16px; }
   }
+
+  /* ── Shared snippet-style content blocks (SnippetPlayer + QuizPlayer) ── */
+  .snip-explanation {
+    font-size: 1.125rem; color: #4A5565; line-height: 1.85; margin-bottom: 20px;
+    text-align: justify; font-family: 'Nunito Sans', system-ui, sans-serif;
+  }
+  .snip-key-term {
+    background: #FFF8EE; border-left: 4px solid ${SAFFRON};
+    border-radius: 0 12px 12px 0; padding: 14px 18px; margin-bottom: 14px;
+  }
+  .snip-kt-label { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: ${SAFFRON}; margin-bottom: 6px; font-family: 'Inter', system-ui, sans-serif; }
+  .snip-kt-word  { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.25rem; font-weight: 700; color: ${SAFFRON}; margin-bottom: 4px; }
+  .snip-kt-meaning { font-size: 1.125rem; color: #4A5565; line-height: 1.6; font-family: 'Nunito Sans', system-ui, sans-serif; }
+
+  .snip-life {
+    background: #F0FAF4; border-left: 4px solid ${GREEN};
+    border-radius: 0 12px 12px 0; padding: 14px 18px; margin-bottom: 14px;
+  }
+  .snip-life-label { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: ${GREEN}; margin-bottom: 6px; font-family: 'Inter', system-ui, sans-serif; }
+  .snip-life-text  { font-size: 1.125rem; color: #2a4a2a; line-height: 1.7; font-family: 'Nunito Sans', system-ui, sans-serif; }
+
+  .snip-quiz {
+    background: #EEF5FF; border-left: 4px solid ${HERITAGE};
+    border-radius: 0 12px 12px 0; padding: 14px 18px; margin-bottom: 14px;
+  }
+  .snip-quiz-label { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: ${HERITAGE}; margin-bottom: 6px; font-family: 'Inter', system-ui, sans-serif; }
+  .snip-quiz-text  { font-size: 1.125rem; color: #1a2a4a; line-height: 1.7; font-family: 'Nunito Sans', system-ui, sans-serif; }
+
+  .snip-citation { font-size: 0.75rem; color: #4A5565; font-style: italic; text-align: left; margin-top: 16px; padding-top: 12px; border-top: 1px solid #E5E7EB; font-family: 'Nunito Sans', system-ui, sans-serif; }
+
+  /* Bottom nav */
+  .player-nav {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+    background: #FFFFFF; border-top: 1px solid #E5E7EB; padding: 12px 1.5rem;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .pnav-btn {
+    display: flex; align-items: center; gap: 6px; border-radius: 12px; padding: 10px 20px;
+    font-family: 'Inter', system-ui, sans-serif; font-size: 0.875rem; font-weight: 500;
+    cursor: pointer; transition: all 0.2s; border: 1px solid transparent;
+    box-shadow: 0px 1px 0.5px 0.05px rgba(29, 41, 61, 0.02);
+  }
+  .pnav-prev { border-color: #E5E7EB; background: white; color: #4A5565; }
+  .pnav-prev:hover:not(:disabled) { border-color: ${SAFFRON}; color: ${SAFFRON}; }
+  .pnav-prev:disabled { opacity: 0.3; cursor: not-allowed; }
+  .pnav-next   { background: ${SAFFRON}; color: white; border-color: ${SAFFRON}; }
+  .pnav-next:hover { opacity: 0.9; transform: translateY(-1px); }
+  .pnav-finish { background: ${GREEN}; color: white; border-color: ${GREEN}; }
+  .pnav-finish:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  .pnav-dots { display: flex; gap: 6px; align-items: center; }
+  .pnav-dot  { width: 18px; height: 18px; border: 5px solid transparent; background-clip: padding-box; border-radius: 50%; background-color: #E5E7EB; transition: all 0.25s; cursor: pointer; }
+  .pnav-dot:hover { background: ${SAFFRON}88; }
+  .pnav-dot.active { background: ${SAFFRON}; transform: scale(1.35); }
+  .pnav-dot.done   { background: ${GREEN}; }
+  .pnav-center-finish { background: white; color: ${GREEN}; border-color: #E5E7EB; }
+  .pnav-center-finish:hover { border-color: ${GREEN}; color: ${GREEN}; }
+
+  .signin-toast {
+    position: fixed; bottom: 84px; left: 50%; transform: translateX(-50%);
+    background: rgba(20,20,20,0.92); color: white; border-radius: 999px;
+    padding: 10px 18px; font-size: 0.875rem; font-weight: 500;
+    font-family: 'Inter', system-ui, sans-serif; z-index: 400;
+    animation: fadeIn 0.2s ease; white-space: nowrap; pointer-events: none;
+  }
+
+  @media (max-width: 480px) {
+    .pnav-btn  { padding: 8px 16px; font-size: 0.8125rem; }
+    .player-nav { padding: 10px 1rem; bottom: 0; }
+  }
+
+  /* ── Font size setting (Settings → Font Size sets body[data-fs]) ──
+     Base (medium) sizes live on the elements; small/large override via .fs-body/.fs-heading */
+  body[data-fs="small"] .fs-body    { font-size: 1rem !important; }
+  body[data-fs="large"] .fs-body    { font-size: 1.3125rem !important; }
+  body[data-fs="small"] .fs-heading { font-size: 1.375rem !important; }
+  body[data-fs="large"] .fs-heading { font-size: 1.875rem !important; }
 `;

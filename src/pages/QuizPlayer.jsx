@@ -63,7 +63,7 @@ const styles = `
   .qp-quiz-timer-fill { height: 100%; background: ${SAFFRON}; transition: width 0.5s linear; border-radius: 999px; }
 
   /* ── Body ── */
-  .qp-body { flex: 1; max-width: 1120px; width: 100%; margin: 0 auto; padding: 28px 1.5rem 48px; }
+  .qp-body { flex: 1; max-width: 1120px; width: 100%; margin: 0 auto; padding: 28px 1.5rem 120px; }
 
   /* ── Question timer (per-question) ── */
   .qp-q-timer {
@@ -81,7 +81,7 @@ const styles = `
     overflow: hidden; animation: qpFadeIn 0.2s ease both;
   }
   @keyframes qpFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
-  @media (max-width: 900px) {
+  @media (max-width: 899px) {
     .qp-main { grid-template-columns: 1fr; }
     .qp-right-col { order: -1; border-left: none; border-bottom: 1px solid #E5E7EB; }
   }
@@ -106,9 +106,10 @@ const styles = `
     border: 2px solid #E5E7EB; border-radius: 10px; padding: 13px 16px;
     cursor: pointer; display: flex; align-items: center; gap: 12px;
     transition: border-color 0.15s, background 0.15s; background: white;
-    font-size: 0.9375rem; font-weight: 500; color: #1F1F1F; text-align: left;
+    font-size: 1.125rem; font-weight: 500; color: #1F1F1F; text-align: left;
   }
   .qp-option:hover:not(.locked) { border-color: ${SAFFRON}; background: #FFF8EE; }
+  .qp-option:disabled { pointer-events: none; } /* let taps pass through to open the explanation sheet */
   .qp-option.selected  { border-color: ${SAFFRON}; background: #FFF8EE; }
   .qp-option.correct   { border-color: ${GREEN};   background: #EDFBF3; color: #065F3E; }
   .qp-option.wrong     { border-color: ${RED};     background: #FEF2F2; color: #7F1D1D; }
@@ -200,6 +201,64 @@ const styles = `
   .qp-reveal-block { margin-bottom: 10px; }
   .qp-reveal-block-label { font-size: 0.75rem; font-weight: 700; color: #6B6B6B; text-transform: uppercase; letter-spacing: 0.05em; }
   .qp-reveal-block-value { font-size: 0.875rem; color: #1F1F1F; margin-top: 2px; line-height: 1.6; }
+
+  /* ── Explanation sheet — mobile slide-up, matches snippet reveal sheet ── */
+  @keyframes qpSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .qp-sheet-overlay {
+    position: fixed; inset: 0; z-index: 140;
+    background: rgba(0,0,0,0.35);
+    animation: fadeIn 0.2s ease;
+  }
+  .qp-sheet {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 145;
+    background: white; border-radius: 20px 20px 0 0;
+    max-height: 78vh;
+    display: flex; flex-direction: column;
+    animation: qpSlideUp 0.3s cubic-bezier(0.25,0.46,0.45,0.94) both;
+    overflow: hidden;
+    touch-action: pan-y;
+  }
+  .qp-sheet-grab { position: relative; flex-shrink: 0; touch-action: none; }
+  .qp-sheet-handle {
+    width: 40px; height: 4px; background: #E5E7EB; border-radius: 2px;
+    margin: 12px auto 0; flex-shrink: 0;
+  }
+  .qp-sheet-close {
+    position: absolute; top: 10px; right: 10px; width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    background: none; border: none; border-radius: 999px;
+    color: #9CA3AF; font-size: 1.25rem; cursor: pointer;
+  }
+  .qp-sheet-close:hover { color: #4A5565; background: #F3F4F6; }
+  .qp-sheet-header {
+    padding: 14px 56px 14px 20px; flex-shrink: 0;
+    border-bottom: 1px solid #E5E7EB;
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'Oswald', 'Arial Narrow', sans-serif;
+    font-size: 1.25rem; font-weight: 500; line-height: 1.3;
+  }
+  .qp-sheet-header.correct { color: ${GREEN}; }
+  .qp-sheet-header.wrong   { color: ${RED}; }
+  .qp-sheet-body {
+    flex: 1; overflow-y: auto; padding: 16px 20px 32px;
+    overscroll-behavior: contain;
+  }
+  .qp-sheet-finish {
+    display: block; width: 100%; margin-top: 16px; padding: 13px;
+    border-radius: 999px; border: none; background: ${GREEN}; color: white;
+    font-size: 1rem; font-weight: 700; cursor: pointer;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  .qp-sp-desktop { display: flex; align-items: center; gap: 6px; }
+  .qp-sp-mobile  { display: none; align-items: center; gap: 6px; }
+  @media (min-width: 900px) {
+    .qp-sheet-overlay, .qp-sheet { display: none !important; }
+  }
+  @media (max-width: 899px) {
+    .qp-explain-section { display: none; }
+    .qp-sp-desktop { display: none; }
+    .qp-sp-mobile  { display: flex; }
+  }
 
   /* ── Unanswered indicator ── */
   .qp-unanswered-badge {
@@ -299,7 +358,7 @@ const styles = `
   .qp-social-right { display: flex; align-items: center; gap: 14px; }
   .qp-social-btn {
     display: flex; align-items: center; gap: 6px;
-    background: none; border: none; padding: 5px 0;
+    background: none; border: none; padding: 10px 6px;
     font-size: 0.9375rem; color: #4A5565; transition: color 0.2s;
     font-family: 'Inter', system-ui, sans-serif; font-weight: 500; cursor: pointer;
   }
@@ -308,6 +367,24 @@ const styles = `
   .qp-social-btn.active   { color: ${SAFFRON}; }
   .qp-social-btn.copied   { color: ${GREEN}; }
   .qp-social-icon { font-size: 1.125rem; line-height: 1; display: flex; align-items: center; }
+
+  /* ── Thin nav pills at bottom of explanation ── */
+  .qp-explain-nav {
+    display: flex; gap: 8px; margin-top: 18px; padding-top: 14px;
+    border-top: 1px solid #E5E7EB;
+  }
+  .qp-explain-pill {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px;
+    padding: 7px 10px; border-radius: 999px;
+    border: 1.5px solid #E5E7EB; background: white;
+    font-size: 0.8125rem; font-weight: 600; color: #4A5565;
+    cursor: pointer; transition: border-color 0.15s, color 0.15s, background 0.15s;
+    white-space: nowrap;
+  }
+  .qp-explain-pill:hover:not(:disabled) { border-color: ${SAFFRON}; color: ${SAFFRON}; }
+  .qp-explain-pill:disabled { opacity: 0.32; cursor: not-allowed; }
+  .qp-explain-pill.pill-finish { background: ${SAFFRON}; border-color: ${SAFFRON}; color: white; }
+  .qp-explain-pill.pill-finish:hover:not(:disabled) { background: #E07E00; border-color: #E07E00; }
 
   /* ── Edit button (admin/creator only) ── */
   .qp-edit-btn {
@@ -439,6 +516,19 @@ export default function QuizPlayer({
   const [saving,      setSaving]    = useState(false);
   const [scoreData,   setScoreData] = useState(null);
   const [shareCopied, setShareCopied] = useState(false);
+  const [explainSheet, setExplainSheet] = useState(false); // mobile slide-up sheet
+  const sheetTimerRef = useRef(null);
+
+  // Swipe state (same as SnippetPlayer)
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
+  const [sheetDragY, setSheetDragY] = useState(0);
+  const [sheetDragged, setSheetDragged] = useState(false);
+  const sheetGrabY = useRef(null);
+  const [signinToast, setSigninToast] = useState("");
+  const toastTimerRef = useRef(null);
 
   // Edit panel state
   const [showEditPanel, setShowEditPanel] = useState(false);
@@ -461,15 +551,31 @@ export default function QuizPlayer({
   const startTimeRef = useRef(Date.now());
   const explainRef   = useRef(null);
 
-  // Scroll explanation into view whenever an answer is revealed
+  // Scroll so question+options stay visible and explanation peeks in at the bottom
   useEffect(() => {
     const currentAns = answers.get(current);
     if (currentAns && currentAns.chosen !== null && explainRef.current) {
       setTimeout(() => {
-        explainRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }, 80);
+        const rect = explainRef.current.getBoundingClientRect();
+        // Only scroll if explanation is below the fold
+        if (rect.top > window.innerHeight * 0.78) {
+          // Position explanation title at ~82% down — question/options stay visible above
+          const target = window.scrollY + rect.top - window.innerHeight * 0.82;
+          window.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
+        }
+      }, 120);
     }
   }, [answers, current]);
+
+  useEffect(() => {
+    if (explainSheet) { setSheetDragged(false); setSheetDragY(0); }
+  }, [explainSheet]);
+
+  // Close the mobile explanation sheet (and any pending open timer) when the question changes
+  useEffect(() => {
+    setExplainSheet(false);
+    return () => clearTimeout(sheetTimerRef.current);
+  }, [current]);
 
   const total = questions.length;
   const q     = questions[current];
@@ -535,6 +641,11 @@ export default function QuizPlayer({
       next.set(current, { chosen: optionLabel, isCorrect, revealed: true });
       return next;
     });
+    // Mobile: lag so the user sees their choice + the correct answer, then slide up the explanation
+    if (window.matchMedia("(max-width: 899px)").matches) {
+      clearTimeout(sheetTimerRef.current);
+      sheetTimerRef.current = setTimeout(() => setExplainSheet(true), isCorrect ? 1500 : 2200);
+    }
   }
 
   // ── Navigation ────────────────────────────────────────────────────────────
@@ -544,6 +655,100 @@ export default function QuizPlayer({
   function goPrev() {
     if (isTimed) return; // disabled in timed mode
     if (current > 0) { setCurrent(c => c - 1); }
+  }
+
+  // ── Touch / Swipe handlers — same behavior as SnippetPlayer ────────────────
+  function onTouchStart(e) {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    setIsDragging(false);
+  }
+
+  function onTouchMove(e) {
+    if (touchStartX.current === null) return;
+    const dx = e.touches[0].clientX - touchStartX.current;
+    const dy = e.touches[0].clientY - touchStartY.current;
+    // Only handle horizontal swipes (not vertical scroll)
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8) {
+      setIsDragging(true);
+      // Resistance at edges
+      const atStart = current === 0 && dx > 0;
+      const atEnd   = current === total - 1 && dx < 0;
+      const resistance = (atStart || atEnd) ? 0.15 : 0.38;
+      setDragOffset(dx * resistance);
+    }
+  }
+
+  function onTouchEnd(e) {
+    const dx = e.changedTouches[0].clientX - (touchStartX.current ?? e.changedTouches[0].clientX);
+    const dy = e.changedTouches[0].clientY - (touchStartY.current ?? e.changedTouches[0].clientY);
+    touchStartX.current = null;
+    touchStartY.current = null;
+    setDragOffset(0);
+    setIsDragging(false);
+    if (Math.abs(dx) < 60) return;
+    // Ignore mostly-vertical gestures (fast scrolls) — only clearly horizontal swipes navigate
+    if (Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    if (dx < 0) goNext();
+    else {
+      if (isTimed && current > 0) { showSigninToast("No going back in timed mode"); return; }
+      goPrev();
+    }
+  }
+
+  // Mobile: once answered, a tap anywhere on the question area opens the explanation sheet
+  function onCardTap(e) {
+    if (!isAnswered || ans?.chosen === null) return;
+    if (!window.matchMedia("(max-width: 899px)").matches) return;
+    if (e.target.closest("button")) return; // real buttons keep their own behavior
+    clearTimeout(sheetTimerRef.current);
+    setExplainSheet(true);
+  }
+
+  // Drag down on the sheet handle/header to dismiss
+  function onSheetGrabStart(e) {
+    sheetGrabY.current = e.touches[0].clientY;
+    setSheetDragged(true);
+  }
+  function onSheetGrabMove(e) {
+    if (sheetGrabY.current === null) return;
+    setSheetDragY(Math.max(0, e.touches[0].clientY - sheetGrabY.current));
+  }
+  function onSheetGrabEnd(e) {
+    const dy = e.changedTouches[0].clientY - (sheetGrabY.current ?? e.changedTouches[0].clientY);
+    sheetGrabY.current = null;
+    if (dy > 90) setExplainSheet(false);
+    setSheetDragY(0);
+  }
+
+  // Drag-down anywhere on the sheet dismisses it (when its body is scrolled to top)
+  const sheetBodyRef = useRef(null);
+  const sheetStartScroll = useRef(0);
+  function onSheetTouchStart(e) {
+    sheetStartScroll.current = sheetBodyRef.current ? sheetBodyRef.current.scrollTop : 0;
+    sheetGrabY.current = e.touches[0].clientY;
+    setSheetDragged(true);
+    onTouchStart(e);
+  }
+  function onSheetTouchMove(e) {
+    const dy = e.touches[0].clientY - (sheetGrabY.current ?? e.touches[0].clientY);
+    const dx = e.touches[0].clientX - (touchStartX.current ?? e.touches[0].clientX);
+    if (sheetStartScroll.current <= 0 && dy > 0 && dy > Math.abs(dx)) setSheetDragY(dy);
+    onTouchMove(e);
+  }
+  function onSheetTouchEnd(e) {
+    const dy = e.changedTouches[0].clientY - (sheetGrabY.current ?? e.changedTouches[0].clientY);
+    const dx = e.changedTouches[0].clientX - (touchStartX.current ?? e.changedTouches[0].clientX);
+    sheetGrabY.current = null;
+    if (sheetStartScroll.current <= 0 && dy > 90 && dy > Math.abs(dx) * 1.5) setExplainSheet(false);
+    setSheetDragY(0);
+    onTouchEnd(e);
+  }
+
+  function showSigninToast(msg) {
+    setSigninToast(msg);
+    clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setSigninToast(""), 2200);
   }
   function requestFinish() {
     const unansweredCount = questions.reduce((n, _, i) => n + (answers.has(i) ? 0 : 1), 0);
@@ -695,9 +900,77 @@ export default function QuizPlayer({
   function scrollToExplain() {
     if (!explainRef.current) return;
     const rect = explainRef.current.getBoundingClientRect();
-    // Position the top of the explanation at ~70% down the viewport
-    const target = window.scrollY + rect.top - window.innerHeight * 0.68;
+    // Position the explanation title at ~82% down — same as auto-scroll
+    const target = window.scrollY + rect.top - window.innerHeight * 0.82;
     window.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
+  }
+
+  // Explanation content — snippet-style blocks (inline panel on desktop + mobile sheet)
+  function renderExplainBlocks() {
+    return (
+      <>
+        {q.explanation
+          ? <div className="snip-explanation fs-body">{q.explanation}</div>
+          : <div className="snip-explanation" style={{ color: "#9CA3AF", fontStyle: "italic" }}>No explanation available.</div>
+        }
+        {q.key_term && (
+          <div className="snip-key-term">
+            <div className="snip-kt-label">Key Term</div>
+            <div className="snip-kt-word">{q.key_term}</div>
+            {q.key_term_meaning && <div className="snip-kt-meaning fs-body">{q.key_term_meaning}</div>}
+          </div>
+        )}
+        {q.life_connection && (
+          <div className="snip-life">
+            <div className="snip-life-label">Life Connection</div>
+            <div className="snip-life-text fs-body">{q.life_connection}</div>
+          </div>
+        )}
+        {q.quiz_recap && (
+          <div className="snip-quiz">
+            <div className="snip-quiz-label">Refresher Questions</div>
+            <div className="snip-quiz-text fs-body">{q.quiz_recap}</div>
+          </div>
+        )}
+        {q.source_citation && <div className="snip-citation">{q.source_citation}</div>}
+      </>
+    );
+  }
+
+  // Social strip — rendered in the inline panel (desktop) and the mobile sheet
+  function renderSocialStrip() {
+    return (
+      <>
+            {/* Social strip */}
+            <div className="qp-social">
+              <div className="qp-social-left" />
+              <div className="qp-social-right">
+                <button
+                  className={"qp-social-btn" + (bookmarks.has("quiz:" + quiz?.quiz_id) ? " active" : "") + (!user || user.is_anonymous ? " disabled" : "")}
+                  title={!user || user.is_anonymous ? "Sign in to bookmark" : bookmarks.has("quiz:" + quiz?.quiz_id) ? "Remove bookmark" : "Bookmark this quiz"}
+                  onClick={() => { if (!user || user.is_anonymous) { showSigninToast("Sign in to bookmark quizzes"); return; } onToggleBookmark?.("quiz", String(quiz?.quiz_id), quiz?.title || "Quiz"); }}
+                >
+                  <span className="qp-social-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill={bookmarks.has("quiz:" + quiz?.quiz_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                  </span>
+                </button>
+                <button
+                  className={"qp-social-btn" + (shareCopied ? " copied" : "")}
+                  onClick={handleShareQuiz}
+                  title={shareCopied ? "Copied!" : "Share quiz"}
+                >
+                  <span className="qp-social-icon">
+                    {shareCopied
+                      ? <i className="ti ti-check" />
+                      : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                    }
+                  </span>
+                  <span>{shareCopied ? "Copied!" : "Share"}</span>
+                </button>
+              </div>
+            </div>
+      </>
+    );
   }
 
   // ── Loading attempt count ─────────────────────────────────────────────────
@@ -762,6 +1035,7 @@ export default function QuizPlayer({
         </div>
 
         <div className="qp-score-wrap">
+        {signinToast && <div className="signin-toast">{signinToast}</div>}
           <div className="qp-score-card">
             <div className="qp-score-emoji">{emoji}</div>
             <div className="qp-score-title">Quiz Complete!</div>
@@ -807,19 +1081,10 @@ export default function QuizPlayer({
 
             {/* Social strip on score screen */}
             <div className="qp-social" style={{justifyContent:"center", gap:24, borderTop:"1px solid #E5E7EB", paddingTop:16}}>
-              <button className="qp-social-btn" disabled title="Coming soon">
-                <span className="qp-social-icon"><i className="ti ti-thumb-up" /></span>
-                <span>Like</span>
-              </button>
-              <button className="qp-social-btn" disabled title="Coming soon">
-                <span className="qp-social-icon"><i className="ti ti-message-circle" /></span>
-                <span>Comment</span>
-              </button>
               <button
                 className={"qp-social-btn" + (bookmarks.has("quiz:" + quiz?.quiz_id) ? " active" : "") + (!user || user.is_anonymous ? " disabled" : "")}
-                disabled={!user || user.is_anonymous}
                 title={!user || user.is_anonymous ? "Sign in to bookmark" : "Bookmark this quiz"}
-                onClick={() => onToggleBookmark?.("quiz", String(quiz?.quiz_id), quiz?.title || "Quiz")}
+                onClick={() => { if (!user || user.is_anonymous) { showSigninToast("Sign in to bookmark quizzes"); return; } onToggleBookmark?.("quiz", String(quiz?.quiz_id), quiz?.title || "Quiz"); }}
               >
                 <span className="qp-social-icon">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill={bookmarks.has("quiz:" + quiz?.quiz_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
@@ -948,7 +1213,13 @@ export default function QuizPlayer({
         </div>
       )}
 
-      <div className="qp-body">
+      <div
+        className="qp-body"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
+        {signinToast && <div className="signin-toast">{signinToast}</div>}
 
         {/* Per-question timer */}
         {isTimed && !isAnswered && (
@@ -969,7 +1240,15 @@ export default function QuizPlayer({
         )}
 
         {/* Two-column layout */}
-        <div className="qp-main" key={current}>
+        <div
+          className="qp-main"
+          key={current}
+          onClick={onCardTap}
+          style={{
+            ...(dragOffset !== 0 ? { transform: `translateX(${dragOffset}px)` } : {}),
+            transition: isDragging ? "none" : "transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94)",
+          }}
+        >
 
           {/* Left column: question card + options + inline nav */}
           <div className="qp-card">
@@ -982,7 +1261,7 @@ export default function QuizPlayer({
                   </button>
                 )}
               </div>
-              <div className="qp-question">{q.question}</div>
+              <div className="qp-question fs-heading">{q.question}</div>
             </div>
 
             {/* Options */}
@@ -990,7 +1269,7 @@ export default function QuizPlayer({
               {q._options.map((opt, oi) => (
                 <button
                   key={opt.label}
-                  className={`qp-option ${getOptionClass(opt)}`}
+                  className={`qp-option fs-body ${getOptionClass(opt)}`}
                   onClick={() => selectOption(opt.label, opt.isCorrect)}
                   disabled={isAnswered}
                 >
@@ -998,37 +1277,6 @@ export default function QuizPlayer({
                   {opt.label}
                 </button>
               ))}
-            </div>
-
-            {/* Inline navigation — 4 equal pills */}
-            <div className="qp-inline-nav">
-              <button className="qp-nav-pill" disabled title="Hints coming soon">
-                <i className="ti ti-bulb pill-icon" />
-                <span className="pill-label">Hint</span>
-              </button>
-              <button
-                className="qp-nav-pill nav-primary"
-                onClick={goPrev}
-                disabled={current === 0 || isTimed}
-              >
-                <i className="ti ti-arrow-left pill-icon" />
-                <span className="pill-label">Previous</span>
-              </button>
-              <button
-                className="qp-nav-pill nav-finish"
-                onClick={requestFinish}
-              >
-                <i className="ti ti-flag-3 pill-icon" />
-                <span className="pill-label">Finish Quiz</span>
-              </button>
-              <button
-                className="qp-nav-pill nav-primary"
-                onClick={goNext}
-                disabled={current === total - 1}
-              >
-                <i className="ti ti-arrow-right pill-icon" />
-                <span className="pill-label">Next</span>
-              </button>
             </div>
           </div>
 
@@ -1045,9 +1293,13 @@ export default function QuizPlayer({
               </div>
             )}
             {isAnswered && ans?.chosen !== null && (
-              <button className="qp-scroll-prompt" key={current} onClick={scrollToExplain}>
-                <i className="ti ti-arrow-down" />
-                Scroll below for explanation
+              <button
+                className="qp-scroll-prompt"
+                key={current}
+                onClick={() => window.matchMedia("(max-width: 899px)").matches ? setExplainSheet(true) : scrollToExplain()}
+              >
+                <span className="qp-sp-desktop"><i className="ti ti-arrow-down" /> Scroll below for explanation</span>
+                <span className="qp-sp-mobile"><i className="ti ti-chevrons-up" /> Tap to read</span>
               </button>
             )}
           </div>
@@ -1057,83 +1309,64 @@ export default function QuizPlayer({
         {isAnswered && ans?.chosen !== null && (
           <div className="qp-explain-section" ref={explainRef}>
             <div className="qp-explain-label">Question Reference and Explanation</div>
-            {q.explanation
-              ? <div className="qp-explain-text">{q.explanation}</div>
-              : <div className="qp-explain-text" style={{ color: "#9CA3AF", fontStyle: "italic" }}>No explanation available.</div>
-            }
-            {q.key_term && (
-              <div className="qp-reveal-block">
-                <div className="qp-reveal-block-label">Key Term</div>
-                <div className="qp-reveal-block-value">
-                  <strong>{q.key_term}</strong>{q.key_term_meaning ? ` — ${q.key_term_meaning}` : ""}
-                </div>
-              </div>
-            )}
-            {q.life_connection && (
-              <div className="qp-reveal-block">
-                <div className="qp-reveal-block-label">Life Connection</div>
-                <div className="qp-reveal-block-value">{q.life_connection}</div>
-              </div>
-            )}
-            {q.quiz_recap && (
-              <div className="qp-reveal-block">
-                <div className="qp-reveal-block-label">Refresher</div>
-                <div className="qp-reveal-block-value">{q.quiz_recap}</div>
-              </div>
-            )}
-            {q.source_citation && (
-              <div className="qp-explain-source">Source: {q.source_citation}</div>
-            )}
+            {renderExplainBlocks()}
 
-            {/* Social strip */}
-            <div className="qp-social">
-              <div className="qp-social-left">
-                <button
-                  className="qp-social-btn"
-                  disabled
-                  title="Coming soon"
-                >
-                  <span className="qp-social-icon"><i className="ti ti-thumb-up" /></span>
-                  <span>Like</span>
-                </button>
-                <button
-                  className="qp-social-btn"
-                  disabled
-                  title="Coming soon"
-                >
-                  <span className="qp-social-icon"><i className="ti ti-message-circle" /></span>
-                  <span>Comment</span>
-                </button>
-              </div>
-              <div className="qp-social-right">
-                <button
-                  className={"qp-social-btn" + (bookmarks.has("quiz:" + quiz?.quiz_id) ? " active" : "") + (!user || user.is_anonymous ? " disabled" : "")}
-                  disabled={!user || user.is_anonymous}
-                  title={!user || user.is_anonymous ? "Sign in to bookmark" : bookmarks.has("quiz:" + quiz?.quiz_id) ? "Remove bookmark" : "Bookmark this quiz"}
-                  onClick={() => onToggleBookmark?.("quiz", String(quiz?.quiz_id), quiz?.title || "Quiz")}
-                >
-                  <span className="qp-social-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill={bookmarks.has("quiz:" + quiz?.quiz_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-                  </span>
-                </button>
-                <button
-                  className={"qp-social-btn" + (shareCopied ? " copied" : "")}
-                  onClick={handleShareQuiz}
-                  title={shareCopied ? "Copied!" : "Share quiz"}
-                >
-                  <span className="qp-social-icon">
-                    {shareCopied
-                      ? <i className="ti ti-check" />
-                      : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                    }
-                  </span>
-                  <span>{shareCopied ? "Copied!" : "Share"}</span>
-                </button>
-              </div>
-            </div>
+            {renderSocialStrip()}
+
+
           </div>
         )}
 
+        {/* Explanation sheet — mobile slide-up (matches snippet tap-to-read) */}
+        {explainSheet && isAnswered && ans?.chosen !== null && (
+          <>
+            <div className="qp-sheet-overlay" onClick={() => setExplainSheet(false)} />
+            <div
+              className="qp-sheet"
+              style={{
+                ...(sheetDragged ? { animation: "none" } : {}),
+                transform: `translateY(${sheetDragY}px)`,
+                transition: sheetDragY ? "none" : "transform 0.25s ease",
+              }}
+              onTouchStart={e => { e.stopPropagation(); onSheetTouchStart(e); }}
+              onTouchMove={e => { e.stopPropagation(); onSheetTouchMove(e); }}
+              onTouchEnd={e => { e.stopPropagation(); onSheetTouchEnd(e); }}
+            >
+              <div
+                className="qp-sheet-grab"
+                onTouchStart={e => { e.stopPropagation(); onSheetGrabStart(e); }}
+                onTouchMove={e => { e.stopPropagation(); onSheetGrabMove(e); }}
+                onTouchEnd={e => { e.stopPropagation(); onSheetGrabEnd(e); }}
+              >
+                <div className="qp-sheet-handle" />
+                <button className="qp-sheet-close" aria-label="Close" onClick={() => setExplainSheet(false)}><i className="ti ti-x" /></button>
+                <div className={"qp-sheet-header " + (ans.isCorrect ? "correct" : "wrong")}>
+                  {ans.isCorrect
+                    ? <><i className="ti ti-circle-check" /> Correct!</>
+                    : <><i className="ti ti-circle-x" /> Correct answer: {q.correct_option}</>}
+                </div>
+              </div>
+              <div className="qp-sheet-body" ref={sheetBodyRef}>
+                {renderExplainBlocks()}
+                {renderSocialStrip()}
+                {current === total - 1 && (
+                  <button className="qp-sheet-finish" onClick={requestFinish}>Finish Quiz ✓</button>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Fixed bottom nav — same pattern as SnippetPlayer */}
+      <div className="player-nav">
+        <button className="pnav-btn pnav-prev" onClick={goPrev} disabled={current === 0 || isTimed}>← Prev</button>
+        {current < total - 1
+          ? <button className="pnav-btn pnav-center-finish" onClick={requestFinish}><i className="ti ti-flag-3" style={{ fontSize: 13 }} /> Finish</button>
+          : <span />}
+        {current === total - 1
+          ? <button className="pnav-btn pnav-finish" onClick={requestFinish}>Finish ✓</button>
+          : <button className="pnav-btn pnav-next" onClick={goNext}>Next →</button>}
       </div>
 
       {/* Edit panel (admin/creator) */}

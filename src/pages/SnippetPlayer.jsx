@@ -88,7 +88,7 @@ const styles = `
       border-radius: 0; max-height: none; height: 100%; min-height: 240px;
     }
     .snip-top-right .snip-img img {
-      width: 100%; height: 100%; max-height: 400px; object-fit: cover;
+      width: 100%; height: 100%; max-height: 400px; object-fit: contain;
       -webkit-mask-image: none; mask-image: none;
     }
     .snip-top-right .snip-header-band { border-radius: 0; height: 100%; min-height: 240px; }
@@ -148,7 +148,7 @@ const styles = `
   .snip-lang-badge {
     position: absolute; top: 10px; left: 10px;
     background: rgba(0,0,0,0.45); color: white; border-radius: 999px;
-    padding: 3px 10px; font-size: 0.6875rem; font-weight: 500; letter-spacing: 0.04em;
+    padding: 7px 12px; font-size: 0.6875rem; font-weight: 500; letter-spacing: 0.04em;
     text-transform: capitalize; font-family: 'Inter', system-ui, sans-serif;
     border: none; cursor: pointer; display: flex; align-items: center; gap: 4px;
     transition: background 0.15s;
@@ -203,62 +203,9 @@ const styles = `
     color: ${HERITAGE}; line-height: 1.3; margin-bottom: 16px;
     letter-spacing: 0.01em; text-align: left;
   }
-  .snip-explanation {
-    font-size: 1rem; color: #4A5565; line-height: 1.85; margin-bottom: 20px;
-    text-align: justify; font-family: 'Nunito Sans', system-ui, sans-serif;
-  }
   .snip-divider { height: 1px; background: #E5E7EB; margin: 20px 0; }
 
-  .snip-key-term {
-    background: white; border-left: 3px solid ${SAFFRON};
-    border-radius: 0 12px 12px 0; padding: 14px 18px; margin-bottom: 14px;
-  }
-  .snip-kt-label { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: ${SAFFRON}; margin-bottom: 6px; font-family: 'Inter', system-ui, sans-serif; }
-  .snip-kt-word  { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.25rem; font-weight: 500; color: ${HERITAGE}; margin-bottom: 4px; }
-  .snip-kt-meaning { font-size: 1rem; color: #4A5565; line-height: 1.6; font-family: 'Nunito Sans', system-ui, sans-serif; }
-
-  .snip-life {
-    background: #F0FAF4; border-left: 4px solid ${GREEN};
-    border-radius: 0 12px 12px 0; padding: 14px 18px; margin-bottom: 14px;
-  }
-  .snip-life-label { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: ${GREEN}; margin-bottom: 6px; font-family: 'Inter', system-ui, sans-serif; }
-  .snip-life-text  { font-size: 1rem; color: #2a4a2a; line-height: 1.7; font-family: 'Nunito Sans', system-ui, sans-serif; }
-
-  .snip-quiz {
-    background: #EEF5FF; border-left: 4px solid ${BLUE};
-    border-radius: 0 12px 12px 0; padding: 14px 18px; margin-bottom: 14px;
-  }
-  .snip-quiz-label { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: ${BLUE}; margin-bottom: 6px; font-family: 'Inter', system-ui, sans-serif; }
-  .snip-quiz-text  { font-size: 1rem; color: #1a2a4a; line-height: 1.7; font-family: 'Nunito Sans', system-ui, sans-serif; }
-
-  .snip-citation { font-size: 0.75rem; color: #4A5565; font-style: italic; text-align: left; margin-top: 16px; padding-top: 12px; border-top: 1px solid #E5E7EB; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .snip-empty    { text-align: center; padding: 48px 24px; font-family: 'Oswald', sans-serif; font-size: 1.25rem; color: #4A5565; }
-
-  /* Bottom nav */
-  .player-nav {
-    position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
-    background: #FFFFFF; border-top: 1px solid #E5E7EB; padding: 12px 1.5rem;
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  }
-  .pnav-btn {
-    display: flex; align-items: center; gap: 6px; border-radius: 12px; padding: 10px 20px;
-    font-family: 'Inter', system-ui, sans-serif; font-size: 0.875rem; font-weight: 500;
-    cursor: pointer; transition: all 0.2s; border: 1px solid transparent;
-    box-shadow: 0px 1px 0.5px 0.05px rgba(29, 41, 61, 0.02);
-  }
-  .pnav-prev { border-color: #E5E7EB; background: white; color: #4A5565; }
-  .pnav-prev:hover:not(:disabled) { border-color: ${SAFFRON}; color: ${SAFFRON}; }
-  .pnav-prev:disabled { opacity: 0.3; cursor: not-allowed; }
-  .pnav-next   { background: ${SAFFRON}; color: white; border-color: ${SAFFRON}; }
-  .pnav-next:hover { opacity: 0.9; transform: translateY(-1px); }
-  .pnav-finish { background: ${GREEN}; color: white; border-color: ${GREEN}; }
-  .pnav-finish:hover { opacity: 0.9; transform: translateY(-1px); }
-
-  .pnav-dots { display: flex; gap: 6px; align-items: center; }
-  .pnav-dot  { width: 8px; height: 8px; border-radius: 50%; background: #E5E7EB; transition: all 0.25s; cursor: pointer; }
-  .pnav-dot:hover { background: ${SAFFRON}88; }
-  .pnav-dot.active { background: ${SAFFRON}; transform: scale(1.35); }
-  .pnav-dot.done   { background: ${GREEN}; }
 
   /* Completion modal */
   .completion-overlay {
@@ -320,7 +267,7 @@ const styles = `
   .snip-social-right { display: flex; align-items: center; gap: 14px; }
   .snip-social-btn {
     display: flex; align-items: center; gap: 6px;
-    background: none; border: none; padding: 6px 0;
+    background: none; border: none; padding: 10px 6px;
     font-size: 0.9375rem; color: #4A5565; transition: color 0.2s;
     font-family: 'Inter', system-ui, sans-serif; font-weight: 500;
   }
@@ -546,11 +493,12 @@ const styles = `
     .snip-bottom-block { display: none !important; }
     .snip-top-block { cursor: pointer; }
     .snip-tap-hint {
-      display: flex; align-items: center; justify-content: center; gap: 5px;
-      padding: 6px 16px 14px;
-      font-size: 0.75rem; font-weight: 500; color: #9CA3AF;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      margin: 4px 16px 14px; padding: 10px 16px;
+      border: 1.5px solid ${SAFFRON}66; border-radius: 999px; background: #FFF8EE;
+      font-size: 0.8125rem; font-weight: 600; color: #B45309;
       font-family: 'Inter', system-ui, sans-serif; letter-spacing: 0.02em;
-      user-select: none; pointer-events: none;
+      user-select: none; cursor: pointer;
     }
   }
 
@@ -572,12 +520,20 @@ const styles = `
   @media (min-width: 900px) {
     .reveal-overlay, .reveal-sheet { display: none !important; }
   }
+  .reveal-sheet-grab { position: relative; flex-shrink: 0; touch-action: none; }
   .reveal-sheet-handle {
     width: 40px; height: 4px; background: #E5E7EB; border-radius: 2px;
     margin: 12px auto 0; flex-shrink: 0;
   }
+  .reveal-sheet-close {
+    position: absolute; top: 10px; right: 10px; width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    background: none; border: none; border-radius: 999px;
+    color: #9CA3AF; font-size: 1.25rem; cursor: pointer;
+  }
+  .reveal-sheet-close:hover { color: #4A5565; background: #F3F4F6; }
   .reveal-sheet-header {
-    padding: 14px 20px 14px; flex-shrink: 0;
+    padding: 14px 56px 14px 20px; flex-shrink: 0;
     border-bottom: 1px solid #E5E7EB;
     font-family: 'Oswald', 'Arial Narrow', sans-serif;
     font-size: 1.375rem; font-weight: 500;
@@ -591,12 +547,9 @@ const styles = `
   @media (max-width: 480px) {
     .player-body { padding: 12px 0.75rem 115px; }
     .snip-hook { font-size: 1.375rem; }
-    .snip-explanation { font-size: 0.9375rem; }
     .snip-top-left { padding: 14px 14px 12px; }
     .snip-bottom-left { padding: 14px 14px 12px; }
     .snip-bottom-right { padding: 12px 14px 14px; }
-    .pnav-btn  { padding: 8px 16px; font-size: 0.8125rem; }
-    .player-nav { padding: 10px 1rem; bottom: 0; }
     .player-nav-links { display: none !important; }
     .snip-img { max-height: 300px; }
     .snip-img img { max-height: 300px; }
@@ -650,6 +603,12 @@ export default function SnippetPlayer({
   // Snippet inline edit state
   const [showEditPanel,       setShowEditPanel]       = useState(false);
   const [sheetOpen,          setSheetOpen]          = useState(false);
+  const [sheetDragY,         setSheetDragY]         = useState(0);
+  const [sheetDragged,       setSheetDragged]       = useState(false);
+  const sheetGrabY = useRef(null);
+  const firstViewedRef = useRef(initialSnippetIndex); // swipe hint shows once, on the first snippet opened
+  const [signinToast, setSigninToast] = useState("");
+  const toastTimerRef = useRef(null);
   const [editSnipDraft,       setEditSnipDraft]       = useState({});
   const [editSaving,          setEditSaving]          = useState(false);
   const [editMsg,             setEditMsg]             = useState("");
@@ -996,11 +955,22 @@ export default function SnippetPlayer({
       if (done) return;
       if (e.key === "ArrowRight") goNext();
       if (e.key === "ArrowLeft")  goPrev();
-      if (e.key === "Escape")     (playlistMode ? backToPlaylist : onBackToLessons)?.();
+      if (e.key === "Escape") {
+        if (sheetOpen)       { setSheetOpen(false); return; }
+        if (showLangPicker)  { setShowLangPicker(false); return; }
+        if (sharePopoverId)  { setSharePopoverId(null); return; }
+        if (showComments)    { setShowComments(false); return; }
+        if (showEditPanel)   { setShowEditPanel(false); return; }
+        (playlistMode ? backToPlaylist : onBackToLessons)?.();
+      }
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [current, total, done, loading]);
+  }, [current, total, done, loading, sheetOpen, showLangPicker, sharePopoverId, showComments, showEditPanel]);
+
+  useEffect(() => {
+    if (sheetOpen) { setSheetDragged(false); setSheetDragY(0); }
+  }, [sheetOpen]);
 
   // ── Touch / Swipe handlers ──────────────────────────────────────────────────
   function onTouchStart(e) {
@@ -1025,20 +995,132 @@ export default function SnippetPlayer({
   }
 
   function onTouchEnd(e) {
-    const dx = e.changedTouches[0].clientX - (touchStartX.current || 0);
+    const dx = e.changedTouches[0].clientX - (touchStartX.current ?? e.changedTouches[0].clientX);
+    const dy = e.changedTouches[0].clientY - (touchStartY.current ?? e.changedTouches[0].clientY);
     touchStartX.current = null;
     touchStartY.current = null;
     setDragOffset(0);
     setIsDragging(false);
     if (Math.abs(dx) < 60) return;
+    // Ignore mostly-vertical gestures (fast scrolls) — only clearly horizontal swipes navigate
+    if (Math.abs(dx) < Math.abs(dy) * 1.5) return;
     if (dx < 0) goNext();
     else goPrev();
+  }
+
+  // Drag down on the sheet handle/header to dismiss
+  function onSheetGrabStart(e) {
+    sheetGrabY.current = e.touches[0].clientY;
+    setSheetDragged(true);
+  }
+  function onSheetGrabMove(e) {
+    if (sheetGrabY.current === null) return;
+    setSheetDragY(Math.max(0, e.touches[0].clientY - sheetGrabY.current));
+  }
+  function onSheetGrabEnd(e) {
+    const dy = e.changedTouches[0].clientY - (sheetGrabY.current ?? e.changedTouches[0].clientY);
+    sheetGrabY.current = null;
+    if (dy > 90) setSheetOpen(false);
+    setSheetDragY(0);
+  }
+
+  // Drag-down anywhere on the sheet dismisses it (when its body is scrolled to top)
+  const sheetBodyRef = useRef(null);
+  const sheetStartScroll = useRef(0);
+  function onSheetTouchStart(e) {
+    sheetStartScroll.current = sheetBodyRef.current ? sheetBodyRef.current.scrollTop : 0;
+    sheetGrabY.current = e.touches[0].clientY;
+    setSheetDragged(true);
+    onTouchStart(e);
+  }
+  function onSheetTouchMove(e) {
+    const dy = e.touches[0].clientY - (sheetGrabY.current ?? e.touches[0].clientY);
+    const dx = e.touches[0].clientX - (touchStartX.current ?? e.touches[0].clientX);
+    if (sheetStartScroll.current <= 0 && dy > 0 && dy > Math.abs(dx)) setSheetDragY(dy);
+    onTouchMove(e);
+  }
+  function onSheetTouchEnd(e) {
+    const dy = e.changedTouches[0].clientY - (sheetGrabY.current ?? e.changedTouches[0].clientY);
+    const dx = e.changedTouches[0].clientX - (touchStartX.current ?? e.changedTouches[0].clientX);
+    sheetGrabY.current = null;
+    if (sheetStartScroll.current <= 0 && dy > 90 && dy > Math.abs(dx) * 1.5) setSheetOpen(false);
+    setSheetDragY(0);
+    onTouchEnd(e);
+  }
+
+  function showSigninToast(msg) {
+    setSigninToast(msg);
+    clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setSigninToast(""), 2200);
+  }
+
+  // Social strip — rendered on the card and at the bottom of the reveal sheet
+  function renderSocialStrip() {
+    return (
+                <div className="snip-social">
+                    <div className="snip-social-left">
+                      <button
+                        className={"snip-social-btn snip-like-btn" + (liked.has(snip.snippet_id) ? " active" : "") + (!user || user.is_anonymous ? " disabled" : "")}
+                        onClick={e => { e.stopPropagation(); if (!user || user.is_anonymous) { showSigninToast(SIGNIN.likeTooltip); return; } toggleLike(snip.snippet_id); }}
+                        title={!user || user.is_anonymous ? SIGNIN.likeTooltip : liked.has(snip.snippet_id) ? PLAYER.unlikeTooltip : "Like"}
+                      >
+                        <span className="snip-social-icon">{liked.has(snip.snippet_id) ? "♥" : "♡"}</span>
+                        <span>{likeCounts[snip.snippet_id] || 0}</span>
+                      </button>
+                      <span className="snip-social-sep">&#183;</span>
+                      <button
+                        className="snip-social-btn snip-comment-btn"
+                        onClick={e => { e.stopPropagation(); openComments(snip.snippet_id); }}
+                        title="Comments"
+                      >
+                        <span className="snip-social-icon">&#128172;</span>
+                        <span>{commentCounts[snip.snippet_id] || 0}</span>
+                      </button>
+                    </div>
+                    <div className="snip-social-right">
+                      <button
+                        className={"snip-social-btn snip-bm-btn" + (bookmarks.has("snippet:" + snip.snippet_id) ? " active" : "") + (!user || user.is_anonymous ? " disabled" : "")}
+                        title={!user || user.is_anonymous ? SIGNIN.bookmarkTooltip : bookmarks.has("snippet:" + snip.snippet_id) ? PLAYER.removeBookmark : PLAYER.addBookmark}
+                        onClick={() => { if (!user || user.is_anonymous) { showSigninToast(SIGNIN.bookmarkTooltip); return; } if (onToggleBookmark) onToggleBookmark("snippet", String(snip.snippet_id), snip.hook || "Snippet"); }}
+                      >
+                        <span className="snip-social-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill={bookmarks.has("snippet:" + snip.snippet_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span>
+                      </button>
+                      <button
+                        className="snip-social-btn snip-share-btn"
+                        title="Share this snippet"
+                        onClick={e => { e.stopPropagation(); setShareCopied(false); setSharePopoverId(snip.snippet_id); }}
+                      >
+                        <span className="snip-social-icon">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="18" cy="5" r="3"/>
+                            <circle cx="6" cy="12" r="3"/>
+                            <circle cx="18" cy="19" r="3"/>
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                          </svg>
+                        </span>
+                        <span>Share</span>
+                      </button>
+                      {canEdit && (
+                        <button
+                          className="snip-social-btn snip-edit-btn"
+                          title="Edit snippet"
+                          onClick={e => { e.stopPropagation(); openEditPanel(); }}
+                        >
+                          <span className="snip-social-icon"><i className="ti ti-pencil" /></span>
+                          <span>Edit</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+    );
   }
 
   return (
     <>
       <style>{globalStyles + styles}</style>
       <div className="player-wrap">
+        {signinToast && <div className="signin-toast">{signinToast}</div>}
 
         {/* Top bar */}
         <div className="player-top-bar">
@@ -1118,7 +1200,7 @@ export default function SnippetPlayer({
                 </div>
 
                 {/* Tap-to-read hint — mobile only, CSS hidden on desktop */}
-                <div className="snip-tap-hint">
+                <div className="snip-tap-hint" onClick={() => setSheetOpen(true)}>
                   <i className="ti ti-chevrons-up" style={{fontSize:'0.9rem'}} /> Tap to read
                 </div>
 
@@ -1156,67 +1238,11 @@ export default function SnippetPlayer({
                 )}
 
                 {/* Social strip — full width, outside the grid */}
-                <div className="snip-social">
-                    <div className="snip-social-left">
-                      <button
-                        className={"snip-social-btn snip-like-btn" + (liked.has(snip.snippet_id) ? " active" : "") + (!user || user.is_anonymous ? " disabled" : "")}
-                        onClick={e => { e.stopPropagation(); toggleLike(snip.snippet_id); }}
-                        disabled={!user || user.is_anonymous}
-                        title={!user || user.is_anonymous ? SIGNIN.likeTooltip : liked.has(snip.snippet_id) ? PLAYER.unlikeTooltip : "Like"}
-                      >
-                        <span className="snip-social-icon">{liked.has(snip.snippet_id) ? "♥" : "♡"}</span>
-                        <span>{likeCounts[snip.snippet_id] || 0}</span>
-                      </button>
-                      <span className="snip-social-sep">&#183;</span>
-                      <button
-                        className="snip-social-btn snip-comment-btn"
-                        onClick={e => { e.stopPropagation(); openComments(snip.snippet_id); }}
-                        title="Comments"
-                      >
-                        <span className="snip-social-icon">&#128172;</span>
-                        <span>{commentCounts[snip.snippet_id] || 0}</span>
-                      </button>
-                    </div>
-                    <div className="snip-social-right">
-                      <button
-                        className={"snip-social-btn snip-bm-btn" + (bookmarks.has("snippet:" + snip.snippet_id) ? " active" : "") + (!user || user.is_anonymous ? " disabled" : "")}
-                        title={!user || user.is_anonymous ? SIGNIN.bookmarkTooltip : bookmarks.has("snippet:" + snip.snippet_id) ? PLAYER.removeBookmark : PLAYER.addBookmark}
-                        onClick={() => { if (onToggleBookmark) onToggleBookmark("snippet", String(snip.snippet_id), snip.hook || "Snippet"); }}
-                      >
-                        <span className="snip-social-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill={bookmarks.has("snippet:" + snip.snippet_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span>
-                      </button>
-                      <button
-                        className="snip-social-btn snip-share-btn"
-                        title="Share this snippet"
-                        onClick={e => { e.stopPropagation(); setShareCopied(false); setSharePopoverId(snip.snippet_id); }}
-                      >
-                        <span className="snip-social-icon">
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="18" cy="5" r="3"/>
-                            <circle cx="6" cy="12" r="3"/>
-                            <circle cx="18" cy="19" r="3"/>
-                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-                          </svg>
-                        </span>
-                        <span>Share</span>
-                      </button>
-                      {canEdit && (
-                        <button
-                          className="snip-social-btn snip-edit-btn"
-                          title="Edit snippet"
-                          onClick={e => { e.stopPropagation(); openEditPanel(); }}
-                        >
-                          <span className="snip-social-icon"><i className="ti ti-pencil" /></span>
-                          <span>Edit</span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
+                {renderSocialStrip()}
               </div>
 
               {/* Swipe hint — only on mobile, fades after first swipe */}
-              {total > 1 && (
+              {total > 1 && current === firstViewedRef.current && (
                 <div className="swipe-hint">
                   <span>← swipe to navigate →</span>
                 </div>
@@ -1231,13 +1257,26 @@ export default function SnippetPlayer({
                   />
                   <div
                     className="reveal-sheet"
-                    onTouchStart={e => { e.stopPropagation(); onTouchStart(e); }}
-                    onTouchMove={e => { e.stopPropagation(); onTouchMove(e); }}
-                    onTouchEnd={e => { e.stopPropagation(); onTouchEnd(e); }}
+                    style={{
+                      ...(sheetDragged ? { animation: "none" } : {}),
+                      transform: `translateY(${sheetDragY}px)`,
+                      transition: sheetDragY ? "none" : "transform 0.25s ease",
+                    }}
+                    onTouchStart={e => { e.stopPropagation(); onSheetTouchStart(e); }}
+                    onTouchMove={e => { e.stopPropagation(); onSheetTouchMove(e); }}
+                    onTouchEnd={e => { e.stopPropagation(); onSheetTouchEnd(e); }}
                   >
-                    <div className="reveal-sheet-handle" />
-                    <div className="reveal-sheet-header fs-heading">{trans.hook}</div>
-                    <div className="reveal-sheet-body">
+                    <div
+                      className="reveal-sheet-grab"
+                      onTouchStart={e => { e.stopPropagation(); onSheetGrabStart(e); }}
+                      onTouchMove={e => { e.stopPropagation(); onSheetGrabMove(e); }}
+                      onTouchEnd={e => { e.stopPropagation(); onSheetGrabEnd(e); }}
+                    >
+                      <div className="reveal-sheet-handle" />
+                      <button className="reveal-sheet-close" aria-label="Close" onClick={() => setSheetOpen(false)}><i className="ti ti-x" /></button>
+                      <div className="reveal-sheet-header fs-heading">{trans.hook}</div>
+                    </div>
+                    <div className="reveal-sheet-body" ref={sheetBodyRef}>
                       {trans.explanation && <div className="snip-explanation fs-body">{trans.explanation}</div>}
                       {trans.source_citation && <div className="snip-citation">{trans.source_citation}</div>}
                       {(trans.key_term || trans.life_connection || trans.quiz_recap) && (
@@ -1263,6 +1302,7 @@ export default function SnippetPlayer({
                           )}
                         </div>
                       )}
+                      {renderSocialStrip()}
                     </div>
                   </div>
                 </>
