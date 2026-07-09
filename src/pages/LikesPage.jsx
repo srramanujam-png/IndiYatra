@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabaseClient } from "../lib/auth";
+import { supabaseClient, loadUserLikesByType } from "../lib/auth";
 import { supabase, SAFFRON, HERITAGE, GREEN } from "../lib/supabase";
 import { globalStyles } from "../styles/global";
 import { useAuthContext } from "../contexts/AuthContext";
@@ -41,12 +41,8 @@ const styles = `
     display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px;
   }
   .like-card {
-    background: white; border-radius: 12px; border: 1px solid #E5E7EB;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.04); overflow: hidden;
-    cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
-    animation: fadeUp 0.4s ease both;
+    overflow: hidden; animation: fadeUp 0.4s ease both;
   }
-  .like-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
   .like-card-img { position: relative; height: 140px; overflow: hidden; background: #F3F4F6; }
   .like-card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
   .like-card:hover .like-card-img img { transform: scale(1.05); }
@@ -98,17 +94,47 @@ const styles = `
     box-shadow: 0px 1px 0.5px 0.05px rgba(29, 41, 61, 0.02);
   }
   .likes-signin-btn:hover { opacity: 0.9; }
+
+  .likes-type-tabs {
+    max-width: 1100px; margin: 0 auto; padding: 20px 1.5rem 0;
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .likes-type-tab {
+    padding: 6px 14px; border-radius: 999px; border: 1.5px solid #E5E7EB;
+    background: white; font-size: 0.8125rem; font-weight: 600; color: #4A5565;
+    cursor: pointer; font-family: 'Inter', system-ui, sans-serif; transition: all 0.15s;
+  }
+  .likes-type-tab.active { background: ${SAFFRON}; border-color: ${SAFFRON}; color: white; }
+  .likes-type-tab:hover:not(.active) { border-color: ${SAFFRON}; color: ${SAFFRON}; }
+
+  .likes-simple-list { max-width: 1100px; margin: 0 auto; padding: 20px 1.5rem 80px; }
+  .likes-simple-item { margin-bottom: 10px; }
+  .likes-simple-icon { font-size: 1.25rem; flex-shrink: 0; }
+  .likes-simple-body { flex: 1; min-width: 0; }
+  .likes-simple-name { font-size: 0.9375rem; font-weight: 600; color: #101828; font-family: 'Nunito Sans', system-ui, sans-serif; }
+  .likes-simple-sub { font-size: 0.75rem; color: #4A5565; margin-top: 2px; font-family: 'Inter', system-ui, sans-serif; }
+  .likes-simple-date { font-size: 0.75rem; color: #4A5565; flex-shrink: 0; font-family: 'Inter', system-ui, sans-serif; }
 `;
+
+const TYPE_TABS = [
+  { key: "snippet", label: "Stories",  icon: "✦" },
+  { key: "lesson",  label: "Lessons",  icon: "📖" },
+  { key: "module",  label: "Modules",  icon: "🗂️" },
+  { key: "quiz",    label: "Quizzes",  icon: "❓" },
+  { key: "question", label: "Questions", icon: "💬" },
+];
 
 export default function LikesPage({ settings, onBack, onOpenSettings, onResume, onDashboard, onLikes, onBookmarks, onDiscover, onForYou, onAllCourses, onPlaySnippet, isAdmin, onAdmin, userEditorialRole, onEditor, activePage, onSaveSettings, languages = [] }) {
   const { user, onSignIn } = useAuthContext();
   const [likes,    setLikes]    = useState([]);
   const [assets,   setAssets]   = useState({});
   const [loading,  setLoading]  = useState(true);
+  const [typedLikes, setTypedLikes] = useState([]); // module/lesson/quiz/question rows
 
   const [filterCourse, setFilterCourse] = useState("all");
   const [filterTheme,  setFilterTheme]  = useState("all");
   const [filterModule, setFilterModule] = useState("all");
+  const [typeFilter,   setTypeFilter]   = useState("snippet"); // Stories/Lessons/Modules/Quizzes/Questions
 
   const isGuest = !user || user.is_anonymous;
 
@@ -116,10 +142,14 @@ export default function LikesPage({ settings, onBack, onOpenSettings, onResume, 
     if (isGuest) { setLoading(false); return; }
     async function load() {
       try {
-        const { data } = await supabaseClient.rpc("get_user_likes");
+        const [{ data }, { data: typedData }] = await Promise.all([
+          supabaseClient.rpc("get_user_likes"),
+          loadUserLikesByType(),
+        ]);
         const rows = data || [];
 
         setLikes(rows);
+        setTypedLikes((typedData || []).filter(r => r.content_type !== "snippet"));
 
         // Fetch assets for all snippet images
         const assetIds = [...new Set(rows.map(r => r.asset_id).filter(Boolean))];
@@ -137,6 +167,15 @@ export default function LikesPage({ settings, onBack, onOpenSettings, onResume, 
     load();
   }, [user]);
 
+  function formatDate(ts) {
+    if (!ts) return "";
+    const d = new Date(ts);
+    return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  }
+
+  const totalLikeCount = likes.length + typedLikes.length;
+  const typedForTab = typedLikes.filter(r => r.content_type === typeFilter);
+
   // Build filter options from loaded data
   const courses = [...new Map(likes.filter(l => l.course_id).map(l => [l.course_id, l.course_name])).entries()];
   const themes  = [...new Map(likes.filter(l => l.theme_id  && (filterCourse === "all" || l.course_id === filterCourse)).map(l => [l.theme_id, l.theme_title])).entries()];
@@ -152,12 +191,6 @@ export default function LikesPage({ settings, onBack, onOpenSettings, onResume, 
     setFilterCourse("all");
     setFilterTheme("all");
     setFilterModule("all");
-  }
-
-  function formatDate(ts) {
-    if (!ts) return "";
-    const d = new Date(ts);
-    return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
   }
 
   return (
@@ -186,8 +219,25 @@ export default function LikesPage({ settings, onBack, onOpenSettings, onResume, 
 
       <div className="likes-hero">
         <h1>♥ My Likes</h1>
-        <p>{isGuest ? SIGNIN.likes : loading ? "" : `${likes.length} snippet${likes.length !== 1 ? "s" : ""} liked`}</p>
+        <p>{isGuest ? SIGNIN.likes : loading ? "" : `${totalLikeCount} item${totalLikeCount !== 1 ? "s" : ""} liked`}</p>
       </div>
+
+      {!isGuest && !loading && totalLikeCount > 0 && (
+        <div className="likes-type-tabs">
+          {TYPE_TABS.map(tab => {
+            const count = tab.key === "snippet" ? likes.length : typedLikes.filter(r => r.content_type === tab.key).length;
+            return (
+              <button
+                key={tab.key}
+                className={"likes-type-tab" + (typeFilter === tab.key ? " active" : "")}
+                onClick={() => setTypeFilter(tab.key)}
+              >
+                {tab.icon} {tab.label} ({count})
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {isGuest ? (
         <div className="likes-signin">
@@ -198,11 +248,31 @@ export default function LikesPage({ settings, onBack, onOpenSettings, onResume, 
         </div>
       ) : loading ? (
         <SkeletonLikeGrid count={6} />
-      ) : likes.length === 0 ? (
+      ) : totalLikeCount === 0 ? (
         <div className="likes-empty">
           <div className="empty-icon">♡</div>
           <h3>{EMPTY.likes}</h3>
-          <p>Tap the ♡ on any snippet while learning to save it here.</p>
+          <p>Tap the ♡ on any snippet, lesson, module or quiz while learning to save it here.</p>
+        </div>
+      ) : typeFilter !== "snippet" ? (
+        <div className="likes-simple-list">
+          {typedForTab.length === 0 ? (
+            <div className="likes-empty">
+              <div className="empty-icon">♡</div>
+              <p>No liked {TYPE_TABS.find(t => t.key === typeFilter)?.label.toLowerCase()} yet.</p>
+            </div>
+          ) : typedForTab.map((item, i) => (
+            <div className="likes-simple-item unified-row-card" key={item.id || i}>
+              <span className="likes-simple-icon">{TYPE_TABS.find(t => t.key === item.content_type)?.icon}</span>
+              <div className="likes-simple-body">
+                <div className="likes-simple-name">{item.item_name || "Untitled"}</div>
+                <div className="likes-simple-sub">
+                  {[item.theme_title, item.module_name, item.lesson_name].filter(Boolean).join(" › ")}
+                </div>
+              </div>
+              <span className="likes-simple-date">{formatDate(item.liked_at)}</span>
+            </div>
+          ))}
         </div>
       ) : (
         <>
@@ -245,7 +315,7 @@ export default function LikesPage({ settings, onBack, onOpenSettings, onResume, 
             {filtered.map((like, i) => (
               <div
                 key={like.snippet_id}
-                className="like-card"
+                className="like-card unified-grid-card"
                 style={{ animationDelay: `${i * 0.05}s` }}
                 onClick={() => {
                   if (onPlaySnippet) {

@@ -96,6 +96,7 @@ export const FALLBACK = {
 export const PLAYER = {
   discoverComplete: "Discover Playlist Complete",
   likesComplete:    "End of Likes Playlist",
+  surpriseComplete: "Surprise Mix Complete",
   dharmaPoints:     "Dharma Points",
   unlikeTooltip:    "Unlike",
   removeBookmark:   "Remove bookmark",

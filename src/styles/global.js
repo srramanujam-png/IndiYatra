@@ -278,4 +278,38 @@ export const globalStyles = `
   body[data-fs="large"] .fs-body    { font-size: 1.3125rem !important; }
   body[data-fs="small"] .fs-heading { font-size: 1.375rem !important; }
   body[data-fs="large"] .fs-heading { font-size: 1.875rem !important; }
+
+  /* ═════════════════════════════════════════════════════════════════════════
+   UNIFIED BLOCK STYLE — Module / Lesson / Snippet cards.
+   One shared visual treatment reused everywhere these blocks appear
+   (For You, Dashboard, Likes, Bookmarks, Based-on-Interest rail, Home
+   page course cards). Pages keep their own class for layout (width,
+   padding, flex direction, thumb slots) but the border, radius, shadow
+   and hover treatment always come from one of these three. ──────────────────── */
+
+  /* Module container — wraps lessons grouped under a module. */
+  .unified-module-block {
+    background: #EAF6F5; border: 1px solid #C2E4E2; border-radius: 16px;
+    padding: 16px; margin-bottom: 16px;
+  }
+  .unified-module-block:last-child { margin-bottom: 0; }
+
+  /* Grid / carousel card — a lesson or snippet shown with a thumbnail. */
+  .unified-grid-card {
+    background: #FFFFFF; border: 1px solid rgba(0,0,0,0.08); border-radius: 14px;
+    box-shadow: none; cursor: pointer;
+    transition: border-color 0.15s, transform 0.18s;
+  }
+  .unified-grid-card:hover  { border-color: ${SAFFRON}; transform: translateY(-2px); }
+  .unified-grid-card:active { transform: translateY(0); }
+
+  /* Row card — compact list contexts: icon left, title/subtitle middle,
+     chevron (or trailing meta) right. */
+  .unified-row-card {
+    background: #FFFFFF; border: 1px solid rgba(0,0,0,0.08); border-radius: 14px;
+    box-shadow: none; display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .unified-row-card:hover { border-color: ${SAFFRON}; }
 `;

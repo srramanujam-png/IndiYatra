@@ -40,6 +40,12 @@ const styles = `
   }
   .lesson-num.done { background: ${GREEN}; }
   .lesson-divider { width: 1px; height: 36px; background: rgba(0,0,0,0.10); flex-shrink: 0; }
+  .lesson-thumb {
+    width: 52px; height: 52px; border-radius: 10px; overflow: hidden;
+    background: #EBEBEA; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .lesson-thumb img { width: 100%; height: 100%; object-fit: cover; }
   .lesson-info { flex: 1; min-width: 0; }
   .lesson-title { font-family: 'Alumni Sans', sans-serif; font-size: 1.1875rem; font-weight: 700; color: #0A0A0A; margin-bottom: 3px; line-height: 1.2; }
   .lesson-meta  { font-size: 0.75rem; color: #6B6B6B; }
@@ -72,13 +78,17 @@ const styles = `
     .lesson-cta-group { gap: 4px; }
   }
   .lesson-lock { flex-shrink: 0; font-size: 0.9rem; color: #6B6B6B; }
-  .bm-btn {
+  .bm-btn, .like-btn {
     flex-shrink: 0; background: none; border: none; cursor: pointer;
     font-size: 1.125rem; line-height: 1; padding: 4px 6px; border-radius: 8px;
     color: #6B6B6B; transition: color 0.15s, transform 0.15s;
   }
   .bm-btn:hover { color: #FF8E00; transform: scale(1.15); }
   .bm-btn.saved { color: #FF8E00; }
+  .like-btn:hover { color: #D85A30; transform: scale(1.15); }
+  .like-btn.liked { color: #D85A30; }
+  .lesson-row-right { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .lesson-row-actions { display: flex; gap: 2px; }
 
   @media (max-width: 768px) {
     .lessons-content { padding: 0 1rem 60px; }
@@ -92,17 +102,24 @@ const styles = `
   }
 `;
 
-export default function LessonsPage({ course, theme, module, levelId, settings, completedLessons = new Set(), onLessonClick, onQuizClick, onBack, onBackToCourse, onBackToModules, onOpenSettings, onLessonsLoaded, onDashboard, onLikes, onBookmarks, onDiscover, onForYou, onAllCourses, onResume, bookmarks = new Set(), onToggleBookmark, userEditorialRole, onEditor, isAdmin, onAdmin, activePage, onSaveSettings, languages = [] }) {
+export default function LessonsPage({ course, theme, module, levelId, settings, completedLessons = new Set(), onLessonClick, onQuizClick, onBack, onBackToCourse, onBackToModules, onOpenSettings, onLessonsLoaded, onDashboard, onLikes, onBookmarks, onDiscover, onForYou, onAllCourses, onResume, bookmarks = new Set(), onToggleBookmark, likes = new Set(), onToggleLike, userEditorialRole, onEditor, isAdmin, onAdmin, activePage, onSaveSettings, languages = [] }) {
   const [lessons, setLessons] = useState([]);
+  const [assets, setAssets] = useState({});
   const [loading, setLoading] = useState(true);
   const [quizMap,  setQuizMap]  = useState({});   // lesson_id → quiz_sets row
   const levelMeta = LEVEL_LABELS[levelId] || { label: "All Levels", color: SAFFRON };
 
   useEffect(() => {
     async function load() {
-      const data = await supabase("lessons", `?select=*&module_id=eq.${module.module_id}&order=sort_order`);
+      const [data, assetData] = await Promise.all([
+        supabase("lessons", `?select=*&module_id=eq.${module.module_id}&order=sort_order`),
+        supabase("asset_library", "?select=*"),
+      ]);
       const loaded = data || [];
       setLessons(loaded);
+      const assetMap = {};
+      (assetData || []).forEach(a => { assetMap[a.asset_id] = a; });
+      setAssets(assetMap);
       if (onLessonsLoaded) onLessonsLoaded(loaded);
       if (loaded.length > 0) {
         const ids = loaded.map(l => l.lesson_id);
@@ -167,6 +184,7 @@ export default function LessonsPage({ course, theme, module, levelId, settings, 
         : lessons.map((lesson, i) => {
           const isComplete = completedLessons.has(lesson.lesson_id);
           const isLocked = course?.sequential_unlock && i > 0 && !completedLessons.has(lessons[i - 1].lesson_id);
+          const asset = assets[lesson.asset_id];
           return (
           <div className={`lesson-row ${isComplete ? "completed" : ""} ${isLocked ? "locked" : ""}`}
             key={lesson.lesson_id} style={{ animationDelay: `${i * 0.05}s` }}
@@ -175,6 +193,12 @@ export default function LessonsPage({ course, theme, module, levelId, settings, 
               {isComplete ? "✓" : i + 1}
             </div>
             <div className="lesson-divider" />
+            <div className="lesson-thumb">
+              {asset
+                ? <img src={asset.file_path} alt={asset.alt_text || lesson.lesson_name} onError={e => { e.target.src = logoUrl; }} />
+                : <span style={{ fontSize: 20 }}>📖</span>
+              }
+            </div>
             <div className="lesson-info">
               <div className="lesson-title">{lesson.lesson_name}</div>
               {lesson.lesson_description && (
@@ -184,12 +208,19 @@ export default function LessonsPage({ course, theme, module, levelId, settings, 
             {isLocked
               ? <span className="lesson-lock">🔒</span>
               : (
-                <>
-                  <button
-                    className={"bm-btn" + (bookmarks.has("lesson:" + lesson.lesson_id) ? " saved" : "")}
-                    title={bookmarks.has("lesson:" + lesson.lesson_id) ? "Remove bookmark" : "Bookmark lesson"}
-                    onClick={e => { e.stopPropagation(); onToggleBookmark && onToggleBookmark("lesson", lesson.lesson_id, lesson.lesson_name); }}
-                  ><svg width="20" height="20" viewBox="0 0 24 24" fill={bookmarks.has("lesson:" + lesson.lesson_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+                <div className="lesson-row-right">
+                  <div className="lesson-row-actions">
+                    <button
+                      className={"like-btn" + (likes.has("lesson:" + lesson.lesson_id) ? " liked" : "")}
+                      title={likes.has("lesson:" + lesson.lesson_id) ? "Unlike" : "Like lesson"}
+                      onClick={e => { e.stopPropagation(); onToggleLike && onToggleLike("lesson", lesson.lesson_id, lesson.lesson_name); }}
+                    ><svg width="19" height="19" viewBox="0 0 24 24" fill={likes.has("lesson:" + lesson.lesson_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.8 4.6c-1.7-1.6-4.4-1.6-6 .1L12 7.5 9.2 4.7c-1.6-1.7-4.3-1.7-6 0-1.7 1.7-1.7 4.4 0 6.1L12 19l8.8-8.2c1.7-1.7 1.7-4.4 0-6.1z"/></svg></button>
+                    <button
+                      className={"bm-btn" + (bookmarks.has("lesson:" + lesson.lesson_id) ? " saved" : "")}
+                      title={bookmarks.has("lesson:" + lesson.lesson_id) ? "Remove bookmark" : "Bookmark lesson"}
+                      onClick={e => { e.stopPropagation(); onToggleBookmark && onToggleBookmark("lesson", lesson.lesson_id, lesson.lesson_name); }}
+                    ><svg width="19" height="19" viewBox="0 0 24 24" fill={bookmarks.has("lesson:" + lesson.lesson_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+                  </div>
                   <div className="lesson-cta-group">
                     <button className={`lesson-cta${isComplete ? " done" : ""}`}
                       onClick={e => { e.stopPropagation(); onLessonClick(lesson); }}>
@@ -203,7 +234,7 @@ export default function LessonsPage({ course, theme, module, levelId, settings, 
                       Quiz
                     </button>
                   </div>
-                </>
+                </div>
               )
             }
           </div>

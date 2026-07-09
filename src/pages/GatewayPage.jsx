@@ -314,7 +314,7 @@ export default function GatewayPage({
 
   function showAnother() {
     const ids = [snippet?.snippet_id, ...snippetPool].filter(Boolean);
-    onSurpriseMe(ids);
+    onSurpriseMe("home", ids);
   }
 
   async function handleMostLiked() {
@@ -334,16 +334,6 @@ export default function GatewayPage({
       .slice(0, 20)
       .map(([id]) => id);
     onPlayMostSaved(ids.length > 0 ? ids : []);
-  }
-
-  async function handleSurpriseMe() {
-    const data = await supabase("snippet_core", "?select=snippet_id&limit=60");
-    const ids = (Array.isArray(data) ? data : []).map(s => s.snippet_id);
-    for (let i = ids.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [ids[i], ids[j]] = [ids[j], ids[i]];
-    }
-    onSurpriseMe(ids.slice(0, 20));
   }
 
   const CHOICE_ACTIONS = [onCourseFlow, onExploreInterests, handleMostLiked, handleMostSaved];
@@ -511,7 +501,7 @@ export default function GatewayPage({
             ))}
           </div>
 
-          <button className="gw-surprise-card" onClick={handleSurpriseMe}>
+          <button className="gw-surprise-card" onClick={() => onSurpriseMe("home")}>
             <div className="gw-surprise-left">
               <i className="ti ti-dice-3 gw-surprise-icon" aria-hidden="true" />
               <div>

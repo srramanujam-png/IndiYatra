@@ -39,17 +39,9 @@ const styles = `
 
   /* Lesson card */
   .rec-card {
-    flex: 0 0 160px; scroll-snap-align: start;
-    background: white; border-radius: 12px; border: 1px solid #E5E7EB;
-    overflow: hidden; cursor: pointer;
-    transition: border-color 0.15s, transform 0.18s;
-    display: flex; flex-direction: column;
-    min-height: 0;
+    flex: 0 0 160px; scroll-snap-align: start; overflow: hidden;
+    display: flex; flex-direction: column; min-height: 0;
   }
-  .rec-card:hover {
-    border-color: ${SAFFRON}80; transform: translateY(-2px);
-  }
-  .rec-card:active { transform: translateY(0); }
 
   /* Colour-block thumb */
   .rec-thumb {
@@ -219,7 +211,7 @@ export default function RecommendationsRail({ userId, onOpenLesson, limit = 8 })
                 return (
                   <div
                     key={rec.lesson_id}
-                    className="rec-card"
+                    className="rec-card unified-grid-card"
                     onClick={() => onOpenLesson?.(rec.lesson_id, rec.lesson_name)}
                     title={rec.lesson_name}
                   >

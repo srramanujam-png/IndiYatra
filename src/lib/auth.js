@@ -224,6 +224,135 @@ export async function loadUserBookmarksRich() {
   return { data, error };
 }
 
+// ─── Generic likes (module / lesson / quiz / question) ───────────────────────
+// Snippet likes keep using snippet_likes + insertLike/deleteLike above.
+// These four content types share the plain `likes` table instead.
+
+export async function loadUserGenericLikes(userId) {
+  const { data, error } = await supabaseClient
+    .from("likes")
+    .select("content_type, content_id")
+    .eq("profile_id", userId);
+  return { data, error };
+}
+
+export async function insertGenericLike(userId, contentType, contentId) {
+  const { data, error } = await supabaseClient
+    .from("likes")
+    .upsert(
+      { profile_id: userId, content_type: contentType, content_id: contentId, liked_at: new Date().toISOString() },
+      { onConflict: "profile_id,content_type,content_id" }
+    );
+  if (error) {
+    console.error("[insertGenericLike] UPSERT failed:", JSON.stringify(error), { userId, contentType, contentId });
+  }
+  return { data, error };
+}
+
+export async function deleteGenericLike(userId, contentType, contentId) {
+  const { data, error } = await supabaseClient
+    .from("likes")
+    .delete()
+    .eq("profile_id", userId)
+    .eq("content_type", contentType)
+    .eq("content_id", contentId);
+  if (error) {
+    console.error("[deleteGenericLike] DELETE failed:", JSON.stringify(error), { userId, contentType, contentId });
+  }
+  return { data, error };
+}
+
+// NOTE: distinct from the pre-existing get_user_likes() RPC (snippet-centric,
+// used by LikesPage.jsx / ForYouPage.jsx for the "My Likes" playlist view).
+// This one spans all 5 content types (module/lesson/quiz/question/snippet) for
+// the type filter described in rule 8.
+export async function loadUserLikesByType() {
+  const { data, error } = await supabaseClient.rpc("get_user_likes_by_type");
+  if (error) {
+    console.error("[loadUserLikesByType] RPC failed:", JSON.stringify(error));
+  }
+  return { data, error };
+}
+
+export async function getTopLikedLessons(limit = 20) {
+  const { data, error } = await supabaseClient.rpc("get_top_liked_lessons", { p_limit: limit });
+  if (error) console.error("[getTopLikedLessons] RPC failed:", JSON.stringify(error));
+  return { data: data || [], error };
+}
+
+export async function getTopSavedLessons(limit = 20) {
+  const { data, error } = await supabaseClient.rpc("get_top_saved_lessons", { p_limit: limit });
+  if (error) console.error("[getTopSavedLessons] RPC failed:", JSON.stringify(error));
+  return { data: data || [], error };
+}
+
+// Community leaderboards spanning module + lesson + snippet ("story").
+// Supersede getTopLikedLessons/getTopSavedLessons above (lessons-only) for
+// ForYouPage's "Most Liked"/"Most Bookmarked" panels. Quiz/question are
+// excluded server-side since they mirror their paired lesson/snippet.
+export async function getTopLikedItems(limit = 20) {
+  const { data, error } = await supabaseClient.rpc("get_top_liked_items", { p_limit: limit });
+  if (error) console.error("[getTopLikedItems] RPC failed:", JSON.stringify(error));
+  return { data: data || [], error };
+}
+
+export async function getTopSavedItems(limit = 20) {
+  const { data, error } = await supabaseClient.rpc("get_top_saved_items", { p_limit: limit });
+  if (error) console.error("[getTopSavedItems] RPC failed:", JSON.stringify(error));
+  return { data: data || [], error };
+}
+
+// ─── Like/bookmark pairing ─────────────────────────────────────────────────────
+// Rules (confirmed): Module never pairs. Lesson <-> Quiz is bidirectional.
+// Question <-> Snippet is bidirectional, only when the question is snippet-linked.
+// Returns { type, id } for the paired entity, or null if this entity has no pair.
+
+export async function getPairedContent(contentType, contentId) {
+  if (contentType === "lesson") {
+    const { data } = await supabaseClient
+      .from("quiz_sets")
+      .select("quiz_id")
+      .eq("lesson_id", contentId)
+      .eq("is_published", true)
+      .maybeSingle();
+    return data?.quiz_id ? { type: "quiz", id: data.quiz_id } : null;
+  }
+
+  if (contentType === "quiz") {
+    const { data } = await supabaseClient
+      .from("quiz_sets")
+      .select("lesson_id")
+      .eq("quiz_id", contentId)
+      .maybeSingle();
+    return data?.lesson_id ? { type: "lesson", id: data.lesson_id } : null;
+  }
+
+  if (contentType === "question") {
+    const { data } = await supabaseClient
+      .from("snippet_questions")
+      .select("snippet_id")
+      .eq("question_key", contentId)
+      .not("snippet_id", "is", null)
+      .limit(1)
+      .maybeSingle();
+    return data?.snippet_id ? { type: "snippet", id: data.snippet_id } : null;
+  }
+
+  if (contentType === "snippet") {
+    const { data } = await supabaseClient
+      .from("snippet_questions")
+      .select("question_key")
+      .eq("snippet_id", contentId)
+      .not("question_key", "is", null)
+      .limit(1)
+      .maybeSingle();
+    return data?.question_key != null ? { type: "question", id: String(data.question_key) } : null;
+  }
+
+  // module (and anything else) never pairs
+  return null;
+}
+
 // ─── Admin helpers ───────────────────────────────────────────────────────────
 
 export async function loadUserRole(userId) {
@@ -696,6 +825,24 @@ export async function uploadSnippetImage(blob, snippetId) {
   if (upErr) { console.error("[uploadSnippetImage]", upErr); return { url: null, error: upErr }; }
   const { data: { publicUrl } } = supabaseClient.storage
     .from("snippet-images")
+    .getPublicUrl(filename);
+  return { url: publicUrl, error: null };
+}
+
+// uploadContentImage(blob, entityType, entityId)
+// Generic cover-image upload for Courses/Modules/Themes/Lessons (Admin
+// Content editor) — mirrors uploadSnippetImage but writes to the
+// "content-images" bucket (see supabase/module_cover_image.sql) under
+// <entityType>/<entityId>/<timestamp>.jpg. entityType is the plural table
+// name ("courses" | "modules" | "themes" | "lessons").
+export async function uploadContentImage(blob, entityType, entityId) {
+  const filename = `${entityType}/${entityId}/${Date.now()}.jpg`;
+  const { error: upErr } = await supabaseClient.storage
+    .from("content-images")
+    .upload(filename, blob, { contentType: "image/jpeg", upsert: true });
+  if (upErr) { console.error("[uploadContentImage]", upErr); return { url: null, error: upErr }; }
+  const { data: { publicUrl } } = supabaseClient.storage
+    .from("content-images")
     .getPublicUrl(filename);
   return { url: publicUrl, error: null };
 }

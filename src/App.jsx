@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useAuth } from "./hooks/useAuth";
-import { supabaseClient, signOut, loadCompletions, saveCompletion, updateLastVisited, loadLessonProgress, upsertLessonProgress, deleteLessonProgress, loadUserBookmarks, insertBookmark, deleteBookmark, getEditorialRole, getQuizQuestions, getQuizForLesson } from "./lib/auth";
+import { supabaseClient, signOut, loadCompletions, saveCompletion, updateLastVisited, loadLessonProgress, upsertLessonProgress, deleteLessonProgress, loadUserBookmarks, insertBookmark, deleteBookmark, loadUserGenericLikes, insertGenericLike, deleteGenericLike, insertLike, deleteLike, getPairedContent, getEditorialRole, getQuizQuestions, getQuizForLesson } from "./lib/auth";
 import { AuthContext } from "./contexts/AuthContext";
 import AuthModal     from "./components/AuthModal";
 import ProfileModal  from "./components/ProfileModal";
@@ -20,6 +20,7 @@ import BookmarksPage  from "./pages/BookmarksPage";
 import DiscoverPage   from "./pages/DiscoverPage";
 import GatewayPage    from "./pages/GatewayPage";
 import CourseNavigatorPage from "./pages/CourseNavigatorPage";
+import AllCoursesPage from "./pages/AllCoursesPage";
 import QuizPlayer from "./pages/QuizPlayer";
 import ForYouPage from "./pages/ForYouPage";
 import AppFooter from "./components/AppFooter";
@@ -58,6 +59,7 @@ export default function App() {
   const redirectResetTimer = useRef(null);        // debounces guard reset on transient SIGNED_OUT
 
   const [bookmarks,    setBookmarks]    = useState(new Set());
+  const [likes,        setLikes]        = useState(new Set()); // module/lesson/quiz/question likes (generic `likes` table; snippet likes stay local to SnippetPlayer)
   const [toastMsg,     setToastMsg]     = useState("");
   const [isAdmin,      setIsAdmin]      = useState(false);
   const [isCreator,    setIsCreator]    = useState(false);
@@ -73,12 +75,27 @@ export default function App() {
   const [playlistStartIndex, setPlaylistStartIndex] = useState(0);
   const [playlistSource,     setPlaylistSource]     = useState("likes");
   const [playerReturnPage, setPlayerReturnPage]   = useState("lessons");
+  // Where a "likes"-sourced playlist should return to when "Back to Likes" is
+  // pressed: the standalone LikesPage ("likes") or ForYouPage ("for-you") —
+  // and, for the latter, which rail tab to reopen on (My Likes vs Most Liked).
+  const [likesPlaylistReturnPage, setLikesPlaylistReturnPage] = useState("likes");
+  const [forYouInitialSection,    setForYouInitialSection]    = useState("resume");
+  // Where a "surprise"-sourced playlist should return to when "Back to
+  // Surprise" is pressed: the home/Gateway page ("home") or ForYouPage
+  // ("for-you") — mirrors likesPlaylistReturnPage above.
+  const [surpriseReturnPage, setSurpriseReturnPage] = useState("home");
   const [selectedQuiz,     setSelectedQuiz]       = useState(null);   // quiz_sets row
   const [quizQuestions,    setQuizQuestions]       = useState([]);     // resolved question objects
   const [quizReturnPage,   setQuizReturnPage]      = useState("lessons");
   const [lessonQuiz,       setLessonQuiz]         = useState(null);    // quiz for current lesson (completion modal CTA)
+  // True only when the current lesson session was opened via a snippet click
+  // from Most Bookmarked (community-wide) — that reading-through shouldn't
+  // count as the viewer's own completion, so points/badges/tokens are
+  // suppressed. Reset to false at every other lesson-entry point.
+  const [suppressLessonRewards, setSuppressLessonRewards] = useState(false);
   const [quizKey,          setQuizKey]            = useState(0);       // increment to force QuizPlayer remount
   const [navigatorSelection, setNavigatorSelection] = useState(null); // pre-seeds Navigator when returning from Resume/player
+  const [allCoursesSeed, setAllCoursesSeed] = useState(null); // { course_id, level_id, theme_id, module_id } — pre-opens All Courses on a specific module (Module click from ForYouPage)
   const [playlistLabel,      setPlaylistLabel]      = useState("");
   const [selectedTheme, setSelectedTheme]       = useState(null);
   const [selectedLevelId, setSelectedLevelId]   = useState(null);
@@ -145,6 +162,11 @@ export default function App() {
         setBookmarks(new Set(data.map(b => b.content_type + ":" + b.content_id)));
       }
     });
+    loadUserGenericLikes(user.id).then(({ data }) => {
+      if (data && data.length > 0) {
+        setLikes(new Set(data.map(l => l.content_type + ":" + l.content_id)));
+      }
+    });
     // Use SECURITY DEFINER RPC so it works regardless of RLS on user_roles_mapping
     supabaseClient.rpc("is_admin").then(({ data }) => {
       setIsAdmin(data === true);
@@ -203,6 +225,7 @@ export default function App() {
     if (hasRedirectedOnLoginRef.current) return; // already redirected this session
     hasRedirectedOnLoginRef.current = true;
     if (profile?.last_visited_route && (page === "home" || page === "gateway")) {
+      setForYouInitialSection("resume");
       goForward("for-you");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -351,6 +374,7 @@ export default function App() {
           setSelectedLesson(lessons[0]);
           setEarnedBadges([]);
           setPlayerReturnPage("navigator");
+          setSuppressLessonRewards(false);
           setNavigatorSelection({ levelId: route.level_id, themeId: route.theme_id, moduleId: route.module_id, lessonId: route.lesson_id });
           goForward("player");
           return;
@@ -386,10 +410,70 @@ export default function App() {
     } else {
       insertBookmark(user.id, contentType, contentId).catch(e => console.warn("insertBookmark:", e));
     }
+
+    // Pairing: Lesson <-> Quiz and Question <-> Snippet mirror the same bookmark
+    // state. Module never pairs. Both sides flip together, symmetric on unbookmark.
+    getPairedContent(contentType, contentId).then(pair => {
+      if (!pair) return;
+      const pairKey = pair.type + ":" + pair.id;
+      setBookmarks(prev => {
+        const next = new Set(prev);
+        if (isBookmarked) next.delete(pairKey); else next.add(pairKey);
+        return next;
+      });
+      if (isBookmarked) {
+        deleteBookmark(user.id, pair.type, pair.id).catch(e => console.warn("deleteBookmark (paired):", e));
+      } else {
+        insertBookmark(user.id, pair.type, pair.id).catch(e => console.warn("insertBookmark (paired):", e));
+      }
+    }).catch(e => console.warn("getPairedContent:", e));
+  }
+
+  function handleToggleLike(contentType, contentId, label) {
+    if (!user || user.is_anonymous) { setShowAuthModal(true); return; }
+    const key = contentType + ":" + contentId;
+    const isLiked = likes.has(key);
+    setLikes(prev => {
+      const next = new Set(prev);
+      if (isLiked) next.delete(key); else next.add(key);
+      return next;
+    });
+    showToast(isLiked ? "Like removed" : label + " liked ♥");
+    if (isLiked) {
+      deleteGenericLike(user.id, contentType, contentId).catch(e => console.warn("deleteGenericLike:", e));
+    } else {
+      insertGenericLike(user.id, contentType, contentId).catch(e => console.warn("insertGenericLike:", e));
+    }
+
+    // Pairing: Lesson <-> Quiz and Question <-> Snippet mirror the same like
+    // state. Module never pairs. Snippet's own like lives in snippet_likes,
+    // not the generic `likes` table, so handle that branch separately.
+    getPairedContent(contentType, contentId).then(pair => {
+      if (!pair) return;
+      if (pair.type === "snippet") {
+        if (isLiked) {
+          deleteLike(user.id, pair.id).catch(e => console.warn("deleteLike (paired):", e));
+        } else {
+          insertLike(user.id, pair.id).catch(e => console.warn("insertLike (paired):", e));
+        }
+        return;
+      }
+      const pairKey = pair.type + ":" + pair.id;
+      setLikes(prev => {
+        const next = new Set(prev);
+        if (isLiked) next.delete(pairKey); else next.add(pairKey);
+        return next;
+      });
+      if (isLiked) {
+        deleteGenericLike(user.id, pair.type, pair.id).catch(e => console.warn("deleteGenericLike (paired):", e));
+      } else {
+        insertGenericLike(user.id, pair.type, pair.id).catch(e => console.warn("insertGenericLike (paired):", e));
+      }
+    }).catch(e => console.warn("getPairedContent:", e));
   }
 
 
-  async function handleBookmarkNavigate(item) {
+  async function handleBookmarkNavigate(item, fromSection) {
     try {
       const {
         content_type, content_id,
@@ -426,6 +510,26 @@ export default function App() {
         }
 
         case "module": {
+          // From a ForYouPage panel (Most Liked/Most Bookmarked/My Likes/My
+          // Bookmarks): open All Courses at this module and stay there —
+          // subsequent navigation (lesson/quiz clicks, back) follows All
+          // Courses' own model, never returning to ForYouPage. Every other
+          // caller (BookmarksPage, DiscoverPage) keeps the old behavior of
+          // going straight to that module's Lessons list.
+          if (fromSection) {
+            const mods = await supabase("modules", `?module_id=eq.${content_id}&select=*`);
+            if (!mods?.length) return;
+            const mod = mods[0];
+            setAllCoursesSeed({
+              course_id: mod.course_id || course_id || null,
+              level_id:  mod.level_id  || null,
+              theme_id:  mod.theme_id  || theme_id || null,
+              module_id: content_id,
+            });
+            goForward("all-courses");
+            break;
+          }
+
           const [mods, themes] = await Promise.all([
             supabase("modules", `?module_id=eq.${content_id}&select=*`),
             theme_id ? supabase("themes", `?theme_id=eq.${theme_id}&select=*`) : Promise.resolve(null),
@@ -461,6 +565,7 @@ export default function App() {
           // Always start lesson bookmarks from the first snippet
           setLessonProgress(prev => { const m = new Map(prev); m.delete(content_id); return m; });
           setPlayerReturnPage("navigator");
+          setSuppressLessonRewards(false);
           goForward("player");
           break;
         }
@@ -480,18 +585,23 @@ export default function App() {
           }
           const lessonId = mapping[0].lesson_id;
 
-          // Get all snippets in this lesson (ordered) to find the index
-          const [allMappings, lessons, mods, themes] = await Promise.all([
+          // Get all snippets in this lesson (ordered) to find the index, plus
+          // the lesson row itself first — module/theme are derived from the
+          // LESSON (below), not from the caller's item, since some callers
+          // (Most Bookmarked's community-leaderboard rows) don't carry
+          // module_id/theme_id at all.
+          const [allMappings, lessons] = await Promise.all([
             supabase("lesson_snippet_mapping", `?lesson_id=eq.${lessonId}&select=snippet_id,order_index&order=order_index`),
             supabase("lessons", `?lesson_id=eq.${lessonId}&select=*`),
-            module_id ? supabase("modules", `?module_id=eq.${module_id}&select=*`) : Promise.resolve(null),
-            theme_id  ? supabase("themes",  `?theme_id=eq.${theme_id}&select=*`)   : Promise.resolve(null),
           ]);
 
           const snippetIndex = Math.max(0, (allMappings || []).findIndex(m => String(m.snippet_id) === String(content_id)));
           const lesson = lessons?.[0] || { lesson_id: lessonId, lesson_name };
-          const mod    = mods?.[0]  || { module_id, module_name };
-          const theme  = themes?.[0] || { theme_id, title: theme_title };
+
+          const mods   = lesson.module_id ? await supabase("modules", `?module_id=eq.${lesson.module_id}&select=*`) : null;
+          const mod    = mods?.[0] || { module_id: lesson.module_id || module_id, module_name };
+          const themes = mod?.theme_id ? await supabase("themes", `?theme_id=eq.${mod.theme_id}&select=*`) : null;
+          const theme  = themes?.[0] || { theme_id: mod?.theme_id || theme_id, title: theme_title };
 
           setSelectedCourse(courseObj);
           setSelectedTheme(theme);
@@ -502,8 +612,48 @@ export default function App() {
           setPlaylistSnippetIds(null);
           // Set progress to start at the bookmarked snippet
           setLessonProgress(prev => { const m = new Map(prev); m.set(lessonId, snippetIndex); return m; });
-          setPlayerReturnPage("navigator");
+
+          if (fromSection) {
+            // Opened from a ForYouPage bookmarks tab (My Bookmarks or Most
+            // Bookmarked) — return to ForYouPage, same rail tab.
+            setPlayerReturnPage("for-you");
+            setForYouInitialSection(fromSection);
+          } else {
+            setPlayerReturnPage("navigator");
+          }
+          // Most Bookmarked is community-wide (other users' bookmarks) — browsing
+          // through to the end of the lesson from there shouldn't count as the
+          // viewer's own lesson completion, so no points/badges/tokens. My
+          // Bookmarks (the viewer's own saved items) gets full credit, same as
+          // any other completion path.
+          setSuppressLessonRewards(fromSection === "bookmarked");
           goForward("player");
+          break;
+        }
+
+        case "quiz":
+        case "question": {
+          // For a question, resolve to whichever quiz contains it (the app has
+          // no standalone per-question view yet).
+          let quizId = content_type === "quiz" ? content_id : null;
+          if (content_type === "question") {
+            const refs = await supabase("quiz_questions", `?question_key=eq.${content_id}&select=quiz_id&limit=1`);
+            quizId = refs?.[0]?.quiz_id || null;
+          }
+          if (!quizId) return;
+          const quizzes = await supabase("quiz_sets", `?quiz_id=eq.${quizId}&select=*`);
+          const quizRow = quizzes?.[0];
+          if (!quizRow) return;
+          const { data: qData } = await getQuizQuestions(quizId, settings.languageId || "LANG_03");
+          const lessons = quizRow.lesson_id
+            ? await supabase("lessons", `?lesson_id=eq.${quizRow.lesson_id}&select=*`)
+            : null;
+          setSelectedQuiz(quizRow);
+          setQuizQuestions(qData || []);
+          setSelectedLesson(lessons?.[0] || null);
+          setQuizReturnPage("bookmarks");
+          setQuizKey(k => k + 1);
+          goForward("quiz");
           break;
         }
 
@@ -525,6 +675,7 @@ export default function App() {
     setPlaylistStartIndex(startIndex);
     setPlaylistSource("likes");
     setPlaylistLabel(PLAYLIST.likes);
+    setLikesPlaylistReturnPage("likes"); // standalone LikesPage, not ForYouPage
     goForward("player");
   }
 
@@ -545,8 +696,37 @@ export default function App() {
     goForward("player");
   }
 
+  // Shared "Surprise Me" handler — used by both GatewayPage's surprise card
+  // (via showAnother, which passes its own ids) and ForYouPage's Surprise
+  // section (called with no args, so it fetches + shuffles a fresh batch).
+  async function handleSurpriseMe(origin = "home", customIds = null) {
+    let ids = customIds;
+    if (!ids) {
+      const data = await supabase("snippet_core", "?select=snippet_id&limit=60");
+      ids = (Array.isArray(data) ? data : []).map(s => s.snippet_id);
+      for (let i = ids.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [ids[i], ids[j]] = [ids[j], ids[i]];
+      }
+      ids = ids.slice(0, 20);
+    }
+    if (!ids || ids.length === 0) return;
+    // Inlined rather than routed through handlePlayFromGateway — that helper
+    // hardcodes playlistSource to "gateway", which would collide with the
+    // distinct "surprise" source this playlist needs (so it gets its own
+    // batching + a return destination that depends on where it was launched
+    // from: Gateway/home vs ForYouPage's Surprise tab).
+    setPlaylistSnippetIds(ids);
+    setPlaylistStartIndex(0);
+    setPlaylistSource("surprise");
+    setPlaylistLabel("🎲 Surprise Mix");
+    setSurpriseReturnPage(origin);
+    if (origin === "for-you") setForYouInitialSection("surprise");
+    goForward("player");
+  }
+
   // Opens a lesson directly by lesson_id (used by ForYouPage recommendations/carousels)
-  async function handleOpenLessonById(lessonId) {
+  async function handleOpenLessonById(lessonId, fromSection) {
     try {
       const lessons = await supabase("lessons", `?lesson_id=eq.${lessonId}&select=*`);
       if (!Array.isArray(lessons) || !lessons.length) return;
@@ -564,6 +744,12 @@ export default function App() {
       setEarnedBadges([]);
       setPlaylistSnippetIds(null);
       setPlayerReturnPage("for-you");
+      // Which ForYouPage rail tab to reopen on when the user backs out —
+      // every caller of handleOpenLessonById lives on ForYouPage, so this is
+      // always safe to set (mirrors the forYouInitialSection mechanism used
+      // for snippet playlists; see onPlaySnippet below).
+      setForYouInitialSection(fromSection || "resume");
+      setSuppressLessonRewards(false);
       setLessonQuiz(null);
       getQuizForLesson(lessonId).then(({ data }) => setLessonQuiz(data || null));
       if (user && !user.is_anonymous) {
@@ -602,8 +788,8 @@ export default function App() {
     settings,
     onOpenSettings: () => goForward("settings"),
     onHome:       () => goBack("home"),
-    onForYou:     () => goForward("for-you"),
-    onAllCourses: () => goForward("home"), // placeholder until All Courses page (Task 3)
+    onForYou:     () => { setForYouInitialSection("resume"); goForward("for-you"); },
+    onAllCourses: () => { setAllCoursesSeed(null); goForward("all-courses"); },
     onDashboard: () => goForward("dashboard"),
     onLikes:     () => goForward("likes"),
     onBookmarks: () => goForward("bookmarks"),
@@ -616,15 +802,35 @@ export default function App() {
     onResume:    handleResume,
     bookmarks,
     onToggleBookmark: handleToggleBookmark,
+    likes,
+    onToggleLike: handleToggleLike,
     activePage:  page,
     onSaveSettings: handleSaveSettings,
     languages,
     lessonProgress,
   };
 
+  // Label for the Lesson-complete screen's primary "Back to ___" button when
+  // the lesson was opened directly from a ForYouPage rail tab (playerReturnPage
+  // === "for-you") — reflects the tab the user will actually land back on,
+  // instead of the generic "Back to Lessons" used for every other origin
+  // (Navigator, Lessons list, All Courses, etc.).
+  function forYouTabBackLabel(section) {
+    switch (section) {
+      case "mylikes":     return "Back to Likes";
+      case "liked":       return "Back to Most Liked";
+      case "bookmarked":  return "Back to Most Bookmarked";
+      case "mybookmarks": return "Back to My Bookmarks";
+      default:            return "Back to For You";
+    }
+  }
+
   const renderPage = () => {
     switch (page) {
-      case "player":
+      case "player": {
+        const backToLessonsLabel = playerReturnPage === "for-you"
+          ? forYouTabBackLabel(forYouInitialSection)
+          : "Back to Lessons";
         return (
           <SnippetPlayer
             {...commonProps}
@@ -638,17 +844,31 @@ export default function App() {
             initialSnippetIndex={playlistSnippetIds ? playlistStartIndex : (lessonProgress.get(selectedLesson?.lesson_id) ?? 0)}
             playlistSnippetIds={playlistSnippetIds}
             onSnippetAdvance={handleSnippetAdvance}
-            onComplete={handleLessonComplete}
+            onComplete={suppressLessonRewards ? undefined : handleLessonComplete}
+            showRewards={!suppressLessonRewards}
+            backToLessonsLabel={backToLessonsLabel}
             onNextLesson={lesson => {
               setEarnedBadges([]);
               setSelectedLesson(lesson);
             }}
             onBackToLessons={() => { setEarnedBadges([]); setPlaylistSnippetIds(null); goBack(playerReturnPage); }}
-            onBackToLikes={playlistSource === "likes" ? () => { setPlaylistSnippetIds(null); goBack("likes"); } : undefined}
+            onBackToLikes={playlistSource === "likes" ? () => {
+              setPlaylistSnippetIds(null);
+              goBack(likesPlaylistReturnPage === "for-you" ? "for-you" : "likes");
+            } : undefined}
             onBackToDiscover={
               playlistSource === "discover" ? () => { setPlaylistSnippetIds(null); goBack("discover"); } :
+              playlistSource === "surprise" ? () => {
+                setPlaylistSnippetIds(null);
+                if (surpriseReturnPage === "for-you") { goBack("for-you"); } else { setPage("home"); }
+              } :
               playlistSource === "gateway"  ? () => { setPlaylistSnippetIds(null); setPage("home"); } :
               undefined
+            }
+            playlistKind={playlistSource}
+            batchMode={
+              (playlistSource === "likes"    && likesPlaylistReturnPage === "for-you") ||
+              playlistSource === "surprise"
             }
             playlistLabel={playlistLabel}
             snippetShareMsg={profile?.snippet_share_message || localStorage.getItem("indiyatra_snippet_share_message") || DEFAULT_SNIPPET_SHARE_MSG}
@@ -663,6 +883,7 @@ export default function App() {
             } : null}
           />
         );
+      }
       case "lessons":
         return (
           <LessonsPage
@@ -677,6 +898,7 @@ export default function App() {
               setSelectedLesson(lesson);
               setEarnedBadges([]);
               setPlayerReturnPage("lessons");
+              setSuppressLessonRewards(false);
               setLessonQuiz(null); // reset; fetch below
               getQuizForLesson(lesson.lesson_id).then(({ data }) => setLessonQuiz(data || null));
               // Save last visited context for Resume Yatra
@@ -734,6 +956,7 @@ export default function App() {
               setSelectedLevelId(levelId);
               setEarnedBadges([]);
               setPlayerReturnPage("navigator");
+              setSuppressLessonRewards(false);
               setLessonQuiz(null);
               getQuizForLesson(lesson.lesson_id).then(({ data }) => setLessonQuiz(data || null));
               setNavigatorSelection({ levelId, themeId: mod.theme_id, moduleId: mod.module_id, lessonId: lesson.lesson_id });
@@ -763,6 +986,59 @@ export default function App() {
             }}
             onBack={() => goBack("home")}
             onBackToCourse={() => goBack("navigator")}
+          />
+        );
+      case "all-courses":
+        return (
+          <AllCoursesPage
+            {...commonProps}
+            completedLessons={completedLessons}
+            lessonProgress={lessonProgress}
+            courseTreeSeed={allCoursesSeed}
+            onLessonSelect={(lesson, mod, thm, levelId, course) => {
+              setSelectedCourse(course);
+              setSelectedModule(mod);
+              setSelectedTheme(thm);
+              setSelectedLevelId(levelId);
+              setSelectedLesson(lesson);
+              setEarnedBadges([]);
+              setPlaylistSnippetIds(null);
+              setPlayerReturnPage("all-courses");
+              setSuppressLessonRewards(false);
+              // The one-time module seed has served its purpose once a real
+              // lesson is picked — clear it so a later return to All Courses
+              // (e.g. via "Back to Lessons") doesn't snap back to the
+              // originally-clicked module if the user has since browsed
+              // elsewhere. From here on, saveLastVisited below keeps the
+              // ordinary resume-route mechanism in sync instead.
+              setAllCoursesSeed(null);
+              setLessonQuiz(null);
+              getQuizForLesson(lesson.lesson_id).then(({ data }) => setLessonQuiz(data || null));
+              if (user && !user.is_anonymous) {
+                saveLastVisited({
+                  lesson_id:   lesson.lesson_id,
+                  module_id:   mod?.module_id  ?? null,
+                  level_id:    levelId         ?? null,
+                  course_id:   course?.course_id  ?? null,
+                  course_name: course?.course_name ?? null,
+                  theme_id:    mod?.theme_id   ?? null,
+                  theme_title: thm?.title      ?? null,
+                });
+              }
+              goForward("player");
+            }}
+            onQuizClick={async (lesson, quiz, mod, thm, levelId, course) => {
+              const { data } = await getQuizQuestions(quiz.quiz_id, settings.languageId || "LANG_03");
+              setSelectedCourse(course);
+              setSelectedLesson(lesson);
+              setSelectedQuiz(quiz);
+              setQuizQuestions(data || []);
+              setQuizReturnPage("all-courses");
+              setAllCoursesSeed(null);
+              setQuizKey(k => k + 1);
+              goForward("quiz");
+            }}
+            onBack={() => goBack("home")}
           />
         );
       case "quiz":
@@ -803,17 +1079,57 @@ export default function App() {
           <ForYouPage
             {...commonProps}
             onBack={() => goBack("home")}
+            initialSection={forYouInitialSection}
+            completedLessons={completedLessons}
             lessonProgress={lessonProgress}
-            onPlaySnippet={(snippetIds, startIndex) => {
+            onLessonSelect={(lesson, mod, thm, levelId, course) => {
+              setSelectedCourse(course);
+              setSelectedModule(mod);
+              setSelectedTheme(thm);
+              setSelectedLevelId(levelId);
+              setSelectedLesson(lesson);
+              setEarnedBadges([]);
+              setPlaylistSnippetIds(null);
+              setPlayerReturnPage("for-you");
+              setLessonQuiz(null);
+              getQuizForLesson(lesson.lesson_id).then(({ data }) => setLessonQuiz(data || null));
+              if (user && !user.is_anonymous) {
+                saveLastVisited({
+                  lesson_id:   lesson.lesson_id,
+                  module_id:   mod?.module_id  ?? null,
+                  level_id:    levelId         ?? null,
+                  course_id:   course?.course_id  ?? null,
+                  course_name: course?.course_name ?? null,
+                  theme_id:    mod?.theme_id   ?? null,
+                  theme_title: thm?.title      ?? null,
+                });
+              }
+              goForward("player");
+            }}
+            onQuizClick={async (lesson, quiz, mod, thm, levelId, course) => {
+              const { data } = await getQuizQuestions(quiz.quiz_id, settings.languageId || "LANG_03");
+              setSelectedCourse(course);
+              setSelectedLesson(lesson);
+              setSelectedQuiz(quiz);
+              setQuizQuestions(data || []);
+              setQuizReturnPage("for-you");
+              setQuizKey(k => k + 1);
+              goForward("quiz");
+            }}
+            onPlaySnippet={(snippetIds, startIndex, sourceTag) => {
               setPlaylistSnippetIds(snippetIds);
               setPlaylistStartIndex(startIndex);
               setPlaylistSource("likes");
-              setPlaylistLabel("\u2665 My Likes");
+              setPlaylistLabel(sourceTag === "mostliked" ? "♥ Most Liked" : "♥ My Likes");
               setPlayerReturnPage("for-you");
+              setSuppressLessonRewards(false);
+              setLikesPlaylistReturnPage("for-you");
+              setForYouInitialSection(sourceTag === "mostliked" ? "liked" : "mylikes");
               goForward("player");
             }}
             onNavigate={handleBookmarkNavigate}
             onOpenLesson={handleOpenLessonById}
+            onSurpriseMe={handleSurpriseMe}
           />
         );
       case "dashboard":
@@ -894,7 +1210,7 @@ export default function App() {
             onExploreInterests={() => goForward("discover")}
             onPlayMostLiked={ids => handlePlayFromGateway(ids, "♥ Most Liked")}
             onPlayMostSaved={ids => handlePlayFromGateway(ids, "🔖 Most Saved")}
-            onSurpriseMe={ids => handlePlayFromGateway(ids, "🎲 Surprise Mix")}
+            onSurpriseMe={handleSurpriseMe}
           />
         );
       default:

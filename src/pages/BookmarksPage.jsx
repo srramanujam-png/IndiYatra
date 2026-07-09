@@ -15,11 +15,13 @@ const BM_ICON = (size = 28, color = "#FF8E00") => (
 );
 
 const TYPE_META = {
-  course:  { label: "Course",   icon: "🎓", color: HERITAGE  },
-  theme:   { label: "Theme",    icon: "🗺",  color: HERITAGE  },
-  module:  { label: "Module",   icon: "📦", color: SAFFRON   },
-  lesson:  { label: "Lesson",   icon: "📖", color: GREEN     },
-  snippet: { label: "Snippet",  icon: "✦",  color: SAFFRON   },
+  course:   { label: "Course",   icon: "🎓", color: HERITAGE  },
+  theme:    { label: "Theme",    icon: "🗺",  color: HERITAGE  },
+  module:   { label: "Module",   icon: "📦", color: SAFFRON   },
+  lesson:   { label: "Lesson",   icon: "📖", color: GREEN     },
+  snippet:  { label: "Snippet",  icon: "✦",  color: SAFFRON   },
+  quiz:     { label: "Quiz",     icon: "❓", color: "#00509E" },
+  question: { label: "Question", icon: "💬", color: "#00509E" },
 };
 
 const styles = `
@@ -56,15 +58,9 @@ const styles = `
     display: flex; flex-direction: column; gap: 12px;
   }
 
-  .bmp-card { cursor: pointer; }
   .bmp-card {
-    background: white; border-radius: 12px; border: 1px solid #E5E7EB;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
-    display: flex; align-items: center; gap: 0;
-    overflow: hidden; animation: fadeUp 0.35s ease both;
-    transition: box-shadow 0.2s, transform 0.2s;
+    padding: 0; gap: 0; overflow: hidden; animation: fadeUp 0.35s ease both;
   }
-  .bmp-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.08); transform: translateX(3px); }
 
   .bmp-card-bar  { width: 5px; flex-shrink: 0; align-self: stretch; }
   .bmp-card-icon { font-size: 1.375rem; padding: 0 14px; flex-shrink: 0; }
@@ -273,7 +269,9 @@ export default function BookmarksPage({
                 <option value="theme">Themes</option>
                 <option value="module">Modules</option>
                 <option value="lesson">Lessons</option>
-                <option value="snippet">Snippets</option>
+                <option value="quiz">Quizzes</option>
+                <option value="snippet">Stories</option>
+                <option value="question">Questions</option>
               </select>
 
               {courses.length > 1 && (
@@ -311,7 +309,7 @@ export default function BookmarksPage({
             {filtered.map((item, i) => {
               const meta = TYPE_META[item.content_type] || TYPE_META.lesson;
               return (
-                <div key={item.id} className="bmp-card" style={{ animationDelay: `${i * 0.04}s` }} onClick={() => onNavigate && onNavigate(item)}>
+                <div key={item.id} className="bmp-card unified-row-card" style={{ animationDelay: `${i * 0.04}s` }} onClick={() => onNavigate && onNavigate(item)}>
                   {/* Colour bar */}
                   <div className="bmp-card-bar" style={{ background: meta.color }} />
 
@@ -324,7 +322,7 @@ export default function BookmarksPage({
                     <div className="bmp-card-breadcrumb">
                       {item.course_name && <><span>{item.course_name}</span></>}
                       {item.theme_title && item.content_type !== "theme" && <> › {item.theme_title}</>}
-                      {item.module_name && item.content_type === "lesson" && <> › {item.module_name}</>}
+                      {item.module_name && (item.content_type === "lesson" || item.content_type === "quiz") && <> › {item.module_name}</>}
                     </div>
                     <div className="bmp-card-meta">Saved {formatDate(item.saved_at)}</div>
                   </div>

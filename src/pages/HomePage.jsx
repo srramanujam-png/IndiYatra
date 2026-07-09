@@ -6,9 +6,7 @@ import { SkeletonCourseGrid } from "../components/Skeletons";
 import { FALLBACK } from "../config/appStrings";
 import { AuthContext } from "../contexts/AuthContext";
 
-const TEAL    = "#4AADA8";
-const TEAL_BG = "#EAF6F5";
-const TEAL_BD = "#C2E4E2";
+const TEAL = "#4AADA8";
 
 const styles = `
   .hp-hero {
@@ -100,15 +98,8 @@ const styles = `
     gap: 20px;
   }
   .hp-course-card {
-    background: white; border-radius: 12px; overflow: hidden;
-    border: 1px solid ${TEAL_BD};
-    transition: transform 0.22s ease, box-shadow 0.22s ease;
-    cursor: pointer; animation: fadeUp 0.5s ease both;
+    overflow: hidden; animation: fadeUp 0.5s ease both;
     display: flex; flex-direction: column;
-  }
-  .hp-course-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(74,173,168,0.18);
   }
   .hp-card-img {
     width: 100%; aspect-ratio: 16 / 9; overflow: hidden;
@@ -295,7 +286,7 @@ export default function HomePage({
                 const learners = learnersByCourse.get(course.course_id);
                 return (
                   <div
-                    className="hp-course-card"
+                    className="hp-course-card unified-grid-card"
                     key={course.course_id}
                     style={{ animationDelay: `${i * 0.08}s` }}
                     onClick={() => onCourseClick(course)}

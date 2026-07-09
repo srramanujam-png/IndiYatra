@@ -73,13 +73,16 @@ const styles = `
   .module-lock-badge {
     font-size: 0.8125rem; color: #6B6B6B; white-space: nowrap; flex-shrink: 0;
   }
-  .bm-btn {
+  .bm-btn, .like-btn {
     flex-shrink: 0; background: none; border: none; cursor: pointer;
     font-size: 1.125rem; line-height: 1; padding: 4px 6px; border-radius: 8px;
     color: #6B6B6B; transition: color 0.15s, transform 0.15s;
   }
   .bm-btn:hover { color: #FF8E00; transform: scale(1.15); }
   .bm-btn.saved { color: #FF8E00; }
+  .like-btn:hover { color: #D85A30; transform: scale(1.15); }
+  .like-btn.liked { color: #D85A30; }
+  .module-row-actions { display: flex; gap: 2px; }
 
   .modules-section-label {
     max-width: 720px; margin: 0 auto 12px; padding: 0 1.5rem;
@@ -107,7 +110,7 @@ function getState(done, total) {
   return "none";
 }
 
-export default function ModulesPage({ course, theme, levelId, settings, completedLessons = new Set(), onModuleClick, onBack, onBackToCourse, onOpenSettings, onDashboard, onLikes, onBookmarks, onDiscover, onForYou, onAllCourses, onResume, bookmarks = new Set(), onToggleBookmark, userEditorialRole, onEditor, isAdmin, onAdmin, activePage, onSaveSettings, languages = [] }) {
+export default function ModulesPage({ course, theme, levelId, settings, completedLessons = new Set(), onModuleClick, onBack, onBackToCourse, onOpenSettings, onDashboard, onLikes, onBookmarks, onDiscover, onForYou, onAllCourses, onResume, bookmarks = new Set(), onToggleBookmark, likes = new Set(), onToggleLike, userEditorialRole, onEditor, isAdmin, onAdmin, activePage, onSaveSettings, languages = [] }) {
   const [modules, setModules]       = useState([]);
   const [assets, setAssets]         = useState({});
   const [lessonsByModule, setLessonsByModule] = useState({});
@@ -258,11 +261,18 @@ export default function ModulesPage({ course, theme, levelId, settings, complete
                       ? <span className="module-lock-badge">🔒 Locked</span>
                       : (
                         <>
-                          <button
-                            className={"bm-btn" + (bookmarks.has("module:" + mod.module_id) ? " saved" : "")}
-                            title={bookmarks.has("module:" + mod.module_id) ? "Remove bookmark" : "Bookmark module"}
-                            onClick={e => { e.stopPropagation(); onToggleBookmark && onToggleBookmark("module", mod.module_id, mod.module_name); }}
-                          ><svg width="20" height="20" viewBox="0 0 24 24" fill={bookmarks.has("module:" + mod.module_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+                          <div className="module-row-actions">
+                            <button
+                              className={"like-btn" + (likes.has("module:" + mod.module_id) ? " liked" : "")}
+                              title={likes.has("module:" + mod.module_id) ? "Unlike" : "Like module"}
+                              onClick={e => { e.stopPropagation(); onToggleLike && onToggleLike("module", mod.module_id, mod.module_name); }}
+                            ><svg width="19" height="19" viewBox="0 0 24 24" fill={likes.has("module:" + mod.module_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.8 4.6c-1.7-1.6-4.4-1.6-6 .1L12 7.5 9.2 4.7c-1.6-1.7-4.3-1.7-6 0-1.7 1.7-1.7 4.4 0 6.1L12 19l8.8-8.2c1.7-1.7 1.7-4.4 0-6.1z"/></svg></button>
+                            <button
+                              className={"bm-btn" + (bookmarks.has("module:" + mod.module_id) ? " saved" : "")}
+                              title={bookmarks.has("module:" + mod.module_id) ? "Remove bookmark" : "Bookmark module"}
+                              onClick={e => { e.stopPropagation(); onToggleBookmark && onToggleBookmark("module", mod.module_id, mod.module_name); }}
+                            ><svg width="19" height="19" viewBox="0 0 24 24" fill={bookmarks.has("module:" + mod.module_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+                          </div>
                           <button
                             className={`module-row-cta module-cta-${ctaClass}`}
                             onClick={e => { e.stopPropagation(); onModuleClick(mod); }}

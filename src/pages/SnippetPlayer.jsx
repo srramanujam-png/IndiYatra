@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase, SAFFRON, HERITAGE, GREEN, logoUrl, DEFAULT_LANG_ID, DIFFICULTY_STARS } from "../lib/supabase";
 import { useAuthContext } from "../contexts/AuthContext";
-import { supabaseClient, loadUserLikes, insertLike, deleteLike, postComment, deleteComment, adminDeleteComment, editComment, getSnippetQuestion, saveSnippetQuestion } from "../lib/auth";
+import { supabaseClient, loadUserLikes, insertLike, deleteLike, postComment, deleteComment, adminDeleteComment, editComment, getSnippetQuestion, saveSnippetQuestion, getPairedContent, insertGenericLike, deleteGenericLike } from "../lib/auth";
 import { globalStyles } from "../styles/global";
 import { DEFAULT_SNIPPET_SHARE_MSG, APP_URL, PLAYER, SIGNIN } from "../config/appStrings";
 import { useViewTracking } from "../hooks/useViewTracking";
@@ -562,7 +562,7 @@ export default function SnippetPlayer({
   initialSnippetIndex = 0,
   playlistSnippetIds = null,
   onSnippetAdvance,
-  onBackToLessons, onBackToLikes, onBackToDiscover = null, playlistLabel = "", onHome, onDashboard, onLikes, onBookmarks, onDiscover, onComplete, onNextLesson,
+  onBackToLessons, backToLessonsLabel = "Back to Lessons", showRewards = true, onBackToLikes, onBackToDiscover = null, playlistKind = null, batchMode = false, playlistLabel = "", onHome, onDashboard, onLikes, onBookmarks, onDiscover, onComplete, onNextLesson,
   bookmarks = new Set(), onToggleBookmark,
   isAdmin = false,
   isCreator = false,
@@ -575,7 +575,7 @@ export default function SnippetPlayer({
 }) {
   const playlistMode       = !!(playlistSnippetIds && playlistSnippetIds.length > 0);
   const backToPlaylist      = onBackToDiscover || onBackToLikes;
-  const isDiscoverPlaylist  = !!onBackToDiscover;
+  const LIKES_BATCH_SIZE    = 10; // My Likes / Most Liked / Surprise Mix pause for a checkpoint every N snippets
   const { user, profile, onSignIn } = useAuthContext();
   const [snippets,     setSnippets]     = useState([]);
   const [translations, setTranslations] = useState({});
@@ -755,6 +755,14 @@ export default function SnippetPlayer({
   const currentLessonIdx = !playlistMode && lesson ? allLessons.findIndex(l => l.lesson_id === lesson.lesson_id) : -1;
   const nextLesson = !playlistMode && currentLessonIdx >= 0 ? allLessons[currentLessonIdx + 1] : null;
 
+  // Batch checkpoint helpers (Likes/Most Liked/Surprise Mix): how many
+  // snippets viewed this session (relative to wherever the playlist
+  // started), a plain (no-emoji) label for the "Continue Reading ___"
+  // button, and the right "Back to ___" wording for this playlist kind.
+  const batchViewedCount   = current - initialSnippetIndex;
+  const shortPlaylistLabel = (playlistLabel || "").replace(/^[^\w]+/, "").trim() || "playlist";
+  const batchBackLabel     = playlistKind === "surprise" ? "Back to Surprise" : "Back to Likes";
+
   function goNext() {
     setSheetOpen(false);
     if (loading) return;
@@ -763,6 +771,14 @@ export default function SnippetPlayer({
       setCurrent(c => c + 1);
       window.scrollTo(0, 0);
       if (!playlistMode && onSnippetAdvance) onSnippetAdvance(lesson.lesson_id, current + 1);
+      // Likes/Most Liked/Surprise Mix playlists pause with a checkpoint modal
+      // every LIKES_BATCH_SIZE snippets *viewed this session* (relative to
+      // wherever the playlist started, not the absolute array position),
+      // even though the playlist isn't over yet.
+      if (batchMode && (current - initialSnippetIndex + 1) % LIKES_BATCH_SIZE === 0) {
+        window.scrollTo(0, 0);
+        setDone(true);
+      }
     } else {
       window.scrollTo(0, 0);
       setDone(true);
@@ -806,6 +822,17 @@ export default function SnippetPlayer({
         lesson?.lesson_id  || null,
       ).catch(e => console.log("Like failed:", e.message));
     }
+
+    // Pairing: a snippet-linked quiz question mirrors this snippet's like state
+    // (bidirectional pair; standalone questions and unpaired snippets are unaffected).
+    getPairedContent("snippet", snippetId).then(pair => {
+      if (!pair || pair.type !== "question") return;
+      if (isLiked) {
+        deleteGenericLike(user.id, "question", pair.id).catch(e => console.warn("deleteGenericLike (paired question):", e));
+      } else {
+        insertGenericLike(user.id, "question", pair.id).catch(e => console.warn("insertGenericLike (paired question):", e));
+      }
+    }).catch(e => console.warn("getPairedContent:", e));
   }
 
   async function openComments(snippetId) {
@@ -1610,25 +1637,38 @@ export default function SnippetPlayer({
           <div className="completion-overlay">
             <div className="completion-card">
               {playlistMode ? (
-                <>
-                  <div className="comp-emoji">{isDiscoverPlaylist ? "\u{1F9ED}" : "\u2665"}</div>
-                  <div className="comp-title">{isDiscoverPlaylist ? PLAYER.discoverComplete : PLAYER.likesComplete}</div>
-                  <div className="comp-subtitle">You've reviewed all <strong>{snippets.length}</strong> snippet{snippets.length !== 1 ? "s" : ""} in <strong>{playlistLabel || "this playlist"}</strong>.</div>
-                  <button className="comp-btn comp-primary" onClick={backToPlaylist}>{isDiscoverPlaylist ? "Back to Discover" : "Back to Likes"}</button>
-                  <button className="comp-btn comp-secondary" onClick={() => { setCurrent(0); setDone(false); }}>Review Again</button>
-                  <button className="comp-btn comp-dashboard" onClick={onDashboard}>Go to Dashboard</button>
-                </>
+                batchMode && !isLast ? (
+                  <>
+                    <div className="comp-emoji">{playlistKind === "surprise" ? "\u{1F3B2}" : "\u2665"}</div>
+                    <div className="comp-title">Great progress!</div>
+                    <div className="comp-subtitle">You've read <strong>{batchViewedCount}</strong> of <strong>{snippets.length}</strong> snippets in <strong>{playlistLabel || "this playlist"}</strong>.</div>
+                    <button className="comp-btn comp-primary" onClick={backToPlaylist}>{batchBackLabel}</button>
+                    <button className="comp-btn comp-secondary" onClick={() => setDone(false)}>Continue Reading {shortPlaylistLabel}</button>
+                    <button className="comp-btn comp-dashboard" onClick={onDashboard}>Go to Dashboard</button>
+                  </>
+                ) : (
+                  <>
+                    <div className="comp-emoji">{playlistKind === "discover" ? "\u{1F9ED}" : playlistKind === "surprise" ? "\u{1F3B2}" : "\u2665"}</div>
+                    <div className="comp-title">{playlistKind === "discover" ? PLAYER.discoverComplete : playlistKind === "surprise" ? PLAYER.surpriseComplete : PLAYER.likesComplete}</div>
+                    <div className="comp-subtitle">You've reviewed all <strong>{snippets.length}</strong> snippet{snippets.length !== 1 ? "s" : ""} in <strong>{playlistLabel || "this playlist"}</strong>.</div>
+                    <button className="comp-btn comp-primary" onClick={backToPlaylist}>{playlistKind === "discover" ? "Back to Discover" : playlistKind === "surprise" ? "Back to Surprise" : "Back to Likes"}</button>
+                    <button className="comp-btn comp-secondary" onClick={() => { setCurrent(0); setDone(false); }}>Review Again</button>
+                    <button className="comp-btn comp-dashboard" onClick={onDashboard}>Go to Dashboard</button>
+                  </>
+                )
               ) : (
                 <>
                   <div className="comp-emoji">🎉</div>
                   <div className="comp-title">Lesson Complete!</div>
                   <div className="comp-subtitle">You've finished <strong>{lesson?.lesson_name}</strong>.</div>
 
-                  <div className="comp-points">
-                    <span className="comp-points-icon">🪙</span>
-                    <span className="comp-points-value">+{totalPoints}</span>
-                    <span className="comp-points-label">{PLAYER.dharmaPoints}</span>
-                  </div>
+                  {showRewards && (
+                    <div className="comp-points">
+                      <span className="comp-points-icon">🪙</span>
+                      <span className="comp-points-value">+{totalPoints}</span>
+                      <span className="comp-points-label">{PLAYER.dharmaPoints}</span>
+                    </div>
+                  )}
 
                   {earnedBadges.length > 0 && (
                     <div className="comp-badges">
@@ -1655,7 +1695,7 @@ export default function SnippetPlayer({
                       🎯 Take the Quiz
                     </button>
                   )}
-                  <button className="comp-btn comp-primary" onClick={onBackToLessons}>Back to Lessons</button>
+                  <button className="comp-btn comp-primary" onClick={onBackToLessons}>{backToLessonsLabel}</button>
                   <button className="comp-btn comp-dashboard" onClick={onDashboard}>Go to Dashboard</button>
                   <button className="comp-btn comp-secondary" onClick={() => { setCurrent(0); setDone(false); }}>Review Again</button>
                 </>

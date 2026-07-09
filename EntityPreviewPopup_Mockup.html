@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IndiYatra — Entity Preview Popup Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Nunito+Sans:wght@400;700;800&family=Inter:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --color-primary: #00509E;
+    --color-secondary: #00924A;
+    --color-accent: #FF8E00;
+    --color-bg-body: #FFFFFF;
+    --color-bg-alt: #B5D7D5;
+    --color-surface: #FEF7FF;
+    --color-text-main: #101828;
+    --color-text-body: #4A5565;
+    --color-border: #E5E7EB;
+    --color-border-muted: #F3F4F6;
+  }
+
+  * , *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito Sans', system-ui, sans-serif;
+    background: #F0EDE8;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 80px;
+  }
+
+  /* ── Page chrome ── */
+  .page-label {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    color: #8B7355; margin-bottom: 8px; text-align: center;
+  }
+  .page-title {
+    font-family: 'Oswald', system-ui, sans-serif;
+    font-size: 26px; font-weight: 700; color: #3D2B00; margin-bottom: 6px; text-align: center;
+  }
+  .page-sub {
+    font-size: 13px; color: #7A6A50; margin-bottom: 20px; text-align: center; max-width: 560px; line-height: 1.5;
+  }
+  .annotation {
+    background: #3D2B00; color: #FFDEA0; font-size: 11px; font-weight: 600;
+    padding: 6px 14px; border-radius: 999px; margin-bottom: 28px;
+    letter-spacing: .04em; font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  /* ── Legend ── */
+  .legend {
+    display: flex; gap: 18px; flex-wrap: wrap; justify-content: center;
+    background: #fff; border: 1px solid var(--color-border); border-radius: 12px;
+    padding: 14px 20px; margin-bottom: 32px; max-width: 900px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--color-text-body); font-family: 'Inter', system-ui, sans-serif; }
+  .legend-swatch { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; }
+  .legend-swatch.non-cta { background: repeating-linear-gradient(45deg, #00509E, #00509E 3px, #DCE9F5 3px, #DCE9F5 6px); }
+  .legend-swatch.cta { background: var(--color-accent); }
+
+  /* ── Phones row ── */
+  .phones-row { display: flex; gap: 40px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+  .phone-block { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .phone-caption { font-size: 12px; font-weight: 700; color: #5A4520; text-transform: uppercase; letter-spacing: .08em; font-family: 'Inter', system-ui, sans-serif; }
+
+  .phone {
+    width: 340px;
+    background: #fff;
+    border-radius: 40px;
+    box-shadow: 0 2px 0 #C0B8AE, 0 8px 32px rgba(0,0,0,0.18), 0 0 0 1px #D8D0C8;
+    overflow: hidden;
+    position: relative;
+  }
+  .phone-notch { height: 32px; background: #fff; position: relative; border-bottom: 1px solid var(--color-border-muted); }
+  .notch-pill { width: 100px; height: 26px; background: #0A0A0A; border-radius: 0 0 16px 16px; position: absolute; top: 0; left: 50%; transform: translateX(-50%); }
+
+  .app-header {
+    height: 48px; background: rgba(255,255,255,0.97); border-bottom: 1px solid var(--color-border);
+    display: flex; align-items: center; justify-content: space-between; padding: 0 14px;
+  }
+  .app-logo { font-family: 'Oswald', system-ui, sans-serif; font-size: 14px; font-weight: 700; color: var(--color-text-main); }
+  .app-logo span { color: var(--color-accent); }
+  .app-screen-tag { font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; font-weight: 600; color: var(--color-text-body); background: var(--color-border-muted); padding: 4px 9px; border-radius: 999px; }
+
+  /* ── Sidebar Two-Pane Layout ── */
+  .phone-container {
+    display: flex;
+    height: 500px;
+    background: #FAFAF9;
+    overflow: hidden;
+  }
+
+  /* Narrow Sidebar (For You) */
+  .phone-sidebar {
+    width: 82px;
+    flex-shrink: 0;
+    background: #EAF6F5;
+    border-right: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    padding: 8px 3px;
+    gap: 6px;
+    overflow-y: auto;
+  }
+  .phone-sidebar::-webkit-scrollbar { display: none; }
+
+  .sidebar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 5px 2px;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    color: var(--color-text-body);
+  }
+  .sidebar-item:hover {
+    background: rgba(0, 80, 158, 0.04);
+  }
+  .sidebar-item-icon {
+    font-size: 15px;
+    margin-bottom: 2px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    transition: background 0.15s, color 0.15s;
+  }
+  .sidebar-item-label {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 8px;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  .sidebar-item.active {
+    color: var(--color-primary);
+    background: rgba(0, 80, 158, 0.08);
+  }
+  .sidebar-item.active .sidebar-item-icon {
+    background: var(--color-primary);
+    color: #fff;
+  }
+
+  /* Courses Sidebar (Course > Level > Theme accordion) */
+  .courses-sidebar {
+    width: 94px;
+    flex-shrink: 0;
+    background: #EAF6F5;
+    border-right: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    padding: 8px 4px;
+    gap: 4px;
+    overflow-y: auto;
+  }
+  .courses-sidebar::-webkit-scrollbar { display: none; }
+  .accordion-course {
+    font-family: 'Oswald', system-ui, sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--color-primary);
+    padding: 4px 6px;
+    background: rgba(0, 80, 158, 0.06);
+    border-radius: 6px;
+    margin-bottom: 2px;
+  }
+  .accordion-level {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 8.5px;
+    font-weight: 700;
+    color: var(--color-text-body);
+    padding: 2px 2px 2px 4px;
+    margin-top: 2px;
+  }
+  .accordion-theme-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-left: 2px;
+  }
+  .accordion-theme {
+    font-family: 'Nunito Sans', system-ui, sans-serif;
+    font-size: 8px;
+    font-weight: 600;
+    color: var(--color-text-body);
+    padding: 3px 4px;
+    cursor: pointer;
+    border-radius: 4px;
+    line-height: 1.25;
+  }
+  .accordion-theme:hover {
+    background: rgba(0, 146, 74, 0.05);
+  }
+  .accordion-theme.active {
+    background: var(--color-secondary);
+    color: white;
+    font-weight: 700;
+  }
+
+  .phone-body {
+    flex: 1;
+    height: 100%;
+    overflow-y: auto;
+    background: #FAFAF9;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .phone-body::-webkit-scrollbar { display: none; }
+
+  .section-heading { font-family: 'Oswald', system-ui, sans-serif; font-size: 13px; font-weight: 500; color: var(--color-text-main); margin: 6px 2px 2px; }
+
+  /* ── Entity row card (list item) ── */
+  .row-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 8px;
+    cursor: pointer;
+    transition: box-shadow .15s, border-color .15s;
+  }
+  .row-card:hover { border-color: var(--color-primary); box-shadow: 0 2px 8px rgba(0,80,158,0.10); }
+  .row-thumb {
+    width: 44px; height: 44px; border-radius: 8px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+  }
+  .row-body { flex: 1; min-width: 0; }
+  .row-type {
+    display: inline-block; font-family: 'Inter', system-ui, sans-serif; font-size: 9px; font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase; padding: 1px 6px; border-radius: 999px; margin-bottom: 2px;
+  }
+  .row-title { font-family: 'Nunito Sans', system-ui, sans-serif; font-size: 13px; font-weight: 700; color: var(--color-text-main); line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row-crumb { font-family: 'Inter', system-ui, sans-serif; font-size: 10px; color: var(--color-text-body); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row-cta {
+    flex-shrink: 0; font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; font-weight: 700; color: #fff;
+    background: var(--color-accent); border: none; border-radius: 8px; padding: 6px 10px; cursor: pointer;
+    box-shadow: 0 1px 0.5px 0.05px rgba(29,41,61,0.15);
+  }
+  .row-cta:active { transform: translateY(1px); }
+
+  /* type accents */
+  .tag-course  { background: rgba(0,80,158,0.10);  color: var(--color-primary); }
+  .thumb-course{ background: rgba(0,80,158,0.12); }
+  .tag-theme   { background: rgba(0,146,74,0.10);  color: var(--color-secondary); }
+  .thumb-theme { background: rgba(0,146,74,0.12); }
+  .tag-module  { background: rgba(255,142,0,0.12); color: #B96500; }
+  .thumb-module{ background: rgba(255,142,0,0.14); }
+  .tag-lesson  { background: rgba(16,24,40,0.08);  color: var(--color-text-main); }
+  .thumb-lesson{ background: rgba(16,24,40,0.07); }
+  .tag-snippet { background: rgba(0,80,158,0.10);  color: var(--color-primary); }
+  .thumb-snippet{ background: linear-gradient(135deg, rgba(0,80,158,0.14), rgba(255,142,0,0.14)); }
+
+  /* ── Bottom tab bar ── */
+  .tab-bar { display: flex; border-top: 1px solid var(--color-border); background: #fff; }
+  .tab-bar button {
+    flex: 1; border: none; background: none; padding: 10px 0 12px; font-family: 'Inter', system-ui, sans-serif;
+    font-size: 10px; font-weight: 600; color: var(--color-text-body); cursor: default; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  }
+  .tab-bar button.active { color: var(--color-primary); }
+  .tab-dot { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+
+  /* ══════════════ POPUP ══════════════ */
+  .popup-overlay {
+    position: fixed; inset: 0; background: rgba(16,24,40,0.55);
+    display: none; align-items: center; justify-content: center; z-index: 999;
+    padding: 24px; backdrop-filter: blur(1.5px);
+  }
+  .popup-overlay.open { display: flex; animation: fadeIn .18s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .popup-card {
+    width: 100%; max-width: 340px; background: #fff; border-radius: 20px; border: 1px solid var(--color-border);
+    overflow: hidden; position: relative; box-shadow: 0 20px 48px rgba(16,24,40,0.28);
+    animation: popIn .18s ease; cursor: pointer;
+  }
+  @keyframes popIn { from { opacity: 0; transform: translateY(10px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+  /* Modern Glassmorphic Close Button (Cross) */
+  .popup-close {
+    position: absolute; top: 12px; right: 12px; width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(8px);
+    border: 1px solid rgba(0, 0, 0, 0.08); color: var(--color-text-main); cursor: pointer; z-index: 4;
+    display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: background .15s, transform .15s;
+  }
+  .popup-close:hover { background: #fff; transform: scale(1.08); }
+
+  /* Plain Bookmark Icon — lights up in saffron when saved */
+  .popup-bookmark {
+    position: absolute; top: 12px; left: 12px; width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(8px);
+    border: 1px solid rgba(0, 0, 0, 0.08); color: var(--color-text-body); cursor: pointer; z-index: 4;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: background .15s, transform .15s, color .15s;
+  }
+  .popup-bookmark:hover { background: #fff; transform: scale(1.08); }
+  .popup-bookmark svg { width: 16px; height: 16px; stroke: currentColor; fill: none; transition: fill .15s, stroke .15s; }
+  
+  /* Saved active state: lights up saffron */
+  .popup-bookmark.saved { color: var(--color-accent); }
+  .popup-bookmark.saved svg { fill: var(--color-accent); stroke: var(--color-accent); }
+
+  .popup-image {
+    height: 160px; width: 100%; display: flex; align-items: center; justify-content: center;
+    font-size: 48px; position: relative;
+  }
+  .popup-type-badge {
+    position: absolute; bottom: 12px; left: 16px;
+    font-family: 'Inter', system-ui, sans-serif; font-size: 9.5px; font-weight: 700; letter-spacing: .07em;
+    text-transform: uppercase; padding: 4px 10px; border-radius: 999px; color: #fff; background: rgba(16,24,40,0.72);
+  }
+
+  /* Centered Modern Play Button Overlay */
+  .popup-play-btn {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 52px; height: 52px; border-radius: 50%;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 6px 16px rgba(16,24,40,0.18);
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .15s, background .15s;
+  }
+  .popup-play-btn svg {
+    width: 22px; height: 22px; fill: var(--color-accent);
+    margin-left: 3px; /* optical adjustment for play triangle */
+    transition: fill .15s;
+  }
+  .popup-card:hover .popup-play-btn {
+    transform: translate(-50%, -50%) scale(1.08);
+    background: #ffffff;
+  }
+
+  .popup-content { padding: 18px 20px 20px; }
+  .popup-crumb { font-family: 'Inter', system-ui, sans-serif; font-size: 11px; color: var(--color-text-body); margin-bottom: 6px; }
+  .popup-title { font-family: 'Nunito Sans', system-ui, sans-serif; font-size: 19px; font-weight: 700; color: var(--color-text-main); line-height: 1.25; margin-bottom: 8px; }
+  .popup-desc { font-family: 'Nunito Sans', system-ui, sans-serif; font-size: 14px; font-weight: 400; color: var(--color-text-body); line-height: 1.5; margin-bottom: 18px; }
+
+  .popup-footer { display: flex; gap: 10px; align-items: center; }
+  .popup-open-btn {
+    flex: 1; font-family: 'Inter', system-ui, sans-serif; font-weight: 600; font-size: 13.5px; color: #fff;
+    background: var(--color-primary); border: none; border-radius: 12px; padding: 12px 16px; cursor: pointer;
+    box-shadow: 0 1px 0.5px 0.05px rgba(29,41,61,0.15);
+  }
+  .popup-saved-note { font-family: 'Inter', system-ui, sans-serif; font-size: 11px; color: var(--color-secondary); font-weight: 600; display: none; align-items: center; gap: 4px; }
+  .popup-saved-note.show { display: flex; }
+
+  .toast {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: #101828; color: #fff; font-family: 'Inter', system-ui, sans-serif; font-size: 12.5px;
+    padding: 10px 18px; border-radius: 999px; opacity: 0; pointer-events: none; transition: opacity .18s, transform .18s;
+    z-index: 1000; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 380px) {
+    .phone { width: 100%; max-width: 320px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="page-label">Feature Mockup</div>
+  <div class="page-title">Entity Preview Popup</div>
+  <div class="page-sub">
+    Tapping the body of a course / theme / module / lesson row (anywhere outside the CTA button) opens a lightweight
+    preview popup — image, category, title, brief description, play overlay, and a plain bookmark icon — without leaving the current screen.
+  </div>
+  <div class="annotation">Tap any row inside the phones (outside the orange button) to preview it →</div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-swatch non-cta"></span> Row body — non‑CTA tap area → opens popup</div>
+    <div class="legend-item"><span class="legend-swatch cta"></span> Orange button — CTA → navigates directly (unchanged)</div>
+  </div>
+
+  <div class="phones-row">
+
+    <!-- ═══════ FOR YOU SCREEN ═══════ -->
+    <div class="phone-block">
+      <div class="phone-caption">For You (With Sidebar)</div>
+      <div class="phone">
+        <div class="phone-notch"><div class="notch-pill"></div></div>
+        <div class="app-header">
+          <div class="app-logo">Indi<span>Yatra</span></div>
+          <div class="app-screen-tag">For You</div>
+        </div>
+        
+        <div class="phone-container">
+          <!-- Narrow Left Sidebar -->
+          <div class="phone-sidebar">
+            <div class="sidebar-item active">
+              <div class="sidebar-item-icon">⏳</div>
+              <div class="sidebar-item-label">Resume</div>
+            </div>
+            <div class="sidebar-item">
+              <div class="sidebar-item-icon">📚</div>
+              <div class="sidebar-item-label">Courses</div>
+            </div>
+            <div class="sidebar-item">
+              <div class="sidebar-item-icon">✨</div>
+              <div class="sidebar-item-label">For You</div>
+            </div>
+            <div class="sidebar-item">
+              <div class="sidebar-item-icon">❤️</div>
+              <div class="sidebar-item-label">Likes</div>
+            </div>
+            <div class="sidebar-item">
+              <div class="sidebar-item-icon">🔖</div>
+              <div class="sidebar-item-label">Saved</div>
+            </div>
+          </div>
+
+          <!-- Main Scroll Pane -->
+          <div class="phone-body">
+            <div class="section-heading">Continue learning</div>
+            <div class="row-card" onclick="openPopup('lesson-1')">
+              <div class="row-thumb thumb-lesson">📜</div>
+              <div class="row-body">
+                <span class="row-type tag-lesson">Lesson</span>
+                <div class="row-title">Battle of Haldighati</div>
+                <div class="row-crumb">Empire & Resistance</div>
+              </div>
+              <button class="row-cta" onclick="ctaTap(event,'Resume')">Resume</button>
+            </div>
+
+            <div class="section-heading">Saved by others</div>
+            <div class="row-card" onclick="openPopup('module-1')">
+              <div class="row-thumb thumb-module">🎨</div>
+              <div class="row-body">
+                <span class="row-type tag-module">Module</span>
+                <div class="row-title">Miniature Painting</div>
+                <div class="row-crumb">Art &amp; Patronage</div>
+              </div>
+              <button class="row-cta" onclick="ctaTap(event,'Start')">Start</button>
+            </div>
+            
+            <div class="row-card" onclick="openPopup('snippet-1')">
+              <div class="row-thumb thumb-snippet">💡</div>
+              <div class="row-body">
+                <span class="row-type tag-snippet">Snippet</span>
+                <div class="row-title">Ashoka's Edicts</div>
+                <div class="row-crumb">Empire of Ashoka</div>
+              </div>
+              <button class="row-cta" onclick="ctaTap(event,'Play')">Play</button>
+            </div>
+
+            <div class="section-heading">Recommended</div>
+            <div class="row-card" onclick="openPopup('theme-1')">
+              <div class="row-thumb thumb-theme">🛕</div>
+              <div class="row-body">
+                <span class="row-type tag-theme">Theme</span>
+                <div class="row-title">Sacred Architecture</div>
+                <div class="row-crumb">South Indian Heritage</div>
+              </div>
+              <button class="row-cta" onclick="ctaTap(event,'Explore')">Explore</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-bar">
+          <button class="active"><span class="tab-dot">🏠</span>For You</button>
+          <button><span class="tab-dot">📚</span>Courses</button>
+          <button><span class="tab-dot">🔎</span>Discover</button>
+          <button><span class="tab-dot">👤</span>Profile</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ COURSES SCREEN ═══════ -->
+    <div class="phone-block">
+      <div class="phone-caption">Courses (With Sidebar)</div>
+      <div class="phone">
+        <div class="phone-notch"><div class="notch-pill"></div></div>
+        <div class="app-header">
+          <div class="app-logo">Indi<span>Yatra</span></div>
+          <div class="app-screen-tag">All Courses</div>
+        </div>
+
+        <div class="phone-container">
+          <!-- Accordion Tree Sidebar -->
+          <div class="courses-sidebar">
+            <div class="accordion-course">Mughal India</div>
+            <div class="accordion-level">Level 1</div>
+            <div class="accordion-theme-list">
+              <div class="accordion-theme">Art &amp; Patronage</div>
+              <div class="accordion-theme active">Empire &amp; Resist.</div>
+            </div>
+            <div class="accordion-level" style="margin-top: 6px;">Level 2</div>
+            
+            <div class="accordion-course" style="margin-top: 12px; background: rgba(0,0,0,0.03); color: var(--color-text-body);">Dance Forms</div>
+            <div class="accordion-course" style="background: rgba(0,0,0,0.03); color: var(--color-text-body);">Ancient India</div>
+          </div>
+
+          <!-- Main Scroll Pane -->
+          <div class="phone-body">
+            <div class="section-heading">All courses</div>
+            <div class="row-card" onclick="openPopup('course-1')">
+              <div class="row-thumb thumb-course">💃</div>
+              <div class="row-body">
+                <span class="row-type tag-course">Course</span>
+                <div class="row-title">Classical Dances</div>
+                <div class="row-crumb">12 themes · 48 lessons</div>
+              </div>
+              <button class="row-cta" onclick="ctaTap(event,'Open')">Open</button>
+            </div>
+            <div class="row-card" onclick="openPopup('course-2')">
+              <div class="row-thumb thumb-course">🏰</div>
+              <div class="row-body">
+                <span class="row-type tag-course">Course</span>
+                <div class="row-title">Mughal India</div>
+                <div class="row-crumb">9 themes · 36 lessons</div>
+              </div>
+              <button class="row-cta" onclick="ctaTap(event,'Open')">Open</button>
+            </div>
+
+            <div class="section-heading">Theme Lessons</div>
+            <div class="row-card" onclick="openPopup('theme-2')">
+              <div class="row-thumb thumb-theme">👑</div>
+              <div class="row-body">
+                <span class="row-type tag-theme">Theme</span>
+                <div class="row-title">Empire &amp; Resistance</div>
+                <div class="row-crumb">Mughal India</div>
+              </div>
+              <button class="row-cta" onclick="ctaTap(event,'Continue')">Continue</button>
+            </div>
+            <div class="row-card" onclick="openPopup('module-1')">
+              <div class="row-thumb thumb-module">🎨</div>
+              <div class="row-body">
+                <span class="row-type tag-module">Module</span>
+                <div class="row-title">Miniature Painting</div>
+                <div class="row-crumb">Art &amp; Patronage</div>
+              </div>
+              <button class="row-cta" onclick="ctaTap(event,'Start')">Start</button>
+            </div>
+            <div class="row-card" onclick="openPopup('lesson-1')">
+              <div class="row-thumb thumb-lesson">📜</div>
+              <div class="row-body">
+                <span class="row-type tag-lesson">Lesson</span>
+                <div class="row-title">Battle of Haldighati</div>
+                <div class="row-crumb">Empire &amp; Resistance</div>
+              </div>
+              <button class="row-cta" onclick="ctaTap(event,'Start')">Start</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-bar">
+          <button><span class="tab-dot">🏠</span>For You</button>
+          <button class="active"><span class="tab-dot">📚</span>Courses</button>
+          <button><span class="tab-dot">🔎</span>Discover</button>
+          <button><span class="tab-dot">👤</span>Profile</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════ POPUP OVERLAY ══════════════ -->
+  <div class="popup-overlay" id="popupOverlay" onclick="if(event.target===this) closePopup()">
+    <!-- Clicking popup card anywhere (unless close/bookmark clicked) triggers cta navigation -->
+    <div class="popup-card" onclick="ctaFromPopup()">
+      <!-- Modern Minimalist Glassmorphic Close Cross -->
+      <button class="popup-close" onclick="closePopup(event)" aria-label="Close">✕</button>
+      
+      <!-- Plain Bookmark Icon (Lights up in saffron when saved) -->
+      <button class="popup-bookmark" id="popupBookmark" onclick="toggleBookmark(event)" aria-label="Bookmark" title="Bookmark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+      </button>
+      
+      <!-- Image Area with Centered Play Button Overlay -->
+      <div class="popup-image" id="popupImage">
+        <span id="popupEmoji">📜</span>
+        <span class="popup-type-badge" id="popupTypeBadge">Lesson</span>
+        <div class="popup-play-btn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        </div>
+      </div>
+      
+      <div class="popup-content">
+        <div class="popup-crumb" id="popupCrumb">Mughal India › Empire &amp; Resistance</div>
+        <div class="popup-title" id="popupTitle">The Battle of Haldighati</div>
+        <div class="popup-desc" id="popupDesc">How Rana Pratap and Akbar's forces clashed in 1576 — and why the battle became a lasting symbol of resistance.</div>
+        <div class="popup-footer">
+          <button class="popup-open-btn" id="popupOpenBtn">Start lesson</button>
+          <span class="popup-saved-note" id="popupSavedNote">✓ Saved</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  const ENTITIES = {
+    'course-1': {
+      type: 'course', typeLabel: 'Course', emoji: '💃', crumb: '',
+      title: "Classical Dance Forms of India",
+      desc: "A journey through Bharatanatyam, Kathak, Odissi and more — trace 2,000 years of movement, mythology and technique.",
+      cta: "Open course", bg: 'linear-gradient(135deg, rgba(0,80,158,0.16), rgba(0,80,158,0.05))'
+    },
+    'course-2': {
+      type: 'course', typeLabel: 'Course', emoji: '🏰', crumb: '',
+      title: "Mughal India",
+      desc: "Nine themes tracing the rise, art, and fall of the Mughal empire — from Babur's conquest to Bahadur Shah's exile.",
+      cta: "Open course", bg: 'linear-gradient(135deg, rgba(0,80,158,0.16), rgba(0,80,158,0.05))'
+    },
+    'theme-1': {
+      type: 'theme', typeLabel: 'Theme', emoji: '🛕', crumb: 'South Indian Heritage',
+      title: "Temples & Sacred Architecture",
+      desc: "Explore how temple design encodes cosmology — from Dravidian gopurams to Nagara shikharas.",
+      cta: "Explore theme", bg: 'linear-gradient(135deg, rgba(0,146,74,0.16), rgba(0,146,74,0.05))'
+    },
+    'theme-2': {
+      type: 'theme', typeLabel: 'Theme', emoji: '👑', crumb: 'Mughal India',
+      title: "Empire & Resistance",
+      desc: "Conquest, rebellion and the regional kingdoms that resisted Mughal expansion across two centuries.",
+      cta: "Continue theme", bg: 'linear-gradient(135deg, rgba(0,146,74,0.16), rgba(0,146,74,0.05))'
+    },
+    'module-1': {
+      type: 'module', typeLabel: 'Module', emoji: '🎨', crumb: 'Mughal India › Art & Patronage',
+      title: "Mughal Miniature Painting",
+      desc: "Six lessons on pigment, perspective and patronage in the Mughal ateliers of Akbar and Jahangir.",
+      cta: "Start module", bg: 'linear-gradient(135deg, rgba(255,142,0,0.18), rgba(255,142,0,0.05))'
+    },
+    'lesson-1': {
+      type: 'lesson', typeLabel: 'Lesson', emoji: '📜', crumb: 'Mughal India › Empire & Resistance',
+      title: "The Battle of Haldighati",
+      desc: "How Rana Pratap and Akbar's forces clashed in 1576 — and why the battle became a lasting symbol of resistance.",
+      cta: "Start lesson", bg: 'linear-gradient(135deg, rgba(16,24,40,0.10), rgba(16,24,40,0.03))'
+    },
+    'snippet-1': {
+      type: 'snippet', typeLabel: 'Snippet', emoji: '💡', crumb: 'Ancient India › Empire of Ashoka',
+      title: "Ashoka's Edicts in Prakrit",
+      desc: "Did you know? Ashoka's rock edicts were carved in Prakrit using Brahmi script — some of the earliest deciphered Indian inscriptions.",
+      cta: "Play snippet", bg: 'linear-gradient(135deg, rgba(0,80,158,0.14), rgba(255,142,0,0.10))'
+    }
+  };
+
+  const bookmarked = new Set();
+  let currentId = null;
+
+  function openPopup(id) {
+    const e = ENTITIES[id];
+    if (!e) return;
+    currentId = id;
+    document.getElementById('popupEmoji').textContent = e.emoji;
+    document.getElementById('popupImage').style.background = e.bg;
+    document.getElementById('popupTypeBadge').textContent = e.typeLabel;
+    document.getElementById('popupCrumb').textContent = e.crumb;
+    document.getElementById('popupCrumb').style.display = e.crumb ? 'block' : 'none';
+    document.getElementById('popupTitle').textContent = e.title;
+    document.getElementById('popupDesc').textContent = e.desc;
+    document.getElementById('popupOpenBtn').textContent = e.cta;
+
+    const bmBtn = document.getElementById('popupBookmark');
+    const savedNote = document.getElementById('popupSavedNote');
+    const isSaved = bookmarked.has(id);
+    bmBtn.classList.toggle('saved', isSaved);
+    savedNote.classList.toggle('show', isSaved);
+
+    document.getElementById('popupOverlay').classList.add('open');
+  }
+
+  function closePopup(evt) {
+    if (evt) evt.stopPropagation();
+    document.getElementById('popupOverlay').classList.remove('open');
+    currentId = null;
+  }
+
+  function toggleBookmark(evt) {
+    if (evt) evt.stopPropagation();
+    if (!currentId) return;
+    const bmBtn = document.getElementById('popupBookmark');
+    const savedNote = document.getElementById('popupSavedNote');
+    if (bookmarked.has(currentId)) {
+      bookmarked.delete(currentId);
+      bmBtn.classList.remove('saved');
+      savedNote.classList.remove('show');
+      showToast('Removed from bookmarks');
+    } else {
+      bookmarked.add(currentId);
+      bmBtn.classList.add('saved');
+      savedNote.classList.add('show');
+      showToast('Saved to bookmarks');
+    }
+  }
+
+  function ctaTap(evt, label) {
+    evt.stopPropagation();
+    showToast(label + ' → Navigating straight to content page!');
+  }
+
+  function ctaFromPopup() {
+    if (!currentId) return;
+    const e = ENTITIES[currentId];
+    showToast(e.cta + ' → Navigating from preview popup!');
+  }
+
+  let toastTimer = null;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePopup(); });
+</script>
+
+</body>
+</html>

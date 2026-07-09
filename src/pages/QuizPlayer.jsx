@@ -482,6 +482,8 @@ export default function QuizPlayer({
   languages = [],
   bookmarks = new Set(),
   onToggleBookmark,
+  likes = new Set(),
+  onToggleLike,
   isAdmin = false,
   isCreator = false,
 }) {
@@ -939,12 +941,45 @@ export default function QuizPlayer({
 
   // Social strip — rendered in the inline panel (desktop) and the mobile sheet
   function renderSocialStrip() {
+    const qKey = q?.question_key != null ? String(q.question_key) : null;
     return (
       <>
             {/* Social strip */}
             <div className="qp-social">
-              <div className="qp-social-left" />
+              <div className="qp-social-left">
+                {qKey && (
+                  <>
+                    <button
+                      className={"qp-social-btn" + (likes.has("question:" + qKey) ? " active" : "") + (!user || user.is_anonymous ? " disabled" : "")}
+                      title={!user || user.is_anonymous ? "Sign in to like" : likes.has("question:" + qKey) ? "Unlike this question" : "Like this question"}
+                      onClick={() => { if (!user || user.is_anonymous) { showSigninToast("Sign in to like questions"); return; } onToggleLike?.("question", qKey, "Question"); }}
+                    >
+                      <span className="qp-social-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill={likes.has("question:" + qKey) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.8 4.6c-1.7-1.6-4.4-1.6-6 .1L12 7.5 9.2 4.7c-1.6-1.7-4.3-1.7-6 0-1.7 1.7-1.7 4.4 0 6.1L12 19l8.8-8.2c1.7-1.7 1.7-4.4 0-6.1z"/></svg>
+                      </span>
+                    </button>
+                    <button
+                      className={"qp-social-btn" + (bookmarks.has("question:" + qKey) ? " active" : "") + (!user || user.is_anonymous ? " disabled" : "")}
+                      title={!user || user.is_anonymous ? "Sign in to bookmark" : bookmarks.has("question:" + qKey) ? "Remove bookmark" : "Bookmark this question"}
+                      onClick={() => { if (!user || user.is_anonymous) { showSigninToast("Sign in to bookmark questions"); return; } onToggleBookmark?.("question", qKey, "Question"); }}
+                    >
+                      <span className="qp-social-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill={bookmarks.has("question:" + qKey) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                      </span>
+                    </button>
+                  </>
+                )}
+              </div>
               <div className="qp-social-right">
+                <button
+                  className={"qp-social-btn" + (likes.has("quiz:" + quiz?.quiz_id) ? " active" : "") + (!user || user.is_anonymous ? " disabled" : "")}
+                  title={!user || user.is_anonymous ? "Sign in to like" : likes.has("quiz:" + quiz?.quiz_id) ? "Unlike this quiz" : "Like this quiz"}
+                  onClick={() => { if (!user || user.is_anonymous) { showSigninToast("Sign in to like quizzes"); return; } onToggleLike?.("quiz", String(quiz?.quiz_id), quiz?.title || "Quiz"); }}
+                >
+                  <span className="qp-social-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill={likes.has("quiz:" + quiz?.quiz_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.8 4.6c-1.7-1.6-4.4-1.6-6 .1L12 7.5 9.2 4.7c-1.6-1.7-4.3-1.7-6 0-1.7 1.7-1.7 4.4 0 6.1L12 19l8.8-8.2c1.7-1.7 1.7-4.4 0-6.1z"/></svg>
+                  </span>
+                </button>
                 <button
                   className={"qp-social-btn" + (bookmarks.has("quiz:" + quiz?.quiz_id) ? " active" : "") + (!user || user.is_anonymous ? " disabled" : "")}
                   title={!user || user.is_anonymous ? "Sign in to bookmark" : bookmarks.has("quiz:" + quiz?.quiz_id) ? "Remove bookmark" : "Bookmark this quiz"}
@@ -1081,6 +1116,16 @@ export default function QuizPlayer({
 
             {/* Social strip on score screen */}
             <div className="qp-social" style={{justifyContent:"center", gap:24, borderTop:"1px solid #E5E7EB", paddingTop:16}}>
+              <button
+                className={"qp-social-btn" + (likes.has("quiz:" + quiz?.quiz_id) ? " active" : "") + (!user || user.is_anonymous ? " disabled" : "")}
+                title={!user || user.is_anonymous ? "Sign in to like" : "Like this quiz"}
+                onClick={() => { if (!user || user.is_anonymous) { showSigninToast("Sign in to like quizzes"); return; } onToggleLike?.("quiz", String(quiz?.quiz_id), quiz?.title || "Quiz"); }}
+              >
+                <span className="qp-social-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill={likes.has("quiz:" + quiz?.quiz_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.8 4.6c-1.7-1.6-4.4-1.6-6 .1L12 7.5 9.2 4.7c-1.6-1.7-4.3-1.7-6 0-1.7 1.7-1.7 4.4 0 6.1L12 19l8.8-8.2c1.7-1.7 1.7-4.4 0-6.1z"/></svg>
+                </span>
+                <span>Like</span>
+              </button>
               <button
                 className={"qp-social-btn" + (bookmarks.has("quiz:" + quiz?.quiz_id) ? " active" : "") + (!user || user.is_anonymous ? " disabled" : "")}
                 title={!user || user.is_anonymous ? "Sign in to bookmark" : "Bookmark this quiz"}

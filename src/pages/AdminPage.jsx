@@ -11,6 +11,7 @@ import {
   adminGetTokensRaw, adminUpdateTokenRow, adminDeleteTokenRow, adminSaveOrder,
   adminGetTokenCatalogue, adminAddTokenType, adminUpdateTokenType, adminDeleteTokenType,
   adminAddTerm, adminUpdateTerm, adminDeleteTerm,
+  uploadContentImage,
 } from "../lib/auth";
 import { globalStyles } from "../styles/global";
 import PageHeader from "../components/PageHeader";
@@ -161,6 +162,8 @@ export default function AdminPage({
   const [editData,       setEditData]       = useState({});
   const [showAdd,        setShowAdd]        = useState(false);
   const [addData,        setAddData]        = useState({});
+  const [editImgUploading, setEditImgUploading] = useState(false); // cover_image_url upload — edit form
+  const [addImgUploading,  setAddImgUploading]  = useState(false); // cover_image_url upload — add form
   const [langs,          setLangs]          = useState([]);
   const [snipLang,       setSnipLang]       = useState("en");
 
@@ -964,6 +967,78 @@ export default function AdminPage({
     XLSX.writeFile(wb, "indiyatra_import_template.xlsx");
   }
 
+  // ── Cover image upload (Courses / Themes / Modules / Lessons — Content tab) ──
+  // Resizes client-side to a 400px-tall JPEG before upload, same treatment
+  // EditorPage uses for snippet images, so file sizes stay small and
+  // consistent across the app's image pipeline.
+  function resizeCoverImage(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const objUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(objUrl);
+        const targetH = 400;
+        const ratio   = targetH / img.naturalHeight;
+        const targetW = Math.round(img.naturalWidth * ratio);
+        const canvas  = document.createElement("canvas");
+        canvas.width  = targetW;
+        canvas.height = targetH;
+        canvas.getContext("2d").drawImage(img, 0, 0, targetW, targetH);
+        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("toBlob failed")),
+          "image/jpeg", 0.88);
+      };
+      img.onerror = reject;
+      img.src = objUrl;
+    });
+  }
+
+  async function handleCoverImageSelect(file, isAdd) {
+    if (!file) return;
+    const pk = getPK(contentSub);
+    const entityType = getTable(contentSub); // "courses" | "themes" | "modules" | "lessons"
+    const entityId = isAdd ? (addData[pk]?.trim() || "unsaved") : editId;
+    const setUploading = isAdd ? setAddImgUploading : setEditImgUploading;
+    const setData      = isAdd ? setAddData         : setEditData;
+    setUploading(true);
+    try {
+      const resized = await resizeCoverImage(file);
+      const { url, error } = await uploadContentImage(resized, entityType, entityId);
+      if (error) { showMsg("Image upload failed: " + error.message, false); return; }
+      setData(d => ({ ...d, cover_image_url: url }));
+      showMsg("Image uploaded ✓");
+    } catch (err) {
+      showMsg("Image resize failed: " + err.message, false);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  // Compact preview + upload/replace/remove control shared by the edit and
+  // add forms for the cover_image_url field.
+  function renderCoverImageField(url, uploading, onSelect, onRemove) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        {url ? (
+          <img src={url} alt="" style={{ width: 56, height: 56, borderRadius: 10, objectFit: "cover", border: "1px solid #e5e7eb" }} />
+        ) : (
+          <div style={{ width: 56, height: 56, borderRadius: 10, background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.625rem", color: "#aaa", textAlign: "center" }}>
+            No image
+          </div>
+        )}
+        <label className="btn-outline" style={{ padding: "6px 14px", minHeight: 32, fontSize: "0.8125rem", cursor: uploading ? "default" : "pointer", opacity: uploading ? 0.6 : 1 }}>
+          {uploading ? "Uploading…" : url ? "Replace" : "Upload"}
+          <input type="file" accept="image/*" style={{ display: "none" }} disabled={uploading}
+            onChange={e => onSelect(e.target.files?.[0])} />
+        </label>
+        {url && !uploading && (
+          <button type="button" className="btn-outline" style={{ padding: "6px 12px", minHeight: 32, fontSize: "0.8125rem" }} onClick={onRemove}>
+            Remove
+          </button>
+        )}
+      </div>
+    );
+  }
+
   // ── Helpers ──────────────────────────────────────────────────────────────────
   const fmtDate = ts => ts ? new Date(ts).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—";
   const filteredUsers = (users || []).filter(u => !userSearch || (u.display_name || "").toLowerCase().includes(userSearch.toLowerCase()));
@@ -980,10 +1055,10 @@ export default function AdminPage({
   // ── Content sub-tab columns config ───────────────────────────────────────────
   function getColumns(sub) {
     if (sub === "Levels")   return ["level_id","title","level_number"];
-    if (sub === "Courses")  return ["course_id","course_name","course_number","description","sequential_unlock"];
-    if (sub === "Themes")   return ["theme_id","title","description"];
-    if (sub === "Modules")  return ["module_id","module_name","module_number","course_id","level_id","theme_id","visibility","description"];
-    if (sub === "Lessons")  return ["lesson_id","lesson_name","lesson_number","module_id","lesson_description"];
+    if (sub === "Courses")  return ["course_id","course_name","course_number","description","sequential_unlock","cover_image_url"];
+    if (sub === "Themes")   return ["theme_id","title","description","cover_image_url"];
+    if (sub === "Modules")  return ["module_id","module_name","module_number","course_id","level_id","theme_id","visibility","description","cover_image_url"];
+    if (sub === "Lessons")  return ["lesson_id","lesson_name","lesson_number","module_id","lesson_description","cover_image_url"];
     if (sub === "Snippets") return ["snippet_id","difficulty_level","snippet_value","_hook"];
     return [];
   }
@@ -1020,6 +1095,19 @@ export default function AdminPage({
               if (col === "_hook") return null;
               const isId = col === pk;
               const val = editData[col] !== undefined ? editData[col] : (row[col] ?? "");
+              if (col === "cover_image_url") {
+                return (
+                  <div key={col} style={{ gridColumn: "span 2" }}>
+                    <label style={{ fontSize: "0.75rem", color: "#aaa", fontWeight: 700, display: "block", marginBottom: 3 }}>Cover Image</label>
+                    {renderCoverImageField(
+                      val,
+                      editImgUploading,
+                      file => handleCoverImageSelect(file, false),
+                      () => setEditData(d => ({ ...d, cover_image_url: "" })),
+                    )}
+                  </div>
+                );
+              }
               return (
                 <div key={col}>
                   <label style={{ fontSize: "0.75rem", color: "#aaa", fontWeight: 700, display: "block", marginBottom: 3 }}>{colLabel(col)}</label>
@@ -1072,6 +1160,22 @@ export default function AdminPage({
               if (col === "_hook") return null;
               const val = addData[col] ?? "";
               const isBoolean = col === "sequential_unlock";
+              if (col === "cover_image_url") {
+                return (
+                  <div key={col} style={{ gridColumn: "span 2" }}>
+                    <label style={{ fontSize: "0.75rem", color: "#aaa", fontWeight: 700, display: "block", marginBottom: 3 }}>Cover Image</label>
+                    {renderCoverImageField(
+                      val,
+                      addImgUploading,
+                      file => handleCoverImageSelect(file, true),
+                      () => setAddData(d => ({ ...d, cover_image_url: "" })),
+                    )}
+                    <div style={{ fontSize: "0.6875rem", color: "#bbb", marginTop: 4 }}>
+                      Tip: fill in {colLabel(pk)} above first so the upload is filed under the right ID.
+                    </div>
+                  </div>
+                );
+              }
               return (
                 <div key={col}>
                   <label style={{ fontSize: "0.75rem", color: "#aaa", fontWeight: 700, display: "block", marginBottom: 3 }}>{colLabel(col)}{col === pk ? " *" : ""}</label>

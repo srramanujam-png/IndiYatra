@@ -1,5 +1,5 @@
 # IndiYatra — Session Handoff Document
-**Last updated:** May 26, 2026 (Session 22 — Bottom tab bar, active-tab fix, profile dropdown standardisation, desktop icon+text nav, mobile icon buttons, 1024px breakpoint)
+**Last updated:** July 6, 2026 (All Courses drawer — quick-commerce style category browser, item 3 from To Do.docx)
 **Project:** IndiYatra — multilingual heritage learning platform
 **Stack:** React + Vite + Supabase (no backend, REST only)
 **Repo root:** `C:\Users\srram\IndiYatra`
@@ -321,6 +321,28 @@ RLS: `auth.uid() = profile_id` — SELECT, INSERT, DELETE own rows only.
 ---
 
 ## 6. Pending Work
+
+### Completed — All Courses drawer (quick-commerce style category browser)
+
+Implements the "All Courses" bottom-nav tab: a Zepto/Blinkit-style two-pane browser over the full content tree, spanning every course (not just one, unlike `CourseNavigatorPage`).
+
+**New file:** `src/pages/AllCoursesPage.jsx`
+- Left sidebar: **Course → Level → Theme** accordion (one branch open at a time; text wraps, no truncation). Fetches all `courses`, then calls the existing `get_course_tree` RPC once per course (`Promise.all`) and tags each row with its `course_id`/`course_name` client-side (the RPC itself is unchanged — still single-course).
+- Main pane, top half: selected theme's **Modules** as speedometer-arc gauge buttons (hand-rolled SVG arc, no library) — arc colour = grey <25%, saffron 25–50%, heritage blue 51–75%, green >75%, based on `completedLessons`. Caption shows `X lessons · Y stories` (`stories` = row-count from `lesson_snippet_mapping` summed per module, fetched unfiltered like `ModulesPage` already does).
+- Main pane, bottom half: selected module's **Lessons** as pill cards (Read = saffron, Quiz = heritage blue via `getQuizzesForLessons`, disabled when no quiz).
+- Modules pane and lessons pane scroll independently (`overflow-y:auto` + `min-height:0` on every flex ancestor + `overscroll-behavior:contain`), per spec — sidebar scrolls independently too.
+- Sidebar active/open states and lesson-card backgrounds use the **teal** accent (`#4AADA8` / `#EAF6F5` / `#C2E4E2`) already established by `HomePage.jsx`'s course cards — kept local to this file rather than promoted to `lib/supabase.js` to minimise blast radius.
+- Below the standard `PageHeader`, a two-line headline: **"All Courses"** + `Course / Level / Theme` breadcrumb (fills in as the user drills down), per the mockup screenshot embedded in `To Do.docx`.
+- On load, auto-opens the first course/level/theme so the drawer isn't empty on first visit (same pattern as `CourseNavigatorPage`'s "auto-select first level").
+
+**App.jsx changes:**
+- `import AllCoursesPage from "./pages/AllCoursesPage"`
+- `onAllCourses` in `commonProps` changed from the `goForward("home")` placeholder to `goForward("all-courses")` — this prop is already wired into every page's "Courses" nav link, so the whole app's bottom-nav "Courses" tab now opens the drawer.
+- New `case "all-courses"` in `renderPage()`, modelled on the existing `"navigator"` case's `onLessonSelect`/`onQuizClick` handlers, with one addition: since this page spans multiple courses it also receives a `course` argument and calls `setSelectedCourse(course)` before navigating to the player/quiz (the `"navigator"` case doesn't need this because `selectedCourse` is already set by whoever opened that single-course page).
+- `playerReturnPage` / `quizReturnPage` set to `"all-courses"` so the back button from the player/quiz returns here.
+- No changes needed to `PageHeader.jsx` — it already had `"all-courses": "Courses"` in `PAGE_TO_TAB` and a `Courses` → books-icon mapping in `LABEL_IC` from an earlier session, i.e. the bottom-tab-bar highlighting "just worked" once the page existed.
+
+**Known environment quirk hit while building this (not a code bug):** in this sandbox, editing an existing `.jsx` file via the file-edit tool updates the real file correctly, but the Linux shell's mount of the same folder can serve a stale/truncated cached copy of that file for some time afterwards (confirmed by writing a marker string and reading it back truncated via `cat`). `npx vite build` / `node --babel-parse` run from the shell against a freshly-edited file can therefore report false failures. Trust the file-edit tool's own file (or a fresh `Read`) over a shell `cat`/`node` check that immediately follows an edit to a pre-existing file.
 
 ### Completed in Session 10 — Discover page (complete)
 

@@ -23,6 +23,44 @@ export async function supabase(table, query = "") {
   return res.json();
 }
 
+// ─── Content thumbnails (module/lesson cover_image_url, story via snippet's
+// own asset_library image) — batched by id, used anywhere a play-button
+// circle needs a real photo behind it (currently ForYouPage's ItemRow).
+// Returns { "module:<id>": url|null, "lesson:<id>": url|null, "story:<id>": url|null }
+// — every requested id gets an entry (null when no image is set), so callers
+// can distinguish "checked, no photo" from "not fetched yet".
+export async function fetchContentThumbs({ moduleIds = [], lessonIds = [], storyIds = [] }) {
+  const result = {};
+  try {
+    if (moduleIds.length) {
+      moduleIds.forEach(id => { result["module:" + id] = null; });
+      const rows = await supabase("modules", `?select=module_id,cover_image_url&module_id=in.(${moduleIds.join(",")})`);
+      (rows || []).forEach(r => { if (r.cover_image_url) result["module:" + r.module_id] = r.cover_image_url; });
+    }
+    if (lessonIds.length) {
+      lessonIds.forEach(id => { result["lesson:" + id] = null; });
+      const rows = await supabase("lessons", `?select=lesson_id,cover_image_url&lesson_id=in.(${lessonIds.join(",")})`);
+      (rows || []).forEach(r => { if (r.cover_image_url) result["lesson:" + r.lesson_id] = r.cover_image_url; });
+    }
+    if (storyIds.length) {
+      storyIds.forEach(id => { result["story:" + id] = null; });
+      const snips = await supabase("snippet_core", `?select=snippet_id,asset_id&snippet_id=in.(${storyIds.join(",")})`);
+      const assetIds = [...new Set((snips || []).map(s => s.asset_id).filter(Boolean))];
+      let fileById = {};
+      if (assetIds.length) {
+        const assets = await supabase("asset_library", `?select=asset_id,file_path&asset_id=in.(${assetIds.join(",")})`);
+        (assets || []).forEach(a => { fileById[a.asset_id] = a.file_path; });
+      }
+      (snips || []).forEach(s => {
+        if (s.asset_id && fileById[s.asset_id]) result["story:" + s.snippet_id] = fileById[s.asset_id];
+      });
+    }
+  } catch (e) {
+    console.warn("fetchContentThumbs:", e);
+  }
+  return result;
+}
+
 // ─── Shared constants ─────────────────────────────────────────────────────────
 export const SAFFRON   = "#FF8E00";
 export const HERITAGE  = "#00509E";
