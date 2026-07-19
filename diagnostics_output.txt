@@ -1,0 +1,5 @@
+conname	table_name
+lc_points_sane	lesson_completions
+lc_snippets_sane	lesson_completions
+qa_score_sane	quiz_attempts
+ut_quantity_sane	user_tokens

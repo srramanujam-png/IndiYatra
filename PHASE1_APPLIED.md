@@ -1,6 +1,27 @@
 # Phase 1 Security Work — Session Record & Your To-Do List
 
-**Date:** 19 July 2026 · **Done by:** Claude (Fable) session · **Roadmap items:** 0.4, 1.1, 1.2 (stopgap), 1.4 (repo scope), 1.5, 1.6, 1.7
+**Date:** 19 July 2026 · **Done by:** Claude (Fable) session · **Roadmap items:** 0.4, 1.1, 1.2 (stopgap), **1.3 ✓, 1.4 ✓**, 1.5, 1.6, 1.7, **A6 ✓**
+
+> **UPDATE (same session, later):** the live-DB audit was COMPLETED interactively.
+> Gopal ran the diagnostics and all fix scripts against the live database:
+> - `phase1_security_fixes.sql` — ✓ run and verified (§5 confirmed constraints + policies)
+> - `phase1_followup_fixes.sql` — ✓ run (policies for roles / user_roles_mapping;
+>   lesson_editors deliberately left locked — unused table, revisit in roadmap 2.9)
+> - `phase1_followup2_attempts.sql` — ✓ run (removed students' ability to
+>   delete/edit their own quiz_attempts, which bypassed max_attempts)
+> - `phase1_followup3_searchpath.sql` — run status: check diagnostics §4 shows no
+>   "NO search_path pinned" rows
+> - Diagnostics §1: ZERO tables without RLS (roadmap 1.3 answered: full coverage)
+> - Diagnostics §3: full policy list reviewed — no remaining
+>   `auth.role() = 'authenticated'` policies (1.4 done); personal-data tables are
+>   own-rows-only; content tables public-read/admin-write; remaining known gap is
+>   client-side awarding within caps, superseded by roadmap 2.4
+> - Diagnostics §4: SECURITY DEFINER gating audited OK (admin_get_* check
+>   is_admin(); get_user_likes/bookmarks filter by auth.uid()); residual minor
+>   item: get_quiz_ranks accepts arbitrary profile_id (ranks only — tighten in 2.4)
+> - Work was pushed to GitHub (feature/quiz) during the session ✓
+>
+> **Phase 1 remaining:** 1.5's profanity filter + report queue · 1.8 compliance memo.
 
 This file tells you (Gopal) exactly what was changed, the **3 things only you can do**, and what to hand the next AI session.
 
