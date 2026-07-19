@@ -14,29 +14,29 @@ const styles = `
   .settings-card {
     background: white; border-radius: 12px; padding: 22px;
     margin-bottom: 24px; box-shadow: none;
-    border: 1px solid #E5E7EB;
+    border: 1px solid var(--color-border);
   }
   .settings-card-label {
     font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.08em;
-    text-transform: uppercase; color: #4A5565; margin-bottom: 16px;
+    text-transform: uppercase; color: var(--color-text-body); margin-bottom: 16px;
     font-family: 'Inter', system-ui, sans-serif;
   }
   .settings-field-label {
-    display: block; font-size: 0.875rem; color: #4A5565; margin-bottom: 6px;
+    display: block; font-size: 0.875rem; color: var(--color-text-body); margin-bottom: 6px;
     font-family: 'Nunito Sans', system-ui, sans-serif;
   }
   .settings-input {
-    width: 100%; border: 1.5px solid #E5E7EB; border-radius: 10px;
+    width: 100%; border: 1.5px solid var(--color-border); border-radius: 10px;
     padding: 10px 14px; font-family: 'Nunito Sans', system-ui, sans-serif; font-size: 1rem;
-    color: #101828; outline: none; transition: border-color 0.2s; background: white;
+    color: var(--color-text-main); outline: none; transition: border-color 0.2s; background: white;
     box-sizing: border-box;
   }
   .settings-input:focus { border-color: ${SAFFRON}; }
-  .settings-input:disabled { background: #F3F4F6; color: #4A5565; cursor: not-allowed; }
+  .settings-input:disabled { background: var(--color-border-muted); color: var(--color-text-body); cursor: not-allowed; }
   .settings-textarea {
-    width: 100%; border: 1.5px solid #E5E7EB; border-radius: 10px;
+    width: 100%; border: 1.5px solid var(--color-border); border-radius: 10px;
     padding: 10px 14px; font-family: 'Nunito Sans', system-ui, sans-serif; font-size: 0.9375rem;
-    color: #101828; outline: none; transition: border-color 0.2s; background: white;
+    color: var(--color-text-main); outline: none; transition: border-color 0.2s; background: white;
     resize: vertical; min-height: 80px; line-height: 1.5; box-sizing: border-box;
   }
   .settings-textarea:focus { border-color: ${SAFFRON}; }
@@ -53,12 +53,12 @@ const styles = `
   .settings-status { font-size: 0.875rem; font-family: 'Inter', system-ui, sans-serif; }
   .settings-status.saved { color: ${GREEN}; }
   .settings-status.error { color: #c0392b; }
-  .settings-status.saving { color: #4A5565; }
+  .settings-status.saving { color: var(--color-text-body); }
   .settings-lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .settings-lang-btn {
-    padding: 12px 12px; border-radius: 12px; border: 1.5px solid #E5E7EB;
+    padding: 12px 12px; border-radius: 12px; border: 1.5px solid var(--color-border);
     background: white; cursor: pointer; font-size: 0.875rem; font-weight: 600;
-    color: #4A5565; transition: all 0.15s; text-align: left;
+    color: var(--color-text-body); transition: all 0.15s; text-align: left;
     display: flex; flex-direction: column; gap: 2px; min-height: 48px;
     font-family: 'Nunito Sans', system-ui, sans-serif;
   }
@@ -67,25 +67,25 @@ const styles = `
   .settings-lang-native { font-size: 0.8125rem; opacity: 0.7; }
   .settings-fs-row { display: flex; gap: 8px; }
   .settings-fs-btn {
-    flex: 1; padding: 12px; border-radius: 12px; border: 1.5px solid #E5E7EB;
-    background: white; cursor: pointer; font-weight: 700; color: #4A5565;
+    flex: 1; padding: 12px; border-radius: 12px; border: 1.5px solid var(--color-border);
+    background: white; cursor: pointer; font-weight: 700; color: var(--color-text-body);
     transition: all 0.15s; text-align: center; min-height: 48px; font-size: 1rem;
     font-family: 'Nunito Sans', system-ui, sans-serif;
   }
   .settings-fs-btn:hover { border-color: ${SAFFRON}; color: ${SAFFRON}; }
   .settings-fs-btn.active { border-color: ${SAFFRON}; background: ${SAFFRON}11; color: ${SAFFRON}; }
-  .settings-hint { font-size: 0.8125rem; color: #4A5565; margin-top: 8px; line-height: 1.4; font-family: 'Nunito Sans', system-ui, sans-serif; }
+  .settings-hint { font-size: 0.8125rem; color: var(--color-text-body); margin-top: 8px; line-height: 1.4; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .settings-guest-note {
     background: ${SAFFRON}08; border: 1.5px solid ${SAFFRON}33; border-radius: 10px;
     padding: 12px 14px; font-size: 0.875rem; color: #b86000; margin-bottom: 16px;
     font-family: 'Nunito Sans', system-ui, sans-serif;
   }
   .settings-code {
-    background: #F3F4F6; padding: 1px 5px; border-radius: 4px; font-size: 0.8125rem;
+    background: var(--color-border-muted); padding: 1px 5px; border-radius: 4px; font-size: 0.8125rem;
     font-family: ui-monospace, Consolas, monospace;
   }
   .settings-reset-btn {
-    background: none; border: none; font-size: 0.8125rem; color: #4A5565;
+    background: none; border: none; font-size: 0.8125rem; color: var(--color-text-body);
     cursor: pointer; padding: 0; font-family: 'Inter', system-ui, sans-serif;
   }
   .settings-reset-btn:hover { color: ${SAFFRON}; }

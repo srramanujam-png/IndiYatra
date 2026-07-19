@@ -24,14 +24,14 @@ const TYPE_FILTERS = [
 const styles = `
   .discover-hero {
     text-align: center; padding: 36px 1.5rem 28px;
-    border-bottom: 1px solid #E5E7EB;
+    border-bottom: 1px solid var(--color-border);
   }
   .discover-hero h1 {
     font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 2rem;
-    font-weight: 700; color: #101828; margin: 0 0 6px;
+    font-weight: 700; color: var(--color-text-main); margin: 0 0 6px;
   }
   .discover-hero p {
-    color: #4A5565; font-size: 0.9375rem; margin: 0;
+    color: var(--color-text-body); font-size: 0.9375rem; margin: 0;
     font-family: 'Nunito Sans', system-ui, sans-serif;
   }
 
@@ -40,7 +40,7 @@ const styles = `
     max-width: 1100px; margin: 0 auto; padding: 28px 1.5rem 120px;
   }
   .discover-zone-label {
-    font-size: 0.6875rem; font-weight: 700; color: #9CA3AF;
+    font-size: 0.6875rem; font-weight: 700; color: var(--color-text-muted);
     text-transform: uppercase; letter-spacing: 0.09em; margin-bottom: 12px;
     font-family: 'Inter', system-ui, sans-serif;
   }
@@ -83,20 +83,20 @@ const styles = `
   .discover-panel-header {
     flex-shrink: 0; display: flex; align-items: center;
     justify-content: space-between;
-    padding: 16px 20px; border-bottom: 1px solid #F3F4F6;
+    padding: 16px 20px; border-bottom: 1px solid var(--color-border-muted);
   }
   .discover-panel-title {
     font-family: 'Oswald', 'Arial Narrow', sans-serif;
-    font-size: 1.25rem; font-weight: 700; color: #101828;
+    font-size: 1.25rem; font-weight: 700; color: var(--color-text-main);
   }
   .discover-panel-close {
     width: 34px; height: 34px; border-radius: 50%;
-    border: none; background: #F3F4F6; cursor: pointer;
-    font-size: 1rem; color: #4A5565;
+    border: none; background: var(--color-border-muted); cursor: pointer;
+    font-size: 1rem; color: var(--color-text-body);
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
   }
-  .discover-panel-close:hover { background: #E5E7EB; }
+  .discover-panel-close:hover { background: var(--color-border); }
 
   /* Panel body */
   .discover-panel-body {
@@ -108,8 +108,8 @@ const styles = `
   .discover-type-filter { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
   .discover-type-pill {
     padding: 5px 13px; border-radius: 999px;
-    border: 1.5px solid #E5E7EB; background: white;
-    font-size: 0.8125rem; font-weight: 600; color: #101828;
+    border: 1.5px solid var(--color-border); background: white;
+    font-size: 0.8125rem; font-weight: 600; color: var(--color-text-main);
     cursor: pointer; transition: border-color 0.15s, background 0.15s, color 0.15s;
     font-family: 'Inter', system-ui, sans-serif;
   }
@@ -117,7 +117,7 @@ const styles = `
   .discover-type-pill.active { background: ${HERITAGE}; border-color: ${HERITAGE}; color: white; }
 
   .discover-results-header {
-    font-size: 0.875rem; color: #4A5565; margin-bottom: 16px;
+    font-size: 0.875rem; color: var(--color-text-body); margin-bottom: 16px;
     font-family: 'Nunito Sans', system-ui, sans-serif;
   }
   .discover-results-header strong { color: ${HERITAGE}; }
@@ -128,7 +128,7 @@ const styles = `
     gap: 12px; margin-bottom: 24px;
   }
   .discover-snippet-card {
-    background: white; border-radius: 12px; border: 1px solid #E5E7EB;
+    background: white; border-radius: 12px; border: 1px solid var(--color-border);
     border-top: 3px solid ${SAFFRON}; padding: 14px 16px;
     cursor: pointer; transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
     animation: fadeUp 0.3s ease both;
@@ -138,7 +138,7 @@ const styles = `
     border-color: ${SAFFRON};
   }
   .discover-snippet-hook {
-    font-size: 0.9375rem; font-weight: 600; color: #101828;
+    font-size: 0.9375rem; font-weight: 600; color: var(--color-text-main);
     line-height: 1.55; margin-bottom: 10px;
     font-family: 'Nunito Sans', system-ui, sans-serif;
   }
@@ -150,7 +150,7 @@ const styles = `
   /* Row cards */
   .discover-row-card {
     display: flex; align-items: center; justify-content: space-between;
-    background: white; border-radius: 12px; border: 1px solid #E5E7EB;
+    background: white; border-radius: 12px; border: 1px solid var(--color-border);
     padding: 12px 14px; margin-bottom: 8px; min-height: 48px;
     cursor: pointer; transition: border-color 0.15s, background 0.15s;
     animation: fadeUp 0.25s ease both;
@@ -159,26 +159,26 @@ const styles = `
   .discover-row-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
   .discover-row-icon { font-size: 1.125rem; flex-shrink: 0; width: 26px; text-align: center; }
   .discover-row-name {
-    font-size: 0.9375rem; font-weight: 600; color: #101828;
+    font-size: 0.9375rem; font-weight: 600; color: var(--color-text-main);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     font-family: 'Nunito Sans', system-ui, sans-serif;
   }
-  .discover-row-arrow { color: #4A5565; font-size: 1.125rem; flex-shrink: 0; }
+  .discover-row-arrow { color: var(--color-text-body); font-size: 1.125rem; flex-shrink: 0; }
 
   .discover-group { margin-bottom: 24px; }
   .discover-group-label {
-    font-size: 0.75rem; font-weight: 700; color: #4A5565;
+    font-size: 0.75rem; font-weight: 700; color: var(--color-text-body);
     text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px;
     font-family: 'Inter', system-ui, sans-serif;
   }
 
   .discover-empty {
-    text-align: center; padding: 48px 24px; color: #4A5565; max-width: 380px; margin: 0 auto;
+    text-align: center; padding: 48px 24px; color: var(--color-text-body); max-width: 380px; margin: 0 auto;
   }
   .discover-empty-icon { font-size: 2.5rem; margin-bottom: 14px; }
   .discover-empty h3 {
     font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.25rem;
-    color: #4A5565; margin-bottom: 8px;
+    color: var(--color-text-body); margin-bottom: 8px;
   }
   .discover-empty p { font-size: 0.9375rem; line-height: 1.6; font-family: 'Nunito Sans', system-ui, sans-serif; }
 
@@ -226,7 +226,7 @@ const styles = `
     }
     .discover-sheet-handle-bar {
       width: 40px; height: 4px; border-radius: 2px;
-      background: #D1D5DB; margin-bottom: 10px;
+      background: var(--color-border); margin-bottom: 10px;
     }
     .discover-snippet-grid { grid-template-columns: 1fr; }
     .discover-panel-body { padding: 14px 16px 48px; }

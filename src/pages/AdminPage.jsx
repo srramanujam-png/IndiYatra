@@ -29,7 +29,7 @@ const styles = `
   .admin-tab-btn {
     padding: 10px 20px; font-family: 'Alumni Sans', sans-serif;
     font-size: 1rem; font-weight: 700; border: none; background: none;
-    cursor: pointer; color: #6B6B6B; border-bottom: 3px solid transparent;
+    cursor: pointer; color: var(--color-text-muted); border-bottom: 3px solid transparent;
     margin-bottom: -2px; transition: color 0.15s, border-color 0.15s;
     letter-spacing: 0.02em; white-space: nowrap;
   }
@@ -57,7 +57,7 @@ const styles = `
     padding: 18px 20px; box-shadow: none;
   }
   .admin-stat-val { font-family: 'Alumni Sans', sans-serif; font-size: 2rem; font-weight: 800; color: ${HERITAGE}; line-height: 1; }
-  .admin-stat-lbl { font-size: 0.8125rem; color: #6B6B6B; margin-top: 4px; font-weight: 600; }
+  .admin-stat-lbl { font-size: 0.8125rem; color: var(--color-text-muted); margin-top: 4px; font-weight: 600; }
   .admin-table-wrap { overflow-x: auto; }
   .admin-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
   .admin-table th {
@@ -65,24 +65,24 @@ const styles = `
     color: #aaa; text-transform: uppercase; letter-spacing: 0.06em;
     border-bottom: 1.5px solid rgba(0,0,0,0.07); white-space: nowrap;
   }
-  .admin-table td { padding: 11px 14px; border-bottom: 1px solid #f5efe4; vertical-align: middle; color: #0A0A0A; }
+  .admin-table td { padding: 11px 14px; border-bottom: 1px solid #f5efe4; vertical-align: middle; color: var(--color-text-main); }
   .admin-table tr:last-child td { border-bottom: none; }
   .admin-table tr:hover td { background: #FAFAF7; }
   .role-pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
   .role-pill.admin { background: ${SAFFRON}22; color: #b86000; border: 1px solid ${SAFFRON}44; }
-  .role-pill.learner { background: #f0f0f0; color: #6B6B6B; border: 1px solid #e0e0e0; }
-  .admin-search { padding: 8px 14px; border-radius: 10px; border: 1.5px solid #e0d4bc; font-size: 0.9375rem; width: 280px; outline: none; font-family: 'Source Sans 3', sans-serif; color: #0A0A0A; transition: border-color 0.15s; }
+  .role-pill.learner { background: #f0f0f0; color: var(--color-text-muted); border: 1px solid #e0e0e0; }
+  .admin-search { padding: 8px 14px; border-radius: 10px; border: 1.5px solid #e0d4bc; font-size: 0.9375rem; width: 280px; outline: none; font-family: 'Source Sans 3', sans-serif; color: var(--color-text-main); transition: border-color 0.15s; }
   .admin-search:focus { border-color: ${SAFFRON}; }
   .icon-btn { background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 6px; font-size: 0.875rem; transition: background 0.15s; color: #aaa; line-height: 1; }
   .icon-btn:hover { background: #f5f0e8; color: #555; }
   .icon-btn.danger:hover { background: #fff0f0; color: #c00; }
   .crud-form-row { background: #FAFAF7; border-bottom: 1px solid rgba(0,0,0,0.07); }
   .crud-form-row td { padding: 12px 14px; }
-  .crud-input { padding: 7px 10px; border-radius: 8px; border: 1.5px solid #e0d4bc; font-size: 0.875rem; font-family: 'Source Sans 3', sans-serif; color: #0A0A0A; outline: none; transition: border-color 0.15s; width: 100%; box-sizing: border-box; }
+  .crud-input { padding: 7px 10px; border-radius: 8px; border: 1.5px solid #e0d4bc; font-size: 0.875rem; font-family: 'Source Sans 3', sans-serif; color: var(--color-text-main); outline: none; transition: border-color 0.15s; width: 100%; box-sizing: border-box; }
   .crud-input:focus { border-color: ${SAFFRON}; }
-  .crud-select { padding: 7px 10px; border-radius: 8px; border: 1.5px solid #e0d4bc; font-size: 0.875rem; background: white; color: #0A0A0A; outline: none; transition: border-color 0.15s; }
+  .crud-select { padding: 7px 10px; border-radius: 8px; border: 1.5px solid #e0d4bc; font-size: 0.875rem; background: white; color: var(--color-text-main); outline: none; transition: border-color 0.15s; }
   .crud-select:focus { border-color: ${SAFFRON}; }
-  .crud-textarea { padding: 7px 10px; border-radius: 8px; border: 1.5px solid #e0d4bc; font-size: 0.875rem; font-family: 'Source Sans 3', sans-serif; color: #0A0A0A; outline: none; transition: border-color 0.15s; width: 100%; box-sizing: border-box; resize: vertical; min-height: 64px; }
+  .crud-textarea { padding: 7px 10px; border-radius: 8px; border: 1.5px solid #e0d4bc; font-size: 0.875rem; font-family: 'Source Sans 3', sans-serif; color: var(--color-text-main); outline: none; transition: border-color 0.15s; width: 100%; box-sizing: border-box; resize: vertical; min-height: 64px; }
   .crud-textarea:focus { border-color: ${SAFFRON}; }
   .crud-msg { padding: 8px 14px; border-radius: 8px; font-size: 0.875rem; margin-bottom: 12px; }
   .crud-msg.ok  { background: #f0fdf4; color: ${GREEN}; }
@@ -90,13 +90,13 @@ const styles = `
   .tax-type-label { font-size: 0.75rem; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.07em; margin: 20px 0 10px; }
   .tax-term-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.07); background: white; margin-bottom: 8px; }
   .tax-term-id  { font-size: 0.6875rem; color: #bbb; font-weight: 600; min-width: 72px; }
-  .tax-term-name { flex: 1; font-size: 0.9375rem; font-weight: 600; color: #0A0A0A; }
+  .tax-term-name { flex: 1; font-size: 0.9375rem; font-weight: 600; color: var(--color-text-main); }
   .tax-term-count { font-size: 0.75rem; color: #aaa; min-width: 80px; text-align: right; }
-  .tax-edit-input { flex: 1; padding: 5px 10px; border-radius: 8px; border: 1.5px solid ${SAFFRON}; font-size: 0.9375rem; font-family: 'Source Sans 3', sans-serif; outline: none; color: #0A0A0A; }
+  .tax-edit-input { flex: 1; padding: 5px 10px; border-radius: 8px; border: 1.5px solid ${SAFFRON}; font-size: 0.9375rem; font-family: 'Source Sans 3', sans-serif; outline: none; color: var(--color-text-main); }
   .tax-add-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 16px; background: #FAFAF7; border-radius: 12px; border: 1.5px dashed rgba(0,0,0,0.10); margin-top: 20px; }
-  .tax-add-input { padding: 8px 12px; border-radius: 8px; border: 1.5px solid #e0d4bc; font-size: 0.875rem; font-family: 'Source Sans 3', sans-serif; outline: none; color: #0A0A0A; transition: border-color 0.15s; }
+  .tax-add-input { padding: 8px 12px; border-radius: 8px; border: 1.5px solid #e0d4bc; font-size: 0.875rem; font-family: 'Source Sans 3', sans-serif; outline: none; color: var(--color-text-main); transition: border-color 0.15s; }
   .tax-add-input:focus { border-color: ${SAFFRON}; }
-  .tax-type-select { padding: 8px 12px; border-radius: 8px; border: 1.5px solid #e0d4bc; font-size: 0.875rem; background: white; color: #0A0A0A; outline: none; cursor: pointer; }
+  .tax-type-select { padding: 8px 12px; border-radius: 8px; border: 1.5px solid #e0d4bc; font-size: 0.875rem; background: white; color: var(--color-text-main); outline: none; cursor: pointer; }
   .badge-admin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
   .badge-admin-card { background: white; border-radius: 14px; border: 1px solid rgba(0,0,0,0.07); padding: 16px; transition: box-shadow 0.15s;  }
   .badge-admin-card.inactive { opacity: 0.5; }
@@ -104,10 +104,10 @@ const styles = `
   .badge-cat-pill.progression { background: ${HERITAGE}18; color: ${HERITAGE}; }
   .badge-cat-pill.volume { background: ${GREEN}18; color: ${GREEN}; }
   .badge-cat-pill.streak { background: white; color: #b86000; }
-  .badge-cat-pill.daily { background: rgba(0,80,158,0.08); color: #00509E; }
+  .badge-cat-pill.daily { background: rgba(0,80,158,0.08); color: var(--color-primary); }
   .badge-icon-big { font-size: 1.75rem; line-height: 1; margin-bottom: 6px; display: block; }
-  .badge-admin-name { font-family: 'Alumni Sans', sans-serif; font-size: 1rem; font-weight: 700; color: #0A0A0A; margin-bottom: 2px; }
-  .badge-admin-criteria { font-size: 0.75rem; color: #6B6B6B; margin-bottom: 10px; line-height: 1.4; }
+  .badge-admin-name { font-family: 'Alumni Sans', sans-serif; font-size: 1rem; font-weight: 700; color: var(--color-text-main); margin-bottom: 2px; }
+  .badge-admin-criteria { font-size: 0.75rem; color: var(--color-text-muted); margin-bottom: 10px; line-height: 1.4; }
   .badge-admin-earned { font-size: 0.6875rem; color: #aaa; margin-bottom: 10px; }
   .badge-toggle-wrap { display: flex; align-items: center; gap: 8px; }
   .toggle-switch { position: relative; width: 36px; height: 20px; cursor: pointer; }
@@ -116,11 +116,11 @@ const styles = `
   .toggle-switch input:checked + .toggle-track { background: ${GREEN}; }
   .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: white; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
   .toggle-switch input:checked ~ .toggle-thumb { transform: translateX(16px); }
-  .toggle-label { font-size: 0.75rem; font-weight: 600; color: #6B6B6B; }
+  .toggle-label { font-size: 0.75rem; font-weight: 600; color: var(--color-text-muted); }
   .token-icon { font-size: 1rem; }
   .admin-denied { text-align: center; padding: 80px 24px; }
   .admin-denied h2 { font-family: 'Alumni Sans', sans-serif; font-size: 1.5rem; color: #c00; margin-bottom: 8px; }
-  .admin-denied p { font-size: 0.9375rem; color: #6B6B6B; }
+  .admin-denied p { font-size: 0.9375rem; color: var(--color-text-muted); }
   @media (max-width: 600px) {
     .admin-tabs { padding: 16px 1rem 0; }
     .admin-tab-btn { padding: 8px 12px; font-size: 0.875rem; }
@@ -1073,9 +1073,9 @@ export default function AdminPage({
     return (
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         {url ? (
-          <img src={url} alt="" style={{ width: 56, height: 56, borderRadius: 10, objectFit: "cover", border: "1px solid #e5e7eb" }} />
+          <img src={url} alt="" style={{ width: 56, height: 56, borderRadius: 10, objectFit: "cover", border: "1px solid var(--color-border)" }} />
         ) : (
-          <div style={{ width: 56, height: 56, borderRadius: 10, background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.625rem", color: "#aaa", textAlign: "center" }}>
+          <div style={{ width: 56, height: 56, borderRadius: 10, background: "var(--color-border-muted)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.625rem", color: "#aaa", textAlign: "center" }}>
             No image
           </div>
         )}
@@ -1279,8 +1279,8 @@ export default function AdminPage({
       ) : (
         <>
           <div style={{ padding:'32px 2rem 0', maxWidth:1440, margin:'0 auto' }}>
-            <h1 style={{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'2rem', color:'#101828', margin:'0 0 6px' }}>Admin Dashboard</h1>
-            <p style={{ fontFamily:"'Nunito Sans',sans-serif", fontSize:'0.9375rem', color:'#4A5565', margin:0 }}>Manage content, users, tokens, and platform settings.</p>
+            <h1 style={{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'2rem', color:'var(--color-text-main)', margin:'0 0 6px' }}>Admin Dashboard</h1>
+            <p style={{ fontFamily:"'Nunito Sans',sans-serif", fontSize:'0.9375rem', color:'var(--color-text-body)', margin:0 }}>Manage content, users, tokens, and platform settings.</p>
           </div>
 
           <div className="admin-tabs">
@@ -1331,7 +1331,7 @@ export default function AdminPage({
                           <tr key={u.profile_id}>
                             <td style={{ fontWeight: 600 }}>{u.display_name || <span style={{ color: "#bbb" }}>—</span>}</td>
                             <td><span className={"role-pill " + (u.role_id !== "ROLE_04" ? "admin" : "learner")}>{u.role_name}</span></td>
-                            <td style={{ color: "#6B6B6B" }}>{fmtDate(u.created_at)}</td>
+                            <td style={{ color: "var(--color-text-muted)" }}>{fmtDate(u.created_at)}</td>
                             <td>{u.lessons_completed}</td>
                             <td>{u.dharma_points.toLocaleString()}</td>
                           </tr>
@@ -1363,10 +1363,10 @@ export default function AdminPage({
                       <tbody>
                         {(modRecent || []).map(c => (
                           <tr key={c.id}>
-                            <td style={{ color: "#6B6B6B", whiteSpace: "nowrap" }}>{fmtDate(c.created_at)}</td>
+                            <td style={{ color: "var(--color-text-muted)", whiteSpace: "nowrap" }}>{fmtDate(c.created_at)}</td>
                             <td style={{ fontWeight: 600 }}>{c.user_name || "—"}</td>
                             <td style={{ maxWidth: 420 }}>{c.body}</td>
-                            <td style={{ color: "#6B6B6B", fontSize: "0.75rem" }}>{c.snippet_id}</td>
+                            <td style={{ color: "var(--color-text-muted)", fontSize: "0.75rem" }}>{c.snippet_id}</td>
                             <td><button className="icon-btn danger" title="Delete comment" onClick={() => deleteRecentComment(c.id)}>✕</button></td>
                           </tr>
                         ))}
@@ -1381,14 +1381,14 @@ export default function AdminPage({
                       <tbody>
                         {(modReports || []).map(r => (
                           <tr key={r.id}>
-                            <td style={{ color: "#6B6B6B", whiteSpace: "nowrap" }}>{fmtDate(r.created_at)}</td>
+                            <td style={{ color: "var(--color-text-muted)", whiteSpace: "nowrap" }}>{fmtDate(r.created_at)}</td>
                             <td style={{ fontWeight: 600 }}>{r.comment_author || "—"}</td>
                             <td style={{ maxWidth: 420 }}>
                               {r.comment_body}
                               {!r.comment_id && <span style={{ color: "#aaa", fontSize: "0.75rem" }}> (already deleted)</span>}
                             </td>
-                            <td style={{ color: "#6B6B6B", fontSize: "0.75rem" }}>{r.snippet_id}</td>
-                            <td style={{ color: "#6B6B6B", maxWidth: 200 }}>{r.reason || "—"}</td>
+                            <td style={{ color: "var(--color-text-muted)", fontSize: "0.75rem" }}>{r.snippet_id}</td>
+                            <td style={{ color: "var(--color-text-muted)", maxWidth: 200 }}>{r.reason || "—"}</td>
                             {modView === "open" && (
                               <td style={{ whiteSpace: "nowrap" }}>
                                 {r.comment_id && <button className="icon-btn danger" title="Delete comment & resolve" onClick={() => resolveReport(r, "delete")}>Delete</button>}
@@ -1437,24 +1437,24 @@ export default function AdminPage({
                               <tr key={row.token_type} style={{ background: "#fffbf0" }}>
                                 <td>
                                   <input value={editCatData.token_icon || ""} onChange={e => setEditCatData(p => ({ ...p, token_icon: e.target.value }))}
-                                    style={{ width: 48, padding: "4px 6px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: "1.1rem", textAlign: "center" }} />
+                                    style={{ width: 48, padding: "4px 6px", border: "1px solid var(--color-border)", borderRadius: 6, fontSize: "1.1rem", textAlign: "center" }} />
                                 </td>
-                                <td style={{ fontSize: "0.8rem", color: "#6B6B6B" }}>{row.token_type}</td>
+                                <td style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>{row.token_type}</td>
                                 <td>
                                   <input value={editCatData.token_name || ""} onChange={e => setEditCatData(p => ({ ...p, token_name: e.target.value }))}
-                                    style={{ width: 120, padding: "4px 8px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: "0.875rem" }} />
+                                    style={{ width: 120, padding: "4px 8px", border: "1px solid var(--color-border)", borderRadius: 6, fontSize: "0.875rem" }} />
                                 </td>
                                 <td>
                                   <input value={editCatData.earn_trigger || ""} onChange={e => setEditCatData(p => ({ ...p, earn_trigger: e.target.value }))}
-                                    style={{ width: 100, padding: "4px 8px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: "0.875rem" }} />
+                                    style={{ width: 100, padding: "4px 8px", border: "1px solid var(--color-border)", borderRadius: 6, fontSize: "0.875rem" }} />
                                 </td>
                                 <td>
                                   <input value={editCatData.description || ""} onChange={e => setEditCatData(p => ({ ...p, description: e.target.value }))}
-                                    style={{ width: 200, padding: "4px 8px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: "0.875rem" }} />
+                                    style={{ width: 200, padding: "4px 8px", border: "1px solid var(--color-border)", borderRadius: 6, fontSize: "0.875rem" }} />
                                 </td>
                                 <td>
                                   <input type="number" value={editCatData.sort_order ?? 0} onChange={e => setEditCatData(p => ({ ...p, sort_order: +e.target.value }))}
-                                    style={{ width: 60, padding: "4px 8px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: "0.875rem" }} />
+                                    style={{ width: 60, padding: "4px 8px", border: "1px solid var(--color-border)", borderRadius: 6, fontSize: "0.875rem" }} />
                                 </td>
                                 <td>
                                   <input type="checkbox" checked={!!editCatData.is_active} onChange={e => setEditCatData(p => ({ ...p, is_active: e.target.checked }))} />
@@ -1473,8 +1473,8 @@ export default function AdminPage({
                                   </span>
                                 </td>
                                 <td style={{ fontWeight: 600 }}>{row.token_name}</td>
-                                <td style={{ color: "#6B6B6B", fontSize: "0.8rem" }}>{row.earn_trigger || "—"}</td>
-                                <td style={{ color: "#6B6B6B", fontSize: "0.8rem", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.description || "—"}</td>
+                                <td style={{ color: "var(--color-text-muted)", fontSize: "0.8rem" }}>{row.earn_trigger || "—"}</td>
+                                <td style={{ color: "var(--color-text-muted)", fontSize: "0.8rem", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.description || "—"}</td>
                                 <td style={{ color: "#aaa", fontSize: "0.8rem" }}>{row.sort_order}</td>
                                 <td>{row.is_active ? <span style={{ color: GREEN, fontWeight: 700 }}>✓</span> : <span style={{ color: "#ccc" }}>–</span>}</td>
                                 <td style={{ whiteSpace: "nowrap" }}>
@@ -1494,27 +1494,27 @@ export default function AdminPage({
                             <tr style={{ background: "#f0faf5" }}>
                               <td>
                                 <input value={addCatData.token_icon || ""} onChange={e => setAddCatData(p => ({ ...p, token_icon: e.target.value }))}
-                                  placeholder="🪙" style={{ width: 48, padding: "4px 6px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: "1.1rem", textAlign: "center" }} />
+                                  placeholder="🪙" style={{ width: 48, padding: "4px 6px", border: "1px solid var(--color-border)", borderRadius: 6, fontSize: "1.1rem", textAlign: "center" }} />
                               </td>
                               <td>
                                 <input value={addCatData.token_type || ""} onChange={e => setAddCatData(p => ({ ...p, token_type: e.target.value }))}
-                                  placeholder="e.g. pearl" style={{ width: 100, padding: "4px 8px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: "0.875rem" }} />
+                                  placeholder="e.g. pearl" style={{ width: 100, padding: "4px 8px", border: "1px solid var(--color-border)", borderRadius: 6, fontSize: "0.875rem" }} />
                               </td>
                               <td>
                                 <input value={addCatData.token_name || ""} onChange={e => setAddCatData(p => ({ ...p, token_name: e.target.value }))}
-                                  placeholder="Name" style={{ width: 120, padding: "4px 8px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: "0.875rem" }} />
+                                  placeholder="Name" style={{ width: 120, padding: "4px 8px", border: "1px solid var(--color-border)", borderRadius: 6, fontSize: "0.875rem" }} />
                               </td>
                               <td>
                                 <input value={addCatData.earn_trigger || ""} onChange={e => setAddCatData(p => ({ ...p, earn_trigger: e.target.value }))}
-                                  placeholder="lesson/module/…" style={{ width: 100, padding: "4px 8px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: "0.875rem" }} />
+                                  placeholder="lesson/module/…" style={{ width: 100, padding: "4px 8px", border: "1px solid var(--color-border)", borderRadius: 6, fontSize: "0.875rem" }} />
                               </td>
                               <td>
                                 <input value={addCatData.description || ""} onChange={e => setAddCatData(p => ({ ...p, description: e.target.value }))}
-                                  placeholder="Description" style={{ width: 200, padding: "4px 8px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: "0.875rem" }} />
+                                  placeholder="Description" style={{ width: 200, padding: "4px 8px", border: "1px solid var(--color-border)", borderRadius: 6, fontSize: "0.875rem" }} />
                               </td>
                               <td>
                                 <input type="number" value={addCatData.sort_order ?? 0} onChange={e => setAddCatData(p => ({ ...p, sort_order: +e.target.value }))}
-                                  style={{ width: 60, padding: "4px 8px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: "0.875rem" }} />
+                                  style={{ width: 60, padding: "4px 8px", border: "1px solid var(--color-border)", borderRadius: 6, fontSize: "0.875rem" }} />
                               </td>
                               <td>
                                 <input type="checkbox" defaultChecked onChange={e => setAddCatData(p => ({ ...p, is_active: e.target.checked }))} />
@@ -1533,18 +1533,18 @@ export default function AdminPage({
 
                 {/* Grant New Token panel */}
                 <div style={{ marginTop: 24, background: "white", border: "1px solid rgba(0,0,0,0.07)", borderRadius: 14, padding: "18px 20px" }}>
-                  <div style={{ fontFamily: "'Alumni Sans', sans-serif", fontWeight: 700, fontSize: "1rem", color: "#0A0A0A", marginBottom: 12 }}>Grant New Token</div>
+                  <div style={{ fontFamily: "'Alumni Sans', sans-serif", fontWeight: 700, fontSize: "1rem", color: "var(--color-text-main)", marginBottom: 12 }}>Grant New Token</div>
                   {grantMsg && <div className={"crud-msg " + (grantMsg.includes("failed") ? "err" : "ok")} style={{ marginBottom: 10 }}>{grantMsg}</div>}
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                      <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "#6B6B6B" }}>User</label>
+                      <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-muted)" }}>User</label>
                       <select className="crud-select" value={grantUser} onChange={e => setGrantUser(e.target.value)} style={{ minWidth: 160 }}>
                         <option value="">Select user…</option>
                         {(users || []).map(u => <option key={u.id} value={u.id}>{u.display_name || u.id.slice(0,8)}</option>)}
                       </select>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                      <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "#6B6B6B" }}>Token type</label>
+                      <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-muted)" }}>Token type</label>
                       <select className="crud-select" value={grantType} onChange={e => setGrantType(e.target.value)}>
                         {tokenCatalogue.length > 0
                           ? tokenCatalogue.map(t => <option key={t.token_type} value={t.token_type}>{t.token_icon} {t.token_name}</option>)
@@ -1553,9 +1553,9 @@ export default function AdminPage({
                       </select>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                      <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "#6B6B6B" }}>Qty</label>
+                      <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-muted)" }}>Qty</label>
                       <input type="number" min={1} max={999} value={grantQty} onChange={e => setGrantQty(e.target.value)}
-                        style={{ width: 70, padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 8, fontSize: "0.9rem" }} />
+                        style={{ width: 70, padding: "7px 10px", border: "1px solid var(--color-border)", borderRadius: 8, fontSize: "0.9rem" }} />
                     </div>
                     <button className="btn-primary" style={{ padding: "8px 20px", minHeight: 38, alignSelf: "flex-end" }} onClick={handleAwardToken}>Award</button>
                   </div>
@@ -1583,7 +1583,7 @@ export default function AdminPage({
                 {/* ── Filter bars ── */}
                 {contentSub === "Modules" && (
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14, alignItems: "center" }}>
-                    <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#6B6B6B" }}>Filter:</span>
+                    <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--color-text-muted)" }}>Filter:</span>
                     <select className="crud-select" value={moduleFilter.course} onChange={e => { const f={...moduleFilter,course:e.target.value}; setModuleFilter(f); loadContent("Modules",f,lessonFilter,snippetFilter); }}>
                       <option value="">All Courses</option>
                       {courses.map(c => <option key={c.course_id} value={c.course_id}>{c.course_name}</option>)}
@@ -1604,7 +1604,7 @@ export default function AdminPage({
                 )}
                 {contentSub === "Lessons" && (
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14, alignItems: "center" }}>
-                    <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#6B6B6B" }}>Filter:</span>
+                    <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--color-text-muted)" }}>Filter:</span>
                     <select className="crud-select" value={lessonFilter.module} onChange={e => { const f={module:e.target.value}; setLessonFilter(f); loadContent("Lessons",moduleFilter,f,snippetFilter); }}>
                       <option value="">All Modules</option>
                       {refData.modules.map(m => <option key={m.module_id} value={m.module_id}>{m.module_name}</option>)}
@@ -1617,7 +1617,7 @@ export default function AdminPage({
                 )}
                 {contentSub === "Snippets" && (
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14, alignItems: "center" }}>
-                    <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#6B6B6B" }}>Filter:</span>
+                    <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--color-text-muted)" }}>Filter:</span>
                     <select className="crud-select" value={snippetFilter.lesson} onChange={e => { const f={lesson:e.target.value}; setSnippetFilter(f); loadContent("Snippets",moduleFilter,lessonFilter,f); }}>
                       <option value="">All Snippets (by ID)</option>
                       {refData.lessons.map(l => <option key={l.lesson_id} value={l.lesson_id}>{l.lesson_name}</option>)}
@@ -1642,7 +1642,7 @@ export default function AdminPage({
                         <button className="btn-primary" style={{ padding: "7px 18px", minHeight: 36, fontSize: "0.875rem" }} onClick={() => { setShowAdd(s => !s); setAddData({}); setEditId(null); }}>
                           {showAdd ? "Cancel" : "+ Add New"}
                         </button>
-                        {dragSaving && <span style={{ fontSize: "0.8rem", color: "#6B6B6B" }}>Saving order…</span>}
+                        {dragSaving && <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>Saving order…</span>}
                         {canReorder && !dragSaving && <span style={{ fontSize: "0.75rem", color: "#bbb" }}>⠿ Drag rows to reorder</span>}
                       </div>
                       <div className="admin-table-wrap">
@@ -1728,7 +1728,7 @@ export default function AdminPage({
                       </div>
                     ))}
                     <form className="tax-add-form" onSubmit={addTerm}>
-                      <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "#6B6B6B", whiteSpace: "nowrap" }}>Add term</span>
+                      <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--color-text-muted)", whiteSpace: "nowrap" }}>Add term</span>
                       <input className="tax-add-input" placeholder="Term name" value={newTermName} onChange={e => setNewTermName(e.target.value)} style={{ flex: 1, minWidth: 140 }} />
                       <select className="tax-type-select" value={newTermType} onChange={e => setNewTermType(e.target.value)}>
                         <option value="category">Category</option>
@@ -1806,7 +1806,7 @@ export default function AdminPage({
                           return (
                             <tr key={badge.badge_id} style={{ background: "#F0F7FF" }}>
                               <td><input style={{ width: 48, textAlign: "center" }} value={eb.badge_icon || ""} onChange={e => setEb({ badge_icon: e.target.value })} /></td>
-                              <td style={{ fontFamily: "monospace", fontSize: "0.8rem", color: "#6B6B6B" }}>{badge.badge_id}</td>
+                              <td style={{ fontFamily: "monospace", fontSize: "0.8rem", color: "var(--color-text-muted)" }}>{badge.badge_id}</td>
                               <td><input style={{ width: 130 }} value={eb.badge_name || ""} onChange={e => setEb({ badge_name: e.target.value })} /></td>
                               <td>
                                 <select value={eb.badge_category || ""} onChange={e => setEb({ badge_category: e.target.value })}>
@@ -1833,13 +1833,13 @@ export default function AdminPage({
                         })() : (
                           <tr key={badge.badge_id} style={{ opacity: badge.is_active ? 1 : 0.5 }}>
                             <td style={{ fontSize: "1.25rem", textAlign: "center" }}>{badge.badge_icon}</td>
-                            <td style={{ fontFamily: "monospace", fontSize: "0.8rem", color: "#6B6B6B" }}>{badge.badge_id}</td>
+                            <td style={{ fontFamily: "monospace", fontSize: "0.8rem", color: "var(--color-text-muted)" }}>{badge.badge_id}</td>
                             <td style={{ fontWeight: 600 }}>{badge.badge_name}</td>
                             <td><span className={"badge-cat-pill " + badge.badge_category}>{badge.badge_category}</span></td>
                             <td style={{ fontSize: "0.8125rem", color: "#666" }}>{badge.criteria_type}</td>
                             <td style={{ textAlign: "center", fontWeight: 600 }}>{badge.criteria_value}</td>
                             <td style={{ fontSize: "0.8125rem", color: "#666", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{badge.description}</td>
-                            <td style={{ textAlign: "center", color: "#6B6B6B" }}>{badge.sort_order}</td>
+                            <td style={{ textAlign: "center", color: "var(--color-text-muted)" }}>{badge.sort_order}</td>
                             <td style={{ textAlign: "center" }}>
                               <label className="toggle-switch" style={{ margin: "0 auto" }}>
                                 <input type="checkbox" checked={badge.is_active} onChange={() => toggleBadge(badge)} />
@@ -1866,7 +1866,7 @@ export default function AdminPage({
               <div className="page-section">
                 <div className="page-section-head">
                   <div className="page-section-title">Featured Snippets</div>
-                  <div className="page-section-meta" style={{ fontSize:"0.8125rem", color:"#4A5565" }}>
+                  <div className="page-section-meta" style={{ fontSize:"0.8125rem", color:"var(--color-text-body)" }}>
                     Slot 1 = hero card on Gateway page. Slots 2–10 = swipe pool.
                   </div>
                 </div>
@@ -1877,7 +1877,7 @@ export default function AdminPage({
                   <input value={featSearch} onChange={e => setFeatSearch(e.target.value)}
                     onKeyDown={e => e.key === "Enter" && searchFeatSnip()}
                     placeholder="Search snippet by key or hook…"
-                    style={{ flex:1, padding:"7px 12px", borderRadius:8, border:"1px solid #E5E7EB", fontSize:"0.875rem" }} />
+                    style={{ flex:1, padding:"7px 12px", borderRadius:8, border:"1px solid var(--color-border)", fontSize:"0.875rem" }} />
                   <button onClick={searchFeatSnip} disabled={featSearching}
                     className="btn-primary" style={{ padding:"7px 16px", fontSize:"0.875rem" }}>
                     {featSearching ? "Searching…" : "Search"}
@@ -1885,18 +1885,18 @@ export default function AdminPage({
                 </div>
 
                 {featResults.length > 0 && featTargetSlot && (
-                  <div style={{ marginBottom:16, padding:"10px 14px", background:"#F9F9F9", borderRadius:8, border:"1px solid #E5E7EB" }}>
-                    <div style={{ fontSize:"0.8125rem", fontWeight:600, marginBottom:8, color:"#101828" }}>
+                  <div style={{ marginBottom:16, padding:"10px 14px", background:"#F9F9F9", borderRadius:8, border:"1px solid var(--color-border)" }}>
+                    <div style={{ fontSize:"0.8125rem", fontWeight:600, marginBottom:8, color:"var(--color-text-main)" }}>
                       Assign to Slot {featTargetSlot}:
                     </div>
                     <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                       {featResults.slice(0, 10).map(r => (
                         <div key={r.snippet_id} style={{ display:"flex", alignItems:"center", gap:10 }}>
-                          <span style={{ fontFamily:"'Inter',sans-serif", fontSize:"0.8125rem", flex:1, color:"#4A5565" }}>
+                          <span style={{ fontFamily:"'Inter',sans-serif", fontSize:"0.8125rem", flex:1, color:"var(--color-text-body)" }}>
                             {r.snippet_id.slice(0, 8)}… · ♥ {r.like_count || 0}
                           </span>
                           <button onClick={() => { assignFeatSlot(featTargetSlot, r.snippet_id); setFeatResults([]); setFeatTargetSlot(null); }}
-                            style={{ padding:"3px 12px", borderRadius:6, border:"1px solid #00509E", color:"#00509E", background:"white", cursor:"pointer", fontSize:"0.8125rem" }}>
+                            style={{ padding:"3px 12px", borderRadius:6, border:"1px solid var(--color-primary)", color:"var(--color-primary)", background:"white", cursor:"pointer", fontSize:"0.8125rem" }}>
                             Fill
                           </button>
                         </div>
@@ -1905,7 +1905,7 @@ export default function AdminPage({
                   </div>
                 )}
 
-                {featLoading ? <div style={{ color:"#4A5565" }}>Loading…</div> : (
+                {featLoading ? <div style={{ color:"var(--color-text-body)" }}>Loading…</div> : (
                   <div className="admin-table-wrap">
                     <table className="admin-table">
                       <thead><tr>
@@ -1917,26 +1917,26 @@ export default function AdminPage({
                       <tbody>
                         {featSlots.map((slot, i) => (
                           <tr key={i} style={{ background: i === 0 ? "#FFFBF0" : "white" }}>
-                            <td style={{ fontWeight:700, color: i===0 ? "#FF8E00" : "#4A5565" }}>{i + 1}{i===0?" ★":""}</td>
-                            <td style={{ fontFamily:"'Inter',sans-serif", fontSize:"0.8125rem", color:"#4A5565" }}>
+                            <td style={{ fontWeight:700, color: i===0 ? "var(--color-accent)" : "var(--color-text-body)" }}>{i + 1}{i===0?" ★":""}</td>
+                            <td style={{ fontFamily:"'Inter',sans-serif", fontSize:"0.8125rem", color:"var(--color-text-body)" }}>
                               {slot ? slot.snippet_id.slice(0, 16) + "…" : <span style={{ color:"#ccc" }}>— empty —</span>}
                             </td>
-                            <td style={{ color:"#4A5565", fontSize:"0.8125rem" }}>
+                            <td style={{ color:"var(--color-text-body)", fontSize:"0.8125rem" }}>
                               {slot?.snippet_core?.like_count ?? "—"}
                             </td>
                             <td>
                               <div style={{ display:"flex", gap:4 }}>
                                 <button onClick={() => { setFeatTargetSlot(i + 1); setFeatResults([]); setFeatSearch(""); }}
-                                  style={{ padding:"2px 8px", borderRadius:6, border:"1px solid #00509E", color:"#00509E", background:"white", cursor:"pointer", fontSize:"0.75rem" }}>
+                                  style={{ padding:"2px 8px", borderRadius:6, border:"1px solid var(--color-primary)", color:"var(--color-primary)", background:"white", cursor:"pointer", fontSize:"0.75rem" }}>
                                   Fill
                                 </button>
                                 {slot && <>
                                   <button onClick={() => moveFeatSlot(i + 1, -1)} disabled={i === 0}
-                                    style={{ padding:"2px 6px", borderRadius:6, border:"1px solid #E5E7EB", background:"white", cursor:"pointer", fontSize:"0.75rem" }}>↑</button>
+                                    style={{ padding:"2px 6px", borderRadius:6, border:"1px solid var(--color-border)", background:"white", cursor:"pointer", fontSize:"0.75rem" }}>↑</button>
                                   <button onClick={() => moveFeatSlot(i + 1, 1)} disabled={i === 9}
-                                    style={{ padding:"2px 6px", borderRadius:6, border:"1px solid #E5E7EB", background:"white", cursor:"pointer", fontSize:"0.75rem" }}>↓</button>
+                                    style={{ padding:"2px 6px", borderRadius:6, border:"1px solid var(--color-border)", background:"white", cursor:"pointer", fontSize:"0.75rem" }}>↓</button>
                                   <button onClick={() => clearFeatSlot(i + 1)}
-                                    style={{ padding:"2px 8px", borderRadius:6, border:"1px solid #E5E7EB", color:"#999", background:"white", cursor:"pointer", fontSize:"0.75rem" }}>✕</button>
+                                    style={{ padding:"2px 8px", borderRadius:6, border:"1px solid var(--color-border)", color:"#999", background:"white", cursor:"pointer", fontSize:"0.75rem" }}>✕</button>
                                 </>}
                               </div>
                             </td>
@@ -1954,7 +1954,7 @@ export default function AdminPage({
               <div className="page-section">
                 <div className="page-section-head">
                   <div className="page-section-title">Content Order</div>
-                  <div className="page-section-meta" style={{ fontSize:"0.8125rem", color:"#4A5565" }}>Drag rows or use ↑↓ to reorder. Saves immediately.</div>
+                  <div className="page-section-meta" style={{ fontSize:"0.8125rem", color:"var(--color-text-body)" }}>Drag rows or use ↑↓ to reorder. Saves immediately.</div>
                 </div>
 
                 <div style={{ display:"flex", gap:8, marginBottom:20, flexWrap:"wrap" }}>
@@ -1962,9 +1962,9 @@ export default function AdminPage({
                     <button key={p} onClick={() => { setOrderPanel(p); loadOrderPanel(p); }}
                       style={{ padding:"6px 18px", borderRadius:8, border:"1.5px solid", cursor:"pointer",
                         fontFamily:"'Inter',sans-serif", fontSize:"0.8125rem", fontWeight:500,
-                        borderColor: orderPanel===p ? "#00509E":"#E5E7EB",
-                        background:  orderPanel===p ? "#00509E":"white",
-                        color:       orderPanel===p ? "white":"#4A5565" }}>
+                        borderColor: orderPanel===p ? "var(--color-primary)":"var(--color-border)",
+                        background:  orderPanel===p ? "var(--color-primary)":"white",
+                        color:       orderPanel===p ? "white":"var(--color-text-body)" }}>
                       {({courses:"Courses",themes:"Themes",modules:"Modules",lessons:"Lessons"})[p]}
                     </button>
                   ))}
@@ -1973,12 +1973,12 @@ export default function AdminPage({
                 {orderPanel === "modules" && (
                   <div style={{ display:"flex", gap:10, marginBottom:16, flexWrap:"wrap" }}>
                     <select value={orderFilter.course} onChange={e => { const f={...orderFilter,course:e.target.value}; setOrderFilter(f); loadOrderPanel("modules",f); }}
-                      style={{ padding:"6px 10px", borderRadius:8, border:"1px solid #E5E7EB", fontSize:"0.8125rem" }}>
+                      style={{ padding:"6px 10px", borderRadius:8, border:"1px solid var(--color-border)", fontSize:"0.8125rem" }}>
                       <option value="">All Courses</option>
                       {orderCourses.map(c => <option key={c.course_id} value={c.course_id}>{c.course_name}</option>)}
                     </select>
                     <select value={orderFilter.theme} onChange={e => { const f={...orderFilter,theme:e.target.value}; setOrderFilter(f); loadOrderPanel("modules",f); }}
-                      style={{ padding:"6px 10px", borderRadius:8, border:"1px solid #E5E7EB", fontSize:"0.8125rem" }}>
+                      style={{ padding:"6px 10px", borderRadius:8, border:"1px solid var(--color-border)", fontSize:"0.8125rem" }}>
                       <option value="">All Themes</option>
                       {orderThemes.map(t => <option key={t.theme_id} value={t.theme_id}>{t.title}</option>)}
                     </select>
@@ -1994,7 +1994,7 @@ export default function AdminPage({
                         if (f.course) q+="&course_id=eq."+f.course;
                         setOrderModules(await supabase("modules",q) || []);
                       }}
-                      style={{ padding:"6px 10px", borderRadius:8, border:"1px solid #E5E7EB", fontSize:"0.8125rem" }}>
+                      style={{ padding:"6px 10px", borderRadius:8, border:"1px solid var(--color-border)", fontSize:"0.8125rem" }}>
                       <option value="">All Courses</option>
                       {orderCourses.map(c => <option key={c.course_id} value={c.course_id}>{c.course_name}</option>)}
                     </select>
@@ -2006,12 +2006,12 @@ export default function AdminPage({
                         if (f.theme)  q+="&theme_id=eq."+f.theme;
                         setOrderModules(await supabase("modules",q) || []);
                       }}
-                      style={{ padding:"6px 10px", borderRadius:8, border:"1px solid #E5E7EB", fontSize:"0.8125rem" }}>
+                      style={{ padding:"6px 10px", borderRadius:8, border:"1px solid var(--color-border)", fontSize:"0.8125rem" }}>
                       <option value="">All Themes</option>
                       {orderThemes.map(t => <option key={t.theme_id} value={t.theme_id}>{t.title}</option>)}
                     </select>
                     <select value={orderFilter.module} onChange={e => { const f={...orderFilter,module:e.target.value}; setOrderFilter(f); loadOrderPanel("lessons",f); }}
-                      style={{ padding:"6px 10px", borderRadius:8, border:"1px solid #E5E7EB", fontSize:"0.8125rem" }}>
+                      style={{ padding:"6px 10px", borderRadius:8, border:"1px solid var(--color-border)", fontSize:"0.8125rem" }}>
                       <option value="">Select Module</option>
                       {orderModules.map(m => <option key={m.module_id} value={m.module_id}>{m.module_name}</option>)}
                     </select>
@@ -2020,7 +2020,7 @@ export default function AdminPage({
 
                 {orderMsg && <div className={"crud-msg "+(orderMsg.includes("failed")?"err":"ok")} style={{ marginBottom:12 }}>{orderMsg}</div>}
 
-                {orderLoading && <div style={{ color:"#4A5565", fontSize:"0.9rem", padding:"12px 0" }}>Loading…</div>}
+                {orderLoading && <div style={{ color:"var(--color-text-body)", fontSize:"0.9rem", padding:"12px 0" }}>Loading…</div>}
 
                 {!orderLoading && (
                   <div className="admin-table-wrap">
@@ -2033,7 +2033,7 @@ export default function AdminPage({
                       </tr></thead>
                       <tbody>
                         {(({courses:orderCourses,themes:orderThemes,modules:orderModules,lessons:orderLessons})[orderPanel]||[]).length === 0 && (
-                          <tr><td colSpan={4} style={{ color:"#4A5565", padding:"16px", textAlign:"center" }}>
+                          <tr><td colSpan={4} style={{ color:"var(--color-text-body)", padding:"16px", textAlign:"center" }}>
                             {orderPanel==="modules"||orderPanel==="lessons" ? "Select filters above to load items." : "No items found."}
                           </td></tr>
                         )}
@@ -2048,13 +2048,13 @@ export default function AdminPage({
                               onDrop={() => orderDrop(orderPanel, idx)}
                               style={{ background:orderDragIdx===idx?"#FFF8EE":"white", cursor:"grab" }}>
                               <td style={{ color:"#aaa", fontSize:"1rem", textAlign:"center", userSelect:"none" }}>⠿</td>
-                              <td style={{ color:"#4A5565", fontSize:"0.8rem", width:36 }}>{idx+1}</td>
+                              <td style={{ color:"var(--color-text-body)", fontSize:"0.8rem", width:36 }}>{idx+1}</td>
                               <td style={{ fontWeight:500 }}>{row[nameKey]}</td>
                               <td><div style={{ display:"flex", gap:4 }}>
                                 <button onClick={() => orderMove(orderPanel,idx,-1)} disabled={idx===0||orderSaving}
-                                  style={{ padding:"2px 8px", borderRadius:6, border:"1px solid #E5E7EB", background:"white", cursor:"pointer", fontSize:"0.8rem" }}>↑</button>
+                                  style={{ padding:"2px 8px", borderRadius:6, border:"1px solid var(--color-border)", background:"white", cursor:"pointer", fontSize:"0.8rem" }}>↑</button>
                                 <button onClick={() => orderMove(orderPanel,idx,1)} disabled={idx===allItems.length-1||orderSaving}
-                                  style={{ padding:"2px 8px", borderRadius:6, border:"1px solid #E5E7EB", background:"white", cursor:"pointer", fontSize:"0.8rem" }}>↓</button>
+                                  style={{ padding:"2px 8px", borderRadius:6, border:"1px solid var(--color-border)", background:"white", cursor:"pointer", fontSize:"0.8rem" }}>↓</button>
                               </div></td>
                             </tr>
                           );
@@ -2085,9 +2085,9 @@ export default function AdminPage({
                     ? <button className="btn-secondary" style={{ fontSize: "0.8rem", padding: "5px 14px" }} onClick={fetchNextSnippetKey}>Check next snippet_key</button>
                     : (
                     <div style={{ padding: "10px 16px", background: "#f0f7ff", border: "1px solid #c0d8f0", borderRadius: 10, display: "flex", alignItems: "center", gap: 10 }}>
-                      <i className="ti ti-key" style={{ color: "#00509E", fontSize: "1.1rem" }} />
-                      <span style={{ fontSize: "0.9rem", color: "#1F1F1F" }}>
-                        Next <strong>snippet_key</strong>: <strong style={{ color: "#00509E", fontSize: "1.1rem" }}>{nextSnippetKey}</strong>
+                      <i className="ti ti-key" style={{ color: "var(--color-primary)", fontSize: "1.1rem" }} />
+                      <span style={{ fontSize: "0.9rem", color: "var(--color-text-main)" }}>
+                        Next <strong>snippet_key</strong>: <strong style={{ color: "var(--color-primary)", fontSize: "1.1rem" }}>{nextSnippetKey}</strong>
                       </span>
                     </div>
                   )}
@@ -2095,9 +2095,9 @@ export default function AdminPage({
                     ? <button className="btn-secondary" style={{ fontSize: "0.8rem", padding: "5px 14px" }} onClick={fetchNextQuestionKey}>Check next question_key</button>
                     : (
                     <div style={{ padding: "10px 16px", background: "#f0f7ff", border: "1px solid #c0d8f0", borderRadius: 10, display: "flex", alignItems: "center", gap: 10 }}>
-                      <i className="ti ti-question-mark" style={{ color: "#00509E", fontSize: "1.1rem" }} />
-                      <span style={{ fontSize: "0.9rem", color: "#1F1F1F" }}>
-                        Next <strong>question_key</strong>: <strong style={{ color: "#00509E", fontSize: "1.1rem" }}>{nextQuestionKey}</strong>
+                      <i className="ti ti-question-mark" style={{ color: "var(--color-primary)", fontSize: "1.1rem" }} />
+                      <span style={{ fontSize: "0.9rem", color: "var(--color-text-main)" }}>
+                        Next <strong>question_key</strong>: <strong style={{ color: "var(--color-primary)", fontSize: "1.1rem" }}>{nextQuestionKey}</strong>
                       </span>
                     </div>
                   )}
@@ -2108,7 +2108,7 @@ export default function AdminPage({
                   <button className="btn-secondary" style={{ padding: "7px 18px", fontSize: "0.875rem" }} onClick={downloadTemplate}>
                     ⬇ Download Template
                   </button>
-                  <span style={{ fontSize: "0.8rem", color: "#6B6B6B" }}>
+                  <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
                     Single "Snippets" sheet with all columns + a Reference sheet. Fill snippet fields, question fields, or both per row.
                   </span>
                 </div>
@@ -2138,7 +2138,7 @@ export default function AdminPage({
                   const cols = Object.keys(rows[0]);
                   return (
                     <div key={sheetName} style={{ marginBottom: 24 }}>
-                      <div style={{ fontFamily: "'Alumni Sans', sans-serif", fontWeight: 700, fontSize: "1rem", color: "#0A0A0A", marginBottom: 8 }}>
+                      <div style={{ fontFamily: "'Alumni Sans', sans-serif", fontWeight: 700, fontSize: "1rem", color: "var(--color-text-main)", marginBottom: 8 }}>
                         {sheetName} — {rows.length} row{rows.length !== 1 ? "s" : ""}
                       </div>
                       <div className="admin-table-wrap" style={{ maxHeight: 200, overflowY: "auto" }}>
@@ -2172,7 +2172,7 @@ export default function AdminPage({
                       {validateRunning ? "Validating…" : "🔍 Validate"}
                     </button>
                     {validateResults && !validateRunning && (
-                      <span style={{ fontSize: "0.8rem", color: "#6B6B6B" }}>
+                      <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
                         {validated ? "Validation passed — ready to import." : "Fix errors before importing."}
                       </span>
                     )}
@@ -2232,7 +2232,7 @@ export default function AdminPage({
                                   return (
                                     <div key={val} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, fontSize: "0.8rem" }}>
                                       <span style={{ fontFamily: "monospace", background: "#f0f0f0", padding: "2px 7px", borderRadius: 4, color: "#333" }}>{val}</span>
-                                      {res.resolvedTo && <><span style={{ color: "#6B6B6B" }}>→</span><span style={{ color: "#222" }}>{res.resolvedTo}</span></>}
+                                      {res.resolvedTo && <><span style={{ color: "var(--color-text-muted)" }}>→</span><span style={{ color: "#222" }}>{res.resolvedTo}</span></>}
                                       <span style={{ background: badge.bg, color: badge.color, padding: "2px 8px", borderRadius: 10, fontSize: "0.73rem", fontWeight: 700 }}>{badge.text}</span>
                                     </div>
                                   );
@@ -2299,7 +2299,7 @@ export default function AdminPage({
                       return (
                         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 24px", marginBottom: 16 }}>
                           {statItems.map(s => (
-                            <div key={s.label} style={{ fontSize: "0.875rem", color: s.dim ? "#6B6B6B" : "#00924A", minWidth: 170 }}>
+                            <div key={s.label} style={{ fontSize: "0.875rem", color: s.dim ? "var(--color-text-muted)" : "var(--color-secondary)", minWidth: 170 }}>
                               <span style={{ fontWeight: 700 }}>{s.val ?? 0}</span>
                               <span style={{ color: "#555", marginLeft: 6 }}>{s.label}</span>
                             </div>

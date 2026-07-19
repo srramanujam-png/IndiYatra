@@ -22,9 +22,23 @@ CSS
   /* Text and Neutral */
   --color-text-main: #101828;    /* Primary Headlines */
   --color-text-body: #4A5565;    /* Secondary/Descriptive Text */
+  --color-text-muted: #6B6B6B;   /* Muted/meta text — the ONE muted grey */
   --color-border: #E5E7EB;       /* Borders and Dividers */
   --color-border-muted: #F3F4F6; /* Sub-dividers */
+
+  /* Semantic */
+  --color-danger: #c62828;       /* Errors, destructive actions */
+  --color-browse: #4AADA8;       /* Course-browsing chrome ONLY (legalised teal).
+                                    Usage rule: card footers / section markers on
+                                    course-browsing surfaces. Never for progress,
+                                    success, or rewards (that is --color-secondary). */
 }
+
+Rule: use tokens, not hex. New code must reference these CSS variables
+(var(--color-…), var(--text-…), var(--radius), var(--space-…)); raw hex literals
+in src/ are lint-gated (roadmap 5.7). The full token sheet, including the
+5-role type scale (--text-xs/sm/base/lg/xl/hero), radii, spacing and button
+shadow, lives in src/index.css — the single source of truth.
 
 3. Typography System
 Assign these font families and properties based on the element type:

@@ -15,7 +15,7 @@ const styles = `
   .theme-banner-accent { width: 5px; height: 40px; border-radius: 3px; background: ${SAFFRON}; flex-shrink: 0; }
   .theme-banner-body   { flex: 1; min-width: 0; }
   .theme-banner-title  { font-family: 'Alumni Sans', sans-serif; font-size: 1.25rem; font-weight: 700; color: ${HERITAGE}; }
-  .theme-banner-desc   { font-size: 0.8125rem; color: #1F1F1F; margin-top: 2px; }
+  .theme-banner-desc   { font-size: 0.8125rem; color: var(--color-text-main); margin-top: 2px; }
   .theme-banner-count  {
     flex-shrink: 0; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em;
     padding: 3px 10px; border-radius: 999px; background: ${SAFFRON}15; color: ${SAFFRON};
@@ -38,21 +38,21 @@ const styles = `
 
   .module-row-thumb {
     width: 64px; height: 64px; border-radius: 12px; overflow: hidden;
-    background: #EBEBEA; flex-shrink: 0;
+    background: var(--color-border); flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
   }
   .module-row-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
   .module-row-info { flex: 1; min-width: 0; }
-  .module-row-number { font-size: 0.6875rem; color: #6B6B6B; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 3px; }
-  .module-row-name   { font-family: 'Alumni Sans', sans-serif; font-size: 1.1875rem; font-weight: 700; color: #0A0A0A; line-height: 1.2; margin-bottom: 4px; }
-  .module-row-desc   { font-size: 0.75rem; color: #6B6B6B; line-height: 1.4; margin-bottom: 5px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
+  .module-row-number { font-size: 0.6875rem; color: var(--color-text-muted); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 3px; }
+  .module-row-name   { font-family: 'Alumni Sans', sans-serif; font-size: 1.1875rem; font-weight: 700; color: var(--color-text-main); line-height: 1.2; margin-bottom: 4px; }
+  .module-row-desc   { font-size: 0.75rem; color: var(--color-text-muted); line-height: 1.4; margin-bottom: 5px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
   .module-row-right  { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
   .vis-badge-right   { border-radius: 999px; padding: 2px 9px; font-size: 0.625rem; font-weight: 700; white-space: nowrap; }
 
   .module-row-progress { height: 4px; background: rgba(0,0,0,0.06); border-radius: 2px; margin-bottom: 4px; overflow: hidden; max-width: 160px; }
   .module-row-progress-fill { height: 100%; border-radius: 2px; }
-  .module-row-count { font-size: 0.75rem; color: #6B6B6B; }
+  .module-row-count { font-size: 0.75rem; color: var(--color-text-muted); }
 
   .module-row-cta {
     flex-shrink: 0; border-radius: 999px; padding: 7px 16px;
@@ -72,15 +72,15 @@ const styles = `
     transform: none !important; box-shadow: none !important;
   }
   .module-lock-badge {
-    font-size: 0.8125rem; color: #6B6B6B; white-space: nowrap; flex-shrink: 0;
+    font-size: 0.8125rem; color: var(--color-text-muted); white-space: nowrap; flex-shrink: 0;
   }
   .bm-btn, .like-btn {
     flex-shrink: 0; background: none; border: none; cursor: pointer;
     font-size: 1.125rem; line-height: 1; padding: 4px 6px; border-radius: 8px;
-    color: #6B6B6B; transition: color 0.15s, transform 0.15s;
+    color: var(--color-text-muted); transition: color 0.15s, transform 0.15s;
   }
-  .bm-btn:hover { color: #FF8E00; transform: scale(1.15); }
-  .bm-btn.saved { color: #FF8E00; }
+  .bm-btn:hover { color: var(--color-accent); transform: scale(1.15); }
+  .bm-btn.saved { color: var(--color-accent); }
   .like-btn:hover { color: #D85A30; transform: scale(1.15); }
   .like-btn.liked { color: #D85A30; }
   .module-row-actions { display: flex; gap: 2px; }

@@ -1184,7 +1184,7 @@ export default function App() {
         );
       case "admin":
         return (
-          <Suspense fallback={<div style={{padding:"2rem",textAlign:"center",color:"#6B6B6B"}}>Loading…</div>}>
+          <Suspense fallback={<div style={{padding:"2rem",textAlign:"center",color:"var(--color-text-muted)"}}>Loading…</div>}>
             <AdminPage
               {...commonProps}
               isAdmin={isAdmin}
@@ -1194,7 +1194,7 @@ export default function App() {
         );
       case "editor":
         return (
-          <Suspense fallback={<div style={{padding:"2rem",textAlign:"center",color:"#6B6B6B"}}>Loading…</div>}>
+          <Suspense fallback={<div style={{padding:"2rem",textAlign:"center",color:"var(--color-text-muted)"}}>Loading…</div>}>
             <EditorPage
               {...commonProps}
               userEditorialRole={userEditorialRole}
@@ -1239,7 +1239,7 @@ export default function App() {
         {toastMsg && (
           <div style={{
             position: "fixed", bottom: "90px", left: "50%", transform: "translateX(-50%)",
-            background: "#00509E", color: "white", padding: "10px 22px",
+            background: "var(--color-primary)", color: "white", padding: "10px 22px",
             borderRadius: "999px", fontSize: "0.875rem", fontWeight: 600,
             boxShadow: "0 4px 20px rgba(0,0,0,0.25)", zIndex: 9999,
             animation: "fadeUp 0.2s ease both", whiteSpace: "nowrap", pointerEvents: "none",

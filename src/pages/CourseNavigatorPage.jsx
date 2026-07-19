@@ -75,7 +75,7 @@ function StatusDot({ status, size = 8, baseColor = GREEN }) {
   if (status === "done")    return <span style={{ ...s, background: baseColor }} />;
   if (status === "partial") return <span style={{ ...s, border: `1.5px solid ${baseColor}`,
     backgroundImage: `linear-gradient(135deg,${baseColor} 50%,transparent 50%)` }} />;
-  return <span style={{ ...s, border: "1.5px solid #BBBBB8" }} />;
+  return <span style={{ ...s, border: "1.5px solid var(--color-text-muted)" }} />;
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
@@ -92,8 +92,8 @@ const styles = `
     padding: 14px 16px 12px;
     border-bottom: 0.5px solid rgba(0,0,0,0.07);
   }
-  .nav-course-name { font-family: 'Alumni Sans', sans-serif; font-size: 1.25rem; font-weight: 700; color: #0A0A0A; }
-  .nav-course-meta { font-size: 0.6875rem; color: #6B6B6B; margin-top: 2px; }
+  .nav-course-name { font-family: 'Alumni Sans', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--color-text-main); }
+  .nav-course-meta { font-size: 0.6875rem; color: var(--color-text-muted); margin-top: 2px; }
   .nav-level-row {
     display: flex; align-items: center; gap: 8px; padding: 8px 16px;
     cursor: pointer; user-select: none;
@@ -110,37 +110,37 @@ const styles = `
   }
   .nav-theme-row:hover { background: rgba(0,0,0,0.02); }
   .nav-theme-row.active { background: rgba(0,80,158,0.05); }
-  .nav-theme-name { font-size: 12px; font-weight: 500; color: #0A0A0A; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nav-theme-name { font-size: 12px; font-weight: 500; color: var(--color-text-main); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .nav-mod-row {
     display: flex; align-items: center; gap: 8px;
     padding: 5px 16px 5px 40px; cursor: pointer;
   }
   .nav-mod-row:hover { background: rgba(0,0,0,0.02); }
   .nav-mod-row.active { background: rgba(0,80,158,0.05); }
-  .nav-mod-name { font-size: 12px; color: #1F1F1F; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nav-mod-name { font-size: 12px; color: var(--color-text-main); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .nav-les-row {
     display: flex; align-items: center; gap: 8px;
     padding: 6px 16px 6px 52px; cursor: pointer; min-height: 36px;
   }
   .nav-les-row:hover { background: rgba(0,0,0,0.02); }
   .nav-les-row.active { background: rgba(0,80,158,0.08); }
-  .nav-les-name { font-size: 12px; flex: 1; color: #1F1F1F; line-height: 1.3; }
+  .nav-les-name { font-size: 12px; flex: 1; color: var(--color-text-main); line-height: 1.3; }
   .nav-les-row.active .nav-les-name { color: ${HERITAGE}; font-weight: 500; }
-  .nav-ch { font-size: 12px; color: #BBBBB8; transition: transform .18s; flex-shrink: 0; }
+  .nav-ch { font-size: 12px; color: var(--color-text-muted); transition: transform .18s; flex-shrink: 0; }
   .nav-ch.open { transform: rotate(180deg); }
 
   /* ── Detail panel ── */
   .nav-detail-col { flex: 1; background: #FAFAF7; padding: 28px 32px; overflow-y: auto; }
   .nav-empty { display: flex; align-items: center; justify-content: center;
-    height: 100%; color: #6B6B6B; font-size: 13px; }
-  .nd-eyebrow { font-size: 11px; color: #6B6B6B; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
-  .nd-title { font-family: 'Alumni Sans', sans-serif; font-size: 1.75rem; font-weight: 700; color: #0A0A0A; margin-bottom: 4px; line-height: 1.1; }
-  .nd-sub { font-size: 0.8125rem; color: #6B6B6B; margin-bottom: 16px; }
+    height: 100%; color: var(--color-text-muted); font-size: 13px; }
+  .nd-eyebrow { font-size: 11px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+  .nd-title { font-family: 'Alumni Sans', sans-serif; font-size: 1.75rem; font-weight: 700; color: var(--color-text-main); margin-bottom: 4px; line-height: 1.1; }
+  .nd-sub { font-size: 0.8125rem; color: var(--color-text-muted); margin-bottom: 16px; }
   .nd-stat-row { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
   .nd-stat { background: white; border: 1px solid rgba(0,0,0,0.07); border-radius: 12px;
     padding: 10px 16px; min-width: 100px; }
   .nd-stat-val { font-size: 1.25rem; font-weight: 700; color: ${HERITAGE}; }
-  .nd-stat-lbl { font-size: 0.6875rem; color: #6B6B6B; margin-top: 1px; }
+  .nd-stat-lbl { font-size: 0.6875rem; color: var(--color-text-muted); margin-top: 1px; }
   .nd-prog-wrap { height: 5px; background: rgba(0,0,0,0.07); border-radius: 3px; margin-bottom: 20px; overflow: hidden; }
   .nd-prog-fill { height: 100%; border-radius: 3px; background: ${HERITAGE}; transition: width .3s; }
   .nd-cta {
@@ -153,7 +153,7 @@ const styles = `
   .nd-cta:hover { box-shadow: 0 4px 14px rgba(255,142,0,0.35); }
   .nd-section-title {
     font-size: 0.6875rem; font-weight: 700; letter-spacing: .07em;
-    text-transform: uppercase; color: #6B6B6B; margin-bottom: 10px;
+    text-transform: uppercase; color: var(--color-text-muted); margin-bottom: 10px;
   }
   .nd-card {
     background: white; border: 1px solid rgba(0,0,0,0.07); border-radius: 12px;
@@ -164,8 +164,8 @@ const styles = `
   .nd-card:hover { border-color: ${SAFFRON}55; transform: translateX(3px); }
   .nd-card-icon { font-size: 20px; flex-shrink: 0; }
   .nd-card-info { flex: 1; min-width: 0; }
-  .nd-card-name { font-family: 'Alumni Sans', sans-serif; font-size: 1.0625rem; font-weight: 700; color: #0A0A0A; }
-  .nd-card-meta { font-size: 0.75rem; color: #6B6B6B; margin-top: 2px; }
+  .nd-card-name { font-family: 'Alumni Sans', sans-serif; font-size: 1.0625rem; font-weight: 700; color: var(--color-text-main); }
+  .nd-card-meta { font-size: 0.75rem; color: var(--color-text-muted); margin-top: 2px; }
   .nd-card-prog { height: 3px; background: rgba(0,0,0,0.07); border-radius: 2px; margin-top: 6px; overflow: hidden; max-width: 180px; }
   .nd-card-prog-fill { height: 100%; border-radius: 2px; }
   .nd-card-right { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
@@ -376,7 +376,7 @@ export default function CourseNavigatorPage({
                 </div>
                 <div className="nd-card-right">
                   {tt > 0 && <span className="nd-card-pct">{tp}%</span>}
-                  <i className="ti ti-chevron-right" aria-hidden="true" style={{ fontSize: 14, color: "#BBBBB8" }} />
+                  <i className="ti ti-chevron-right" aria-hidden="true" style={{ fontSize: 14, color: "var(--color-text-muted)" }} />
                 </div>
               </div>
             );
@@ -423,7 +423,7 @@ export default function CourseNavigatorPage({
                 </div>
                 <div className="nd-card-right">
                   {mt > 0 && <span className="nd-card-pct">{mp}%</span>}
-                  <i className="ti ti-chevron-right" aria-hidden="true" style={{ fontSize: 14, color: "#BBBBB8" }} />
+                  <i className="ti ti-chevron-right" aria-hidden="true" style={{ fontSize: 14, color: "var(--color-text-muted)" }} />
                 </div>
               </div>
             );
@@ -474,7 +474,7 @@ export default function CourseNavigatorPage({
                 display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {lStatus === "done"   && <i className="ti ti-circle-check" aria-hidden="true" style={{ fontSize: 15, color: GREEN }} />}
                 {lStatus === "resume" && <i className="ti ti-player-play"  aria-hidden="true" style={{ fontSize: 14, color: SAFFRON }} />}
-                {lStatus === "none"   && <span style={{ fontSize: 11, fontWeight: 700, color: "#6B6B6B" }}>{i + 1}</span>}
+                {lStatus === "none"   && <span style={{ fontSize: 11, fontWeight: 700, color: "var(--color-text-muted)" }}>{i + 1}</span>}
               </div>
               <div className="nd-card-info">
                 <div className="nd-card-name">{lesson.lesson_name}</div>
@@ -531,7 +531,7 @@ export default function CourseNavigatorPage({
             </div>
             <div className="nd-card-right">
               {tLessons.length > 0 && <span className="nd-card-pct">{pct}%</span>}
-              <i className="ti ti-chevron-right" aria-hidden="true" style={{ fontSize: 14, color: "#BBBBB8" }} />
+              <i className="ti ti-chevron-right" aria-hidden="true" style={{ fontSize: 14, color: "var(--color-text-muted)" }} />
             </div>
           </div>
         );
@@ -554,7 +554,7 @@ export default function CourseNavigatorPage({
             </div>
             <div className="nd-card-right">
               {mod.lessons.length > 0 && <span className="nd-card-pct">{pct}%</span>}
-              <i className="ti ti-chevron-right" aria-hidden="true" style={{ fontSize: 14, color: "#BBBBB8" }} />
+              <i className="ti ti-chevron-right" aria-hidden="true" style={{ fontSize: 14, color: "var(--color-text-muted)" }} />
             </div>
           </div>
         );
@@ -573,7 +573,7 @@ export default function CourseNavigatorPage({
                 display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {lStatus === "done"   && <i className="ti ti-circle-check" aria-hidden="true" style={{ fontSize: 14, color: GREEN }} />}
                 {lStatus === "resume" && <i className="ti ti-player-play"  aria-hidden="true" style={{ fontSize: 13, color: SAFFRON }} />}
-                {lStatus === "none"   && <span style={{ fontSize: 11, fontWeight: 700, color: "#6B6B6B" }}>{i + 1}</span>}
+                {lStatus === "none"   && <span style={{ fontSize: 11, fontWeight: 700, color: "var(--color-text-muted)" }}>{i + 1}</span>}
               </div>
               <div className="nd-card-info">
                 <div className="nd-card-name">{lesson.lesson_name}</div>
@@ -662,7 +662,7 @@ export default function CourseNavigatorPage({
                             onClick={() => desktopClickLesson(lesson, mid, tid, lid)}>
                             {lStatus === "done"   && <i className="ti ti-circle-check" aria-hidden="true" style={{ fontSize: 13, color: GREEN, flexShrink: 0 }} />}
                             {lStatus === "resume" && <i className="ti ti-player-play"  aria-hidden="true" style={{ fontSize: 13, color: SAFFRON, flexShrink: 0 }} />}
-                            {lStatus === "none"   && <i className="ti ti-circle"        aria-hidden="true" style={{ fontSize: 13, color: "#BBBBB8", flexShrink: 0 }} />}
+                            {lStatus === "none"   && <i className="ti ti-circle"        aria-hidden="true" style={{ fontSize: 13, color: "var(--color-text-muted)", flexShrink: 0 }} />}
                             <span className="nav-les-name">{lesson.lesson_name}</span>
                           </div>
                         );
@@ -695,19 +695,19 @@ export default function CourseNavigatorPage({
           </span>
           {selThemeId && lvl?.themes[selThemeId] && (
             <>
-              <i className="ti ti-chevron-right" aria-hidden="true" style={{ fontSize: 11, color: "#BBBBB8" }} />
+              <i className="ti ti-chevron-right" aria-hidden="true" style={{ fontSize: 11, color: "var(--color-text-muted)" }} />
               <span onClick={() => { setMobileDepth("themes"); setSelModuleId(null); }}
                 style={{ fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 999,
-                  background: "rgba(0,0,0,0.06)", color: "#1F1F1F", cursor: "pointer" }}>
+                  background: "rgba(0,0,0,0.06)", color: "var(--color-text-main)", cursor: "pointer" }}>
                 {lvl.themes[selThemeId].title}
               </span>
             </>
           )}
           {selModuleId && lvl?.themes[selThemeId]?.modules[selModuleId] && (
             <>
-              <i className="ti ti-chevron-right" aria-hidden="true" style={{ fontSize: 11, color: "#BBBBB8" }} />
+              <i className="ti ti-chevron-right" aria-hidden="true" style={{ fontSize: 11, color: "var(--color-text-muted)" }} />
               <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 999,
-                background: "rgba(0,0,0,0.06)", color: "#1F1F1F" }}>
+                background: "rgba(0,0,0,0.06)", color: "var(--color-text-main)" }}>
                 {lvl.themes[selThemeId].modules[selModuleId].name}
               </span>
             </>
@@ -730,7 +730,7 @@ export default function CourseNavigatorPage({
             {meta.label}{meta.classes ? ` · ${meta.classes}` : ""}
           </span>
           <span style={{ flex: 1 }} />
-          <i className="ti ti-chevron-right" aria-hidden="true" style={{ fontSize: 14, color: "#BBBBB8" }} />
+          <i className="ti ti-chevron-right" aria-hidden="true" style={{ fontSize: 14, color: "var(--color-text-muted)" }} />
         </div>
       );
     });
@@ -777,7 +777,7 @@ export default function CourseNavigatorPage({
             )}
           </div>
           {loading
-            ? <div style={{ padding: "20px 16px", fontSize: 13, color: "#6B6B6B" }}>Loading…</div>
+            ? <div style={{ padding: "20px 16px", fontSize: 13, color: "var(--color-text-muted)" }}>Loading…</div>
             : (
               <>
                 {/* Desktop tree */}

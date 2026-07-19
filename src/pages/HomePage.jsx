@@ -7,7 +7,7 @@ import { FALLBACK } from "../config/appStrings";
 import { AuthContext } from "../contexts/AuthContext";
 import { useEntityPreview } from "../components/EntityPreview";
 
-const TEAL = "#4AADA8";
+const TEAL = "var(--color-browse)";
 
 const styles = `
   .hp-hero {
@@ -35,19 +35,19 @@ const styles = `
   .hp-headline {
     font-family: 'Oswald', 'Arial Narrow', sans-serif;
     font-size: clamp(2rem, 3.5vw, 2.75rem); font-weight: 700;
-    line-height: 1.1; color: #101828; margin-bottom: 16px;
+    line-height: 1.1; color: var(--color-text-main); margin-bottom: 16px;
   }
   .hp-headline em { font-style: normal; }
   .hp-subline {
     font-family: 'Nunito Sans', system-ui, sans-serif;
-    font-size: 1rem; color: #4A5565; line-height: 1.65;
+    font-size: 1rem; color: var(--color-text-body); line-height: 1.65;
     margin-bottom: 32px; max-width: 440px;
   }
   .hp-cta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
   .hp-guest-note {
     margin-top: 16px;
     font-family: 'Nunito Sans', system-ui, sans-serif;
-    font-size: 0.8125rem; color: #9CA3AF;
+    font-size: 0.8125rem; color: var(--color-text-muted);
   }
   .hp-benefits { display: flex; flex-direction: column; gap: 14px; }
   .hp-benefit-card {
@@ -68,11 +68,11 @@ const styles = `
   }
   .hp-benefit-title {
     font-family: 'Nunito Sans', system-ui, sans-serif;
-    font-size: 0.9375rem; font-weight: 700; color: #101828; margin-bottom: 3px;
+    font-size: 0.9375rem; font-weight: 700; color: var(--color-text-main); margin-bottom: 3px;
   }
   .hp-benefit-desc {
     font-family: 'Nunito Sans', system-ui, sans-serif;
-    font-size: 0.8125rem; color: #6B7280; line-height: 1.5;
+    font-size: 0.8125rem; color: var(--color-text-body); line-height: 1.5;
   }
   .hp-panel { background: #F8F8F6; padding: 48px 1.5rem 64px; }
   .hp-panel-inner { max-width: 1100px; margin: 0 auto; }
@@ -82,7 +82,7 @@ const styles = `
   }
   .hp-panel-heading {
     font-family: 'Oswald', 'Arial Narrow', sans-serif;
-    font-size: 1.375rem; font-weight: 500; color: #101828;
+    font-size: 1.375rem; font-weight: 500; color: var(--color-text-main);
     display: flex; align-items: center; gap: 10px;
   }
   .hp-panel-heading::before {
@@ -91,7 +91,7 @@ const styles = `
   }
   .hp-panel-sub {
     font-family: 'Nunito Sans', system-ui, sans-serif;
-    font-size: 0.875rem; color: #6B7280;
+    font-size: 0.875rem; color: var(--color-text-body);
   }
   .hp-cards-grid {
     display: grid;
@@ -134,13 +134,13 @@ const styles = `
   .hp-card-title {
     font-family: 'Nunito Sans', system-ui, sans-serif;
     font-size: 0.9375rem; font-weight: 700;
-    color: #101828; margin-bottom: 6px; line-height: 1.3;
+    color: var(--color-text-main); margin-bottom: 6px; line-height: 1.3;
   }
   .hp-card-meta {
     display: flex; flex-wrap: wrap; gap: 8px;
     font-family: 'Inter', system-ui, sans-serif;
     font-size: 0.6875rem; font-weight: 600;
-    color: #6B7280; margin-bottom: 14px;
+    color: var(--color-text-body); margin-bottom: 14px;
   }
   .hp-card-meta span { display: flex; align-items: center; gap: 3px; }
   .hp-card-footer {
@@ -342,7 +342,7 @@ export default function HomePage({
                         onClick={e => { e.stopPropagation(); onToggleBookmark && onToggleBookmark("course", course.course_id, course.course_name); }}
                         style={{
                           background: "none", border: "none", cursor: "pointer", padding: "4px 6px", borderRadius: 8,
-                          color: bookmarks.has("course:" + course.course_id) ? "#FF8E00" : "#6B6B6B",
+                          color: bookmarks.has("course:" + course.course_id) ? "var(--color-accent)" : "var(--color-text-muted)",
                         }}
                       >
                         <svg width="19" height="19" viewBox="0 0 24 24" fill={bookmarks.has("course:" + course.course_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>

@@ -4,7 +4,7 @@ import { globalStyles } from "../styles/global";
 import { GATEWAY, FALLBACK } from "../config/appStrings";
 import PageHeader from "../components/PageHeader";
 
-const RED = "#E53935";
+const RED = "var(--color-danger)";
 
 const ACCENT_MAP = { HERITAGE, GREEN, SAFFRON, RED };
 
@@ -36,12 +36,12 @@ const styles = `
   .gw-headline {
     font-family: 'Oswald', 'Arial Narrow', sans-serif;
     font-size: 2.5rem; font-weight: 700;
-    color: #FF8E00; line-height: 1.15; margin-bottom: 14px;
+    color: var(--color-accent); line-height: 1.15; margin-bottom: 14px;
   }
 
   /* Subtitle */
   .gw-subtitle {
-    font-size: 1rem; color: #4A5565; line-height: 1.65;
+    font-size: 1rem; color: var(--color-text-body); line-height: 1.65;
     margin-bottom: 28px;
     font-family: 'Nunito Sans', system-ui, sans-serif;
   }
@@ -51,28 +51,28 @@ const styles = `
   .gw-feature { display: flex; align-items: flex-start; gap: 12px; }
   .gw-feature-icon {
     width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
-    background: #F9FAFB; border: 1px solid #E5E7EB;
+    background: #F9FAFB; border: 1px solid var(--color-border);
     display: flex; align-items: center; justify-content: center;
   }
   .gw-feature-icon i { font-size: 18px; }
   .gw-feature-body {}
   .gw-feature-title {
-    font-size: 0.9375rem; font-weight: 700; color: #101828;
+    font-size: 0.9375rem; font-weight: 700; color: var(--color-text-main);
     margin-bottom: 2px;
     font-family: 'Nunito Sans', system-ui, sans-serif;
   }
   .gw-feature-desc {
-    font-size: 0.875rem; color: #4A5565; line-height: 1.45;
+    font-size: 0.875rem; color: var(--color-text-body); line-height: 1.45;
     font-family: 'Nunito Sans', system-ui, sans-serif;
   }
 
   /* ── Snippet card (right col) ──────────────────────── */
   .gw-snip-outer {
-    border: 1px solid #E5E7EB; border-radius: 12px; overflow: hidden;
+    border: 1px solid var(--color-border); border-radius: 12px; overflow: hidden;
     background: #fff;
   }
   .gw-snip-img {
-    background: #F3F4F6; border-bottom: 1px solid #E5E7EB;
+    background: var(--color-border-muted); border-bottom: 1px solid var(--color-border);
     display: flex; align-items: center; justify-content: center;
     height: 180px; overflow: hidden;
   }
@@ -81,16 +81,16 @@ const styles = `
   .gw-scroll-hint {
     display: flex; align-items: center; justify-content: flex-end; gap: 4px;
     padding: 4px 14px 0;
-    font-size: 0.7rem; color: #4A5565; font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.7rem; color: var(--color-text-body); font-family: 'Inter', system-ui, sans-serif;
   }
   .gw-scroll-hint i { font-size: 11px; }
   .gw-snip-scroll {
     height: 300px; overflow-y: auto;
-    scrollbar-width: thin; scrollbar-color: #E5E7EB transparent;
+    scrollbar-width: thin; scrollbar-color: var(--color-border) transparent;
   }
   .gw-snip-scroll::-webkit-scrollbar { width: 4px; }
   .gw-snip-scroll::-webkit-scrollbar-track { background: transparent; }
-  .gw-snip-scroll::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 4px; }
+  .gw-snip-scroll::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 4px; }
   .gw-snip-body { padding: 14px 18px 18px; }
   .gw-snip-tag {
     display: block; font-size: 0.6875rem; font-weight: 700;
@@ -99,13 +99,13 @@ const styles = `
   }
   .gw-snip-hook {
     font-family: 'Oswald', 'Arial Narrow', sans-serif;
-    font-size: 1.125rem; font-weight: 500; color: #101828;
+    font-size: 1.125rem; font-weight: 500; color: var(--color-text-main);
     line-height: 1.35; margin-bottom: 10px;
   }
   .gw-snip-explanation {
-    font-size: 0.9375rem; color: #4A5565; line-height: 1.7; margin-bottom: 12px;
+    font-size: 0.9375rem; color: var(--color-text-body); line-height: 1.7; margin-bottom: 12px;
   }
-  .gw-snip-divider { height: 1px; background: #E5E7EB; margin: 12px 0; }
+  .gw-snip-divider { height: 1px; background: var(--color-border); margin: 12px 0; }
   .gw-snip-section-label {
     font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.08em;
     text-transform: uppercase; color: ${SAFFRON}; margin-bottom: 5px;
@@ -113,14 +113,14 @@ const styles = `
   }
   .gw-snip-key-block {
     border-left: 3px solid ${SAFFRON}; padding: 8px 12px;
-    background: #FEF7FF; margin-bottom: 12px; border-radius: 0 6px 6px 0;
+    background: var(--color-surface); margin-bottom: 12px; border-radius: 0 6px 6px 0;
   }
-  .gw-snip-key-word { font-weight: 700; color: #101828; font-size: 0.9375rem; margin-bottom: 2px; }
-  .gw-snip-key-meaning { font-size: 0.875rem; color: #4A5565; line-height: 1.45; }
-  .gw-snip-section-text { font-size: 0.875rem; color: #4A5565; line-height: 1.65; margin-bottom: 12px; }
+  .gw-snip-key-word { font-weight: 700; color: var(--color-text-main); font-size: 0.9375rem; margin-bottom: 2px; }
+  .gw-snip-key-meaning { font-size: 0.875rem; color: var(--color-text-body); line-height: 1.45; }
+  .gw-snip-section-text { font-size: 0.875rem; color: var(--color-text-body); line-height: 1.65; margin-bottom: 12px; }
   .gw-snip-citation {
-    font-size: 0.75rem; color: #4A5565; font-style: italic;
-    border-top: 1px solid #E5E7EB; padding-top: 10px; margin-top: 4px;
+    font-size: 0.75rem; color: var(--color-text-body); font-style: italic;
+    border-top: 1px solid var(--color-border); padding-top: 10px; margin-top: 4px;
     font-family: 'Inter', system-ui, sans-serif;
   }
   .gw-snip-meta { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
@@ -128,7 +128,7 @@ const styles = `
 
   /* Skeleton */
   .gw-skel {
-    background: linear-gradient(90deg, #F3F4F6 25%, #FFFFFF 50%, #F3F4F6 75%);
+    background: linear-gradient(90deg, var(--color-border-muted) 25%, #FFFFFF 50%, var(--color-border-muted) 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s ease-in-out infinite;
     border-radius: 6px;
@@ -156,7 +156,7 @@ const styles = `
   .gw-choices-title {
     font-family: 'Inter', system-ui, sans-serif;
     font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em;
-    text-transform: uppercase; color: #4A5565;
+    text-transform: uppercase; color: var(--color-text-body);
     margin-bottom: 14px;
   }
   .gw-choices-grid {
@@ -164,7 +164,7 @@ const styles = `
     margin-bottom: 12px;
   }
   .gw-choice-card {
-    background: #fff; border: 1px solid #E5E7EB; border-radius: 12px;
+    background: #fff; border: 1px solid var(--color-border); border-radius: 12px;
     padding: 16px 14px 14px;
     display: flex; flex-direction: column; gap: 6px;
     cursor: pointer; text-align: left;
@@ -174,16 +174,16 @@ const styles = `
   .gw-choice-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.08); }
   .gw-choice-icon { font-size: 1.25rem; color: var(--card-accent, ${SAFFRON}); }
   .gw-choice-title {
-    font-size: 0.9375rem; font-weight: 700; color: #101828; line-height: 1.2;
+    font-size: 0.9375rem; font-weight: 700; color: var(--color-text-main); line-height: 1.2;
     font-family: 'Nunito Sans', system-ui, sans-serif;
   }
   .gw-choice-sub {
-    font-size: 0.8125rem; color: #4A5565; line-height: 1.35;
+    font-size: 0.8125rem; color: var(--color-text-body); line-height: 1.35;
     font-family: 'Inter', system-ui, sans-serif;
   }
   /* Surprise me — full width */
   .gw-surprise-card {
-    width: 100%; background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 12px;
+    width: 100%; background: #F9FAFB; border: 1px solid var(--color-border); border-radius: 12px;
     padding: 14px 20px; display: flex; align-items: center;
     justify-content: space-between; cursor: pointer;
     border-left: 3px solid ${SAFFRON};
@@ -193,11 +193,11 @@ const styles = `
   .gw-surprise-left { display: flex; align-items: center; gap: 12px; }
   .gw-surprise-icon { font-size: 1.25rem; color: ${SAFFRON}; }
   .gw-surprise-title {
-    font-size: 0.9375rem; font-weight: 700; color: #101828;
+    font-size: 0.9375rem; font-weight: 700; color: var(--color-text-main);
     font-family: 'Nunito Sans', system-ui, sans-serif;
   }
   .gw-surprise-sub {
-    font-size: 0.8125rem; color: #4A5565;
+    font-size: 0.8125rem; color: var(--color-text-body);
     font-family: 'Inter', system-ui, sans-serif;
   }
   .gw-surprise-cta {
@@ -215,7 +215,7 @@ const styles = `
   }
   .gw-mobile-features-title {
     font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em;
-    text-transform: uppercase; color: #4A5565;
+    text-transform: uppercase; color: var(--color-text-body);
     margin-bottom: 12px;
     font-family: 'Inter', system-ui, sans-serif;
   }

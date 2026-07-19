@@ -5,7 +5,7 @@ import { useRecommendations } from "../hooks/useRecommendations";
 const styles = `
   /* ── Recommendations Rail ── */
   .rec-rail {
-    background: white; border-radius: 12px; border: 1px solid #E5E7EB;
+    background: white; border-radius: 12px; border: 1px solid var(--color-border);
     padding: 24px; margin-bottom: 24px;
     border-left: 3px solid ${SAFFRON}; border-radius: 0 12px 12px 0;
   }
@@ -17,13 +17,13 @@ const styles = `
 
   .rec-rail-title {
     font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.25rem;
-    font-weight: 500; color: #101828; letter-spacing: 0.01em;
+    font-weight: 500; color: var(--color-text-main); letter-spacing: 0.01em;
     display: inline-flex; align-items: center; gap: 8px;
     padding-bottom: 4px; border-bottom: 2px solid ${SAFFRON};
   }
 
   .rec-rail-meta {
-    font-size: 0.75rem; color: #4A5565; font-weight: 600;
+    font-size: 0.75rem; color: var(--color-text-body); font-weight: 600;
     font-family: 'Inter', system-ui, sans-serif;
   }
 
@@ -48,7 +48,7 @@ const styles = `
     height: 88px; width: 100%;
     display: flex; align-items: center; justify-content: center;
     font-size: 1.875rem; position: relative; flex-shrink: 0;
-    background: #F3F4F6;
+    background: var(--color-border-muted);
   }
   .rec-thumb-tag {
     position: absolute; bottom: 6px; left: 6px; right: 6px;
@@ -70,7 +70,7 @@ const styles = `
   .rec-body { padding: 10px 12px 12px; flex: 1; display: flex; flex-direction: column; }
   .rec-lesson-name {
     font-family: 'Nunito Sans', system-ui, sans-serif;
-    font-size: 0.8125rem; font-weight: 700; color: #101828;
+    font-size: 0.8125rem; font-weight: 700; color: var(--color-text-main);
     line-height: 1.4; margin-bottom: 6px;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
     overflow: hidden;
@@ -93,7 +93,7 @@ const styles = `
     margin-top: 14px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
   }
   .rec-interest-label {
-    font-size: 0.6875rem; color: #4A5565; font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.6875rem; color: var(--color-text-body); font-family: 'Inter', system-ui, sans-serif;
     white-space: nowrap;
   }
   .rec-interest-tag {
@@ -104,7 +104,7 @@ const styles = `
 
   /* Empty / loading states */
   .rec-empty {
-    font-size: 0.9375rem; color: #4A5565; font-style: italic; padding: 4px 0;
+    font-size: 0.9375rem; color: var(--color-text-body); font-style: italic; padding: 4px 0;
     font-family: 'Nunito Sans', system-ui, sans-serif;
   }
 
@@ -112,7 +112,7 @@ const styles = `
   .rec-skel-row { display: flex; gap: 12px; }
   .rec-skel-card {
     flex: 0 0 160px; border-radius: 12px; height: 160px;
-    background: linear-gradient(90deg, #F3F4F6 25%, #FFFFFF 50%, #F3F4F6 75%);
+    background: linear-gradient(90deg, var(--color-border-muted) 25%, #FFFFFF 50%, var(--color-border-muted) 75%);
     background-size: 600px 100%;
     animation: shimmer 1.5s ease-in-out infinite;
   }

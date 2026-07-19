@@ -19,14 +19,14 @@ import { EMPTY } from "../config/appStrings";
 
 // ── Status config ─────────────────────────────────────────────────────────────
 const STATUS_CFG = {
-  unassigned:      { label: "Unassigned",       bg: "#F8F8F6", color: "#1F1F1F"     },
+  unassigned:      { label: "Unassigned",       bg: "#F8F8F6", color: "var(--color-text-main)"     },
   assigned:        { label: "Assigned",          bg: "#EEF5FF", color: "#1a56c9" },
-  in_draft:        { label: "In Draft",          bg: "white", color: "#FF8E00" },
+  in_draft:        { label: "In Draft",          bg: "white", color: "var(--color-accent)" },
   submitted:       { label: "Submitted",         bg: "#F3E5F5", color: "#6a1b8a" },
   needs_revision:  { label: "Needs Revision",    bg: "#FFF3CD", color: "#856404" },
   approved:        { label: "Approved",          bg: "#E8F5E9", color: "#1a7a3a" },
-  published:       { label: "Published",         bg: "#E8F5E9", color: "#00509E" },
-  rejected:        { label: "Rejected",          bg: "#FFEBEE", color: "#c62828" },
+  published:       { label: "Published",         bg: "#E8F5E9", color: "var(--color-primary)" },
+  rejected:        { label: "Rejected",          bg: "#FFEBEE", color: "var(--color-danger)" },
 };
 
 const EDITOR_STYLES = `
@@ -37,12 +37,12 @@ const EDITOR_STYLES = `
   }
   .ep-hero h1 {
     font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 2rem;
-    font-weight: 700; color: #101828; margin: 0 0 6px; letter-spacing: 0.01em;
+    font-weight: 700; color: var(--color-text-main); margin: 0 0 6px; letter-spacing: 0.01em;
   }
-  .ep-hero p { font-size: 0.9375rem; color: #4A5565; margin: 0; font-family: 'Nunito Sans', system-ui, sans-serif; }
+  .ep-hero p { font-size: 0.9375rem; color: var(--color-text-body); margin: 0; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .ep-role-badge {
     display: inline-flex; align-items: center;
-    border: 1.5px solid #00509E; color: #00509E; border-radius: 999px;
+    border: 1.5px solid var(--color-primary); color: var(--color-primary); border-radius: 999px;
     padding: 3px 14px; font-size: 0.75rem; font-weight: 700;
     letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 12px;
     font-family: 'Inter', system-ui, sans-serif;
@@ -50,38 +50,38 @@ const EDITOR_STYLES = `
 
   .ep-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; margin-bottom: 28px; }
   .ep-stat {
-    background: #fff; border-radius: 12px; border: 1px solid #E5E7EB;
+    background: #fff; border-radius: 12px; border: 1px solid var(--color-border);
     padding: 14px 16px; text-align: center;
   }
-  .ep-stat-num { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.875rem; font-weight: 700; color: #FF8E00; line-height: 1; }
-  .ep-stat-lbl { font-size: 0.75rem; color: #4A5565; margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-family: 'Inter', system-ui, sans-serif; }
+  .ep-stat-num { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.875rem; font-weight: 700; color: var(--color-accent); line-height: 1; }
+  .ep-stat-lbl { font-size: 0.75rem; color: var(--color-text-body); margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-family: 'Inter', system-ui, sans-serif; }
 
   .ep-section { margin-bottom: 32px; }
   .ep-section-title {
     font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.25rem;
-    font-weight: 500; color: #101828; margin: 0 0 14px;
-    border-left: 4px solid #FF8E00; padding-left: 12px;
+    font-weight: 500; color: var(--color-text-main); margin: 0 0 14px;
+    border-left: 4px solid var(--color-accent); padding-left: 12px;
   }
 
   /* Assignment form */
   .ep-form {
-    background: #fff; border-radius: 12px; border: 1px solid #E5E7EB;
+    background: #fff; border-radius: 12px; border: 1px solid var(--color-border);
     padding: 22px 24px; margin-bottom: 24px;
   }
   .ep-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   @media (max-width: 560px) { .ep-form-grid { grid-template-columns: 1fr; } }
   .ep-field { display: flex; flex-direction: column; gap: 5px; }
-  .ep-field label { font-size: 0.8125rem; font-weight: 600; color: #101828; text-transform: uppercase; letter-spacing: 0.05em; font-family: 'Inter', system-ui, sans-serif; }
+  .ep-field label { font-size: 0.8125rem; font-weight: 600; color: var(--color-text-main); text-transform: uppercase; letter-spacing: 0.05em; font-family: 'Inter', system-ui, sans-serif; }
   .ep-field input,
   .ep-field select,
   .ep-field textarea {
-    border: 1.5px solid #E5E7EB; border-radius: 8px; padding: 9px 12px;
+    border: 1.5px solid var(--color-border); border-radius: 8px; padding: 9px 12px;
     font-size: 0.9375rem; font-family: 'Nunito Sans', system-ui, sans-serif;
     background: white; transition: border-color 0.15s; outline: none;
   }
   .ep-field input:focus,
   .ep-field select:focus,
-  .ep-field textarea:focus { border-color: #FF8E00; background: #fff; }
+  .ep-field textarea:focus { border-color: var(--color-accent); background: #fff; }
   .ep-field textarea { resize: vertical; min-height: 68px; }
   .ep-form-actions { margin-top: 16px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 
@@ -95,26 +95,26 @@ const EDITOR_STYLES = `
   }
   .ep-btn:hover { opacity: 0.88; transform: translateY(-1px); }
   .ep-btn:active { transform: translateY(0); }
-  .ep-btn-primary   { background: #FF8E00; color: #fff; }
-  .ep-btn-secondary { background: #F3F4F6; color: #4A5565; }
-  .ep-btn-heritage  { background: #00509E; color: #fff; }
+  .ep-btn-primary   { background: var(--color-accent); color: #fff; }
+  .ep-btn-secondary { background: var(--color-border-muted); color: var(--color-text-body); }
+  .ep-btn-heritage  { background: var(--color-primary); color: #fff; }
   .ep-btn-sm { padding: 6px 14px; font-size: 0.8125rem; border-radius: 8px; border: none; font-weight: 500; cursor: pointer; transition: opacity 0.12s; font-family: 'Inter', system-ui, sans-serif; }
   .ep-btn-sm:hover { opacity: 0.82; }
   .ep-btn-approve  { background: #E8F5E9; color: #1a7a3a; }
-  .ep-btn-reject   { background: #FFEBEE; color: #c62828; }
+  .ep-btn-reject   { background: #FFEBEE; color: var(--color-danger); }
   .ep-btn-sendback { background: white; color: #b86000; }
-  .ep-btn-publish  { background: #00509E; color: #fff; }
+  .ep-btn-publish  { background: var(--color-primary); color: #fff; }
 
   /* Tables */
-  .ep-table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid #E5E7EB; }
+  .ep-table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--color-border); }
   .ep-table { width: 100%; border-collapse: collapse; background: #fff; }
   .ep-table th {
     padding: 11px 14px; text-align: left; font-size: 0.75rem;
     font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
-    color: #4A5565; background: white; border-bottom: 1px solid #E5E7EB; white-space: nowrap;
+    color: var(--color-text-body); background: white; border-bottom: 1px solid var(--color-border); white-space: nowrap;
     font-family: 'Inter', system-ui, sans-serif;
   }
-  .ep-table td { padding: 12px 14px; font-size: 0.9rem; border-bottom: 1px solid #E5E7EB; vertical-align: middle; font-family: 'Nunito Sans', system-ui, sans-serif; }
+  .ep-table td { padding: 12px 14px; font-size: 0.9rem; border-bottom: 1px solid var(--color-border); vertical-align: middle; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .ep-table tr:last-child td { border-bottom: none; }
   .ep-table tr:hover td { background: #F9FAFB; }
 
@@ -151,43 +151,43 @@ const EDITOR_STYLES = `
   }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   .ep-panel-header {
-    padding: 18px 20px; border-bottom: 1.5px solid #E5E7EB;
+    padding: 18px 20px; border-bottom: 1.5px solid var(--color-border);
     display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-shrink: 0;
   }
-  .ep-panel-header-text h3 { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.125rem; font-weight: 500; color: #101828; margin: 0 0 2px; }
-  .ep-panel-header-text p  { font-size: 0.8125rem; color: #4A5565; margin: 0; font-family: 'Nunito Sans', system-ui, sans-serif; }
-  .ep-panel-close { background: none; border: none; font-size: 1.25rem; cursor: pointer; color: #4A5565; flex-shrink: 0; padding: 2px 6px; }
+  .ep-panel-header-text h3 { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.125rem; font-weight: 500; color: var(--color-text-main); margin: 0 0 2px; }
+  .ep-panel-header-text p  { font-size: 0.8125rem; color: var(--color-text-body); margin: 0; font-family: 'Nunito Sans', system-ui, sans-serif; }
+  .ep-panel-close { background: none; border: none; font-size: 1.25rem; cursor: pointer; color: var(--color-text-body); flex-shrink: 0; padding: 2px 6px; }
   .ep-panel-body { flex: 1; overflow-y: auto; padding: 20px; }
   .ep-panel-footer {
-    padding: 14px 20px; border-top: 1.5px solid #E5E7EB; flex-shrink: 0;
+    padding: 14px 20px; border-top: 1.5px solid var(--color-border); flex-shrink: 0;
     display: flex; gap: 10px; flex-wrap: wrap;
   }
 
   /* Edit form specifics */
   .ep-edit-field { margin-bottom: 16px; }
   .ep-edit-field label {
-    display: block; font-size: 0.8125rem; font-weight: 600; color: #101828;
+    display: block; font-size: 0.8125rem; font-weight: 600; color: var(--color-text-main);
     text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px;
     font-family: 'Inter', system-ui, sans-serif;
   }
-  .ep-edit-field .ep-hint { font-size: 0.75rem; color: #4A5565; font-weight: 400; text-transform: none; letter-spacing: 0; }
+  .ep-edit-field .ep-hint { font-size: 0.75rem; color: var(--color-text-body); font-weight: 400; text-transform: none; letter-spacing: 0; }
   .ep-edit-field input,
   .ep-edit-field textarea {
     width: 100%; box-sizing: border-box;
-    border: 1.5px solid #E5E7EB; border-radius: 8px; padding: 9px 12px;
+    border: 1.5px solid var(--color-border); border-radius: 8px; padding: 9px 12px;
     font-size: 0.9375rem; font-family: 'Nunito Sans', system-ui, sans-serif;
     background: white; transition: border-color 0.15s; outline: none; resize: vertical;
   }
   .ep-edit-field input:focus,
-  .ep-edit-field textarea:focus { border-color: #FF8E00; background: #fff; }
+  .ep-edit-field textarea:focus { border-color: var(--color-accent); background: #fff; }
   .ep-edit-field textarea.short { min-height: 56px; }
   .ep-edit-field textarea.tall  { min-height: 100px; }
-  .ep-section-divider { border: none; border-top: 1.5px solid #E5E7EB; margin: 20px 0; }
+  .ep-section-divider { border: none; border-top: 1.5px solid var(--color-border); margin: 20px 0; }
 
   /* Taxonomy picker */
-  .ep-tax-section h4 { font-size: 0.875rem; font-weight: 700; color: #101828; margin: 0 0 6px; font-family: 'Nunito Sans', system-ui, sans-serif; }
+  .ep-tax-section h4 { font-size: 0.875rem; font-weight: 700; color: var(--color-text-main); margin: 0 0 6px; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .ep-tax-group { margin-bottom: 12px; }
-  .ep-tax-group-label { font-size: 0.75rem; font-weight: 600; color: #4A5565; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; font-family: 'Inter', system-ui, sans-serif; }
+  .ep-tax-group-label { font-size: 0.75rem; font-weight: 600; color: var(--color-text-body); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; font-family: 'Inter', system-ui, sans-serif; }
   .ep-tax-pills { display: flex; flex-wrap: wrap; gap: 6px; }
   .ep-tax-pill {
     padding: 4px 12px; border-radius: 999px; font-size: 0.8125rem; font-weight: 600;
@@ -195,10 +195,10 @@ const EDITOR_STYLES = `
     user-select: none; font-family: 'Inter', system-ui, sans-serif;
   }
   .ep-tax-pill.existing { background: #E8F5E9; border-color: #a5d6a7; color: #1a7a3a; cursor: default; }
-  .ep-tax-pill.selected { background: #FF8E00; border-color: #FF8E00; color: #fff; }
-  .ep-tax-pill.available { background: white; border-color: #E5E7EB; color: #101828; }
-  .ep-tax-pill.available:hover { border-color: #FF8E00; color: #FF8E00; }
-  .ep-tax-note { font-size: 0.75rem; color: #4A5565; margin-top: 6px; font-family: 'Inter', system-ui, sans-serif; }
+  .ep-tax-pill.selected { background: var(--color-accent); border-color: var(--color-accent); color: #fff; }
+  .ep-tax-pill.available { background: white; border-color: var(--color-border); color: var(--color-text-main); }
+  .ep-tax-pill.available:hover { border-color: var(--color-accent); color: var(--color-accent); }
+  .ep-tax-note { font-size: 0.75rem; color: var(--color-text-body); margin-top: 6px; font-family: 'Inter', system-ui, sans-serif; }
 
   /* ── Centred modal (activity log) ──────────────────────────── */
   .ep-modal-backdrop {
@@ -217,20 +217,20 @@ const EDITOR_STYLES = `
     to   { opacity: 1; transform: scale(1); }
   }
   .ep-modal-header {
-    padding: 18px 20px 14px; border-bottom: 1.5px solid #E5E7EB;
+    padding: 18px 20px 14px; border-bottom: 1.5px solid var(--color-border);
     display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
   }
-  .ep-modal-header h3 { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.125rem; font-weight: 500; color: #101828; margin: 0; }
+  .ep-modal-header h3 { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.125rem; font-weight: 500; color: var(--color-text-main); margin: 0; }
   .ep-modal-body { flex: 1; overflow-y: auto; padding: 20px; }
   .ep-modal-footer {
-    padding: 12px 20px; border-top: 1.5px solid #E5E7EB; flex-shrink: 0;
+    padding: 12px 20px; border-top: 1.5px solid var(--color-border); flex-shrink: 0;
     display: flex; justify-content: flex-end;
   }
 
   /* Toast */
   .ep-toast {
     position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
-    background: #00509E; color: #fff; padding: 10px 22px;
+    background: var(--color-primary); color: #fff; padding: 10px 22px;
     border-radius: 12px; font-size: 0.875rem; font-weight: 500;
     box-shadow: 0 4px 20px rgba(0,0,0,0.20); z-index: 9999;
     animation: fadeUp 0.2s ease both; white-space: nowrap; pointer-events: none;
@@ -240,16 +240,16 @@ const EDITOR_STYLES = `
 
   /* Event log */
   .ep-event { display: flex; gap: 12px; margin-bottom: 14px; }
-  .ep-event-dot { width: 10px; height: 10px; border-radius: 50%; background: #FF8E00; margin-top: 5px; flex-shrink: 0; }
-  .ep-event-action { font-weight: 700; font-size: 0.875rem; color: #101828; font-family: 'Nunito Sans', system-ui, sans-serif; }
-  .ep-event-meta   { font-size: 0.8rem; color: #4A5565; margin-top: 2px; font-family: 'Inter', system-ui, sans-serif; }
-  .ep-event-comment { font-size: 0.875rem; color: #4A5565; margin-top: 3px; font-style: italic; font-family: 'Nunito Sans', system-ui, sans-serif; }
+  .ep-event-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--color-accent); margin-top: 5px; flex-shrink: 0; }
+  .ep-event-action { font-weight: 700; font-size: 0.875rem; color: var(--color-text-main); font-family: 'Nunito Sans', system-ui, sans-serif; }
+  .ep-event-meta   { font-size: 0.8rem; color: var(--color-text-body); margin-top: 2px; font-family: 'Inter', system-ui, sans-serif; }
+  .ep-event-comment { font-size: 0.875rem; color: var(--color-text-body); margin-top: 3px; font-style: italic; font-family: 'Nunito Sans', system-ui, sans-serif; }
 `;
 
 // ── Shared components ─────────────────────────────────────────────────────────
 
 function StatusBadge({ status }) {
-  const cfg = STATUS_CFG[status] || { label: status, bg: "#eee", color: "#1F1F1F" };
+  const cfg = STATUS_CFG[status] || { label: status, bg: "#eee", color: "var(--color-text-main)" };
   return <span className="ep-status-badge" style={{ background: cfg.bg, color: cfg.color }}>{cfg.label}</span>;
 }
 
@@ -271,8 +271,8 @@ function CsTag({ item }) {
   if (item.content_status === "full")
     return <span style={{background:"#E8F5E9",color:"#1a7a3a",fontSize:"0.7rem",padding:"2px 8px",borderRadius:"999px",fontWeight:700,whiteSpace:"nowrap"}}>Full ({item.total_fields}/{item.total_fields})</span>;
   if (item.content_status === "partial")
-    return <span style={{background:"white",color:"#FF8E00",fontSize:"0.7rem",padding:"2px 8px",borderRadius:"999px",fontWeight:700,whiteSpace:"nowrap"}}>Partial ({item.filled_count}/{item.total_fields})</span>;
-  return <span style={{background:"rgba(0,0,0,0.05)",color:"#6B6B6B",fontSize:"0.7rem",padding:"2px 8px",borderRadius:"999px",fontWeight:700,whiteSpace:"nowrap",border:"1px solid rgba(0,0,0,0.10)"}}>None</span>;
+    return <span style={{background:"white",color:"var(--color-accent)",fontSize:"0.7rem",padding:"2px 8px",borderRadius:"999px",fontWeight:700,whiteSpace:"nowrap"}}>Partial ({item.filled_count}/{item.total_fields})</span>;
+  return <span style={{background:"rgba(0,0,0,0.05)",color:"var(--color-text-muted)",fontSize:"0.7rem",padding:"2px 8px",borderRadius:"999px",fontWeight:700,whiteSpace:"nowrap",border:"1px solid rgba(0,0,0,0.10)"}}>None</span>;
 }
 
 // ── SubRoleBadge — pill showing the caller's sub_role for this draft ────────
@@ -658,13 +658,13 @@ function DraftEditForm({ draft, onClose, onSaved, showToast }) {
                     {/* Preview: uploaded (priority) or existing */}
                     {(imageUrl || existingImage?.file_path) && (
                       <div style={{ marginBottom: 12 }}>
-                        <div style={{ fontSize: "0.75rem", color: "#6B6B6B", marginBottom: 6 }}>
+                        <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", marginBottom: 6 }}>
                           {imageUrl ? "New image (will publish with draft):" : "Current live image:"}
                         </div>
                         <img
                           src={imageUrl || existingImage?.file_path}
                           alt={imageAlt || existingImage?.alt_text || "snippet image"}
-                          style={{ maxHeight: 200, maxWidth: "100%", borderRadius: 8, objectFit: "cover", border: "1px solid #e5e7eb" }}
+                          style={{ maxHeight: 200, maxWidth: "100%", borderRadius: 8, objectFit: "cover", border: "1px solid var(--color-border)" }}
                         />
                       </div>
                     )}
@@ -672,8 +672,8 @@ function DraftEditForm({ draft, onClose, onSaved, showToast }) {
                     {/* File picker — hidden input, styled label */}
                     <label style={{
                       display: "inline-block", cursor: imageUploading ? "not-allowed" : "pointer",
-                      background: "#f3f4f6", border: "1px solid #d1d5db", borderRadius: 8,
-                      padding: "7px 16px", fontSize: "0.875rem", color: "#1F1F1F",
+                      background: "var(--color-border-muted)", border: "1px solid var(--color-border)", borderRadius: 8,
+                      padding: "7px 16px", fontSize: "0.875rem", color: "var(--color-text-main)",
                       opacity: imageUploading ? 0.6 : 1, marginBottom: 10,
                     }}>
                       {imageUploading ? "Uploading…" : imageUrl ? "Replace Image" : "Choose Image"}
@@ -685,13 +685,13 @@ function DraftEditForm({ draft, onClose, onSaved, showToast }) {
                       onChange={e => setImageAlt(e.target.value)}
                       placeholder="Alt text — brief description for accessibility…"
                       style={{ display: "block", width: "100%", marginBottom: 8,
-                        padding: "8px 10px", border: "1px solid #d1d5db", borderRadius: 8,
+                        padding: "8px 10px", border: "1px solid var(--color-border)", borderRadius: 8,
                         fontSize: "0.9rem", boxSizing: "border-box" }} />
                     <input type="text" value={imageAttrib}
                       onChange={e => setImageAttrib(e.target.value)}
                       placeholder="Attribution / credit (e.g. Archaeological Survey of India)…"
                       style={{ display: "block", width: "100%",
-                        padding: "8px 10px", border: "1px solid #d1d5db", borderRadius: 8,
+                        padding: "8px 10px", border: "1px solid var(--color-border)", borderRadius: 8,
                         fontSize: "0.9rem", boxSizing: "border-box" }} />
 
                     <div className="ep-tax-note" style={{ marginTop: 8 }}>
@@ -705,9 +705,9 @@ function DraftEditForm({ draft, onClose, onSaved, showToast }) {
               {isSnippet && (
                 <>
                   <hr className="ep-section-divider" />
-                  <div style={{ fontWeight: 700, fontSize: "0.8125rem", color: "#101828", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 12, display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ fontWeight: 700, fontSize: "0.8125rem", color: "var(--color-text-main)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 12, display: "flex", alignItems: "center", gap: 10 }}>
                     Quiz Question
-                    <span style={{ fontWeight: 400, fontSize: "0.75rem", textTransform: "none", letterSpacing: 0, color: "#6B6B6B" }}>— saved live on draft save (not gated by approval)</span>
+                    <span style={{ fontWeight: 400, fontSize: "0.75rem", textTransform: "none", letterSpacing: 0, color: "var(--color-text-muted)" }}>— saved live on draft save (not gated by approval)</span>
                   </div>
                   {qLoading ? (
                     <p style={{ color: "#aaa", fontSize: "0.875rem" }}>Loading question…</p>
@@ -1039,8 +1039,8 @@ function SupervisorView({ languages, showToast }) {
     return {
       flex:1, padding:"10px 12px", border:"none",
       borderRight: key !== "all" ? "1px solid rgba(0,0,0,0.10)" : "none",
-      background: activeTab === key ? "#00509E" : "white",
-      color: activeTab === key ? "#fff" : "#1F1F1F",
+      background: activeTab === key ? "var(--color-primary)" : "white",
+      color: activeTab === key ? "#fff" : "var(--color-text-main)",
       fontWeight: 700, fontSize: "0.875rem", cursor: "pointer",
     };
   }
@@ -1146,8 +1146,8 @@ function SupervisorView({ languages, showToast }) {
                         <td onClick={e => e.stopPropagation()}>
                           <input type="checkbox" checked={isSelected} onChange={() => toggleSelect(id)} />
                         </td>
-                        <td style={{ fontFamily:"monospace", fontSize:"0.8125rem", color:"#1F1F1F", whiteSpace:"nowrap" }}>{id}</td>
-                        <td style={{ fontSize:"0.8125rem", color:"#1F1F1F", maxWidth:220 }}>
+                        <td style={{ fontFamily:"monospace", fontSize:"0.8125rem", color:"var(--color-text-main)", whiteSpace:"nowrap" }}>{id}</td>
+                        <td style={{ fontSize:"0.8125rem", color:"var(--color-text-main)", maxWidth:220 }}>
                           {item.preview_hook
                             ? item.preview_hook.slice(0, 65) + (item.preview_hook.length > 65 ? "..." : "")
                             : <span style={{ color:"#ccc", fontStyle:"italic" }}>No English hook</span>}
@@ -1169,7 +1169,7 @@ function SupervisorView({ languages, showToast }) {
                 <span style={{ fontSize:"0.875rem", color:"#1a56c9", fontWeight:700 }}>
                   {selected.size} item{selected.size !== 1 ? "s" : ""} selected
                 </span>
-                <span style={{ fontSize:"0.8125rem", color:"#6B6B6B" }}>of {filteredItems.length} shown</span>
+                <span style={{ fontSize:"0.8125rem", color:"var(--color-text-muted)" }}>of {filteredItems.length} shown</span>
                 <div style={{ marginLeft:"auto", display:"flex", gap:8 }}>
                   <button className="ep-btn-sm ep-btn-secondary" onClick={toggleSelectAll}>
                     {selected.size === filteredItems.length ? "Deselect all" : "Select all"}
@@ -1205,10 +1205,10 @@ function SupervisorView({ languages, showToast }) {
 
               {/* Assignment details — user + role + optional fields in one card */}
               <div className="ep-form">
-                <div style={{ fontWeight:700, color:"#0A0A0A", fontSize:"0.875rem", marginBottom:14 }}>
+                <div style={{ fontWeight:700, color:"var(--color-text-main)", fontSize:"0.875rem", marginBottom:14 }}>
                   Assign {selected.size} item{selected.size !== 1 ? "s" : ""}
                   {contentType === "snippet_translation" && langFilter && (
-                    <span style={{ fontWeight:400, color:"#6B6B6B", fontSize:"0.8125rem" }}>
+                    <span style={{ fontWeight:400, color:"var(--color-text-muted)", fontSize:"0.8125rem" }}>
                       {" "}&#8212; <strong>{languages.find(l => l.language_id === langFilter)?.language || langFilter}</strong>
                     </span>
                   )}
@@ -1279,9 +1279,9 @@ function SupervisorView({ languages, showToast }) {
               <button key={key} onClick={() => setTaskStatus(key)} style={{
                 padding:"5px 14px", borderRadius:999, border:"none", fontSize:"0.8125rem", fontWeight:700, cursor:"pointer",
                 background: taskStatus === key
-                  ? (key === "overdue" ? "#c62828" : "#00509E")
+                  ? (key === "overdue" ? "var(--color-danger)" : "var(--color-primary)")
                   : (key === "overdue" && overdueCount > 0 ? "#FFEBEE" : "#f0f0f0"),
-                color: taskStatus === key ? "#fff" : (key === "overdue" && overdueCount > 0 ? "#c62828" : "#555"),
+                color: taskStatus === key ? "#fff" : (key === "overdue" && overdueCount > 0 ? "var(--color-danger)" : "#555"),
               }}>{label}</button>
             ))}
           </div>
@@ -1377,7 +1377,7 @@ function SupervisorView({ languages, showToast }) {
                               return s;
                             })} />
                         </td>
-                        <td style={{ fontFamily:"monospace", fontSize:"0.8125rem", color:"#1F1F1F" }}>
+                        <td style={{ fontFamily:"monospace", fontSize:"0.8125rem", color:"var(--color-text-main)" }}>
                           {d.content_id}
                           {d.notes && (
                             <div style={{ fontSize:"0.75rem", color:"#aaa", marginTop:2 }} title={d.notes}>
@@ -1386,7 +1386,7 @@ function SupervisorView({ languages, showToast }) {
                           )}
                         </td>
                         <td><ContentTypeTag type={d.content_type} /></td>
-                        <td style={{ fontSize:"0.8125rem", color:"#1F1F1F" }}>{d.language_id || "&#8212;"}</td>
+                        <td style={{ fontSize:"0.8125rem", color:"var(--color-text-main)" }}>{d.language_id || "&#8212;"}</td>
                         <td style={{ fontSize:"0.875rem" }}>{d.editor_name || "&#8212;"}</td>
                         <td>
                           {roleCfg
@@ -1394,7 +1394,7 @@ function SupervisorView({ languages, showToast }) {
                             : <span style={{ color:"#ccc", fontSize:"0.75rem" }}>&#8212;</span>}
                         </td>
                         <td><StatusBadge status={d.status} /></td>
-                        <td style={{ fontSize:"0.8125rem", color: isOverdue ? "#c62828" : "#666", fontWeight: isOverdue ? 700 : 400 }}>
+                        <td style={{ fontSize:"0.8125rem", color: isOverdue ? "var(--color-danger)" : "#666", fontWeight: isOverdue ? 700 : 400 }}>
                           {isOverdue && "&#9888; "}{fmtDate(d.due_date)}
                         </td>
                         <td>
@@ -1453,7 +1453,7 @@ function EditorView({ showToast }) {
     if (!d) return null;
     const dt = new Date(d);
     const overdue = dt < new Date();
-    return <span style={{ color: overdue ? "#c62828" : "#666", fontWeight: overdue ? 700 : 400 }}>
+    return <span style={{ color: overdue ? "var(--color-danger)" : "#666", fontWeight: overdue ? 700 : 400 }}>
       {overdue ? "⚠ " : ""}{dt.toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}
     </span>;
   }
@@ -1474,13 +1474,13 @@ function EditorView({ showToast }) {
               <tbody>
                 {drafts.map(d => (
                   <tr key={d.id}>
-                    <td style={{ fontFamily: "monospace", fontSize: "0.8125rem", color: "#1F1F1F" }}>{d.content_id}</td>
+                    <td style={{ fontFamily: "monospace", fontSize: "0.8125rem", color: "var(--color-text-main)" }}>{d.content_id}</td>
                     <td><ContentTypeTag type={d.content_type} /></td>
-                    <td style={{ fontSize: "0.8125rem", color: "#1F1F1F" }}>{d.language_id || "—"}</td>
+                    <td style={{ fontSize: "0.8125rem", color: "var(--color-text-main)" }}>{d.language_id || "—"}</td>
                     <td><SubRoleBadge role={d.sub_role} /></td>
                     <td><StatusBadge status={d.status} /></td>
                     <td style={{ fontSize: "0.8125rem" }}>{fmtDue(d.due_date)}</td>
-                    <td style={{ fontSize: "0.8125rem", color: "#6B6B6B", maxWidth: 130 }}>
+                    <td style={{ fontSize: "0.8125rem", color: "var(--color-text-muted)", maxWidth: 130 }}>
                       {d.notes ? d.notes.slice(0,55)+(d.notes.length>55?"…":"") : "—"}
                     </td>
                     <td>
@@ -1551,9 +1551,9 @@ function VerifierView({ showToast }) {
               <tbody>
                 {drafts.map(d => (
                   <tr key={d.id}>
-                    <td style={{ fontFamily: "monospace", fontSize: "0.8125rem", color: "#1F1F1F" }}>{d.content_id}</td>
+                    <td style={{ fontFamily: "monospace", fontSize: "0.8125rem", color: "var(--color-text-main)" }}>{d.content_id}</td>
                     <td><ContentTypeTag type={d.content_type} /></td>
-                    <td style={{ fontSize: "0.8125rem", color: "#1F1F1F" }}>{d.language_id || "—"}</td>
+                    <td style={{ fontSize: "0.8125rem", color: "var(--color-text-main)" }}>{d.language_id || "—"}</td>
                     <td style={{ fontSize: "0.875rem" }}>{d.editor_name || "—"}</td>
                     <td><SubRoleBadge role={d.sub_role} /></td>
                     <td><StatusBadge status={d.status} /></td>

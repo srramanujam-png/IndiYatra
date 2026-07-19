@@ -8,7 +8,7 @@ import { levelNumber, levelShortLabel, moduleProgress, lessonStatus } from "../l
 import { useEntityPreview } from "../components/EntityPreview";
 
 // Teal — brandbook accent reserved for course-browsing chrome (matches HomePage course cards)
-const TEAL    = "#48A9A6";
+const TEAL    = "var(--color-browse)";
 const TEAL_BG = "#EDF6F6";
 const TEAL_BD = "#C2E4E2";
 
@@ -28,13 +28,13 @@ const styles = `
     color: ${HERITAGE};
   }
   .ac-headline-path {
-    font-family: 'Nunito Sans', system-ui, sans-serif; font-size: 0.8125rem; color: #6B7280;
+    font-family: 'Nunito Sans', system-ui, sans-serif; font-size: 0.8125rem; color: var(--color-text-body);
     margin-top: 2px;
   }
   .ac-crumb { cursor: pointer; }
   .ac-crumb:hover { color: ${TEAL}; text-decoration: underline; }
-  .ac-crumb-current { color: #6B7280; cursor: default; }
-  .ac-crumb-sep { color: #9CA3AF; padding: 0 2px; }
+  .ac-crumb-current { color: var(--color-text-body); cursor: default; }
+  .ac-crumb-sep { color: var(--color-text-muted); padding: 0 2px; }
 
   .ac-body {
     display: flex;
@@ -52,7 +52,7 @@ const styles = `
   .ac-course-row {
     padding: 12px 10px; cursor: pointer; user-select: none;
     font-family: 'Nunito Sans', system-ui, sans-serif; font-weight: 700; font-size: 0.8125rem;
-    color: #101828;
+    color: var(--color-text-main);
     word-wrap: break-word; overflow-wrap: break-word;
   }
   .ac-course-row.open {
@@ -67,7 +67,7 @@ const styles = `
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     cursor: pointer; user-select: none; line-height: 1; text-align: center;
     font-family: 'Inter', system-ui, sans-serif;
-    background: rgba(0,0,0,0.05); color: #6B7280; border: 1.5px solid transparent;
+    background: rgba(0,0,0,0.05); color: var(--color-text-body); border: 1.5px solid transparent;
     transition: background 0.15s, color 0.15s, border-color 0.15s;
   }
   .ac-level-tab-label { font-size: 0.34375rem; font-weight: 700; letter-spacing: 0.01em; text-transform: uppercase; }
@@ -75,13 +75,13 @@ const styles = `
   .ac-level-tab.active { background: ${TEAL}; color: #fff; border-color: ${TEAL}; }
   .ac-theme-row {
     padding: 8px 10px 8px 18px; cursor: pointer; user-select: none;
-    font-family: 'Nunito Sans', system-ui, sans-serif; font-size: 0.75rem; color: #4A5565;
+    font-family: 'Nunito Sans', system-ui, sans-serif; font-size: 0.75rem; color: var(--color-text-body);
     word-wrap: break-word; overflow-wrap: break-word;
   }
   .ac-theme-row.active {
     background: ${TEAL_BG}; color: ${TEAL}; font-weight: 700;
   }
-  .ac-sidebar-empty { padding: 20px 12px; font-size: 0.75rem; color: #9CA3AF; }
+  .ac-sidebar-empty { padding: 20px 12px; font-size: 0.75rem; color: var(--color-text-muted); }
 
   /* ── Main pane: single merged Module → Lesson feed ── */
   .ac-main { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
@@ -93,7 +93,7 @@ const styles = `
   .ac-feed-pane::-webkit-scrollbar { display: none; } /* Chrome / Safari */
   .ac-empty {
     display: flex; align-items: center; justify-content: center; height: 100%;
-    color: #9CA3AF; font-size: 0.8125rem; text-align: center; padding: 20px;
+    color: var(--color-text-muted); font-size: 0.8125rem; text-align: center; padding: 20px;
     font-family: 'Nunito Sans', system-ui, sans-serif;
   }
 
@@ -108,12 +108,12 @@ const styles = `
   .ac-module-name {
     flex: 1; min-width: 0;
     font-family: 'Nunito Sans', system-ui, sans-serif; font-weight: 700; font-size: 0.9375rem;
-    color: #101828; line-height: 1.25;
+    color: var(--color-text-main); line-height: 1.25;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .ac-module-subrow { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
   .ac-module-meta {
-    font-family: 'Inter', system-ui, sans-serif; font-size: 0.6875rem; color: #101828;
+    font-family: 'Inter', system-ui, sans-serif; font-size: 0.6875rem; color: var(--color-text-main);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .ac-module-social { flex-shrink: 0; display: flex; gap: 8px; }
@@ -121,13 +121,13 @@ const styles = `
   .bm-btn, .like-btn {
     flex-shrink: 0; background: none; border: none; cursor: pointer;
     font-size: 1.125rem; line-height: 1; padding: 4px; border-radius: 8px;
-    color: #6B6B6B; transition: color 0.15s, transform 0.15s;
+    color: var(--color-text-muted); transition: color 0.15s, transform 0.15s;
     display: flex; align-items: center; justify-content: center;
   }
-  .bm-btn:hover { color: #101828; transform: scale(1.15); }
-  .bm-btn.saved { color: #101828; }
-  .like-btn:hover { color: #101828; transform: scale(1.15); }
-  .like-btn.liked { color: #101828; }
+  .bm-btn:hover { color: var(--color-text-main); transform: scale(1.15); }
+  .bm-btn.saved { color: var(--color-text-main); }
+  .like-btn:hover { color: var(--color-text-main); transform: scale(1.15); }
+  .like-btn.liked { color: var(--color-text-main); }
 
   .ac-lesson-card {
     background: #FFFFFF; border: 1px solid rgba(0,0,0,0.08); border-radius: 12px;
@@ -143,13 +143,13 @@ const styles = `
   .ac-lesson-num {
     flex-shrink: 0; min-width: 18px; text-align: center;
     font-family: 'Inter', system-ui, sans-serif; font-size: 0.8125rem; font-weight: 700;
-    color: #101828;
+    color: var(--color-text-main);
   }
   .ac-lesson-num.done { color: ${GREEN}; font-size: 1rem; font-weight: 800; }
   .ac-lesson-title {
     flex: 1; min-width: 0;
     font-family: 'Nunito Sans', system-ui, sans-serif; font-weight: 700; font-size: 0.9375rem;
-    color: #101828; line-height: 1.3;
+    color: var(--color-text-main); line-height: 1.3;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .ac-continue-tag {
@@ -164,7 +164,7 @@ const styles = `
     background: none; border: none; cursor: pointer; color: ${SAFFRON};
     transition: background 0.12s;
   }
-  .ac-continue-play:hover { background: #F3F4F6; }
+  .ac-continue-play:hover { background: var(--color-border-muted); }
   .ac-lesson-actions { display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; }
   .ac-lesson-social { display: flex; gap: 0; margin-right: auto; flex-shrink: 0; }
   .ac-btn-read {
@@ -181,7 +181,7 @@ const styles = `
     font-weight: 600; cursor: pointer; transition: opacity 0.15s; white-space: nowrap;
   }
   .ac-btn-quiz:hover { opacity: 0.88; }
-  .ac-btn-quiz:disabled { background: #D1D5DB; color: #9CA3AF; cursor: not-allowed; }
+  .ac-btn-quiz:disabled { background: var(--color-border); color: var(--color-text-muted); cursor: not-allowed; }
 
   @media (min-width: 640px) {
     .ac-sidebar { width: 200px; }

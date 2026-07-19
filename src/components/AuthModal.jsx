@@ -3,8 +3,8 @@ import { SAFFRON, HERITAGE, PARCHMENT } from "../lib/supabase";
 import { signInWithProvider, signInWithEmail, signUpWithEmail, signInAnonymously } from "../lib/auth";
 import { APP_NAME, AUTH } from "../config/appStrings";
 
-const SAFFRON_VAL  = "#FF8E00";
-const HERITAGE_VAL = "#00509E";
+const SAFFRON_VAL  = "var(--color-accent)";
+const HERITAGE_VAL = "var(--color-primary)";
 const PARCHMENT_VAL = "#FFFDF5";
 
 const styles = `
@@ -18,7 +18,7 @@ const styles = `
     background: #FFFFFF; border-radius: 16px;
     width: 100%; max-width: 440px;
     padding: 36px 32px 32px;
-    box-shadow: 0 24px 80px rgba(0,0,0,0.15); border: 1px solid #E5E7EB;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.15); border: 1px solid var(--color-border);
     position: relative;
     animation: authSlideUp 0.28s cubic-bezier(0.25,0.46,0.45,0.94) both;
   }
@@ -29,25 +29,25 @@ const styles = `
   .auth-close {
     position: absolute; top: 16px; right: 16px;
     background: none; border: none; cursor: pointer;
-    font-size: 20px; color: #4A5565; line-height: 1;
+    font-size: 20px; color: var(--color-text-body); line-height: 1;
     width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
     border-radius: 50%; transition: background 0.15s;
   }
-  .auth-close:hover { background: #F3F4F6; }
+  .auth-close:hover { background: var(--color-border-muted); }
   .auth-title {
     font-family: 'Oswald', 'Arial Narrow', sans-serif;
     font-size: 28px; font-weight: 700; color: ${HERITAGE_VAL};
     margin-bottom: 4px; text-align: center;
   }
   .auth-subtitle {
-    font-size: 14px; color: #4A5565; text-align: center; margin-bottom: 28px;
+    font-size: 14px; color: var(--color-text-body); text-align: center; margin-bottom: 28px;
     font-family: 'Nunito Sans', system-ui, sans-serif;
   }
   .auth-social-btn {
     width: 100%; padding: 12px 16px; border-radius: 12px;
-    border: 1.5px solid #E5E7EB; background: #fff; cursor: pointer;
+    border: 1.5px solid var(--color-border); background: #fff; cursor: pointer;
     display: flex; align-items: center; gap: 12px;
-    font-size: 15px; font-weight: 600; color: #101828;
+    font-size: 15px; font-weight: 600; color: var(--color-text-main);
     margin-bottom: 10px; transition: border-color 0.15s, box-shadow 0.15s;
     font-family: 'Nunito Sans', system-ui, sans-serif;
   }
@@ -55,18 +55,18 @@ const styles = `
   .auth-social-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .auth-divider {
     display: flex; align-items: center; gap: 12px;
-    margin: 20px 0; color: #4A5565; font-size: 13px;
+    margin: 20px 0; color: var(--color-text-body); font-size: 13px;
     font-family: 'Inter', system-ui, sans-serif;
   }
   .auth-divider::before, .auth-divider::after {
-    content: ''; flex: 1; height: 1px; background: #E5E7EB;
+    content: ''; flex: 1; height: 1px; background: var(--color-border);
   }
   .auth-input-group { margin-bottom: 14px; }
-  .auth-input-label { font-size: 13px; font-weight: 600; color: #4A5565; margin-bottom: 6px; display: block; font-family: 'Inter', system-ui, sans-serif; }
+  .auth-input-label { font-size: 13px; font-weight: 600; color: var(--color-text-body); margin-bottom: 6px; display: block; font-family: 'Inter', system-ui, sans-serif; }
   .auth-input {
     width: 100%; padding: 10px 14px; border-radius: 10px;
-    border: 1.5px solid #E5E7EB; background: #fff;
-    font-size: 15px; color: #101828; outline: none;
+    border: 1.5px solid var(--color-border); background: #fff;
+    font-size: 15px; color: var(--color-text-main); outline: none;
     box-sizing: border-box; transition: border-color 0.15s;
     font-family: 'Nunito Sans', system-ui, sans-serif;
   }
@@ -80,7 +80,7 @@ const styles = `
   }
   .auth-submit:hover { opacity: 0.9; }
   .auth-submit:disabled { opacity: 0.5; cursor: not-allowed; }
-  .auth-toggle { text-align: center; margin-top: 16px; font-size: 14px; color: #4A5565; font-family: 'Nunito Sans', system-ui, sans-serif; }
+  .auth-toggle { text-align: center; margin-top: 16px; font-size: 14px; color: var(--color-text-body); font-family: 'Nunito Sans', system-ui, sans-serif; }
   .auth-toggle button {
     background: none; border: none; cursor: pointer;
     color: ${HERITAGE_VAL}; font-weight: 600; font-size: 14px;
@@ -88,13 +88,13 @@ const styles = `
   }
   .auth-guest-btn {
     width: 100%; padding: 11px 16px; border-radius: 12px;
-    border: 1.5px solid #E5E7EB; background: transparent; cursor: pointer;
+    border: 1.5px solid var(--color-border); background: transparent; cursor: pointer;
     display: flex; align-items: center; justify-content: center; gap: 8px;
-    font-size: 14px; font-weight: 500; color: #4A5565;
+    font-size: 14px; font-weight: 500; color: var(--color-text-body);
     margin-top: 14px; transition: border-color 0.15s, color 0.15s;
     font-family: 'Inter', system-ui, sans-serif;
   }
-  .auth-guest-btn:hover { border-color: #4A5565; color: #101828; }
+  .auth-guest-btn:hover { border-color: var(--color-text-body); color: var(--color-text-main); }
   .auth-guest-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .auth-error {
     background: #fff0f0; border: 1px solid #ffcccc; border-radius: 8px;

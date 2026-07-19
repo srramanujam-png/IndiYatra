@@ -35,7 +35,7 @@ export default function ModuleGauge({ pct, size = 84 }) {
       <div style={{
         position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
       }}>
-        <span style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: size * 0.22, color: "#101828" }}>
+        <span style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: size * 0.22, color: "var(--color-text-main)" }}>
           {pct}%
         </span>
       </div>

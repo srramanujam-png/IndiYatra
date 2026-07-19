@@ -75,7 +75,7 @@ function StatusDot({ status, size = 8 }) {
   if (status === "partial") return <span style={{ ...base, background: "transparent",
     border: `1.5px solid ${GREEN}`,
     backgroundImage: `linear-gradient(135deg, ${GREEN} 50%, transparent 50%)` }} />;
-  return <span style={{ ...base, background: "transparent", border: `1.5px solid #BBBBB8` }} />;
+  return <span style={{ ...base, background: "transparent", border: `1.5px solid var(--color-text-muted)` }} />;
 }
 
 function ModuleDot({ status, size = 7 }) {
@@ -84,7 +84,7 @@ function ModuleDot({ status, size = 7 }) {
   if (status === "partial") return <span style={{ ...base, background: "transparent",
     border: `1.5px solid ${HERITAGE}`,
     backgroundImage: `linear-gradient(135deg, ${HERITAGE} 50%, transparent 50%)` }} />;
-  return <span style={{ ...base, background: "transparent", border: `1.5px solid #BBBBB8` }} />;
+  return <span style={{ ...base, background: "transparent", border: `1.5px solid var(--color-text-muted)` }} />;
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -151,7 +151,7 @@ export default function CourseSidebar({
   const renderTree = () => (
     <div style={{ flex: 1, overflowY: "auto", padding: "6px 0" }}>
       {loading && (
-        <div style={{ padding: "24px 16px", fontSize: 13, color: "#6B6B6B" }}>Loading…</div>
+        <div style={{ padding: "24px 16px", fontSize: 13, color: "var(--color-text-muted)" }}>Loading…</div>
       )}
       {!loading && levelIds.map(levelId => {
         const lvl        = tree[levelId];
@@ -175,13 +175,13 @@ export default function CourseSidebar({
                 fontSize: 11, fontWeight: 700, padding: "3px 10px",
                 borderRadius: 999, whiteSpace: "nowrap",
                 background: isActiveLevel ? `${HERITAGE}18` : "rgba(0,0,0,0.05)",
-                color: isActiveLevel ? HERITAGE : "#6B6B6B",
+                color: isActiveLevel ? HERITAGE : "var(--color-text-muted)",
               }}>
                 {meta.label}{meta.classes ? ` · ${meta.classes}` : ""}
               </span>
               <span style={{ flex: 1 }} />
               <i className={`ti ti-chevron-down`} aria-hidden="true"
-                style={{ fontSize: 13, color: "#BBBBB8", transition: "transform .2s",
+                style={{ fontSize: 13, color: "var(--color-text-muted)", transition: "transform .2s",
                   transform: levelOpen ? "rotate(180deg)" : "none" }} />
             </div>
 
@@ -202,12 +202,12 @@ export default function CourseSidebar({
                       padding: "6px 16px 6px 28px", cursor: "pointer" }}
                   >
                     <StatusDot status={tStatus} />
-                    <span style={{ flex: 1, fontSize: 13, fontWeight: 500, color: "#0A0A0A",
+                    <span style={{ flex: 1, fontSize: 13, fontWeight: 500, color: "var(--color-text-main)",
                       overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {thm.title}
                     </span>
                     <i className="ti ti-chevron-down" aria-hidden="true"
-                      style={{ fontSize: 12, color: "#BBBBB8", transition: "transform .2s",
+                      style={{ fontSize: 12, color: "var(--color-text-muted)", transition: "transform .2s",
                         transform: themeOpen ? "rotate(180deg)" : "none", flexShrink: 0 }} />
                   </div>
 
@@ -228,12 +228,12 @@ export default function CourseSidebar({
                             background: isActiveMod ? `${HERITAGE}06` : "transparent" }}
                         >
                           <ModuleDot status={mStatus} />
-                          <span style={{ flex: 1, fontSize: 12, color: "#1F1F1F",
+                          <span style={{ flex: 1, fontSize: 12, color: "var(--color-text-main)",
                             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {mod.name}
                           </span>
                           <i className="ti ti-chevron-down" aria-hidden="true"
-                            style={{ fontSize: 11, color: "#BBBBB8", transition: "transform .2s",
+                            style={{ fontSize: 11, color: "var(--color-text-muted)", transition: "transform .2s",
                               transform: modOpen ? "rotate(180deg)" : "none", flexShrink: 0 }} />
                         </div>
 
@@ -253,10 +253,10 @@ export default function CourseSidebar({
                             >
                               {lStatus === "done"   && <i className="ti ti-circle-check" aria-hidden="true" style={{ fontSize: 14, color: GREEN, flexShrink: 0 }} />}
                               {lStatus === "resume" && <i className="ti ti-player-play"  aria-hidden="true" style={{ fontSize: 14, color: SAFFRON, flexShrink: 0 }} />}
-                              {lStatus === "none"   && <i className="ti ti-circle"        aria-hidden="true" style={{ fontSize: 14, color: "#BBBBB8", flexShrink: 0 }} />}
+                              {lStatus === "none"   && <i className="ti ti-circle"        aria-hidden="true" style={{ fontSize: 14, color: "var(--color-text-muted)", flexShrink: 0 }} />}
                               <span style={{
                                 flex: 1, fontSize: 12, lineHeight: 1.3,
-                                color: isActive ? HERITAGE : "#1F1F1F",
+                                color: isActive ? HERITAGE : "var(--color-text-main)",
                                 fontWeight: isActive ? 500 : 400,
                               }}>
                                 {lesson.lesson_name}
@@ -286,10 +286,10 @@ export default function CourseSidebar({
       {[
         { color: GREEN,   label: "Done" },
         { color: SAFFRON, label: "In progress" },
-        { color: "#BBBBB8", label: "Not started", outline: true },
+        { color: "var(--color-text-muted)", label: "Not started", outline: true },
       ].map(({ color, label, outline }) => (
         <div key={label} style={{ display: "flex", alignItems: "center", gap: 5,
-          fontSize: 11, color: "#6B6B6B" }}>
+          fontSize: 11, color: "var(--color-text-muted)" }}>
           <span style={{ width: 7, height: 7, borderRadius: "50%", flexShrink: 0,
             background: outline ? "transparent" : color,
             border: outline ? `1.5px solid ${color}` : "none" }} />
@@ -313,9 +313,9 @@ export default function CourseSidebar({
         borderBottom: "0.5px solid rgba(0,0,0,0.07)",
         display: "flex", alignItems: "center", gap: 8 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 11, color: "#6B6B6B", textTransform: "uppercase",
+          <div style={{ fontSize: 11, color: "var(--color-text-muted)", textTransform: "uppercase",
             letterSpacing: "0.06em", marginBottom: 3 }}>Course</div>
-          <div style={{ fontSize: 15, fontWeight: 500, color: "#0A0A0A",
+          <div style={{ fontSize: 15, fontWeight: 500, color: "var(--color-text-main)",
             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {course?.course_name || ""}
           </div>
@@ -324,7 +324,7 @@ export default function CourseSidebar({
           onClick={onClose}
           aria-label="Close sidebar"
           style={{ background: "none", border: "none", cursor: "pointer",
-            fontSize: 18, color: "#6B6B6B", padding: 4, borderRadius: 6, lineHeight: 1 }}>
+            fontSize: 18, color: "var(--color-text-muted)", padding: 4, borderRadius: 6, lineHeight: 1 }}>
           <i className="ti ti-x" aria-hidden="true" />
         </button>
       </div>
@@ -368,13 +368,13 @@ export default function CourseSidebar({
           padding: "6px 16px 10px",
           borderBottom: "0.5px solid rgba(0,0,0,0.07)" }}>
           <i className="ti ti-layout-sidebar-right" aria-hidden="true"
-            style={{ fontSize: 16, color: "#6B6B6B" }} />
-          <span style={{ flex: 1, fontSize: 14, fontWeight: 500, color: "#0A0A0A" }}>
+            style={{ fontSize: 16, color: "var(--color-text-muted)" }} />
+          <span style={{ flex: 1, fontSize: 14, fontWeight: 500, color: "var(--color-text-main)" }}>
             {course?.course_name || ""}
           </span>
           <button onClick={onClose} aria-label="Close sidebar"
             style={{ background: "none", border: "none", cursor: "pointer",
-              fontSize: 18, color: "#6B6B6B", padding: 4 }}>
+              fontSize: 18, color: "var(--color-text-muted)", padding: 4 }}>
             <i className="ti ti-x" aria-hidden="true" />
           </button>
         </div>

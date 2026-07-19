@@ -15,7 +15,7 @@ const styles = `
   }
   .module-banner-accent  { width: 5px; height: 40px; border-radius: 3px; background: ${HERITAGE}; flex-shrink: 0; }
   .module-banner-body    { flex: 1; min-width: 0; }
-  .module-banner-number  { font-size: 0.6875rem; color: #6B6B6B; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 2px; }
+  .module-banner-number  { font-size: 0.6875rem; color: var(--color-text-muted); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 2px; }
   .module-banner-title   { font-family: 'Alumni Sans', sans-serif; font-size: 1.1875rem; font-weight: 700; color: ${HERITAGE}; }
   .module-banner-count   {
     flex-shrink: 0; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em;
@@ -43,13 +43,13 @@ const styles = `
   .lesson-divider { width: 1px; height: 36px; background: rgba(0,0,0,0.10); flex-shrink: 0; }
   .lesson-thumb {
     width: 52px; height: 52px; border-radius: 10px; overflow: hidden;
-    background: #EBEBEA; flex-shrink: 0;
+    background: var(--color-border); flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
   }
   .lesson-thumb img { width: 100%; height: 100%; object-fit: cover; }
   .lesson-info { flex: 1; min-width: 0; }
-  .lesson-title { font-family: 'Alumni Sans', sans-serif; font-size: 1.1875rem; font-weight: 700; color: #0A0A0A; margin-bottom: 3px; line-height: 1.2; }
-  .lesson-meta  { font-size: 0.75rem; color: #6B6B6B; }
+  .lesson-title { font-family: 'Alumni Sans', sans-serif; font-size: 1.1875rem; font-weight: 700; color: var(--color-text-main); margin-bottom: 3px; line-height: 1.2; }
+  .lesson-meta  { font-size: 0.75rem; color: var(--color-text-muted); }
   .lesson-cta {
     flex-shrink: 0; border: 1.5px solid ${SAFFRON}; color: ${SAFFRON}; border-radius: 999px;
     padding: 6px 16px; font-family: 'Alumni Sans', sans-serif; font-size: 0.8125rem;
@@ -67,25 +67,25 @@ const styles = `
   }
   .lesson-cta-group { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
   .lesson-cta-quiz {
-    flex-shrink: 0; border: 1.5px solid #00509E; color: #00509E; border-radius: 999px;
+    flex-shrink: 0; border: 1.5px solid var(--color-primary); color: var(--color-primary); border-radius: 999px;
     padding: 6px 14px; font-family: 'Alumni Sans', sans-serif; font-size: 0.8125rem;
     font-weight: 700; cursor: pointer; background: transparent;
     transition: background 0.2s, color 0.2s; white-space: nowrap;
   }
-  .lesson-cta-quiz:hover { background: #00509E; color: white; }
-  .lesson-cta-quiz:disabled { opacity: 0.3; cursor: not-allowed; border-color: #9CA3AF; color: #9CA3AF; }
+  .lesson-cta-quiz:hover { background: var(--color-primary); color: white; }
+  .lesson-cta-quiz:disabled { opacity: 0.3; cursor: not-allowed; border-color: var(--color-text-muted); color: var(--color-text-muted); }
   @media (max-width: 480px) {
     .lesson-cta-quiz { padding: 5px 10px; font-size: 0.75rem; }
     .lesson-cta-group { gap: 4px; }
   }
-  .lesson-lock { flex-shrink: 0; font-size: 0.9rem; color: #6B6B6B; }
+  .lesson-lock { flex-shrink: 0; font-size: 0.9rem; color: var(--color-text-muted); }
   .bm-btn, .like-btn {
     flex-shrink: 0; background: none; border: none; cursor: pointer;
     font-size: 1.125rem; line-height: 1; padding: 4px 6px; border-radius: 8px;
-    color: #6B6B6B; transition: color 0.15s, transform 0.15s;
+    color: var(--color-text-muted); transition: color 0.15s, transform 0.15s;
   }
-  .bm-btn:hover { color: #FF8E00; transform: scale(1.15); }
-  .bm-btn.saved { color: #FF8E00; }
+  .bm-btn:hover { color: var(--color-accent); transform: scale(1.15); }
+  .bm-btn.saved { color: var(--color-accent); }
   .like-btn:hover { color: #D85A30; transform: scale(1.15); }
   .like-btn.liked { color: #D85A30; }
   .lesson-row-right { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }

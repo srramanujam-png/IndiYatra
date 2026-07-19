@@ -28,24 +28,24 @@ const styles = `
     transform: none !important; box-shadow: none !important;
   }
   .theme-lock-badge {
-    flex-shrink: 0; font-size: 0.8125rem; color: #6B6B6B; white-space: nowrap;
+    flex-shrink: 0; font-size: 0.8125rem; color: var(--color-text-muted); white-space: nowrap;
   }
   .bm-btn {
     flex-shrink: 0; background: none; border: none; cursor: pointer;
     font-size: 1.125rem; line-height: 1; padding: 4px 6px; border-radius: 8px;
-    color: #6B6B6B; transition: color 0.15s, transform 0.15s;
+    color: var(--color-text-muted); transition: color 0.15s, transform 0.15s;
   }
-  .bm-btn:hover { color: #FF8E00; transform: scale(1.15); }
-  .bm-btn.saved { color: #FF8E00; }
+  .bm-btn:hover { color: var(--color-accent); transform: scale(1.15); }
+  .bm-btn.saved { color: var(--color-accent); }
   .level-tab.complete { border-color: ${GREEN}55 !important; background: #F0FBF5; }
   .level-tab-name    { font-family: 'Alumni Sans', sans-serif; font-size: 1.25rem; font-weight: 700; line-height: 1; }
-  .level-tab-classes { font-size: 0.8125rem; color: #6B6B6B; margin-top: 4px; }
+  .level-tab-classes { font-size: 0.8125rem; color: var(--color-text-muted); margin-top: 4px; }
   .level-tab-count   {
     font-size: 0.75rem; font-weight: 600; margin-top: 8px;
-    padding: 2px 10px; border-radius: 999px; background: #f5f5f5; color: #1F1F1F;
+    padding: 2px 10px; border-radius: 999px; background: #f5f5f5; color: var(--color-text-main);
   }
   .level-tab.active .level-tab-count { color: white; }
-  .level-tab:not(.active):hover .level-tab-count { background: #EBEBEA; color: #1F1F1F; }
+  .level-tab:not(.active):hover .level-tab-count { background: var(--color-border); color: var(--color-text-main); }
 
   .content { max-width: 720px; margin: 0 auto; padding: 0 1.5rem 80px; }
 
@@ -64,18 +64,18 @@ const styles = `
 
   .theme-row-thumb {
     width: 72px; height: 72px; border-radius: 12px; overflow: hidden;
-    background: #EBEBEA; flex-shrink: 0;
+    background: var(--color-border); flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
   }
   .theme-row-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; }
 
   .theme-row-info { flex: 1; min-width: 0; }
-  .theme-row-title { font-family: 'Alumni Sans', sans-serif; font-size: 1.25rem; font-weight: 700; color: #0A0A0A; line-height: 1.2; margin-bottom: 4px; }
-  .theme-row-desc  { font-size: 0.8125rem; color: #6B6B6B; line-height: 1.4; margin-bottom: 6px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .theme-row-title { font-family: 'Alumni Sans', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--color-text-main); line-height: 1.2; margin-bottom: 4px; }
+  .theme-row-desc  { font-size: 0.8125rem; color: var(--color-text-muted); line-height: 1.4; margin-bottom: 6px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 
   .theme-row-progress { height: 4px; background: rgba(0,0,0,0.06); border-radius: 2px; margin-bottom: 4px; overflow: hidden; }
   .theme-row-progress-fill { height: 100%; border-radius: 2px; }
-  .theme-row-count { font-size: 0.75rem; color: #6B6B6B; font-weight: 600; }
+  .theme-row-count { font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; }
 
   .theme-row-cta {
     flex-shrink: 0; border-radius: 8px; padding: 7px 16px;

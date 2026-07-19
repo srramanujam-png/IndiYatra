@@ -21,7 +21,7 @@ export function SkeletonCourseGrid({ count = 3 }) {
       {Array.from({ length: count }).map((_, i) => (
         <div key={i} style={{
           background: "white", borderRadius: 12,
-          border: "1px solid #E5E7EB", overflow: "hidden",
+          border: "1px solid var(--color-border)", overflow: "hidden",
           boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
         }}>
           <S h={180} r={0} />
@@ -55,7 +55,7 @@ export function SkeletonCourseThemes() {
         <div key={i} style={{
           display: "flex", alignItems: "center", gap: 14,
           background: "white", borderRadius: 12,
-          border: "1px solid #E5E7EB", padding: "14px 16px",
+          border: "1px solid var(--color-border)", padding: "14px 16px",
           marginBottom: 10,
         }}>
           <S w={52} h={52} r={10} />
@@ -78,7 +78,7 @@ export function SkeletonModuleList({ count = 4 }) {
         <div key={i} style={{
           display: "flex", alignItems: "center", gap: 14,
           background: "white", borderRadius: 12,
-          border: "1px solid #E5E7EB", padding: "14px 16px",
+          border: "1px solid var(--color-border)", padding: "14px 16px",
           marginBottom: 10,
         }}>
           <S w={64} h={64} r={10} />
@@ -102,7 +102,7 @@ export function SkeletonLessonList({ count = 5 }) {
         <div key={i} style={{
           display: "flex", alignItems: "center", gap: 14,
           background: "white", borderRadius: 14,
-          border: "1px solid #E5E7EB", padding: "14px 16px",
+          border: "1px solid var(--color-border)", padding: "14px 16px",
           marginBottom: 8,
         }}>
           <S w={36} h={36} r={999} />
@@ -128,7 +128,7 @@ export function SkeletonLikeGrid({ count = 6 }) {
       {Array.from({ length: count }).map((_, i) => (
         <div key={i} style={{
           background: "white", borderRadius: 12,
-          border: "1px solid #E5E7EB", overflow: "hidden",
+          border: "1px solid var(--color-border)", overflow: "hidden",
           boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
         }}>
           <S h={140} r={0} />
@@ -153,7 +153,7 @@ export function SkeletonBookmarkList({ count = 4 }) {
       {Array.from({ length: count }).map((_, i) => (
         <div key={i} style={{
           display: "flex", background: "white", borderRadius: 16,
-          border: "1px solid #E5E7EB", marginBottom: 12, overflow: "hidden",
+          border: "1px solid var(--color-border)", marginBottom: 12, overflow: "hidden",
           boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
         }}>
           <S w={5} h={88} r={0} />
@@ -184,7 +184,7 @@ export function SkeletonDiscoverResults({ count = 5 }) {
         <div key={i} style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
           background: "white", borderRadius: 12,
-          border: "1px solid #E5E7EB", padding: "13px 16px",
+          border: "1px solid var(--color-border)", padding: "13px 16px",
           marginBottom: 8,
         }}>
           <S h={16} w="55%" />

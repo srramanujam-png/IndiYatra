@@ -25,13 +25,13 @@ const styles = `
   .qp-topbar {
     position: sticky; top: 0; z-index: 100;
     background: rgba(255,255,255,0.97); backdrop-filter: blur(12px);
-    border-bottom: 1px solid #E5E7EB;
+    border-bottom: 1px solid var(--color-border);
     padding: 0 1.5rem; height: 54px;
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
   }
   .qp-back {
     display: flex; align-items: center; gap: 5px; background: none; border: none;
-    cursor: pointer; font-size: 0.875rem; font-weight: 500; color: #4A5565;
+    cursor: pointer; font-size: 0.875rem; font-weight: 500; color: var(--color-text-body);
     transition: color 0.2s; flex-shrink: 0;
   }
   .qp-back:hover { color: ${SAFFRON}; }
@@ -40,15 +40,15 @@ const styles = `
     color: ${BLUE}; flex: 1; text-align: center;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .qp-counter { font-size: 0.8125rem; color: #4A5565; font-weight: 600; flex-shrink: 0; }
+  .qp-counter { font-size: 0.8125rem; color: var(--color-text-body); font-weight: 600; flex-shrink: 0; }
 
   /* ── Segmented progress bar ── */
   .qp-progress-segs {
     display: flex; gap: 4px; padding: 8px 1.5rem;
-    background: white; border-bottom: 1px solid #F3F4F6;
+    background: white; border-bottom: 1px solid var(--color-border-muted);
   }
   .qp-progress-seg {
-    flex: 1; height: 4px; border-radius: 999px; background: #E5E7EB;
+    flex: 1; height: 4px; border-radius: 999px; background: var(--color-border);
     transition: background 0.3s;
   }
   .qp-progress-seg.done    { background: ${SAFFRON}; }
@@ -77,13 +77,13 @@ const styles = `
   /* ── Unified two-column panel ── */
   .qp-main {
     display: grid; grid-template-columns: 1fr 340px; gap: 0;
-    background: white; border-radius: 14px; border: 1px solid #E5E7EB;
+    background: white; border-radius: 14px; border: 1px solid var(--color-border);
     overflow: hidden; animation: qpFadeIn 0.2s ease both;
   }
   @keyframes qpFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
   @media (max-width: 899px) {
     .qp-main { grid-template-columns: 1fr; }
-    .qp-right-col { order: -1; border-left: none; border-bottom: 1px solid #E5E7EB; }
+    .qp-right-col { order: -1; border-left: none; border-bottom: 1px solid var(--color-border); }
   }
 
   /* ── Left column (question card — no own border) ── */
@@ -97,16 +97,16 @@ const styles = `
   }
   .qp-question {
     font-family: 'Alumni Sans', sans-serif; font-size: 1.375rem; font-weight: 700;
-    color: #0A0A0A; line-height: 1.4; margin-bottom: 8px;
+    color: var(--color-text-main); line-height: 1.4; margin-bottom: 8px;
   }
 
   /* ── Options ── */
   .qp-options { display: flex; flex-direction: column; gap: 10px; padding: 12px 20px 16px; }
   .qp-option {
-    border: 2px solid #E5E7EB; border-radius: 10px; padding: 13px 16px;
+    border: 2px solid var(--color-border); border-radius: 10px; padding: 13px 16px;
     cursor: pointer; display: flex; align-items: center; gap: 12px;
     transition: border-color 0.15s, background 0.15s; background: white;
-    font-size: 1.125rem; font-weight: 500; color: #1F1F1F; text-align: left;
+    font-size: 1.125rem; font-weight: 500; color: var(--color-text-main); text-align: left;
   }
   .qp-option:hover:not(.locked) { border-color: ${SAFFRON}; background: #FFF8EE; }
   .qp-option:disabled { pointer-events: none; } /* let taps pass through to open the explanation sheet */
@@ -117,7 +117,7 @@ const styles = `
   .qp-option-marker {
     flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 0.75rem; font-weight: 700; background: #F3F4F6; color: #6B6B6B;
+    font-size: 0.75rem; font-weight: 700; background: var(--color-border-muted); color: var(--color-text-muted);
     transition: background 0.15s, color 0.15s;
   }
   .qp-option.correct .qp-option-marker  { background: ${GREEN}; color: white; }
@@ -127,11 +127,11 @@ const styles = `
   /* ── Inline nav row — 4 equal pills ── */
   .qp-inline-nav {
     display: flex; align-items: stretch; gap: 8px;
-    padding: 12px 16px 16px; border-top: 1px solid #F3F4F6;
+    padding: 12px 16px 16px; border-top: 1px solid var(--color-border-muted);
   }
   .qp-nav-pill {
     flex: 1; min-width: 0; border-radius: 10px; padding: 9px 6px;
-    border: 2px solid #E5E7EB; background: white; color: #4A5565;
+    border: 2px solid var(--color-border); background: white; color: var(--color-text-body);
     cursor: pointer; display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 3px;
     transition: border-color 0.15s, color 0.15s, background 0.15s;
@@ -147,7 +147,7 @@ const styles = `
 
   /* ── Right column (image — shares panel border) ── */
   .qp-right-col {
-    border-left: 1px solid #E5E7EB;
+    border-left: 1px solid var(--color-border);
     display: flex; flex-direction: column;
   }
   .qp-right-col-img {
@@ -158,7 +158,7 @@ const styles = `
   .qp-right-col-empty {
     flex: 1; width: 100%; min-height: 200px; display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    background: #F9F9F7; color: #9CA3AF; font-size: 0.8125rem; gap: 8px;
+    background: #F9F9F7; color: var(--color-text-muted); font-size: 0.8125rem; gap: 8px;
   }
   @keyframes qpScrollPrompt {
     0%   { opacity: 0; transform: translateY(-6px); }
@@ -173,7 +173,7 @@ const styles = `
     font-size: 0.8125rem; font-weight: 600; color: ${SAFFRON};
     display: flex; align-items: center; justify-content: center; gap: 6px;
     animation: qpScrollPrompt 2.2s ease forwards;
-    border-top: 1px solid #F3F4F6;
+    border-top: 1px solid var(--color-border-muted);
     background: none; border-left: none; border-right: none; border-bottom: none;
     cursor: pointer; width: 100%; text-decoration: none;
   }
@@ -192,15 +192,15 @@ const styles = `
   }
   .qp-explain-label {
     font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
-    color: #0A0A0A; margin-bottom: 12px;
+    color: var(--color-text-main); margin-bottom: 12px;
   }
-  .qp-explain-text { font-size: 0.9375rem; color: #1F1F1F; line-height: 1.8; margin-bottom: 14px; }
-  .qp-explain-source { font-size: 0.8125rem; color: #6B6B6B; font-style: italic; margin-top: 10px; }
+  .qp-explain-text { font-size: 0.9375rem; color: var(--color-text-main); line-height: 1.8; margin-bottom: 14px; }
+  .qp-explain-source { font-size: 0.8125rem; color: var(--color-text-muted); font-style: italic; margin-top: 10px; }
 
   /* ── Shared reveal blocks (used in explain panel + review) ── */
   .qp-reveal-block { margin-bottom: 10px; }
-  .qp-reveal-block-label { font-size: 0.75rem; font-weight: 700; color: #6B6B6B; text-transform: uppercase; letter-spacing: 0.05em; }
-  .qp-reveal-block-value { font-size: 0.875rem; color: #1F1F1F; margin-top: 2px; line-height: 1.6; }
+  .qp-reveal-block-label { font-size: 0.75rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .qp-reveal-block-value { font-size: 0.875rem; color: var(--color-text-main); margin-top: 2px; line-height: 1.6; }
 
   /* ── Explanation sheet — mobile slide-up, matches snippet reveal sheet ── */
   @keyframes qpSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -220,19 +220,19 @@ const styles = `
   }
   .qp-sheet-grab { position: relative; flex-shrink: 0; touch-action: none; }
   .qp-sheet-handle {
-    width: 40px; height: 4px; background: #E5E7EB; border-radius: 2px;
+    width: 40px; height: 4px; background: var(--color-border); border-radius: 2px;
     margin: 12px auto 0; flex-shrink: 0;
   }
   .qp-sheet-close {
     position: absolute; top: 10px; right: 10px; width: 40px; height: 40px;
     display: flex; align-items: center; justify-content: center;
     background: none; border: none; border-radius: 999px;
-    color: #9CA3AF; font-size: 1.25rem; cursor: pointer;
+    color: var(--color-text-muted); font-size: 1.25rem; cursor: pointer;
   }
-  .qp-sheet-close:hover { color: #4A5565; background: #F3F4F6; }
+  .qp-sheet-close:hover { color: var(--color-text-body); background: var(--color-border-muted); }
   .qp-sheet-header {
     padding: 14px 56px 14px 20px; flex-shrink: 0;
-    border-bottom: 1px solid #E5E7EB;
+    border-bottom: 1px solid var(--color-border);
     display: flex; align-items: center; gap: 8px;
     font-family: 'Oswald', 'Arial Narrow', sans-serif;
     font-size: 1.25rem; font-weight: 500; line-height: 1.3;
@@ -278,28 +278,28 @@ const styles = `
     text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
   }
   .qp-confirm-icon { font-size: 2.5rem; margin-bottom: 12px; }
-  .qp-confirm-title { font-family: 'Alumni Sans', sans-serif; font-size: 1.5rem; font-weight: 700; color: #0A0A0A; margin-bottom: 8px; }
-  .qp-confirm-body  { font-size: 0.9375rem; color: #4A5565; margin-bottom: 24px; line-height: 1.6; }
+  .qp-confirm-title { font-family: 'Alumni Sans', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--color-text-main); margin-bottom: 8px; }
+  .qp-confirm-body  { font-size: 0.9375rem; color: var(--color-text-body); margin-bottom: 24px; line-height: 1.6; }
   .qp-confirm-btns  { display: flex; flex-direction: column; gap: 10px; }
   .qp-confirm-btn   { border-radius: 999px; padding: 12px; font-size: 0.9375rem; font-weight: 700; cursor: pointer; border: 2px solid transparent; }
   .qp-confirm-btn.primary { background: ${BLUE}; color: white; border-color: ${BLUE}; }
-  .qp-confirm-btn.cancel  { background: white; color: #4A5565; border-color: #E5E7EB; }
+  .qp-confirm-btn.cancel  { background: white; color: var(--color-text-body); border-color: var(--color-border); }
 
   /* ── Score screen ── */
   .qp-score-wrap { max-width: 680px; margin: 0 auto; padding: 32px 1rem 120px; }
   .qp-score-card {
-    background: white; border-radius: 16px; border: 1px solid #E5E7EB;
+    background: white; border-radius: 16px; border: 1px solid var(--color-border);
     padding: 32px 24px; text-align: center; margin-bottom: 24px;
   }
   .qp-score-emoji { font-size: 3rem; margin-bottom: 12px; }
-  .qp-score-title { font-family: 'Alumni Sans', sans-serif; font-size: 2rem; font-weight: 700; color: #0A0A0A; margin-bottom: 4px; }
-  .qp-score-subtitle { font-size: 0.9375rem; color: #4A5565; margin-bottom: 20px; }
+  .qp-score-title { font-family: 'Alumni Sans', sans-serif; font-size: 2rem; font-weight: 700; color: var(--color-text-main); margin-bottom: 4px; }
+  .qp-score-subtitle { font-size: 0.9375rem; color: var(--color-text-body); margin-bottom: 20px; }
   .qp-score-numbers {
     display: flex; justify-content: center; gap: 28px; margin-bottom: 16px;
   }
   .qp-score-stat { text-align: center; }
   .qp-score-stat-num { font-family: 'Alumni Sans', sans-serif; font-size: 2.5rem; font-weight: 700; line-height: 1; }
-  .qp-score-stat-lbl { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #6B6B6B; margin-top: 2px; }
+  .qp-score-stat-lbl { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-top: 2px; }
   .qp-score-stat-num.correct  { color: ${GREEN}; }
   .qp-score-stat-num.wrong    { color: ${RED}; }
   .qp-score-stat-num.skipped  { color: #D97706; }
@@ -318,48 +318,48 @@ const styles = `
   }
   .qp-score-btn.primary  { background: ${SAFFRON}; color: white; border-color: ${SAFFRON}; }
   .qp-score-btn.secondary { background: white; color: ${BLUE}; border-color: ${BLUE}; }
-  .qp-score-btn.ghost    { background: white; color: #4A5565; border-color: #E5E7EB; }
+  .qp-score-btn.ghost    { background: white; color: var(--color-text-body); border-color: var(--color-border); }
 
   /* ── Answer review ── */
   .qp-review-title {
     font-family: 'Alumni Sans', sans-serif; font-size: 1.25rem; font-weight: 700;
-    color: #0A0A0A; margin-bottom: 16px; padding: 0 4px;
+    color: var(--color-text-main); margin-bottom: 16px; padding: 0 4px;
   }
   .qp-review-item {
-    background: white; border-radius: 12px; border: 1px solid #E5E7EB;
+    background: white; border-radius: 12px; border: 1px solid var(--color-border);
     margin-bottom: 14px; overflow: hidden;
   }
   .qp-review-header {
-    padding: 14px 16px 10px; border-bottom: 1px solid #F3F4F6;
+    padding: 14px 16px 10px; border-bottom: 1px solid var(--color-border-muted);
     display: flex; align-items: flex-start; gap: 12px;
   }
   .qp-review-icon { font-size: 1.125rem; flex-shrink: 0; margin-top: 2px; }
-  .qp-review-q    { font-size: 0.9375rem; font-weight: 600; color: #0A0A0A; line-height: 1.45; }
+  .qp-review-q    { font-size: 0.9375rem; font-weight: 600; color: var(--color-text-main); line-height: 1.45; }
   .qp-review-answers { padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; }
   .qp-review-ans-row  { font-size: 0.875rem; line-height: 1.5; }
-  .qp-review-ans-label { font-weight: 700; color: #6B6B6B; }
+  .qp-review-ans-label { font-weight: 700; color: var(--color-text-muted); }
   .qp-review-ans-val.correct { color: ${GREEN}; font-weight: 600; }
   .qp-review-ans-val.wrong   { color: ${RED};   font-weight: 600; }
   .qp-review-ans-val.skipped { color: #D97706;  font-weight: 600; }
   .qp-review-explanation {
-    padding: 10px 16px 14px; border-top: 1px solid #F3F4F6;
-    font-size: 0.875rem; color: #4A5565; line-height: 1.7;
+    padding: 10px 16px 14px; border-top: 1px solid var(--color-border-muted);
+    font-size: 0.875rem; color: var(--color-text-body); line-height: 1.7;
   }
 
-  .qp-loading { display: flex; align-items: center; justify-content: center; min-height: 60vh; font-size: 1rem; color: #6B6B6B; }
+  .qp-loading { display: flex; align-items: center; justify-content: center; min-height: 60vh; font-size: 1rem; color: var(--color-text-muted); }
   .qp-error   { max-width: 480px; margin: 80px auto; text-align: center; color: ${RED}; font-size: 0.9375rem; padding: 1rem; }
 
   /* ── Social strip (explain panel footer + score screen) ── */
   .qp-social {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 0 2px; border-top: 1px solid #E5E7EB; margin-top: 16px; gap: 8px;
+    padding: 10px 0 2px; border-top: 1px solid var(--color-border); margin-top: 16px; gap: 8px;
   }
   .qp-social-left  { display: flex; align-items: center; gap: 10px; }
   .qp-social-right { display: flex; align-items: center; gap: 14px; }
   .qp-social-btn {
     display: flex; align-items: center; gap: 6px;
     background: none; border: none; padding: 10px 6px;
-    font-size: 0.9375rem; color: #4A5565; transition: color 0.2s;
+    font-size: 0.9375rem; color: var(--color-text-body); transition: color 0.2s;
     font-family: 'Inter', system-ui, sans-serif; font-weight: 500; cursor: pointer;
   }
   .qp-social-btn:hover:not(:disabled)  { color: ${SAFFRON}; }
@@ -371,13 +371,13 @@ const styles = `
   /* ── Thin nav pills at bottom of explanation ── */
   .qp-explain-nav {
     display: flex; gap: 8px; margin-top: 18px; padding-top: 14px;
-    border-top: 1px solid #E5E7EB;
+    border-top: 1px solid var(--color-border);
   }
   .qp-explain-pill {
     flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px;
     padding: 7px 10px; border-radius: 999px;
-    border: 1.5px solid #E5E7EB; background: white;
-    font-size: 0.8125rem; font-weight: 600; color: #4A5565;
+    border: 1.5px solid var(--color-border); background: white;
+    font-size: 0.8125rem; font-weight: 600; color: var(--color-text-body);
     cursor: pointer; transition: border-color 0.15s, color 0.15s, background 0.15s;
     white-space: nowrap;
   }
@@ -389,11 +389,11 @@ const styles = `
   /* ── Edit button (admin/creator only) ── */
   .qp-edit-btn {
     display: flex; align-items: center; gap: 5px; background: none; border: none;
-    cursor: pointer; font-size: 0.8125rem; font-weight: 600; color: #9CA3AF;
+    cursor: pointer; font-size: 0.8125rem; font-weight: 600; color: var(--color-text-muted);
     padding: 4px 6px; border-radius: 6px; transition: color 0.15s, background 0.15s;
     font-family: 'Inter', system-ui, sans-serif;
   }
-  .qp-edit-btn:hover { color: ${HERITAGE}; background: #F3F4F6; }
+  .qp-edit-btn:hover { color: ${HERITAGE}; background: var(--color-border-muted); }
 
   /* ── Edit slide-in panel ── */
   .qp-edit-overlay {
@@ -408,20 +408,20 @@ const styles = `
   }
   @keyframes qpSlideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
   .qp-edit-header {
-    padding: 16px 20px; border-bottom: 1px solid #E5E7EB; flex-shrink: 0;
+    padding: 16px 20px; border-bottom: 1px solid var(--color-border); flex-shrink: 0;
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
   }
-  .qp-edit-header-title { font-family: 'Alumni Sans', sans-serif; font-size: 1.125rem; font-weight: 700; color: #0A0A0A; }
-  .qp-edit-header-sub   { font-size: 0.75rem; color: #9CA3AF; margin-top: 1px; }
+  .qp-edit-header-title { font-family: 'Alumni Sans', sans-serif; font-size: 1.125rem; font-weight: 700; color: var(--color-text-main); }
+  .qp-edit-header-sub   { font-size: 0.75rem; color: var(--color-text-muted); margin-top: 1px; }
   .qp-edit-close {
     background: none; border: none; cursor: pointer; font-size: 1.125rem;
-    color: #9CA3AF; padding: 4px 8px; border-radius: 6px;
+    color: var(--color-text-muted); padding: 4px 8px; border-radius: 6px;
   }
-  .qp-edit-close:hover { color: #0A0A0A; background: #F3F4F6; }
+  .qp-edit-close:hover { color: var(--color-text-main); background: var(--color-border-muted); }
   .qp-edit-body { flex: 1; overflow-y: auto; padding: 18px 20px; }
   .qp-edit-section-label {
     font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase;
-    color: ${SAFFRON}; margin: 0 0 12px; padding-bottom: 6px; border-bottom: 1px solid #F3F4F6;
+    color: ${SAFFRON}; margin: 0 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--color-border-muted);
   }
   .qp-edit-field { margin-bottom: 14px; }
   .qp-edit-field label {
@@ -431,19 +431,19 @@ const styles = `
   }
   .qp-edit-field textarea, .qp-edit-field input {
     width: 100%; box-sizing: border-box;
-    border: 1.5px solid #E5E7EB; border-radius: 8px; padding: 8px 11px;
+    border: 1.5px solid var(--color-border); border-radius: 8px; padding: 8px 11px;
     font-size: 0.9375rem; font-family: 'Nunito Sans', system-ui, sans-serif;
     background: white; resize: vertical; outline: none; transition: border-color 0.15s;
-    color: #1F1F1F;
+    color: var(--color-text-main);
   }
   .qp-edit-field textarea:focus, .qp-edit-field input:focus { border-color: ${HERITAGE}; }
-  .qp-edit-divider { border: none; border-top: 1px solid #E5E7EB; margin: 18px 0 16px; }
+  .qp-edit-divider { border: none; border-top: 1px solid var(--color-border); margin: 18px 0 16px; }
   .qp-edit-footer {
-    padding: 12px 20px; border-top: 1px solid #E5E7EB; flex-shrink: 0;
+    padding: 12px 20px; border-top: 1px solid var(--color-border); flex-shrink: 0;
     display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
   }
   .qp-edit-msg { font-size: 0.875rem; flex: 1; }
-  .qp-edit-msg.ok  { color: #00924A; }
+  .qp-edit-msg.ok  { color: var(--color-secondary); }
   .qp-edit-msg.err { color: #DC2626; }
   .qp-edit-save-btn {
     padding: 9px 24px; border-radius: 10px; border: none;
@@ -454,11 +454,11 @@ const styles = `
   .qp-edit-save-btn:disabled { opacity: 0.45; cursor: not-allowed; }
   .qp-edit-save-btn:not(:disabled):hover { opacity: 0.88; }
   .qp-edit-cancel-btn {
-    padding: 9px 18px; border-radius: 10px; border: 1.5px solid #E5E7EB;
-    background: white; color: #4A5565; cursor: pointer;
+    padding: 9px 18px; border-radius: 10px; border: 1.5px solid var(--color-border);
+    background: white; color: var(--color-text-body); cursor: pointer;
     font-size: 0.9375rem; font-weight: 600; font-family: 'Inter', system-ui, sans-serif;
   }
-  .qp-edit-cancel-btn:hover { background: #F3F4F6; }
+  .qp-edit-cancel-btn:hover { background: var(--color-border-muted); }
 `;
 
 const OPTION_LABELS = ["A", "B", "C", "D"];
@@ -913,7 +913,7 @@ export default function QuizPlayer({
       <>
         {q.explanation
           ? <div className="snip-explanation fs-body">{q.explanation}</div>
-          : <div className="snip-explanation" style={{ color: "#9CA3AF", fontStyle: "italic" }}>No explanation available.</div>
+          : <div className="snip-explanation" style={{ color: "var(--color-text-muted)", fontStyle: "italic" }}>No explanation available.</div>
         }
         {q.key_term && (
           <div className="snip-key-term">
@@ -1081,14 +1081,14 @@ export default function QuizPlayer({
                 <div className={`qp-pass-badge ${passed ? "pass" : "fail"}`}>
                   {passed ? "✓ Passed" : "✗ Not Passed"}
                 </div>
-                <div style={{ fontSize:"0.8125rem", color:"#6B6B6B", marginBottom:16 }}>
+                <div style={{ fontSize:"0.8125rem", color:"var(--color-text-muted)", marginBottom:16 }}>
                   {Math.round(scoreData.earnedPoints / scoreData.totalPoints * 100)}% scored
                   {quiz.pass_percent ? ` · ${quiz.pass_percent}% to pass` : ""}
                 </div>
               </>
             )}
             {quiz.max_attempts && (
-              <div style={{ fontSize:"0.8125rem", color:"#6B6B6B", marginBottom:8 }}>
+              <div style={{ fontSize:"0.8125rem", color:"var(--color-text-muted)", marginBottom:8 }}>
                 Attempt {Math.min(attemptCount, quiz.max_attempts)} of {quiz.max_attempts}
               </div>
             )}
@@ -1115,7 +1115,7 @@ export default function QuizPlayer({
             </div>
 
             {/* Social strip on score screen */}
-            <div className="qp-social" style={{justifyContent:"center", gap:24, borderTop:"1px solid #E5E7EB", paddingTop:16}}>
+            <div className="qp-social" style={{justifyContent:"center", gap:24, borderTop:"1px solid var(--color-border)", paddingTop:16}}>
               <button
                 className={"qp-social-btn" + (likes.has("quiz:" + quiz?.quiz_id) ? " active" : "") + (!user || user.is_anonymous ? " disabled" : "")}
                 title={!user || user.is_anonymous ? "Sign in to like" : "Like this quiz"}
@@ -1208,7 +1208,7 @@ export default function QuizPlayer({
                     {qItem.key_term && <p style={{margin:"0 0 4px",fontSize:"0.8125rem"}}><strong>Key Term:</strong> {qItem.key_term}{qItem.key_term_meaning ? ` — ${qItem.key_term_meaning}` : ""}</p>}
                     {qItem.life_connection && <p style={{margin:"0 0 4px",fontSize:"0.8125rem"}}><strong>Life Connection:</strong> {qItem.life_connection}</p>}
                     {qItem.quiz_recap && <p style={{margin:"0 0 4px",fontSize:"0.8125rem"}}><strong>Refresher:</strong> {qItem.quiz_recap}</p>}
-                    {qItem.source_citation && <p style={{margin:"0",fontSize:"0.75rem",color:"#6B6B6B"}}>{qItem.source_citation}</p>}
+                    {qItem.source_citation && <p style={{margin:"0",fontSize:"0.75rem",color:"var(--color-text-muted)"}}>{qItem.source_citation}</p>}
                   </div>
                 )}
               </div>
@@ -1441,7 +1441,7 @@ export default function QuizPlayer({
                 { key: "wrong_option_3", label: "Wrong Option 3",  rows: 2 },
               ].map(({ key, label, rows, green }) => (
                 <div className="qp-edit-field" key={key}>
-                  <label style={green ? { color: "#00924A" } : undefined}>{label}</label>
+                  <label style={green ? { color: "var(--color-secondary)" } : undefined}>{label}</label>
                   <textarea
                     rows={rows}
                     value={editDraft[key] || ""}

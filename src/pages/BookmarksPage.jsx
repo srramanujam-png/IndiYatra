@@ -8,8 +8,8 @@ import { SkeletonBookmarkList } from "../components/Skeletons";
 import { SIGNIN, EMPTY } from "../config/appStrings";
 import { useEntityPreview, SUPPORTS_BOOKMARK } from "../components/EntityPreview";
 
-const BM_ICON = (size = 28, color = "#FF8E00") => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill={color} stroke={color}
+const BM_ICON = (size = 28, color = "var(--color-accent)") => (
+  <svg width={size} height={size} viewBox="0 0 24 24" style={{ fill: color, stroke: color }}
     strokeWidth="0" strokeLinecap="round" strokeLinejoin="round">
     <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
   </svg>
@@ -21,29 +21,29 @@ const TYPE_META = {
   module:   { label: "Module",   icon: "📦", color: SAFFRON   },
   lesson:   { label: "Lesson",   icon: "📖", color: GREEN     },
   snippet:  { label: "Snippet",  icon: "✦",  color: SAFFRON   },
-  quiz:     { label: "Quiz",     icon: "❓", color: "#00509E" },
-  question: { label: "Question", icon: "💬", color: "#00509E" },
+  quiz:     { label: "Quiz",     icon: "❓", color: "var(--color-primary)" },
+  question: { label: "Question", icon: "💬", color: "var(--color-primary)" },
 };
 
 const styles = `
   .bmp-hero {
     text-align: center; padding: 40px 1.5rem 28px;
-    border-bottom: 1px solid #E5E7EB;
+    border-bottom: 1px solid var(--color-border);
   }
   .bmp-hero h1 {
     font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 2rem; font-weight: 700;
-    color: #101828; margin-bottom: 6px;
+    color: var(--color-text-main); margin-bottom: 6px;
   }
-  .bmp-hero p { color: #4A5565; font-size: 0.9375rem; font-family: 'Nunito Sans', system-ui, sans-serif; }
+  .bmp-hero p { color: var(--color-text-body); font-size: 0.9375rem; font-family: 'Nunito Sans', system-ui, sans-serif; }
 
   .bmp-filters {
     max-width: 1100px; margin: 0 auto; padding: 20px 1.5rem 0;
     display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
   }
-  .bmp-filter-label { font-size: 0.8125rem; font-weight: 600; color: #4A5565; font-family: 'Inter', system-ui, sans-serif; }
+  .bmp-filter-label { font-size: 0.8125rem; font-weight: 600; color: var(--color-text-body); font-family: 'Inter', system-ui, sans-serif; }
   .bmp-filter-select {
-    padding: 6px 12px; border-radius: 999px; border: 1.5px solid #E5E7EB;
-    background: white; font-size: 0.8125rem; font-weight: 600; color: #101828;
+    padding: 6px 12px; border-radius: 999px; border: 1.5px solid var(--color-border);
+    background: white; font-size: 0.8125rem; font-weight: 600; color: var(--color-text-main);
     cursor: pointer; outline: none; appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23aaa'/%3E%3C/svg%3E");
     background-repeat: no-repeat; background-position: right 10px center;
@@ -52,7 +52,7 @@ const styles = `
   .bmp-filter-select:focus { border-color: ${SAFFRON}; }
   .bmp-clear  { font-size: 0.8125rem; color: ${SAFFRON}; cursor: pointer; font-weight: 600; margin-left: 4px; font-family: 'Inter', system-ui, sans-serif; }
   .bmp-clear:hover { text-decoration: underline; }
-  .bmp-count  { font-size: 0.8125rem; color: #4A5565; margin-left: auto; font-family: 'Inter', system-ui, sans-serif; }
+  .bmp-count  { font-size: 0.8125rem; color: var(--color-text-body); margin-left: auto; font-family: 'Inter', system-ui, sans-serif; }
 
   .bmp-list {
     max-width: 1100px; margin: 0 auto; padding: 24px 1.5rem 80px;
@@ -68,11 +68,11 @@ const styles = `
   .bmp-card-body { flex: 1; min-width: 0; padding: 14px 0; }
   .bmp-card-name {
     font-family: 'Nunito Sans', system-ui, sans-serif; font-size: 1.0625rem; font-weight: 700;
-    color: #101828; line-height: 1.2; margin-bottom: 4px;
+    color: var(--color-text-main); line-height: 1.2; margin-bottom: 4px;
   }
-  .bmp-card-breadcrumb { font-size: 0.75rem; color: #4A5565; line-height: 1.5; font-family: 'Inter', system-ui, sans-serif; }
+  .bmp-card-breadcrumb { font-size: 0.75rem; color: var(--color-text-body); line-height: 1.5; font-family: 'Inter', system-ui, sans-serif; }
   .bmp-card-breadcrumb span { color: ${HERITAGE}; font-weight: 600; }
-  .bmp-card-meta { font-size: 0.6875rem; color: #4A5565; margin-top: 4px; font-family: 'Inter', system-ui, sans-serif; }
+  .bmp-card-meta { font-size: 0.6875rem; color: var(--color-text-body); margin-top: 4px; font-family: 'Inter', system-ui, sans-serif; }
 
   .bmp-card-right { display: flex; align-items: center; gap: 8px; padding: 0 16px; flex-shrink: 0; }
   .bmp-type-badge {
@@ -82,7 +82,7 @@ const styles = `
   }
   .bmp-remove-btn {
     background: none; border: none; cursor: pointer; font-size: 1rem;
-    color: #4A5565; padding: 8px; border-radius: 8px;
+    color: var(--color-text-body); padding: 8px; border-radius: 8px;
     transition: color 0.15s, background 0.15s;
     line-height: 1; min-width: 36px; min-height: 36px;
     display: flex; align-items: center; justify-content: center;
@@ -90,11 +90,11 @@ const styles = `
   .bmp-remove-btn:hover { color: #e05252; background: #e0525210; }
 
   .bmp-empty {
-    text-align: center; padding: 80px 24px; color: #4A5565;
+    text-align: center; padding: 80px 24px; color: var(--color-text-body);
     max-width: 400px; margin: 0 auto;
   }
   .bmp-empty .empty-icon { font-size: 3rem; margin-bottom: 16px; }
-  .bmp-empty h3 { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.25rem; color: #4A5565; margin-bottom: 8px; }
+  .bmp-empty h3 { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.25rem; color: var(--color-text-body); margin-bottom: 8px; }
   .bmp-empty p  { font-size: 0.9375rem; line-height: 1.6; font-family: 'Nunito Sans', system-ui, sans-serif; }
 
   .bmp-signin {
@@ -102,7 +102,7 @@ const styles = `
   }
   .bmp-signin .empty-icon { font-size: 3rem; margin-bottom: 16px; }
   .bmp-signin h3 { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.25rem; color: ${HERITAGE}; margin-bottom: 8px; }
-  .bmp-signin p  { font-size: 0.9375rem; color: #4A5565; margin-bottom: 24px; font-family: 'Nunito Sans', system-ui, sans-serif; }
+  .bmp-signin p  { font-size: 0.9375rem; color: var(--color-text-body); margin-bottom: 24px; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .bmp-signin-btn {
     display: inline-flex; align-items: center; justify-content: center;
     padding: 12px 28px; border-radius: 12px; min-height: 44px;

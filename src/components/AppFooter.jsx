@@ -3,7 +3,7 @@ import { HERITAGE, SAFFRON } from "../lib/supabase";
 const footerStyles = `
   .app-footer {
     background: white;
-    border-top: 1px solid #E5E7EB;
+    border-top: 1px solid var(--color-border);
     padding: 24px 1.5rem;
   }
   .app-footer-inner {
@@ -18,14 +18,14 @@ const footerStyles = `
   }
   .app-footer-logo img { height: 28px; width: auto; }
   .app-footer-copy {
-    font-size: 0.8125rem; color: #6B6B6B;
+    font-size: 0.8125rem; color: var(--color-text-muted);
     text-align: center; flex: 1;
   }
   .app-footer-social {
     display: flex; align-items: center; gap: 14px;
   }
   .app-footer-social a {
-    color: #6B6B6B; font-size: 1.125rem; text-decoration: none;
+    color: var(--color-text-muted); font-size: 1.125rem; text-decoration: none;
     transition: color 0.2s;
   }
   .app-footer-social a:hover { color: ${SAFFRON}; }

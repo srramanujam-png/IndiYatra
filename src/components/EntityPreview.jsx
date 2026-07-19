@@ -88,9 +88,9 @@ const TYPE_LABELS = {
 
 // 0–30 grey · 31–60 saffron · 61–80 blue · 81–100 green
 export function previewGaugeColor(pct) {
-  if (pct > 80) return "#00924A";
-  if (pct > 60) return "#00509E";
-  if (pct > 30) return "#FF8E00";
+  if (pct > 80) return "var(--color-secondary)";
+  if (pct > 60) return "var(--color-primary)";
+  if (pct > 30) return "var(--color-accent)";
   return "#B7B7B2";
 }
 
@@ -111,14 +111,15 @@ export function ProgressBadge({ pct, size = 34, style }) {
     <div style={{ position: "relative", width: size, height: size, flexShrink: 0, ...style }} title={`${clamped}% complete`}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}>
         <circle cx={c} cy={c} r={r} fill="none" stroke="#E9E9E6" strokeWidth={strokeW} />
-        <circle cx={c} cy={c} r={r} fill="none" stroke={color} strokeWidth={strokeW} strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={dash} />
+        {/* style not attribute: lets `color` be a CSS var token */}
+        <circle cx={c} cy={c} r={r} fill="none" style={{ stroke: color }} strokeWidth={strokeW} strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={dash} />
       </svg>
       <div style={{
         position: "absolute", top: faceInset, left: faceInset, width: faceSize, height: faceSize,
         borderRadius: "50%", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
         display: "flex", alignItems: "center", justifyContent: "center",
       }}>
-        <span style={{ fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 800, fontSize: size * 0.28, color: "#101828" }}>{clamped}%</span>
+        <span style={{ fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 800, fontSize: size * 0.28, color: "var(--color-text-main)" }}>{clamped}%</span>
       </div>
     </div>
   );
@@ -136,8 +137,8 @@ function Chip({ active, onClick, path, count, label }) {
       title={label}
       style={{
         display: "flex", alignItems: "center", gap: 3, border: "none",
-        background: active ? "rgba(255,142,0,0.14)" : "#F3F4F6",
-        color: active ? "#FF8E00" : "#4A5565",
+        background: active ? "rgba(255,142,0,0.14)" : "var(--color-border-muted)",
+        color: active ? "var(--color-accent)" : "var(--color-text-body)",
         borderRadius: 999, padding: "3px 7px", cursor: "pointer",
         fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10, fontWeight: 700,
       }}
@@ -183,7 +184,7 @@ function EntityPreviewPopup() {
       }}
     >
       <div style={{
-        width: "100%", maxWidth: 360, background: "#fff", borderRadius: 20, border: "1px solid #E5E7EB",
+        width: "100%", maxWidth: 360, background: "#fff", borderRadius: 20, border: "1px solid var(--color-border)",
         overflow: "hidden", position: "relative", boxShadow: "0 20px 48px rgba(16,24,40,0.28)",
       }}>
         <button
@@ -192,7 +193,7 @@ function EntityPreviewPopup() {
           style={{
             position: "absolute", top: 12, right: 12, width: 34, height: 34, borderRadius: "50%",
             background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", border: "1px solid rgba(0,0,0,0.08)",
-            color: "#101828", cursor: "pointer", zIndex: 5, display: "flex", alignItems: "center", justifyContent: "center",
+            color: "var(--color-text-main)", cursor: "pointer", zIndex: 5, display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: 14, fontWeight: 700, boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
           }}
         >✕</button>
@@ -225,9 +226,9 @@ function EntityPreviewPopup() {
         </div>
 
         <div style={{ padding: "18px 20px 20px" }}>
-          {crumb && <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 11, color: "#4A5565", marginBottom: 6 }}>{crumb}</div>}
-          <div style={{ fontFamily: "'Nunito Sans', system-ui, sans-serif", fontSize: 19, fontWeight: 700, color: "#101828", lineHeight: 1.25, marginBottom: 8 }}>{title}</div>
-          {desc && <div style={{ fontFamily: "'Nunito Sans', system-ui, sans-serif", fontSize: 14, color: "#4A5565", lineHeight: 1.5, marginBottom: 18 }}>{desc}</div>}
+          {crumb && <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 11, color: "var(--color-text-body)", marginBottom: 6 }}>{crumb}</div>}
+          <div style={{ fontFamily: "'Nunito Sans', system-ui, sans-serif", fontSize: 19, fontWeight: 700, color: "var(--color-text-main)", lineHeight: 1.25, marginBottom: 8 }}>{title}</div>
+          {desc && <div style={{ fontFamily: "'Nunito Sans', system-ui, sans-serif", fontSize: 14, color: "var(--color-text-body)", lineHeight: 1.5, marginBottom: 18 }}>{desc}</div>}
 
           <div style={{ display: "flex", gap: 10 }}>
             {onPlay && (
@@ -257,7 +258,7 @@ function PopupChip({ active, onClick, path, count, label }) {
         height: 34, padding: "0 10px", borderRadius: 999, background: "rgba(255,255,255,0.85)",
         backdropFilter: "blur(8px)", border: "1px solid rgba(0,0,0,0.08)", display: "flex", alignItems: "center", gap: 5,
         fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12, fontWeight: 700,
-        color: active ? "#FF8E00" : "#4A5565", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", cursor: "pointer",
+        color: active ? "var(--color-accent)" : "var(--color-text-body)", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", cursor: "pointer",
       }}
     >
       <svg width="15" height="15" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2" fill={active ? "currentColor" : "none"}>
@@ -272,8 +273,8 @@ function ctaBtnStyle(primary) {
   return {
     flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
     fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 600, fontSize: 13.5,
-    color: primary ? "#fff" : "#00509E",
-    background: primary ? "#00509E" : "rgba(0,80,158,0.08)",
+    color: primary ? "#fff" : "var(--color-primary)",
+    background: primary ? "var(--color-primary)" : "rgba(0,80,158,0.08)",
     border: "none", borderRadius: 12, padding: "12px 16px", cursor: "pointer",
   };
 }

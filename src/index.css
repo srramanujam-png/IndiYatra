@@ -12,8 +12,31 @@
   /* ── Text & Neutral ── */
   --color-text-main:    #101828;   /* Primary Headlines */
   --color-text-body:    #4A5565;   /* Secondary / Descriptive Text */
+  --color-text-muted:   #6B6B6B;   /* Muted / meta text — the ONE muted grey */
   --color-border:       #E5E7EB;   /* Borders and Dividers */
   --color-border-muted: #F3F4F6;   /* Sub-dividers */
+
+  /* ── Semantic ── */
+  --color-danger:       #c62828;   /* Errors, destructive actions */
+  --color-browse:       #4AADA8;   /* Course-browsing chrome ONLY (legalised teal — Phase 0 decision 2) */
+
+  /* ── Type scale (5 roles — DESIGN_SYSTEM.MD §3) ── */
+  --text-xs:   0.75rem;    /* meta, badges        */
+  --text-sm:   0.875rem;   /* UI, buttons         */
+  --text-base: 1rem;       /* body                */
+  --text-lg:   1.25rem;    /* card titles (h3)    */
+  --text-xl:   2rem;       /* section headings    */
+  --text-hero: 3.125rem;   /* hero headings       */
+
+  /* ── Radii / spacing / shadow (DESIGN_SYSTEM.MD §4–5) ── */
+  --radius:      12px;
+  --radius-img:  10px;
+  --radius-pill: 999px;
+  --space-1: 8px;
+  --space-2: 12px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --shadow-btn: 0 1px 0.5px 0.05px rgba(29, 41, 61, 0.02);
 
   /* ── Typography ── */
   --font-heading: 'Oswald', 'Arial Narrow', sans-serif;

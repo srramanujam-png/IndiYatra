@@ -2,8 +2,8 @@ import { useState } from "react";
 import { updateDisplayName } from "../lib/auth";
 import { useAuthContext } from "../contexts/AuthContext";
 
-const SAFFRON_VAL   = "#FF8E00";
-const HERITAGE_VAL  = "#00509E";
+const SAFFRON_VAL   = "var(--color-accent)";
+const HERITAGE_VAL  = "var(--color-primary)";
 
 const styles = `
   .pm-overlay {
@@ -15,7 +15,7 @@ const styles = `
   .pm-modal {
     background: #FFFFFF; border-radius: 16px;
     width: 100%; max-width: 400px; padding: 32px;
-    box-shadow: 0 24px 80px rgba(0,0,0,0.15); border: 1px solid #E5E7EB;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.15); border: 1px solid var(--color-border);
     position: relative;
     animation: authSlideUp 0.28s cubic-bezier(0.25,0.46,0.45,0.94) both;
   }
@@ -33,17 +33,17 @@ const styles = `
   }
   .pm-close {
     background: none; border: none; cursor: pointer;
-    font-size: 20px; color: #4A5565;
+    font-size: 20px; color: var(--color-text-body);
     width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
     border-radius: 50%; transition: background 0.15s;
   }
-  .pm-close:hover { background: #F3F4F6; }
-  .pm-label { font-size: 13px; font-weight: 600; color: #4A5565; margin-bottom: 6px; display: block; font-family: 'Inter', system-ui, sans-serif; }
-  .pm-hint  { font-size: 12px; color: #4A5565; margin-top: 6px; line-height: 1.4; font-family: 'Nunito Sans', system-ui, sans-serif; }
+  .pm-close:hover { background: var(--color-border-muted); }
+  .pm-label { font-size: 13px; font-weight: 600; color: var(--color-text-body); margin-bottom: 6px; display: block; font-family: 'Inter', system-ui, sans-serif; }
+  .pm-hint  { font-size: 12px; color: var(--color-text-body); margin-top: 6px; line-height: 1.4; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .pm-input {
     width: 100%; padding: 10px 14px; border-radius: 10px;
-    border: 1.5px solid #E5E7EB; background: #fff;
-    font-size: 15px; color: #101828; outline: none;
+    border: 1.5px solid var(--color-border); background: #fff;
+    font-size: 15px; color: var(--color-text-main); outline: none;
     box-sizing: border-box; transition: border-color 0.15s;
     font-family: 'Nunito Sans', system-ui, sans-serif;
   }

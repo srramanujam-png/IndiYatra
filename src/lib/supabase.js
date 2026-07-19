@@ -62,9 +62,14 @@ export async function fetchContentThumbs({ moduleIds = [], lessonIds = [], story
 }
 
 // ─── Shared constants ─────────────────────────────────────────────────────────
-export const SAFFRON   = "#FF8E00";
-export const HERITAGE  = "#00509E";
-export const GREEN     = "#00924A";
+// JS MIRROR of the CSS tokens in src/index.css — kept as raw hex ONLY because
+// some call sites concatenate alpha suffixes (`${SAFFRON}22`) or feed SVG
+// presentation attributes, where CSS var() doesn't work. KEEP IN SYNC with
+// index.css. In new code use var(--color-accent) etc. instead of these.
+// Migration away from these constants lands with shared components (roadmap 3.6).
+export const SAFFRON   = "#FF8E00";  // = var(--color-accent)
+export const HERITAGE  = "#00509E";  // = var(--color-primary)
+export const GREEN     = "#00924A";  // = var(--color-secondary)
 export const PARCHMENT = "#FAFAF7"; // brand-compliant bright off-white
 
 export const DEFAULT_LANG_ID   = "LANG_03";

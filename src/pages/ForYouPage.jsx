@@ -33,7 +33,7 @@ const styles = `
   /* ── Resume Yatra card ── */
   .fy-resume {
     background: white;
-    border: 1px solid #E5E7EB;
+    border: 1px solid var(--color-border);
     border-left: 3px solid ${SAFFRON};
     border-radius: 0 12px 12px 0;
     padding: 20px 24px;
@@ -48,18 +48,18 @@ const styles = `
   }
   .fy-resume-title {
     font-family: 'Oswald', 'Arial Narrow', sans-serif;
-    font-size: 1.25rem; font-weight: 500; color: #101828;
+    font-size: 1.25rem; font-weight: 500; color: var(--color-text-main);
     margin-bottom: 10px; line-height: 1.3;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .fy-progress-wrap {
-    height: 4px; background: #F3F4F6; border-radius: 2px; margin-bottom: 8px;
+    height: 4px; background: var(--color-border-muted); border-radius: 2px; margin-bottom: 8px;
   }
   .fy-progress-fill {
     height: 4px; background: ${SAFFRON}; border-radius: 2px; transition: width 0.4s;
   }
   .fy-resume-meta {
-    font-size: 0.75rem; color: #4A5565;
+    font-size: 0.75rem; color: var(--color-text-body);
     font-family: 'Inter', system-ui, sans-serif;
   }
   .fy-resume-btn {
@@ -105,7 +105,7 @@ const styles = `
   .fy-card-body { padding: 10px 12px 12px; flex: 1; display: flex; flex-direction: column; }
   .fy-card-name {
     font-family: 'Nunito Sans', system-ui, sans-serif;
-    font-size: 0.8125rem; font-weight: 700; color: #101828;
+    font-size: 0.8125rem; font-weight: 700; color: var(--color-text-main);
     line-height: 1.4; margin-bottom: 6px;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
     overflow: hidden;
@@ -129,14 +129,14 @@ const styles = `
   .fy-list-body { flex: 1; min-width: 0; }
   .fy-list-title {
     font-family: 'Nunito Sans', system-ui, sans-serif;
-    font-size: 0.9375rem; font-weight: 700; color: #101828;
+    font-size: 0.9375rem; font-weight: 700; color: var(--color-text-main);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .fy-list-sub {
-    font-size: 0.75rem; color: #4A5565; margin-top: 2px;
+    font-size: 0.75rem; color: var(--color-text-body); margin-top: 2px;
     font-family: 'Inter', system-ui, sans-serif;
   }
-  .fy-list-arrow { font-size: 1rem; color: #D1D5DB; flex-shrink: 0; }
+  .fy-list-arrow { font-size: 1rem; color: var(--color-border); flex-shrink: 0; }
 
   /* ── My Likes horizontal layout ── */
   .fy-likes-row {
@@ -180,7 +180,7 @@ const styles = `
   }
   .fy-like-card-sub {
     font-family: 'Nunito Sans', system-ui, sans-serif;
-    font-size: 0.6875rem; color: #4A5565; line-height: 1.4;
+    font-size: 0.6875rem; color: var(--color-text-body); line-height: 1.4;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .fy-like-card-when {
@@ -192,16 +192,16 @@ const styles = `
 
   /* ── Sign-in CTA ── */
   .fy-signin {
-    background: white; border-radius: 12px; border: 1px solid #E5E7EB;
+    background: white; border-radius: 12px; border: 1px solid var(--color-border);
     padding: 48px 32px; text-align: center; margin-bottom: 20px;
   }
   .fy-signin-icon { font-size: 3rem; margin-bottom: 16px; }
   .fy-signin-title {
     font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.5rem;
-    font-weight: 500; color: #101828; margin-bottom: 8px;
+    font-weight: 500; color: var(--color-text-main); margin-bottom: 8px;
   }
   .fy-signin-sub {
-    font-size: 0.9375rem; color: #4A5565; line-height: 1.6;
+    font-size: 0.9375rem; color: var(--color-text-body); line-height: 1.6;
     max-width: 380px; margin: 0 auto 24px;
     font-family: 'Nunito Sans', system-ui, sans-serif;
   }
@@ -211,13 +211,13 @@ const styles = `
   .fy-skel-row { display: flex; gap: 12px; }
   .fy-skel-card {
     flex: 0 0 172px; border-radius: 12px; height: 162px;
-    background: linear-gradient(90deg, #F3F4F6 25%, #FFFFFF 50%, #F3F4F6 75%);
+    background: linear-gradient(90deg, var(--color-border-muted) 25%, #FFFFFF 50%, var(--color-border-muted) 75%);
     background-size: 1200px 100%;
     animation: shimmer 1.5s ease-in-out infinite;
   }
   .fy-skel-list {
     height: 62px; border-radius: 10px; margin-bottom: 8px;
-    background: linear-gradient(90deg, #F3F4F6 25%, #FFFFFF 50%, #F3F4F6 75%);
+    background: linear-gradient(90deg, var(--color-border-muted) 25%, #FFFFFF 50%, var(--color-border-muted) 75%);
     background-size: 1200px 100%;
     animation: shimmer 1.5s ease-in-out infinite;
   }
@@ -240,14 +240,14 @@ const styles = `
      ══════════════════════════════════════════════════════════════════════ */
   .fy-layout {
     display: flex; align-items: stretch;
-    border: 1px solid #E5E7EB; border-radius: 14px; overflow: hidden;
+    border: 1px solid var(--color-border); border-radius: 14px; overflow: hidden;
     max-width: 1000px; margin: 0 auto;
   }
 
   /* ── Photo-tile rail ── */
   .fy-sb {
     width: 108px; flex-shrink: 0; background: #FAFAF8;
-    border-right: 1px solid #E5E7EB; padding: 8px 6px;
+    border-right: 1px solid var(--color-border); padding: 8px 6px;
   }
   @media (min-width: 480px) { .fy-sb { width: 124px; } }
   @media (min-width: 768px) { .fy-sb { width: 140px; } }
@@ -290,7 +290,7 @@ const styles = `
     line-height: 1.15; font-family: 'Inter', system-ui, sans-serif;
     text-shadow: 0 1px 3px rgba(0,0,0,0.4);
   }
-  .fy-sb-divider { height: 1px; background: #E5E7EB; margin: 6px 2px; }
+  .fy-sb-divider { height: 1px; background: var(--color-border); margin: 6px 2px; }
 
   /* ── Wider rail on desktop: taller tiles, bigger icon/label ── */
   @media (min-width: 1024px) {
@@ -304,10 +304,10 @@ const styles = `
   .fy-panel { flex: 1; min-width: 0; background: #FAFAF7; padding: 8px; }
   .fy-panel-head {
     font-size: 0.625rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
-    color: #9CA3AF; margin-bottom: 10px; font-family: 'Inter', system-ui, sans-serif;
+    color: var(--color-text-muted); margin-bottom: 10px; font-family: 'Inter', system-ui, sans-serif;
   }
   .fy-panel-empty {
-    color: #9CA3AF; font-size: 0.8125rem; text-align: center; padding: 40px 16px;
+    color: var(--color-text-muted); font-size: 0.8125rem; text-align: center; padding: 40px 16px;
     font-family: 'Nunito Sans', system-ui, sans-serif;
   }
 
@@ -322,14 +322,14 @@ const styles = `
   .fy-sec-info { flex: 1; min-width: 0; }
   .fy-sec-name {
     font-family: 'Nunito Sans', system-ui, sans-serif; font-size: 0.8125rem; font-weight: 700;
-    color: #101828; line-height: 1.3;
+    color: var(--color-text-main); line-height: 1.3;
   }
-  .fy-sec-sub { font-size: 0.6875rem; color: #4A5565; margin-top: 2px; font-family: 'Inter', system-ui, sans-serif; }
+  .fy-sec-sub { font-size: 0.6875rem; color: var(--color-text-body); margin-top: 2px; font-family: 'Inter', system-ui, sans-serif; }
 
   .bm-btn, .like-btn {
     flex-shrink: 0; background: none; border: none; cursor: pointer;
     font-size: 1.125rem; line-height: 1; padding: 6px; border-radius: 8px;
-    color: #6B6B6B; transition: color 0.15s, transform 0.15s;
+    color: var(--color-text-muted); transition: color 0.15s, transform 0.15s;
     display: flex; align-items: center; justify-content: center;
   }
   .bm-btn:hover { color: ${SAFFRON}; transform: scale(1.15); }
@@ -379,11 +379,11 @@ const styles = `
   .fy-item-body { flex: 1; min-width: 0; }
   .fy-item-name {
     font-family: 'Nunito Sans', system-ui, sans-serif; font-size: 0.875rem; font-weight: 700;
-    color: #101828; line-height: 1.3;
+    color: var(--color-text-main); line-height: 1.3;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .fy-item-sub {
-    font-size: 0.75rem; color: #4A5565; margin-top: 3px; font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.75rem; color: var(--color-text-body); margin-top: 3px; font-family: 'Inter', system-ui, sans-serif;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   /* Type label — vertical (bottom-to-top) strip between the thumb and the
@@ -406,7 +406,7 @@ const styles = `
      regardless of what the indicator is. */
   .fy-item-right { flex-shrink: 0; display: flex; align-items: center; }
   .fy-item-count {
-    font-size: 0.75rem; font-weight: 700; color: #4A5565;
+    font-size: 0.75rem; font-weight: 700; color: var(--color-text-body);
     display: flex; align-items: center; gap: 4px; white-space: nowrap; font-family: 'Inter', system-ui, sans-serif;
   }
   .fy-item-count.like svg { color: #D85A30; }
@@ -415,12 +415,12 @@ const styles = `
   /* ── Type filter — compact dropdown (All types / Modules / Lessons / Stories) ── */
   .fy-filter-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
   .fy-filter-label {
-    font-size: 0.6875rem; font-weight: 700; color: #4A5565; text-transform: uppercase; letter-spacing: 0.05em;
+    font-size: 0.6875rem; font-weight: 700; color: var(--color-text-body); text-transform: uppercase; letter-spacing: 0.05em;
     font-family: 'Inter', system-ui, sans-serif;
   }
   .fy-filter-select {
-    padding: 6px 28px 6px 12px; border-radius: 999px; border: 1.5px solid #E5E7EB;
-    background: #fff; font-size: 0.75rem; font-weight: 700; color: #101828;
+    padding: 6px 28px 6px 12px; border-radius: 999px; border: 1.5px solid var(--color-border);
+    background: #fff; font-size: 0.75rem; font-weight: 700; color: var(--color-text-main);
     cursor: pointer; outline: none; appearance: none; font-family: 'Inter', system-ui, sans-serif;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236B7280'/%3E%3C/svg%3E");
     background-repeat: no-repeat; background-position: right 12px center;
@@ -430,7 +430,7 @@ const styles = `
 
   /* ── Interest tags strip under "Based on your interests" ── */
   .fy-interest-tags { margin-top: 14px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-  .fy-interest-label { font-size: 0.75rem; color: #4A5565; font-family: 'Inter', system-ui, sans-serif; white-space: nowrap; }
+  .fy-interest-label { font-size: 0.75rem; color: var(--color-text-body); font-family: 'Inter', system-ui, sans-serif; white-space: nowrap; }
   .fy-interest-tag {
     font-size: 0.75rem; font-weight: 600; color: ${HERITAGE};
     background: ${HERITAGE}0F; border-radius: 999px; padding: 2px 9px; font-family: 'Inter', system-ui, sans-serif;
