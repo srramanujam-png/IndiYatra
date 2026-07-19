@@ -9,6 +9,7 @@ import { pageToHash, parseHash, isDeepHash } from "./lib/router";
 import { loadSettings, saveSettings, DEFAULT_SETTINGS } from "./hooks/useSettings";
 import { APP_NAME, DEFAULT_SNIPPET_SHARE_MSG, PLAYLIST } from "./config/appStrings";
 import { awardForLessonComplete } from "./lib/awards";
+import { track } from "./lib/track";
 import SettingsPage from "./pages/SettingsPage";
 import HomePage      from "./pages/HomePage";
 import CoursePage    from "./pages/CoursePage";
@@ -319,6 +320,7 @@ export default function App() {
   async function handleLessonComplete(lessonId, points, snippetCount) {
     const newCompleted = new Set([...completedLessons, lessonId]);
     setCompletedLessons(newCompleted);
+    track("complete", { contentType: "lesson", contentId: lessonId, meta: { points: points || 0 } });
 
     // Persist to Supabase for authenticated (non-anonymous) users — fire-and-forget
     if (user && !user.is_anonymous) {
@@ -463,6 +465,7 @@ export default function App() {
       return next;
     });
     showToast(isBookmarked ? "Bookmark removed" : label + " bookmarked ✓");
+    track(isBookmarked ? "unbookmark" : "bookmark", { contentType, contentId });
     if (isBookmarked) {
       deleteBookmark(user.id, contentType, contentId).catch(e => console.warn("deleteBookmark:", e));
     } else {
@@ -497,6 +500,7 @@ export default function App() {
       return next;
     });
     showToast(isLiked ? "Like removed" : label + " liked ♥");
+    track(isLiked ? "unlike" : "like", { contentType, contentId });
     if (isLiked) {
       deleteGenericLike(user.id, contentType, contentId).catch(e => console.warn("deleteGenericLike:", e));
     } else {

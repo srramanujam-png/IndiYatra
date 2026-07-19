@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { SAFFRON, HERITAGE, GREEN, DEFAULT_LANG_ID } from "../lib/supabase";
 import { supabaseClient, saveQuizAttempt, getAttemptCount, saveSnippetQuestion, saveStandaloneQuestion } from "../lib/auth";
+import { track } from "../lib/track";
 import PageHeader from "../components/PageHeader";
 import { globalStyles } from "../styles/global";
 import { APP_URL } from "../config/appStrings";
@@ -790,6 +791,10 @@ export default function QuizPlayer({
       setSaving(true);
       saveQuizAttempt(user.id, quiz.quiz_id, earnedPoints, totalPoints, answersArr)
         .finally(() => setSaving(false));
+      track("quiz_complete", {
+        contentType: "quiz", contentId: quiz.quiz_id,
+        meta: { score: earnedPoints, max: totalPoints, passed },
+      });
     }
   }
 

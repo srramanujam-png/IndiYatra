@@ -3,6 +3,7 @@ import { supabase, SAFFRON, HERITAGE, GREEN, logoUrl, DEFAULT_LANG_ID, DIFFICULT
 import { useAuthContext } from "../contexts/AuthContext";
 import { supabaseClient, loadUserLikes, insertLike, deleteLike, postComment, deleteComment, adminDeleteComment, editComment, reportComment, getSnippetQuestion, saveSnippetQuestion, getPairedContent, insertGenericLike, deleteGenericLike } from "../lib/auth";
 import { containsProfanity, PROFANITY_MESSAGE } from "../lib/profanity";
+import { track } from "../lib/track";
 import { globalStyles } from "../styles/global";
 import { DEFAULT_SNIPPET_SHARE_MSG, APP_URL, PLAYER, SIGNIN } from "../config/appStrings";
 import { useViewTracking } from "../hooks/useViewTracking";
@@ -750,6 +751,11 @@ export default function SnippetPlayer({
 
   const total    = snippets.length;
   const snip     = snippets[current];
+
+  // R3 view event — one per snippet actually shown (batched in track.js).
+  useEffect(() => {
+    if (snip?.snippet_id) track("view", { contentType: "snippet", contentId: snip.snippet_id });
+  }, [snip?.snippet_id]);
   const trans    = snip ? (translations[snip.snippet_id] || {}) : {};
   const asset    = snip ? assets[snip.asset_id] : null;
   // Map language ID (e.g. "LANG_03") → display name (e.g. "English")
@@ -805,6 +811,7 @@ export default function SnippetPlayer({
   async function toggleLike(snippetId) {
     if (!user || user.is_anonymous) return;
     const isLiked = liked.has(snippetId);
+    track(isLiked ? "unlike" : "like", { contentType: "snippet", contentId: snippetId });
 
     // Optimistic update
     setLiked(prev => {
@@ -1458,7 +1465,7 @@ export default function SnippetPlayer({
                     href={waHref}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={() => setSharePopoverId(null)}
+                    onClick={() => { track("share", { contentType: "snippet", contentId: sharePopoverId, meta: { channel: "whatsapp" } }); setSharePopoverId(null); }}
                   >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.122 1.532 5.854L.057 23.75a.5.5 0 0 0 .614.612l5.96-1.46A11.942 11.942 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 0 1-5.028-1.385l-.36-.214-3.732.914.944-3.635-.234-.374A9.817 9.817 0 0 1 2.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
                     WhatsApp
@@ -1468,7 +1475,7 @@ export default function SnippetPlayer({
                     href={twHref}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={() => setSharePopoverId(null)}
+                    onClick={() => { track("share", { contentType: "snippet", contentId: sharePopoverId, meta: { channel: "twitter" } }); setSharePopoverId(null); }}
                   >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                     Post on X
@@ -1476,6 +1483,7 @@ export default function SnippetPlayer({
                   <button
                     className={"share-pop-btn share-pop-btn-copy" + (shareCopied ? " copied" : "")}
                     onClick={() => {
+                      track("share", { contentType: "snippet", contentId: sharePopoverId, meta: { channel: "copy" } });
                       navigator.clipboard.writeText(shareText + "\n" + shareUrl).then(() => {
                         setShareCopied(true);
                         setTimeout(() => { setShareCopied(false); setSharePopoverId(null); }, 1800);
