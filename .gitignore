@@ -27,3 +27,15 @@ dist-ssr
 # Build artefacts from previous sessions
 dist[0-9]
 dist[0-9][0-9]
+
+# Content & working files (roadmap 1.7 / manual A10) — keep out of git
+"First Set of Quizzes - Tagged.xlsx"
+First Set of Quizzes - Tagged.xlsx
+snippets_for_gemini.csv
+gemini_batches/
+results/
+To Do*.docx
+~$*.docx
+test_write*.tmp
+test_write*.txt
+sync_test.txt

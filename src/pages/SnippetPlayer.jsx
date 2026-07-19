@@ -956,9 +956,11 @@ export default function SnippetPlayer({
   }
 
   async function postCommentHandler() {
-    if (!user || !commentDraft.trim() || commentPosting) return;
+    // Anonymous sessions cannot post — enforced server-side by RLS
+    // (phase1_security_fixes.sql §3); this guard keeps the UI honest.
+    if (!user || user.is_anonymous || !commentDraft.trim() || commentPosting) return;
     setCommentPosting(true);
-    const userName = profile?.display_name || (user.is_anonymous ? "Guest" : (user.email?.split("@")[0] || "Learner"));
+    const userName = profile?.display_name || user.email?.split("@")[0] || "Learner";
     const { data, error } = await postComment(user.id, commentsSnipId, commentDraft.trim(), userName);
     if (!error && data) {
       setCommentsData(prev => [data, ...prev]);
@@ -1527,7 +1529,7 @@ export default function SnippetPlayer({
               </div>
               {/* Comment input footer */}
               <div className="comments-footer">
-                {user ? (
+                {user && !user.is_anonymous ? (
                   <>
                     <textarea
                       className="comment-input"
@@ -1549,7 +1551,7 @@ export default function SnippetPlayer({
                   </>
                 ) : (
                   <div className="comments-signin">
-                    <div className="comments-signin-text">Sign in or continue as Guest to comment</div>
+                    <div className="comments-signin-text">Sign in with an account to comment</div>
                     <button className="comments-signin-btn" onClick={() => { closeComments(); onSignIn?.(); }}>Sign in</button>
                   </div>
                 )}
