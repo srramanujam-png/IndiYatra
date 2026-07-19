@@ -22,6 +22,17 @@
 > - Work was pushed to GitHub (feature/quiz) during the session ✓
 >
 > **Phase 1 remaining:** 1.5's profanity filter + report queue · 1.8 compliance memo.
+>
+> **UPDATE (19 Jul 2026, second session):** Both remaining items are now DONE in code:
+> - **1.5 complete** (`0d41ae9`): `supabase/phase1_comment_moderation.sql` (blocked-words
+>   table EN+Hinglish, `contains_profanity()` + trigger on snippet_comments,
+>   `comment_reports` table + RLS) · `src/lib/profanity.js` (client mirror, unit-tested) ·
+>   report button in SnippetPlayer (comment authors now shown first-name-only, per R1) ·
+>   new **Comments** tab in AdminPage (open/resolved/dismissed report queue + recent-comments
+>   view with delete). ⚠ **ACTION NEEDED: run `supabase/phase1_comment_moderation.sql` in the
+>   Supabase SQL Editor** — until then the filter/reporting have no server-side effect and the
+>   report button will error.
+> - **1.8 complete:** see `COMPLIANCE_MEMO.md` (DPDP/COPPA analysis + action list; not legal advice).
 
 This file tells you (Gopal) exactly what was changed, the **3 things only you can do**, and what to hand the next AI session.
 
