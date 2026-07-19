@@ -1588,6 +1588,69 @@ export async function editComment(commentId, newBody) {
     .single();
 }
 
+// ─── Comment moderation (Roadmap 1.5) ─────────────────────────────────────────
+
+/**
+ * Reports a comment for moderation. Any authenticated session (including
+ * anonymous) may report; RLS enforces reporter_id = auth.uid(). Body and
+ * author are snapshotted so the report survives comment deletion.
+ * Duplicate reports by the same session return a 23505 error — treat as success.
+ * Returns { data, error }
+ */
+export async function reportComment({ commentId, snippetId, body, authorName, authorId, reporterId, reason }) {
+  return supabaseClient.from("comment_reports").insert({
+    comment_id:        commentId,
+    snippet_id:        snippetId,
+    comment_body:      body,
+    comment_author:    authorName || null,
+    comment_author_id: authorId || null,
+    reporter_id:       reporterId,
+    reason:            reason || null,
+  }).select().single();
+}
+
+/**
+ * Admin-only: fetches the comment report queue (RLS: is_admin()).
+ * @param {string} status  'open' | 'resolved' | 'dismissed'
+ * Returns { data, error }
+ */
+export async function adminGetCommentReports(status = "open") {
+  return supabaseClient
+    .from("comment_reports")
+    .select("*")
+    .eq("status", status)
+    .order("created_at", { ascending: false });
+}
+
+/**
+ * Admin-only: marks a report resolved or dismissed.
+ * @param {string} reportId    Report uuid
+ * @param {string} status      'resolved' | 'dismissed'
+ * @param {string} resolvedBy  Admin's profile id
+ * Returns { data, error }
+ */
+export async function adminSetReportStatus(reportId, status, resolvedBy) {
+  return supabaseClient
+    .from("comment_reports")
+    .update({ status, resolved_at: new Date().toISOString(), resolved_by: resolvedBy })
+    .eq("id", reportId)
+    .select()
+    .single();
+}
+
+/**
+ * Admin-only helper for proactive moderation: most recent comments site-wide.
+ * (Reads use the public-read policy; the Comments admin tab gates the UI.)
+ * Returns { data, error }
+ */
+export async function adminGetRecentComments(limit = 50) {
+  return supabaseClient
+    .from("snippet_comments")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+}
+
 // ─── Course sidebar tree ───────────────────────────────────────────────────────
 /**
  * Fetches the full Theme > Module > Lesson tree for a given course, with

@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase, SAFFRON, HERITAGE, GREEN, logoUrl, DEFAULT_LANG_ID, DIFFICULTY_STARS } from "../lib/supabase";
 import { useAuthContext } from "../contexts/AuthContext";
-import { supabaseClient, loadUserLikes, insertLike, deleteLike, postComment, deleteComment, adminDeleteComment, editComment, getSnippetQuestion, saveSnippetQuestion, getPairedContent, insertGenericLike, deleteGenericLike } from "../lib/auth";
+import { supabaseClient, loadUserLikes, insertLike, deleteLike, postComment, deleteComment, adminDeleteComment, editComment, reportComment, getSnippetQuestion, saveSnippetQuestion, getPairedContent, insertGenericLike, deleteGenericLike } from "../lib/auth";
+import { containsProfanity, PROFANITY_MESSAGE } from "../lib/profanity";
 import { globalStyles } from "../styles/global";
 import { DEFAULT_SNIPPET_SHARE_MSG, APP_URL, PLAYER, SIGNIN } from "../config/appStrings";
 import { useViewTracking } from "../hooks/useViewTracking";
@@ -391,6 +392,10 @@ const styles = `
   .comment-delete-btn:hover { color: #e55; }
   .comment-edit-btn { background: none; border: none; cursor: pointer; color: #E5E7EB; font-size: 0.75rem; padding: 0 2px; line-height: 1; }
   .comment-edit-btn:hover { color: #FF8E00; }
+  .comment-report-btn { background: none; border: none; cursor: pointer; color: #E5E7EB; font-size: 0.75rem; padding: 0 2px; line-height: 1; }
+  .comment-report-btn:hover { color: #e58e00; }
+  .comment-report-btn.reported { color: #7BAE7F; cursor: default; }
+  .comment-error { margin-top: 6px; font-size: 0.8125rem; color: #c0392b; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .comment-edit-form { margin-top: 4px; }
   .comment-edit-actions { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
   .comment-edit-cancel-btn { background: none; border: 1px solid #E5E7EB; border-radius: 8px; padding: 4px 12px; font-size: 0.875rem; cursor: pointer; color: #4A5565; font-family: 'Inter', system-ui, sans-serif; }
@@ -597,6 +602,8 @@ export default function SnippetPlayer({
   const [showLangPicker,  setShowLangPicker]  = useState(false);
   const [commentDraft,    setCommentDraft]    = useState("");
   const [commentPosting,  setCommentPosting]  = useState(false);
+  const [commentError,    setCommentError]    = useState("");
+  const [reportedIds,     setReportedIds]     = useState(() => new Set());
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editDraft,        setEditDraft]        = useState("");
 
@@ -959,6 +966,12 @@ export default function SnippetPlayer({
     // Anonymous sessions cannot post — enforced server-side by RLS
     // (phase1_security_fixes.sql §3); this guard keeps the UI honest.
     if (!user || user.is_anonymous || !commentDraft.trim() || commentPosting) return;
+    // Client-side profanity check (friendly message; DB trigger is the real gate)
+    if (containsProfanity(commentDraft)) {
+      setCommentError(PROFANITY_MESSAGE);
+      return;
+    }
+    setCommentError("");
     setCommentPosting(true);
     const userName = profile?.display_name || user.email?.split("@")[0] || "Learner";
     const { data, error } = await postComment(user.id, commentsSnipId, commentDraft.trim(), userName);
@@ -967,8 +980,31 @@ export default function SnippetPlayer({
       setCommentCounts(prev => ({ ...prev, [commentsSnipId]: (prev[commentsSnipId] || 0) + 1 }));
       setCommentDraft("");
       setShowComments(false);
+    } else if (error) {
+      setCommentError(
+        String(error.message || "").includes("COMMENT_BLOCKED")
+          ? PROFANITY_MESSAGE
+          : "Could not post your comment. Please try again."
+      );
     }
     setCommentPosting(false);
+  }
+
+  async function reportCommentHandler(c) {
+    if (!user || reportedIds.has(c.id)) return;
+    setReportedIds(prev => new Set(prev).add(c.id));  // optimistic
+    const { error } = await reportComment({
+      commentId:  c.id,
+      snippetId:  commentsSnipId,
+      body:       c.body,
+      authorName: c.user_name,
+      authorId:   c.profile_id,
+      reporterId: user.id,
+    });
+    // 23505 = already reported by this session — treat as success
+    if (error && error.code !== "23505") {
+      setReportedIds(prev => { const n = new Set(prev); n.delete(c.id); return n; });
+    }
   }
 
   // ── View tracking (active reading time for recommendations) ───────────────────
@@ -1475,8 +1511,17 @@ export default function SnippetPlayer({
                       <div className="comment-avatar">&#128100;</div>
                       <div className="comment-content">
                         <div className="comment-author-row">
-                          <span className="comment-author">{c.user_name || "Learner"}</span>
+                          {/* First name only — R1: don't broadcast children's full names */}
+                          <span className="comment-author">{(c.user_name || "Learner").trim().split(/\s+/)[0]}</span>
                           <span className="comment-actions">
+                            {user && c.profile_id !== user.id && (
+                              <button
+                                className={"comment-report-btn" + (reportedIds.has(c.id) ? " reported" : "")}
+                                title={reportedIds.has(c.id) ? "Reported — thank you" : "Report comment"}
+                                disabled={reportedIds.has(c.id)}
+                                onClick={() => reportCommentHandler(c)}
+                              >{reportedIds.has(c.id) ? "✓" : "⚑"}</button>
+                            )}
                             {user && c.profile_id === user.id && editingCommentId !== c.id && (
                               <button className="comment-edit-btn" title="Edit comment" onClick={() => { setEditingCommentId(c.id); setEditDraft(c.body); }}>✏</button>
                             )}
@@ -1509,9 +1554,16 @@ export default function SnippetPlayer({
                                 style={{ padding: "5px 14px", fontSize: "0.875rem" }}
                                 disabled={!editDraft.trim() || editDraft.trim() === c.body}
                                 onClick={async () => {
+                                  if (containsProfanity(editDraft)) {
+                                    setCommentError(PROFANITY_MESSAGE);
+                                    setEditingCommentId(null);
+                                    return;
+                                  }
                                   const { data, error } = await editComment(c.id, editDraft.trim());
                                   if (!error && data) {
                                     setCommentsData(prev => prev.map(x => x.id === c.id ? { ...x, body: data.body } : x));
+                                  } else if (error && String(error.message || "").includes("COMMENT_BLOCKED")) {
+                                    setCommentError(PROFANITY_MESSAGE);
                                   }
                                   setEditingCommentId(null);
                                 }}
@@ -1537,9 +1589,10 @@ export default function SnippetPlayer({
                       maxLength={500}
                       rows={2}
                       value={commentDraft}
-                      onChange={e => setCommentDraft(e.target.value)}
+                      onChange={e => { setCommentDraft(e.target.value); if (commentError) setCommentError(""); }}
                       onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); postCommentHandler(); } }}
                     />
+                    {commentError && <div className="comment-error">{commentError}</div>}
                     <div className="comment-footer-row">
                       <span className="comment-char-count">{commentDraft.length}/500</span>
                       <button

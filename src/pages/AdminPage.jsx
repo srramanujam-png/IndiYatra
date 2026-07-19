@@ -12,11 +12,12 @@ import {
   adminGetTokenCatalogue, adminAddTokenType, adminUpdateTokenType, adminDeleteTokenType,
   adminAddTerm, adminUpdateTerm, adminDeleteTerm,
   uploadContentImage,
+  adminGetCommentReports, adminSetReportStatus, adminGetRecentComments, adminDeleteComment,
 } from "../lib/auth";
 import { globalStyles } from "../styles/global";
 import PageHeader from "../components/PageHeader";
 
-const TABS = ["Overview", "Users", "Tokens", "Content", "Taxonomy", "Badges", "Featured", "Order", "Import"];
+const TABS = ["Overview", "Users", "Comments", "Tokens", "Content", "Taxonomy", "Badges", "Featured", "Order", "Import"];
 const CONTENT_SUBS = ["Levels", "Courses", "Themes", "Modules", "Lessons", "Snippets"];
 const TOKEN_TYPES = FOREST_TOKEN_TYPES;  // from appStrings
 
@@ -149,6 +150,13 @@ export default function AdminPage({
   const [usersLoading, setUsersLoading] = useState(false);
   const [users,      setUsers]      = useState(null);
   const [userSearch, setUserSearch] = useState("");
+
+  // ── Comments (moderation queue — roadmap 1.5) ────────────────────────────────
+  const [modView,        setModView]        = useState("open");   // open | resolved | dismissed | recent
+  const [modLoading,     setModLoading]     = useState(false);
+  const [modReports,     setModReports]     = useState(null);
+  const [modRecent,      setModRecent]      = useState(null);
+  const [modMsg,         setModMsg]         = useState("");
 
   // ── Tokens ───────────────────────────────────────────────────────────────────
   const [tokensLoading, setTokensLoading] = useState(false);
@@ -289,6 +297,7 @@ export default function AdminPage({
   useEffect(() => {
     if (!isAdmin) return;
     if (activeTab === "Users"    && users === null)   loadUsers();
+    if (activeTab === "Comments" && modReports === null) loadModeration(modView);
     if (activeTab === "Tokens"   && tokenRowsRaw === null)  loadTokens();
     if (activeTab === "Tokens"   && tokenCatalogue.length === 0) loadTokenCatalogue();
     if (activeTab === "Taxonomy" && terms.length === 0) loadTaxonomy();
@@ -332,6 +341,51 @@ export default function AdminPage({
     const { data } = await adminGetTokensRaw();
     setTokenRowsRaw(data || []);
     setTokenRowsLoading(false);
+  }
+
+  // ── Comment moderation (roadmap 1.5) ────────────────────────────────────────
+  async function loadModeration(view) {
+    setModLoading(true);
+    setModMsg("");
+    if (view === "recent") {
+      const { data, error } = await adminGetRecentComments(50);
+      if (error) setModMsg("Load failed: " + error.message);
+      setModRecent(data || []);
+      if (modReports === null) setModReports([]);   // stop the tab-loader refiring
+    } else {
+      const { data, error } = await adminGetCommentReports(view);
+      if (error) setModMsg("Load failed: " + error.message);
+      setModReports(data || []);
+    }
+    setModLoading(false);
+  }
+
+  function switchModView(view) {
+    setModView(view);
+    loadModeration(view);
+  }
+
+  async function resolveReport(report, action) {
+    // action: 'delete' (remove comment + resolve) | 'dismiss'
+    setModMsg("");
+    if (action === "delete" && report.comment_id) {
+      const { error: delErr } = await adminDeleteComment(report.comment_id);
+      if (delErr) { setModMsg("Delete failed: " + delErr.message); return; }
+    }
+    const { data: { user: adminUser } = {} } = await supabaseClient.auth.getUser();
+    const status = action === "delete" ? "resolved" : "dismissed";
+    const { error } = await adminSetReportStatus(report.id, status, adminUser?.id || null);
+    if (error) { setModMsg("Status update failed: " + error.message); return; }
+    setModReports(prev => (prev || []).filter(r => r.id !== report.id));
+    setModMsg(action === "delete" ? "Comment deleted and report resolved." : "Report dismissed.");
+  }
+
+  async function deleteRecentComment(commentId) {
+    setModMsg("");
+    const { error } = await adminDeleteComment(commentId);
+    if (error) { setModMsg("Delete failed: " + error.message); return; }
+    setModRecent(prev => (prev || []).filter(c => c.id !== commentId));
+    setModMsg("Comment deleted.");
   }
 
   async function loadTokenCatalogue() {
@@ -1283,6 +1337,67 @@ export default function AdminPage({
                           </tr>
                         ))}
                         {filteredUsers.length === 0 && <tr><td colSpan={5} style={{ textAlign: "center", color: "#aaa", padding: "32px" }}>No users found</td></tr>}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── COMMENTS (moderation queue — roadmap 1.5) ─────────────── */}
+            {activeTab === "Comments" && (
+              <div className="page-section">
+                <div className="page-section-head">
+                  <div className="page-section-title">Comment Moderation</div>
+                  {modMsg && <div className="page-section-meta">{modMsg}</div>}
+                </div>
+                <div className="admin-sub-tabs">
+                  {[["open", "Open Reports"], ["resolved", "Resolved"], ["dismissed", "Dismissed"], ["recent", "Recent Comments"]].map(([v, label]) => (
+                    <button key={v} className={"admin-sub-btn" + (modView === v ? " active" : "")} onClick={() => switchModView(v)}>{label}</button>
+                  ))}
+                </div>
+                {modLoading ? <p style={{ color: "#aaa" }}>Loading…</p> : modView === "recent" ? (
+                  <div className="admin-table-wrap">
+                    <table className="admin-table">
+                      <thead><tr><th>Date</th><th>Author</th><th>Comment</th><th>Snippet</th><th></th></tr></thead>
+                      <tbody>
+                        {(modRecent || []).map(c => (
+                          <tr key={c.id}>
+                            <td style={{ color: "#6B6B6B", whiteSpace: "nowrap" }}>{fmtDate(c.created_at)}</td>
+                            <td style={{ fontWeight: 600 }}>{c.user_name || "—"}</td>
+                            <td style={{ maxWidth: 420 }}>{c.body}</td>
+                            <td style={{ color: "#6B6B6B", fontSize: "0.75rem" }}>{c.snippet_id}</td>
+                            <td><button className="icon-btn danger" title="Delete comment" onClick={() => deleteRecentComment(c.id)}>✕</button></td>
+                          </tr>
+                        ))}
+                        {(modRecent || []).length === 0 && <tr><td colSpan={5} style={{ textAlign: "center", color: "#aaa", padding: "32px" }}>No comments yet</td></tr>}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="admin-table-wrap">
+                    <table className="admin-table">
+                      <thead><tr><th>Reported</th><th>Author</th><th>Comment (snapshot)</th><th>Snippet</th><th>Reason</th>{modView === "open" && <th>Actions</th>}</tr></thead>
+                      <tbody>
+                        {(modReports || []).map(r => (
+                          <tr key={r.id}>
+                            <td style={{ color: "#6B6B6B", whiteSpace: "nowrap" }}>{fmtDate(r.created_at)}</td>
+                            <td style={{ fontWeight: 600 }}>{r.comment_author || "—"}</td>
+                            <td style={{ maxWidth: 420 }}>
+                              {r.comment_body}
+                              {!r.comment_id && <span style={{ color: "#aaa", fontSize: "0.75rem" }}> (already deleted)</span>}
+                            </td>
+                            <td style={{ color: "#6B6B6B", fontSize: "0.75rem" }}>{r.snippet_id}</td>
+                            <td style={{ color: "#6B6B6B", maxWidth: 200 }}>{r.reason || "—"}</td>
+                            {modView === "open" && (
+                              <td style={{ whiteSpace: "nowrap" }}>
+                                {r.comment_id && <button className="icon-btn danger" title="Delete comment & resolve" onClick={() => resolveReport(r, "delete")}>Delete</button>}
+                                <button className="icon-btn" title="Dismiss report (keep comment)" onClick={() => resolveReport(r, "dismiss")}>Dismiss</button>
+                              </td>
+                            )}
+                          </tr>
+                        ))}
+                        {(modReports || []).length === 0 && <tr><td colSpan={6} style={{ textAlign: "center", color: "#aaa", padding: "32px" }}>{modView === "open" ? "No open reports 🎉" : "Nothing here"}</td></tr>}
                       </tbody>
                     </table>
                   </div>
