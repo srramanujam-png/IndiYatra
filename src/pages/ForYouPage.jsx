@@ -5,6 +5,7 @@ import { globalStyles } from "../styles/global";
 import { useAuthContext } from "../contexts/AuthContext";
 import PageHeader from "../components/PageHeader";
 import { useRecommendations } from "../hooks/useRecommendations";
+import { useEntityPreview } from "../components/EntityPreview";
 
 // ── Sidebar rail — fixed order of the 8 tabs, each backed by one photo tile.
 // Real per-tab curated photos don't exist yet, so each key starts out mapped
@@ -522,11 +523,22 @@ function ItemThumb({ type, id, thumbSrc }) {
   );
 }
 
-function ItemRow({ type, id, name, sub, showBadge, indicator, rightIndicator, onClick, thumbSrc }) {
+function ItemRow({ type, id, name, sub, showBadge, indicator, rightIndicator, onClick, thumbSrc, desc, pct, liked, bookmarked, onToggleLike, onToggleBookmark }) {
   const meta = ITEM_TYPE_META[type] || ITEM_TYPE_META.lesson;
   const crowded = (showBadge && indicator) || rightIndicator;
+  const { openPreview } = useEntityPreview();
+  // "story" is ForYouPage's internal name for a Snippet — the shared preview
+  // component/DB schema both use "snippet".
+  const previewType = type === "story" ? "snippet" : type;
+  function openThisPreview() {
+    openPreview({
+      type: previewType, id, title: name, sub, crumb: sub, desc, image: thumbSrc, pct,
+      liked, bookmarked, onToggleLike, onToggleBookmark,
+      onPlay: onClick, playLabel: meta.label ? `Open ${meta.label}` : "Open",
+    });
+  }
   return (
-    <div className="fy-item-card unified-row-card" onClick={onClick}>
+    <div className="fy-item-card unified-row-card" onClick={openThisPreview}>
       {/* Type label — vertical, bottom-to-top, sitting to the left of the
           thumb instead of stacked as a pill under it. Frees up the thumb
           column to just be the thumb, so the row's height tracks the
@@ -684,8 +696,15 @@ function LessonCard({ lesson, index, chipLabel, chipCount, chipColor, onClick })
     chipColor === "heritage" ? "fy-chip fy-chip-heritage" :
     chipColor === "green"    ? "fy-chip fy-chip-green"    :
                                "fy-chip fy-chip-saffron";
+  const { openPreview } = useEntityPreview();
+  function openThisPreview() {
+    openPreview({
+      type: "lesson", id: lesson.lesson_id, title: lesson.lesson_name,
+      crumb: lesson.theme_title || "", onPlay: onClick, playLabel: "Open",
+    });
+  }
   return (
-    <div className="fy-card unified-grid-card" onClick={onClick} title={lesson.lesson_name}>
+    <div className="fy-card unified-grid-card" onClick={openThisPreview} title={lesson.lesson_name}>
       <div className="fy-thumb" style={{ background: pal.bg }}>
         <span>{pal.icon}</span>
         {lesson.theme_title && (

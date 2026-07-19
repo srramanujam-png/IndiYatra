@@ -248,13 +248,14 @@ const headerStyles = `
     border: 1.5px solid transparent;
     transition: background 0.12s, border-color 0.12s;
   }
-  .btm-tab-inner svg { color: #4A5565; transition: color 0.12s; }
+  .btm-tab-inner svg, .btm-tab-inner i { color: #4A5565; transition: color 0.12s; }
   .btm-tab:hover .btm-tab-inner:not(.active) { border-color: #FF8E00; }
-  .btm-tab:hover .btm-tab-inner:not(.active) svg { color: #FF8E00; }
+  .btm-tab:hover .btm-tab-inner:not(.active) svg,
+  .btm-tab:hover .btm-tab-inner:not(.active) i { color: #FF8E00; }
   .btm-tab:hover .btm-tab-inner:not(.active) .btm-label { color: #FF8E00; }
-  .btm-tab-inner.active { background: #FF8E00; border-color: #FF8E00; }
-  .btm-tab-inner.active svg { color: #fff; }
-  .btm-tab-inner.active .btm-label { color: #fff; }
+  .btm-tab-inner.active { background: none; border-color: transparent; }
+  .btm-tab-inner.active svg, .btm-tab-inner.active i { color: ${HERITAGE}; }
+  .btm-tab-inner.active .btm-label { color: ${HERITAGE}; }
   .btm-label {
     font-size: 10px; font-weight: 600; color: #4A5565; line-height: 1;
     transition: color 0.12s; font-family: 'Inter', system-ui, sans-serif;

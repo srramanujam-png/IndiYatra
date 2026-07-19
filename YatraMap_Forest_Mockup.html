@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IndiYatra — Yatra Map Mockup (Forest of Bharat)</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Nunito+Sans:wght@400;700;800&family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Design system: DESIGN_SYSTEM.MD */
+  :root {
+    --heritage: #00509E; --green: #00924A; --saffron: #FF8E00;
+    --bg-alt: #B5D7D5; --text-main: #101828; --text-body: #4A5565;
+    --border: #E5E7EB; --border-muted: #F3F4F6;
+    --river: #4A90D9; --river-locked: #C9D4DE;
+    --forest-tint: #E8F4EC; --map-land: #F6F1E4; --map-stroke: #D9CBA8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Nunito Sans', system-ui, sans-serif; background: #FAFAF8; color: var(--text-main); }
+
+  .top {
+    background: white; border-bottom: 1px solid var(--border);
+    padding: 18px 28px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  .top h1 { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 1.45rem; }
+  .top h1 span { color: var(--saffron); }
+  .top .sub { font-size: 0.85rem; color: var(--text-body); }
+  .seedbar {
+    margin-left: auto; display: flex; align-items: center; gap: 8px;
+    background: #FFF7EC; border: 1.5px solid var(--saffron); border-radius: 999px;
+    padding: 7px 16px; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.9rem; color: #b86000;
+  }
+  .layout { display: grid; grid-template-columns: 1fr 330px; gap: 24px; max-width: 1280px; margin: 24px auto; padding: 0 24px; }
+  @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } }
+
+  .map-card, .panel {
+    background: white; border: 1px solid var(--border); border-radius: 12px; padding: 20px;
+  }
+  .map-card h2, .panel h2 {
+    font-family: 'Oswald', sans-serif; font-weight: 500; font-size: 1.15rem; margin-bottom: 4px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .map-card h2::before { content: ''; width: 4px; height: 20px; border-radius: 2px; background: var(--green); }
+  .map-hint { font-size: 0.8rem; color: var(--text-body); margin-bottom: 10px; }
+  svg#yatra { width: 100%; height: auto; display: block; }
+
+  /* tree pop-in */
+  .tree { font-size: 15px; opacity: 0; transform-origin: center; animation: pop 0.6s cubic-bezier(.2,1.6,.4,1) forwards; cursor: default; }
+  @keyframes pop { 0% { opacity: 0; transform: scale(0) translateY(6px);} 100% { opacity: 1; transform: scale(1) translateY(0);} }
+
+  .river { fill: none; stroke-width: 3.5; stroke-linecap: round; }
+  .river.locked { stroke: var(--river-locked); stroke-dasharray: 2 7; }
+  .river.flowing { stroke: var(--river); stroke-dasharray: 10 6; animation: flow 1.6s linear infinite; filter: drop-shadow(0 0 2px #4A90D955); }
+  @keyframes flow { to { stroke-dashoffset: -32; } }
+
+  .peak { font-size: 20px; opacity: 0.35; filter: grayscale(1); }
+  .peak.climbed { opacity: 1; filter: none; }
+  .temple { font-size: 19px; opacity: 0.35; filter: grayscale(1); }
+  .temple.lit { opacity: 1; filter: drop-shadow(0 0 5px #FF8E00AA); }
+  .jyoti { fill: #E5E7EB; }
+  .jyoti.lit { fill: var(--saffron); filter: drop-shadow(0 0 3px #FF8E00); }
+  .maplabel { font-family: 'Inter', sans-serif; font-size: 9.5px; font-weight: 600; fill: var(--text-body); pointer-events: none; }
+  .maplabel.milestone { fill: #8a7a52; }
+
+  /* Sidebar */
+  .panel { margin-bottom: 20px; }
+  .panel h2::before { content: ''; width: 4px; height: 20px; border-radius: 2px; background: var(--saffron); }
+  .tokrow { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border-muted); }
+  .tokrow:last-child { border-bottom: none; }
+  .tokrow .ic { font-size: 1.25rem; width: 28px; text-align: center; }
+  .tokrow .nm { font-weight: 700; font-size: 0.85rem; }
+  .tokrow .sb { font-size: 0.7rem; color: var(--text-body); }
+  .tokrow .ct { margin-left: auto; font-family: 'Oswald', sans-serif; font-size: 1.2rem; font-weight: 700; color: var(--green); }
+  .next {
+    background: #F0F7FF; border: 1px solid #CFE3F7; border-radius: 10px; padding: 12px 14px;
+    font-size: 0.83rem; color: var(--heritage); margin-top: 12px; line-height: 1.45;
+  }
+  .mstone { display: flex; align-items: center; gap: 9px; padding: 6px 0; font-size: 0.82rem; }
+  .mstone .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
+  .mstone.done .dot { background: var(--green); }
+  .mstone.done { color: var(--text-main); font-weight: 700; }
+  .mstone { color: var(--text-body); }
+  .msec { font-family: 'Inter', sans-serif; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--text-body); margin: 12px 0 4px; }
+
+  /* Demo controls */
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .controls button {
+    font-family: 'Inter', sans-serif; font-size: 0.78rem; font-weight: 600;
+    border: 1.5px solid var(--border); background: white; border-radius: 12px;
+    padding: 8px 12px; cursor: pointer; transition: all 0.15s;
+  }
+  .controls button:hover { border-color: var(--saffron); background: #FFF7EC; }
+  .controls .primary { background: var(--saffron); border-color: var(--saffron); color: white; }
+  .controls .primary:hover { background: #e07f00; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 34px; transform: translateX(-50%) translateY(80px);
+    background: var(--text-main); color: white; border-radius: 12px; padding: 13px 22px;
+    font-size: 0.9rem; font-weight: 700; opacity: 0; transition: all 0.35s cubic-bezier(.2,1.4,.4,1);
+    display: flex; gap: 10px; align-items: center; z-index: 50; box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>Indi<span>Yatra</span> · Yatra Map</h1>
+  <div class="sub">Your learning journey, planted across Bharat — mockup, stylised geography</div>
+  <div class="seedbar">✦ <span id="dharma">0</span> Dharma Points</div>
+</div>
+
+<div class="layout">
+  <div class="map-card">
+    <h2>Forest of Bharat</h2>
+    <div class="map-hint">Every lesson plants a Tulsi 🌿 · modules bloom Ashoka 🌸 · themes float a Lotus 🪷 on a sacred river · levels raise a Peepal 🌳 and crown a mountain · courses grow a Banyan 🌲 and light a Char Dham temple.</div>
+
+    <svg id="yatra" viewBox="0 0 660 780">
+      <defs>
+        <clipPath id="india-clip"><path id="india-shape2" d=""/></clipPath>
+        <linearGradient id="landg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#F8F4E9"/><stop offset="1" stop-color="#F1E9D4"/>
+        </linearGradient>
+      </defs>
+
+      <!-- India silhouette (stylised) -->
+      <path id="india-shape" fill="url(#landg)" stroke="var(--map-stroke)" stroke-width="2.5" stroke-linejoin="round" d=""/>
+
+      <g clip-path="url(#india-clip)">
+        <!-- Region tints appear when a course's Banyan is grown -->
+        <g id="region-tints"></g>
+        <!-- Rivers -->
+        <path class="river locked" id="riv-ganga"   d="M340 150 Q 380 220 440 260 T 540 340"/>
+        <path class="river locked" id="riv-yamuna"  d="M318 130 Q 330 200 368 252"/>
+        <path class="river locked" id="riv-narmada" d="M440 352 Q 330 368 200 372"/>
+        <path class="river locked" id="riv-godavari" d="M268 430 Q 360 448 470 478"/>
+        <path class="river locked" id="riv-kaveri"  d="M300 618 Q 350 640 402 648"/>
+        <path class="river locked" id="riv-brahma"  d="M628 238 Q 590 290 548 330"/>
+        <!-- Trees get planted here -->
+        <g id="trees"></g>
+      </g>
+
+      <!-- Sacred mountains (levels) -->
+      <text class="peak" id="pk-kailash"    x="322" y="72"  text-anchor="middle">🏔️</text>
+      <text class="peak" id="pk-vindhya"    x="352" y="338" text-anchor="middle">⛰️</text>
+      <text class="peak" id="pk-aravalli"   x="242" y="242" text-anchor="middle">⛰️</text>
+      <text class="peak" id="pk-nilgiri"    x="308" y="598" text-anchor="middle">⛰️</text>
+      <text class="maplabel milestone" x="322" y="92"  text-anchor="middle">Kailash</text>
+      <text class="maplabel milestone" x="352" y="356" text-anchor="middle">Vindhya</text>
+      <text class="maplabel milestone" x="242" y="260" text-anchor="middle">Aravalli</text>
+      <text class="maplabel milestone" x="308" y="616" text-anchor="middle">Nilgiri</text>
+
+      <!-- Char Dham temples (courses) -->
+      <text class="temple" id="tp-badri" x="360" y="118" text-anchor="middle">🛕</text>
+      <text class="temple" id="tp-dwarka" x="112" y="336" text-anchor="middle">🛕</text>
+      <text class="temple" id="tp-puri"   x="500" y="400" text-anchor="middle">🛕</text>
+      <text class="temple" id="tp-rameswaram" x="372" y="688" text-anchor="middle">🛕</text>
+      <text class="maplabel milestone" x="360" y="132" text-anchor="middle">Badrinath</text>
+      <text class="maplabel milestone" x="106" y="352" text-anchor="middle">Dwarka</text>
+      <text class="maplabel milestone" x="500" y="416" text-anchor="middle">Puri</text>
+      <text class="maplabel milestone" x="372" y="704" text-anchor="middle">Rameswaram</text>
+
+      <!-- Jyotirlinga network (badges) -->
+      <g id="jyotis"></g>
+
+      <!-- River labels -->
+      <text class="maplabel" x="452" y="252" >Ganga</text>
+      <text class="maplabel" x="332" y="212" >Yamuna</text>
+      <text class="maplabel" x="290" y="362" >Narmada</text>
+      <text class="maplabel" x="360" y="466" >Godavari</text>
+      <text class="maplabel" x="336" y="662" >Kaveri</text>
+      <text class="maplabel" x="566" y="292" >Brahmaputra</text>
+    </svg>
+
+    <div class="controls">
+      <span style="font-family:'Inter',sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-body);align-self:center;">Simulate:</span>
+      <button class="primary" onclick="earn('lesson')">Complete Lesson · +🌿 +10✦</button>
+      <button onclick="earn('module')">Complete Module · +🌸</button>
+      <button onclick="earn('theme')">Complete Theme · +🪷 river</button>
+      <button onclick="earn('level')">Complete Level · +🌳 mountain</button>
+      <button onclick="earn('course')">Complete Course · +🌲 temple</button>
+      <button onclick="reset()" style="color:#9CA3AF;">Reset</button>
+    </div>
+  </div>
+
+  <div>
+    <div class="panel">
+      <h2>My Forest</h2>
+      <div id="tokrows"></div>
+      <div class="next" id="nexthint">🌱 Complete your first lesson to plant your first Tulsi.</div>
+    </div>
+    <div class="panel">
+      <h2>Milestones</h2>
+      <div class="msec">Sacred Rivers · one per Theme</div>
+      <div id="ms-rivers"></div>
+      <div class="msec">Sacred Mountains · one per Level</div>
+      <div id="ms-peaks"></div>
+      <div class="msec">Char Dham · one per Course</div>
+      <div id="ms-temples"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── Stylised India outline ─────────────────────────────────────────────── */
+const INDIA = "M310 28 Q 330 22 342 42 L 356 78 Q 372 96 388 112 L 402 138 Q 420 150 445 158 L 486 176 Q 520 188 552 196 L 596 188 Q 622 184 636 202 L 644 224 Q 640 244 618 252 L 588 262 Q 568 274 556 296 L 546 322 Q 540 338 528 344 L 512 352 Q 524 372 520 392 L 508 420 Q 496 448 478 472 L 452 516 Q 432 556 414 592 L 396 636 Q 382 672 366 700 L 348 736 Q 338 752 326 736 L 310 700 Q 296 664 286 628 L 272 580 Q 258 540 246 504 L 232 464 Q 220 436 206 416 L 186 396 Q 166 386 148 376 L 116 362 Q 92 352 96 328 L 108 306 Q 124 292 148 296 L 172 302 Q 182 284 178 262 L 176 232 Q 180 204 198 186 L 222 166 Q 240 150 252 128 L 264 96 Q 274 66 288 44 Q 298 30 310 28 Z";
+document.getElementById("india-shape").setAttribute("d", INDIA);
+document.getElementById("india-shape2").setAttribute("d", INDIA);
+
+/* ── Config ─────────────────────────────────────────────────────────────── */
+const RIVERS  = [["riv-ganga","Ganga"],["riv-yamuna","Yamuna"],["riv-narmada","Narmada"],["riv-godavari","Godavari"],["riv-kaveri","Kaveri"],["riv-brahma","Brahmaputra"]];
+const PEAKS   = [["pk-kailash","Mount Kailash"],["pk-vindhya","Vindhya Range"],["pk-aravalli","Aravalli Hills"],["pk-nilgiri","Nilgiri Hills"]];
+const TEMPLES = [["tp-badri","Badrinath"],["tp-dwarka","Dwarka"],["tp-puri","Puri"],["tp-rameswaram","Rameswaram"]];
+const TOKENS  = [
+  { key:"tulsi",  icon:"🌿", name:"Tulsi",  sub:"per lesson" },
+  { key:"ashoka", icon:"🌸", name:"Ashoka", sub:"per module" },
+  { key:"lotus",  icon:"🪷", name:"Lotus",  sub:"per theme · unlocks a river" },
+  { key:"peepal", icon:"🌳", name:"Peepal", sub:"per level · crowns a mountain" },
+  { key:"banyan", icon:"🌲", name:"Banyan", sub:"per course · lights a temple" },
+];
+/* Planting regions cycled through as the forest grows (loosely: plains → west → deccan → south → east) */
+const REGIONS = [
+  {cx:400, cy:270, rx:110, ry:60},   // Gangetic plains
+  {cx:230, cy:300, rx:75,  ry:70},   // West
+  {cx:340, cy:450, rx:120, ry:80},   // Deccan
+  {cx:330, cy:620, rx:60,  ry:70},   // South
+  {cx:540, cy:280, rx:60,  ry:45},   // East / NE
+];
+/* Jyotirlinga dots (12) — lit by quiz badges in the real app; here every 2nd lesson */
+const JYOTIS = [[300,180],[360,300],[250,340],[420,330],[300,410],[430,420],[240,420],[380,520],[330,560],[300,660],[430,560],[500,350]];
+
+let S; /* state */
+const rand = (seed => () => (seed = (seed * 9301 + 49297) % 233280) / 233280)(42);
+const SLOTS = [];
+REGIONS.forEach((r, ri) => { for (let i = 0; i < 40; i++) {
+  const a = rand() * Math.PI * 2, d = Math.sqrt(rand());
+  SLOTS.push({ region: ri, x: r.cx + Math.cos(a) * r.rx * d, y: r.cy + Math.sin(a) * r.ry * d });
+}});
+/* interleave regions so the whole map greens gradually */
+SLOTS.sort((a, b) => (a.region === b.region) ? 0 : 0); // stable; pick via pointer per region
+
+function reset() {
+  S = { tulsi:0, ashoka:0, lotus:0, peepal:0, banyan:0, dharma:0, planted:0 };
+  document.getElementById("trees").innerHTML = "";
+  document.getElementById("region-tints").innerHTML = "";
+  const jg = document.getElementById("jyotis");
+  jg.innerHTML = JYOTIS.map((p,i) => `<circle class="jyoti" id="jy-${i}" cx="${p[0]}" cy="${p[1]}" r="4"><title>Jyotirlinga ${i+1}</title></circle>`).join("");
+  RIVERS.forEach(([id]) => document.getElementById(id).setAttribute("class","river locked"));
+  PEAKS.forEach(([id]) => document.getElementById(id).setAttribute("class","peak"));
+  TEMPLES.forEach(([id]) => document.getElementById(id).setAttribute("class","temple"));
+  render();
+}
+
+function plant(icon, title) {
+  const slot = SLOTS[(S.planted * 7) % SLOTS.length]; S.planted++;
+  const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  t.setAttribute("x", slot.x); t.setAttribute("y", slot.y);
+  t.setAttribute("text-anchor", "middle"); t.setAttribute("class", "tree");
+  t.innerHTML = icon + `<title>${title}</title>`;
+  document.getElementById("trees").appendChild(t);
+}
+
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.innerHTML = msg; el.classList.add("show");
+  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove("show"), 2800);
+}
+
+function earn(kind) {
+  if (kind === "lesson") {
+    S.tulsi++; S.dharma += 10; plant("🌿", "Tulsi — a lesson completed");
+    if (S.tulsi % 2 === 0) { const j = document.getElementById("jy-" + ((S.tulsi/2 - 1) % 12)); if (j) j.classList.add("lit"); }
+    toast("🌿 A Tulsi takes root · +10 ✦ Dharma");
+  }
+  if (kind === "module") { S.ashoka++; plant("🌸", "Ashoka — a module completed"); toast("🌸 An Ashoka blooms in your forest"); }
+  if (kind === "theme") {
+    S.lotus++; plant("🪷", "Lotus — a theme completed");
+    const r = RIVERS[S.lotus - 1];
+    if (r) { document.getElementById(r[0]).setAttribute("class", "river flowing"); toast(`🪷 The sacred <b>${r[1]}</b> now flows on your map!`); }
+    else toast("🪷 A Lotus blossoms on the waters");
+  }
+  if (kind === "level") {
+    S.peepal++; plant("🌳", "Peepal — a level completed");
+    const p = PEAKS[S.peepal - 1];
+    if (p) { document.getElementById(p[0]).setAttribute("class", "peak climbed"); toast(`🌳 You have reached <b>${p[1]}</b>!`); }
+    else toast("🌳 A mighty Peepal rises");
+  }
+  if (kind === "course") {
+    S.banyan++; plant("🌲", "Banyan — a course completed");
+    const t = TEMPLES[S.banyan - 1];
+    if (t) { document.getElementById(t[0]).setAttribute("class", "temple lit"); toast(`🌲 The lamps of <b>${t[1]}</b> are lit — Char Dham ${S.banyan}/4`); }
+    const reg = REGIONS[(S.banyan - 1) % REGIONS.length];
+    const e = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
+    e.setAttribute("cx", reg.cx); e.setAttribute("cy", reg.cy); e.setAttribute("rx", reg.rx + 20); e.setAttribute("ry", reg.ry + 20);
+    e.setAttribute("fill", "var(--forest-tint)"); e.setAttribute("opacity", "0.7");
+    document.getElementById("region-tints").appendChild(e);
+  }
+  render();
+}
+
+function render() {
+  document.getElementById("dharma").textContent = S.dharma;
+  document.getElementById("tokrows").innerHTML = TOKENS.map(t =>
+    `<div class="tokrow"><span class="ic">${t.icon}</span><span><div class="nm">${t.name}</div><div class="sb">${t.sub}</div></span><span class="ct">${S[t.key]}</span></div>`).join("");
+  const hints = [];
+  if (S.lotus < RIVERS.length)   hints.push(`Complete <b>1 more theme</b> to set the <b>${RIVERS[S.lotus][1]}</b> flowing`);
+  if (S.peepal < PEAKS.length)   hints.push(`finish this level to reach <b>${PEAKS[S.peepal][1]}</b>`);
+  if (S.banyan < TEMPLES.length) hints.push(`complete the course to light <b>${TEMPLES[S.banyan][1]}</b>`);
+  document.getElementById("nexthint").innerHTML = S.planted === 0
+    ? "🌱 Complete your first lesson to plant your first Tulsi."
+    : "🧭 Next on your Yatra: " + hints.slice(0, 2).join(", and ") + ".";
+  document.getElementById("ms-rivers").innerHTML  = RIVERS.map(([,n],i)  => `<div class="mstone ${i < S.lotus  ? "done" : ""}"><span class="dot"></span>${n}</div>`).join("");
+  document.getElementById("ms-peaks").innerHTML   = PEAKS.map(([,n],i)   => `<div class="mstone ${i < S.peepal ? "done" : ""}"><span class="dot"></span>${n}</div>`).join("");
+  document.getElementById("ms-temples").innerHTML = TEMPLES.map(([,n],i) => `<div class="mstone ${i < S.banyan ? "done" : ""}"><span class="dot"></span>${n}</div>`).join("");
+}
+
+reset();
+/* small demo seed so the map isn't empty on open */
+earn("lesson"); earn("lesson"); earn("lesson"); earn("module"); earn("lesson"); earn("theme");
+</script>
+</body>
+</html>

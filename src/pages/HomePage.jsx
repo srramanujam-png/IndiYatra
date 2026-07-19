@@ -5,6 +5,7 @@ import PageHeader from "../components/PageHeader";
 import { SkeletonCourseGrid } from "../components/Skeletons";
 import { FALLBACK } from "../config/appStrings";
 import { AuthContext } from "../contexts/AuthContext";
+import { useEntityPreview } from "../components/EntityPreview";
 
 const TEAL = "#4AADA8";
 
@@ -190,9 +191,11 @@ export default function HomePage({
   onLikes, onBookmarks, onDiscover, onForYou, onAllCourses, onResume,
   isAdmin, onAdmin, userEditorialRole, onEditor,
   activePage, onSaveSettings, languages = [],
+  bookmarks = new Set(), onToggleBookmark,
 }) {
   const { onSignIn, user } = useContext(AuthContext);
   const isGuest = !user || user.is_anonymous;
+  const { openPreview } = useEntityPreview();
 
   const [courses, setCourses]               = useState([]);
   const [assets, setAssets]                 = useState({});
@@ -284,12 +287,23 @@ export default function HomePage({
               {courses.map((course, i) => {
                 const asset    = assets[course.asset_id];
                 const learners = learnersByCourse.get(course.course_id);
+                const openThisPreview = () => openPreview({
+                  type: "course",
+                  id: course.course_id,
+                  title: course.course_name || FALLBACK.courseName,
+                  desc: course.description || "",
+                  image: asset?.file_path,
+                  bookmarked: bookmarks.has("course:" + course.course_id),
+                  onToggleBookmark: () => onToggleBookmark && onToggleBookmark("course", course.course_id, course.course_name),
+                  onPlay: () => onCourseClick(course),
+                  playLabel: "Explore",
+                });
                 return (
                   <div
                     className="hp-course-card unified-grid-card"
                     key={course.course_id}
                     style={{ animationDelay: `${i * 0.08}s` }}
-                    onClick={() => onCourseClick(course)}
+                    onClick={openThisPreview}
                   >
                     <div className="hp-card-img">
                       {asset
@@ -316,12 +330,22 @@ export default function HomePage({
                         )}
                       </div>
                     </div>
-                    <div className="hp-card-footer">
+                    <div className="hp-card-footer" style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <button
                         className="hp-card-cta"
                         onClick={e => { e.stopPropagation(); onCourseClick(course); }}
                       >
                         Explore →
+                      </button>
+                      <button
+                        title={bookmarks.has("course:" + course.course_id) ? "Remove bookmark" : "Bookmark course"}
+                        onClick={e => { e.stopPropagation(); onToggleBookmark && onToggleBookmark("course", course.course_id, course.course_name); }}
+                        style={{
+                          background: "none", border: "none", cursor: "pointer", padding: "4px 6px", borderRadius: 8,
+                          color: bookmarks.has("course:" + course.course_id) ? "#FF8E00" : "#6B6B6B",
+                        }}
+                      >
+                        <svg width="19" height="19" viewBox="0 0 24 24" fill={bookmarks.has("course:" + course.course_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
                       </button>
                     </div>
                   </div>

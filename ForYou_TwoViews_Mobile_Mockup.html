@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IndiYatra — For You Mobile: Compact &amp; Relaxed Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Nunito+Sans:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --color-primary: #00509E; --color-secondary: #00924A; --color-accent: #FF8E00;
+    --color-text-main: #101828; --color-text-body: #4A5565; --color-text-muted: #6B7280;
+    --color-border: #E5E7EB; --font-heading: 'Oswald', sans-serif;
+    --font-body: 'Nunito Sans', sans-serif; --font-ui: 'Inter', sans-serif; --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-body); color: var(--color-text-body); background: #F4F4F2; padding: 30px 16px 60px; }
+  .stage { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+  .phone-col { text-align: center; }
+  .phone-caption { font-family: var(--font-ui); font-size: 0.875rem; font-weight: 600; color: var(--color-text-main); margin-bottom: 12px; }
+  .phone-caption small { display: block; font-weight: 400; color: var(--color-text-muted); margin-top: 2px; }
+  .mock-note { max-width: 860px; margin: 0 auto 26px; background: #FFF8EE; border: 1px solid #FFE2B8; border-radius: var(--radius); padding: 12px 16px; font-size: 0.875rem; font-family: var(--font-ui); text-align: left; }
+
+  /* Phone frame */
+  .phone {
+    width: 390px; height: 780px; background: #fff; border-radius: 38px;
+    border: 10px solid #101828; overflow: hidden; position: relative; text-align: left;
+    box-shadow: 0 20px 50px rgba(16,24,40,0.25); display: flex; flex-direction: column;
+  }
+  .notch { height: 24px; flex-shrink: 0; display: flex; justify-content: center; align-items: center; }
+  .notch::after { content: ''; width: 110px; height: 16px; background: #101828; border-radius: 0 0 12px 12px; }
+  .screen { flex: 1; overflow-y: auto; overflow-x: hidden; position: relative; }
+
+  /* App bar */
+  .appbar { position: sticky; top: 0; z-index: 20; background: rgba(255,255,255,0.97); backdrop-filter: blur(8px); border-bottom: 1px solid var(--color-border); padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
+  .appbar .title { font-family: var(--font-heading); font-weight: 500; font-size: 1.25rem; color: var(--color-text-main); }
+  .appbar .seg { margin-left: auto; display: inline-flex; border: 1px solid var(--color-border); border-radius: 999px; overflow: hidden; font-family: var(--font-ui); font-size: 0.6875rem; }
+  .appbar .seg span { padding: 5px 10px; color: var(--color-text-muted); }
+  .appbar .seg span.on { background: var(--color-accent); color: #fff; font-weight: 600; }
+
+  /* ═══ COMPACT MOBILE ═══ */
+  /* Rail → horizontally scrollable photo-chip strip */
+  .chips { display: flex; gap: 8px; overflow-x: auto; padding: 12px 14px 4px; scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip {
+    position: relative; flex: 0 0 auto; width: 92px; height: 64px; border-radius: 12px; overflow: hidden;
+    border: none; cursor: pointer; display: flex; align-items: flex-end; padding: 7px 8px; text-align: left;
+  }
+  .chip .ph { position: absolute; inset: 0; background-size: cover; background-position: center; filter: grayscale(1); }
+  .chip .tint { position: absolute; inset: 0; background: linear-gradient(135deg, #FF8E009E, #00509E9E); mix-blend-mode: multiply; }
+  .chip .scrim { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.62), rgba(0,0,0,0.08) 60%); }
+  .chip .lbl { position: relative; z-index: 1; color: #fff; font-family: var(--font-ui); font-size: 0.625rem; font-weight: 700; line-height: 1.2; }
+  .chip.active { outline: 2.5px solid var(--color-accent); outline-offset: -2.5px; }
+  .chip .count { position: absolute; top: 5px; right: 5px; z-index: 1; background: rgba(255,255,255,0.3); color: #fff; border-radius: 999px; font-family: var(--font-ui); font-size: 0.5625rem; font-weight: 700; padding: 1px 6px; }
+
+  .cm-body { padding: 10px 14px 90px; }
+  .cm-resume { display: flex; align-items: center; gap: 10px; border: 1.5px solid var(--color-accent); background: #FFF8EE; border-radius: var(--radius); padding: 9px 11px; margin-bottom: 12px; }
+  .cm-resume .thumb { width: 42px; height: 42px; border-radius: 9px; background: linear-gradient(135deg, var(--color-accent), var(--color-primary)); flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; }
+  .cm-resume .t { font-weight: 700; font-size: 0.8125rem; color: var(--color-text-main); line-height: 1.25; }
+  .cm-resume .s { font-family: var(--font-ui); font-size: 0.6875rem; color: var(--color-text-muted); }
+  .cm-resume .go { margin-left: auto; flex-shrink: 0; background: var(--color-accent); color: #fff; border: none; border-radius: 999px; padding: 7px 13px; font-family: var(--font-ui); font-size: 0.6875rem; font-weight: 600; }
+
+  .cm-filter { display: flex; gap: 8px; margin-bottom: 10px; font-family: var(--font-ui); font-size: 0.75rem; }
+  .cm-filter select { flex: 0 0 auto; font: inherit; border: 1px solid var(--color-border); border-radius: 8px; padding: 6px 8px; color: var(--color-text-body); background: #fff; }
+  .cm-filter input { flex: 1; min-width: 0; font: inherit; border: 1px solid var(--color-border); border-radius: 8px; padding: 6px 10px; }
+
+  .cm-row { display: flex; align-items: center; gap: 10px; padding: 8px 9px; border: 1px solid var(--color-border); border-radius: 10px; margin-bottom: 7px; }
+  .cm-row .thumb { width: 42px; height: 42px; border-radius: 8px; flex-shrink: 0; background-size: cover; background-position: center; }
+  .cm-row .name { font-weight: 700; font-size: 0.8125rem; color: var(--color-text-main); }
+  .cm-row .sub { font-family: var(--font-ui); font-size: 0.6875rem; color: var(--color-text-muted); }
+  .cm-row .acts { margin-left: auto; display: flex; gap: 10px; font-size: 0.9rem; color: var(--color-text-muted); }
+  .cm-row .acts .on { color: var(--color-accent); }
+
+  /* Bottom-sheet preview (replaces desktop docked pane) */
+  .sheet-scrim { position: absolute; inset: 0; background: rgba(0,0,0,0.4); z-index: 30; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 31; background: #fff; border-radius: 20px 20px 0 0; padding: 10px 18px 22px; transform: translateY(105%); transition: transform .25s ease; box-shadow: 0 -8px 30px rgba(0,0,0,0.18); }
+  .phone.sheet-open .sheet { transform: none; }
+  .phone.sheet-open .sheet-scrim { opacity: 1; pointer-events: auto; }
+  .sheet .grab { width: 40px; height: 4px; border-radius: 2px; background: var(--color-border); margin: 0 auto 12px; }
+  .sheet .img { height: 110px; border-radius: 12px; background: linear-gradient(135deg, #FF8E00AA, #00509EAA); margin-bottom: 10px; }
+  .sheet h3 { font-family: var(--font-heading); font-weight: 500; font-size: 1.1rem; color: var(--color-text-main); margin-bottom: 4px; }
+  .sheet p { font-size: 0.8125rem; line-height: 1.45; margin-bottom: 8px; }
+  .sheet .meta { font-family: var(--font-ui); font-size: 0.6875rem; color: var(--color-text-muted); margin-bottom: 12px; }
+  .sheet .start { width: 100%; background: var(--color-accent); color: #fff; border: none; border-radius: var(--radius); padding: 12px; font-family: var(--font-ui); font-weight: 600; font-size: 0.875rem; }
+
+  /* ═══ RELAXED MOBILE ═══ */
+  .rm-step { display: none; padding: 14px 14px 110px; animation: slideIn .25s ease; }
+  .rm-step.show { display: block; }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(22px); } to { opacity: 1; transform: none; } }
+
+  .rm-trailbar { position: sticky; top: 0; z-index: 20; background: rgba(255,255,255,0.97); backdrop-filter: blur(8px); border-bottom: 1px solid var(--color-border); padding: 8px 12px; display: flex; align-items: center; gap: 8px; min-height: 44px; font-family: var(--font-ui); font-size: 0.75rem; }
+  .rm-back { border: 1px solid var(--color-border); background: #fff; border-radius: 999px; width: 32px; height: 32px; flex-shrink: 0; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; }
+  .rm-crumb { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--color-text-muted); }
+  .rm-crumb b { color: var(--color-text-main); }
+  .rm-stepdots { margin-left: auto; display: flex; gap: 4px; flex-shrink: 0; }
+  .rm-stepdots i { width: 6px; height: 6px; border-radius: 50%; background: var(--color-border); }
+  .rm-stepdots i.on { background: var(--color-accent); }
+
+  .rm-q { font-family: var(--font-heading); font-weight: 500; font-size: 1.35rem; color: var(--color-text-main); margin-bottom: 2px; }
+  .rm-qs { font-size: 0.8125rem; color: var(--color-text-muted); margin-bottom: 14px; }
+
+  .rm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .rm-tile { position: relative; height: 128px; border-radius: 14px; overflow: hidden; border: none; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; padding: 10px 11px; text-align: left; }
+  .rm-tile.wide { grid-column: 1 / -1; height: 104px; }
+  .rm-tile .ph { position: absolute; inset: 0; background-size: cover; background-position: center; filter: grayscale(1); }
+  .rm-tile .tint { position: absolute; inset: 0; background: linear-gradient(135deg, #FF8E009E, #00509E9E); mix-blend-mode: multiply; }
+  .rm-tile .scrim { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.66), rgba(0,0,0,0.06) 60%); }
+  .rm-tile .ico { position: relative; z-index: 1; font-size: 1.2rem; margin-bottom: 3px; }
+  .rm-tile .t { position: relative; z-index: 1; color: #fff; font-family: var(--font-heading); font-weight: 500; font-size: 0.9375rem; line-height: 1.15; }
+  .rm-tile .s { position: relative; z-index: 1; color: rgba(255,255,255,0.85); font-family: var(--font-ui); font-size: 0.625rem; }
+
+  .rm-card { display: flex; gap: 12px; border: 1px solid var(--color-border); border-radius: 14px; padding: 11px; margin-bottom: 10px; text-align: left; background: #fff; width: 100%; }
+  .rm-card .img { width: 86px; height: 68px; border-radius: 9px; flex-shrink: 0; background-size: cover; background-position: center; }
+  .rm-card .t { font-weight: 700; font-size: 0.9rem; color: var(--color-text-main); margin-bottom: 2px; }
+  .rm-card .d { font-size: 0.75rem; line-height: 1.4; margin-bottom: 6px; }
+  .rm-card .chip { display: inline-block; font-family: var(--font-ui); font-size: 0.5625rem; font-weight: 600; color: var(--color-primary); background: #EEF5FF; border-radius: 999px; padding: 2px 8px; }
+
+  .rm-hero .img { height: 170px; border-radius: 16px; background: linear-gradient(135deg, #FF8E00AA, #00509EAA); margin-bottom: 14px; }
+  .rm-hero h3 { font-family: var(--font-heading); font-weight: 500; font-size: 1.4rem; color: var(--color-text-main); margin-bottom: 6px; }
+  .rm-hero p { font-size: 0.875rem; line-height: 1.5; margin-bottom: 12px; }
+  .rm-dots { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
+  .rm-dots span { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--color-border); display: flex; align-items: center; justify-content: center; font-family: var(--font-ui); font-size: 0.625rem; color: var(--color-text-muted); }
+  .rm-dots span.done { background: var(--color-secondary); border-color: var(--color-secondary); color: #fff; }
+
+  /* Sticky bottom CTA — thumb zone */
+  .rm-cta { position: absolute; left: 0; right: 0; bottom: 0; z-index: 25; padding: 12px 16px 20px; background: linear-gradient(to top, #fff 70%, rgba(255,255,255,0)); display: none; }
+  .rm-cta.show { display: block; }
+  .rm-cta button { width: 100%; background: var(--color-accent); color: #fff; border: none; border-radius: 14px; padding: 15px; font-family: var(--font-ui); font-weight: 600; font-size: 0.9375rem; box-shadow: 0 6px 18px rgba(255,142,0,0.35); }
+
+  .rm-player { text-align: center; border: 2px dashed var(--color-border); border-radius: 16px; padding: 60px 20px; margin-top: 20px; }
+  .rm-player .big { font-size: 2rem; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+  <div class="mock-note">
+    <b>Mobile mockup (390px frames)</b> — left: <b>Compact</b> (rail becomes a swipeable photo-chip strip; tapping a row opens a bottom-sheet preview). Right: <b>Relaxed</b> (full-screen steps, sticky thumb-zone CTA). Both are interactive — tap around.
+  </div>
+
+  <div class="stage">
+    <!-- ═════════ COMPACT PHONE ═════════ -->
+    <div class="phone-col">
+      <div class="phone-caption">Compact — mobile<small>Chip strip · dense list · bottom-sheet preview</small></div>
+      <div class="phone" id="phoneC">
+        <div class="notch"></div>
+        <div class="screen">
+          <div class="appbar"><span class="title">For You</span><span class="seg"><span class="on">▦</span><span>▭</span></span></div>
+
+          <div class="chips">
+            <button class="chip active"><span class="ph" style="background-image:url('https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=300')"></span><span class="tint"></span><span class="scrim"></span><span class="lbl">▶ Resume</span></button>
+            <button class="chip"><span class="ph" style="background-image:url('https://images.unsplash.com/photo-1548013146-72479768bada?w=300')"></span><span class="tint"></span><span class="scrim"></span><span class="lbl">✦ Interest</span></button>
+            <button class="chip"><span class="ph" style="background-image:url('https://images.unsplash.com/photo-1587474260584-136574528ed5?w=300')"></span><span class="tint"></span><span class="scrim"></span><span class="lbl">🎲 Surprise</span></button>
+            <button class="chip"><span class="ph" style="background-image:url('https://images.unsplash.com/photo-1564507592333-c60657eea523?w=300')"></span><span class="tint"></span><span class="scrim"></span><span class="lbl">♥ Most Liked</span></button>
+            <button class="chip"><span class="ph" style="background-image:url('https://images.unsplash.com/photo-1600100397608-f010f4d3d1e4?w=300')"></span><span class="tint"></span><span class="scrim"></span><span class="lbl">🔖 Most Saved</span></button>
+            <button class="chip"><span class="ph" style="background-image:url('https://images.unsplash.com/photo-1532664189809-02133fee698d?w=300')"></span><span class="tint"></span><span class="scrim"></span><span class="lbl">✨ Latest</span></button>
+            <button class="chip"><span class="count">7</span><span class="ph" style="background-image:url('https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=300')"></span><span class="tint"></span><span class="scrim"></span><span class="lbl">♥ My Likes</span></button>
+            <button class="chip"><span class="count">12</span><span class="ph" style="background-image:url('https://images.unsplash.com/photo-1506461883276-594a12b11cf3?w=300')"></span><span class="tint"></span><span class="scrim"></span><span class="lbl">🔖 My Marks</span></button>
+          </div>
+
+          <div class="cm-body">
+            <div class="cm-resume">
+              <div class="thumb">▶</div>
+              <div><div class="t">The Mauryan Empire</div><div class="s">Snippet 4 of 9</div></div>
+              <button class="go">Continue</button>
+            </div>
+            <div class="cm-filter">
+              <select><option>All</option><option>Lessons</option><option>Modules</option><option>Stories</option></select>
+              <input placeholder="Filter this list…">
+            </div>
+            <div class="cm-row" onclick="openSheet()"><div class="thumb" style="background-image:url('https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=200')"></div><div><div class="name">Ashoka the Great</div><div class="sub">Lesson · 8 snippets</div></div><div class="acts"><span class="on">♥</span><span>🔖</span></div></div>
+            <div class="cm-row" onclick="openSheet()"><div class="thumb" style="background-image:url('https://images.unsplash.com/photo-1548013146-72479768bada?w=200')"></div><div><div class="name">Trade on the Silk Route</div><div class="sub">Lesson · 6 snippets</div></div><div class="acts"><span>♥</span><span class="on">🔖</span></div></div>
+            <div class="cm-row" onclick="openSheet()"><div class="thumb" style="background-image:url('https://images.unsplash.com/photo-1564507592333-c60657eea523?w=200')"></div><div><div class="name">Temples of the South</div><div class="sub">Module · 5 lessons</div></div><div class="acts"><span>♥</span><span>🔖</span></div></div>
+            <div class="cm-row" onclick="openSheet()"><div class="thumb" style="background-image:url('https://images.unsplash.com/photo-1587474260584-136574528ed5?w=200')"></div><div><div class="name">The Story of Zero</div><div class="sub">Story · 1 snippet</div></div><div class="acts"><span>♥</span><span>🔖</span></div></div>
+            <div class="cm-row" onclick="openSheet()"><div class="thumb" style="background-image:url('https://images.unsplash.com/photo-1532664189809-02133fee698d?w=200')"></div><div><div class="name">Rivers of India</div><div class="sub">Lesson · 7 snippets</div></div><div class="acts"><span>♥</span><span>🔖</span></div></div>
+            <div class="cm-row" onclick="openSheet()"><div class="thumb" style="background-image:url('https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=200')"></div><div><div class="name">The Grand Trunk Road</div><div class="sub">Lesson · 5 snippets</div></div><div class="acts"><span>♥</span><span>🔖</span></div></div>
+          </div>
+        </div>
+
+        <!-- Bottom sheet preview -->
+        <div class="sheet-scrim" onclick="closeSheet()"></div>
+        <div class="sheet">
+          <div class="grab"></div>
+          <div class="img"></div>
+          <h3>Ashoka the Great</h3>
+          <p>From conqueror of Kalinga to messenger of dhamma — how one emperor changed the idea of kingship.</p>
+          <div class="meta">8 snippets · ~6 min · ★★ · Free</div>
+          <button class="start" onclick="closeSheet()">Start lesson →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═════════ RELAXED PHONE ═════════ -->
+    <div class="phone-col">
+      <div class="phone-caption">Relaxed — mobile<small>One decision per screen · sticky thumb-zone CTA</small></div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="screen" id="rmScreen">
+          <div class="rm-trailbar" id="rmTrail"></div>
+
+          <!-- Step 1 -->
+          <div class="rm-step show" id="rm1">
+            <div class="rm-q">What shall we explore?</div>
+            <div class="rm-qs">Pick one — you can always come back.</div>
+            <div class="rm-grid">
+              <button class="rm-tile wide" onclick="rmGo(4)"><span class="ph" style="background-image:url('https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=500')"></span><span class="tint"></span><span class="scrim"></span><span class="ico">▶</span><span class="t">Continue where you left off</span><span class="s">The Mauryan Empire · snippet 4 of 9</span></button>
+              <button class="rm-tile" onclick="rmGo(2,'Picked for you')"><span class="ph" style="background-image:url('https://images.unsplash.com/photo-1548013146-72479768bada?w=400')"></span><span class="tint"></span><span class="scrim"></span><span class="ico">✦</span><span class="t">Picked for you</span></button>
+              <button class="rm-tile" onclick="rmGo(2,'Most loved')"><span class="ph" style="background-image:url('https://images.unsplash.com/photo-1564507592333-c60657eea523?w=400')"></span><span class="tint"></span><span class="scrim"></span><span class="ico">♥</span><span class="t">Most loved</span></button>
+              <button class="rm-tile" onclick="rmGo(4)"><span class="ph" style="background-image:url('https://images.unsplash.com/photo-1587474260584-136574528ed5?w=400')"></span><span class="tint"></span><span class="scrim"></span><span class="ico">🎲</span><span class="t">Surprise me!</span></button>
+              <button class="rm-tile" onclick="rmGo(2,'What’s new')"><span class="ph" style="background-image:url('https://images.unsplash.com/photo-1532664189809-02133fee698d?w=400')"></span><span class="tint"></span><span class="scrim"></span><span class="ico">✨</span><span class="t">What's new</span></button>
+              <button class="rm-tile wide" onclick="rmGo(2,'My saved things')"><span class="ph" style="background-image:url('https://images.unsplash.com/photo-1506461883276-594a12b11cf3?w=500')"></span><span class="tint"></span><span class="scrim"></span><span class="ico">🔖</span><span class="t">My saved things</span><span class="s">Likes &amp; bookmarks · 19 items</span></button>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="rm-step" id="rm2">
+            <div class="rm-q" id="rmShelfTitle">Most loved</div>
+            <div class="rm-qs">Choose a lesson to begin.</div>
+            <button class="rm-card" onclick="rmGo(3,null,'Ashoka the Great')"><div class="img" style="background-image:url('https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=300')"></div><div><div class="t">Ashoka the Great</div><div class="d">From conqueror of Kalinga to messenger of dhamma.</div><span class="chip">8 snippets · ~6 min</span></div></button>
+            <button class="rm-card" onclick="rmGo(3,null,'Trade on the Silk Route')"><div class="img" style="background-image:url('https://images.unsplash.com/photo-1548013146-72479768bada?w=300')"></div><div><div class="t">Trade on the Silk Route</div><div class="d">Spices, silk and stories across continents.</div><span class="chip">6 snippets · ~5 min</span></div></button>
+            <button class="rm-card" onclick="rmGo(3,null,'Temples of the South')"><div class="img" style="background-image:url('https://images.unsplash.com/photo-1564507592333-c60657eea523?w=300')"></div><div><div class="t">Temples of the South</div><div class="d">Towering gopurams and their sculptors.</div><span class="chip">9 snippets · ~7 min</span></div></button>
+            <button class="rm-card" onclick="rmGo(3,null,'Rivers of India')"><div class="img" style="background-image:url('https://images.unsplash.com/photo-1532664189809-02133fee698d?w=300')"></div><div><div class="t">Rivers of India</div><div class="d">Lifelines of the land, from Indus to Kaveri.</div><span class="chip">7 snippets · ~6 min</span></div></button>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="rm-step" id="rm3">
+            <div class="rm-hero">
+              <div class="img"></div>
+              <h3 id="rmHeroTitle">Ashoka the Great</h3>
+              <p>From conqueror of Kalinga to messenger of dhamma — how one emperor changed the idea of kingship in India.</p>
+              <div class="rm-dots"><span class="done">✓</span><span class="done">✓</span><span class="done">✓</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div>
+              <div class="rm-qs">3 of 8 snippets read · ~4 min left</div>
+            </div>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="rm-step" id="rm4">
+            <div class="rm-player">
+              <div class="big">📖</div>
+              <div class="rm-q">SnippetPlayer opens here</div>
+              <div class="rm-qs">Full-screen reading — the player takes over.</div>
+              <button class="rm-back" style="width:auto;padding:0 16px;margin:10px auto 0;" onclick="rmGo(1)">← Start over</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sticky CTA for step 3 -->
+        <div class="rm-cta" id="rmCta"><button onclick="rmGo(4)">Continue from snippet 4 →</button></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  /* Compact: chip + row selection, bottom sheet */
+  document.querySelectorAll('.chip').forEach(c => c.onclick = () => {
+    document.querySelectorAll('.chip').forEach(x => x.classList.remove('active')); c.classList.add('active');
+  });
+  function openSheet()  { document.getElementById('phoneC').classList.add('sheet-open'); }
+  function closeSheet() { document.getElementById('phoneC').classList.remove('sheet-open'); }
+
+  /* Relaxed flow */
+  let rmShelf = 'Most loved', rmLesson = 'Ashoka the Great';
+  function rmGo(step, shelfName, lessonName) {
+    if (shelfName) { rmShelf = shelfName; document.getElementById('rmShelfTitle').textContent = shelfName; }
+    if (lessonName) { rmLesson = lessonName; document.getElementById('rmHeroTitle').textContent = lessonName; }
+    for (let i = 1; i <= 4; i++) document.getElementById('rm' + i).classList.toggle('show', i === step);
+    document.getElementById('rmCta').classList.toggle('show', step === 3);
+    document.getElementById('rmScreen').scrollTop = 0;
+    const t = document.getElementById('rmTrail');
+    let crumb;
+    if (step === 1) crumb = '<span class="rm-crumb"><b>Explore</b></span>';
+    else if (step === 2) crumb = '<span class="rm-crumb">Explore › <b>' + rmShelf + '</b></span>';
+    else if (step === 3) crumb = '<span class="rm-crumb">' + rmShelf + ' › <b>' + rmLesson + '</b></span>';
+    else crumb = '<span class="rm-crumb"><b>Reading</b></span>';
+    const back = step > 1 ? '<button class="rm-back" onclick="rmGo(' + (step === 4 ? 1 : step - 1) + ')">←</button>' : '';
+    const dots = '<span class="rm-stepdots">' + [1,2,3].map(i => '<i class="' + (i <= Math.min(step,3) ? 'on' : '') + '"></i>').join('') + '</span>';
+    t.innerHTML = back + crumb + dots;
+  }
+  rmGo(1);
+</script>
+</body>
+</html>

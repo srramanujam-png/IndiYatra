@@ -4,6 +4,7 @@ import { globalStyles } from "../styles/global";
 import PageHeader from "../components/PageHeader";
 import { SkeletonDiscoverResults } from "../components/Skeletons";
 import { EMPTY } from "../config/appStrings";
+import { useEntityPreview } from "../components/EntityPreview";
 
 const TYPE_META = {
   snippet: { label: "Snippet", icon: "✦", color: SAFFRON,  border: "#FF8E0033" },
@@ -245,6 +246,7 @@ export default function DiscoverPage({
   const [loading, setLoading]           = useState(false);
   const [results, setResults]           = useState({ snippets: [], lessons: [], modules: [], courses: [] });
   const [panelOpen, setPanelOpen]       = useState(false);
+  const { openPreview } = useEntityPreview();
 
   const navOnHome = onHome || onBack;
 
@@ -419,7 +421,10 @@ export default function DiscoverPage({
                   key={s.snippet_id}
                   className="discover-snippet-card"
                   style={{ animationDelay: i * 0.04 + "s" }}
-                  onClick={() => handleSnippetClick(s.snippet_id)}
+                  onClick={() => openPreview({
+                    type: "snippet", id: s.snippet_id, title: s.hook || "Snippet",
+                    onPlay: () => handleSnippetClick(s.snippet_id), playLabel: "Play snippet",
+                  })}
                 >
                   <div className="discover-snippet-hook">{s.hook || s.snippet_id}</div>
                   <div className="discover-snippet-badge">&#x2726; Snippet</div>
@@ -435,9 +440,13 @@ export default function DiscoverPage({
             {visible.lessons.map((l, i) => (
               <div key={l.lesson_id} className="discover-row-card"
                 style={{ borderColor: TYPE_META.lesson.border, animationDelay: i * 0.04 + "s" }}
-                onClick={() => onNavigate && onNavigate({
-                  content_type: "lesson", content_id: l.lesson_id,
-                  lesson_name: l.lesson_name, module_id: l.module_id,
+                onClick={() => openPreview({
+                  type: "lesson", id: l.lesson_id, title: l.lesson_name,
+                  onPlay: () => onNavigate && onNavigate({
+                    content_type: "lesson", content_id: l.lesson_id,
+                    lesson_name: l.lesson_name, module_id: l.module_id,
+                  }),
+                  playLabel: "Open lesson",
                 })}
               >
                 <div className="discover-row-left">
@@ -456,10 +465,14 @@ export default function DiscoverPage({
             {visible.modules.map((m, i) => (
               <div key={m.module_id} className="discover-row-card"
                 style={{ borderColor: TYPE_META.module.border, animationDelay: i * 0.04 + "s" }}
-                onClick={() => onNavigate && onNavigate({
-                  content_type: "module", content_id: m.module_id,
-                  module_id: m.module_id, module_name: m.module_name,
-                  theme_id: m.theme_id, course_id: m.course_id,
+                onClick={() => openPreview({
+                  type: "module", id: m.module_id, title: m.module_name,
+                  onPlay: () => onNavigate && onNavigate({
+                    content_type: "module", content_id: m.module_id,
+                    module_id: m.module_id, module_name: m.module_name,
+                    theme_id: m.theme_id, course_id: m.course_id,
+                  }),
+                  playLabel: "Open module",
                 })}
               >
                 <div className="discover-row-left">
@@ -478,9 +491,13 @@ export default function DiscoverPage({
             {visible.courses.map((c, i) => (
               <div key={c.course_id} className="discover-row-card"
                 style={{ borderColor: TYPE_META.course.border, animationDelay: i * 0.04 + "s" }}
-                onClick={() => onNavigate && onNavigate({
-                  content_type: "course", content_id: c.course_id,
-                  course_id: c.course_id, course_name: c.course_name,
+                onClick={() => openPreview({
+                  type: "course", id: c.course_id, title: c.course_name,
+                  onPlay: () => onNavigate && onNavigate({
+                    content_type: "course", content_id: c.course_id,
+                    course_id: c.course_id, course_name: c.course_name,
+                  }),
+                  playLabel: "Open course",
                 })}
               >
                 <div className="discover-row-left">

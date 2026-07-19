@@ -6,6 +6,7 @@ import { useAuthContext } from "../contexts/AuthContext";
 import PageHeader from "../components/PageHeader";
 import { SkeletonLikeGrid } from "../components/Skeletons";
 import { SIGNIN, EMPTY } from "../config/appStrings";
+import { useEntityPreview, SUPPORTS_LIKE } from "../components/EntityPreview";
 
 const styles = `
   .likes-hero {
@@ -124,7 +125,8 @@ const TYPE_TABS = [
   { key: "question", label: "Questions", icon: "💬" },
 ];
 
-export default function LikesPage({ settings, onBack, onOpenSettings, onResume, onDashboard, onLikes, onBookmarks, onDiscover, onForYou, onAllCourses, onPlaySnippet, isAdmin, onAdmin, userEditorialRole, onEditor, activePage, onSaveSettings, languages = [] }) {
+export default function LikesPage({ settings, onBack, onOpenSettings, onResume, onDashboard, onLikes, onBookmarks, onDiscover, onForYou, onAllCourses, onPlaySnippet, isAdmin, onAdmin, userEditorialRole, onEditor, activePage, onSaveSettings, languages = [], onToggleLike }) {
+  const { openPreview } = useEntityPreview();
   const { user, onSignIn } = useAuthContext();
   const [likes,    setLikes]    = useState([]);
   const [assets,   setAssets]   = useState({});
@@ -261,8 +263,15 @@ export default function LikesPage({ settings, onBack, onOpenSettings, onResume, 
               <div className="empty-icon">♡</div>
               <p>No liked {TYPE_TABS.find(t => t.key === typeFilter)?.label.toLowerCase()} yet.</p>
             </div>
-          ) : typedForTab.map((item, i) => (
-            <div className="likes-simple-item unified-row-card" key={item.id || i}>
+          ) : typedForTab.map((item, i) => {
+            const crumb = [item.course_name, item.theme_title, item.module_name, item.lesson_name].filter(Boolean).join(" › ");
+            const openThisPreview = () => openPreview({
+              type: item.content_type, id: item.content_id, title: item.item_name || "Untitled", crumb,
+              liked: true,
+              onToggleLike: SUPPORTS_LIKE[item.content_type] ? () => onToggleLike && onToggleLike(item.content_type, item.content_id, item.item_name) : undefined,
+            });
+            return (
+            <div className="likes-simple-item unified-row-card" key={item.id || i} onClick={openThisPreview} style={{ cursor: "pointer" }}>
               <span className="likes-simple-icon">{TYPE_TABS.find(t => t.key === item.content_type)?.icon}</span>
               <div className="likes-simple-body">
                 <div className="likes-simple-name">{item.item_name || "Untitled"}</div>
@@ -272,7 +281,8 @@ export default function LikesPage({ settings, onBack, onOpenSettings, onResume, 
               </div>
               <span className="likes-simple-date">{formatDate(item.liked_at)}</span>
             </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <>
@@ -317,13 +327,20 @@ export default function LikesPage({ settings, onBack, onOpenSettings, onResume, 
                 key={like.snippet_id}
                 className="like-card unified-grid-card"
                 style={{ animationDelay: `${i * 0.05}s` }}
-                onClick={() => {
-                  if (onPlaySnippet) {
-                    const ids = filtered.map(l => l.snippet_id);
-                    const idx = filtered.findIndex(l => l.snippet_id === like.snippet_id);
-                    onPlaySnippet(ids, idx);
-                  }
-                }}
+                onClick={() => openPreview({
+                  type: "snippet", id: like.snippet_id, title: like.hook || "Snippet",
+                  crumb: [like.course_name, like.theme_title, like.module_name, like.lesson_name].filter(Boolean).join(" › "),
+                  image: assets[like.asset_id],
+                  liked: true,
+                  onPlay: () => {
+                    if (onPlaySnippet) {
+                      const ids = filtered.map(l => l.snippet_id);
+                      const idx = filtered.findIndex(l => l.snippet_id === like.snippet_id);
+                      onPlaySnippet(ids, idx);
+                    }
+                  },
+                  playLabel: "Play snippet",
+                })}
               >
                 <div className="like-card-img">
                   {assets[like.asset_id] && (

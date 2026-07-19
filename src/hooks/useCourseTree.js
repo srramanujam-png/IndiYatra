@@ -209,6 +209,24 @@ export function useCourseTree(profile, seed) {
     setResumeLessonId(null); // manual browsing supersedes the one-time "continue" pointer
     setResumeModuleId(null); // ditto for the one-time "opened from ForYouPage" module target
   }
+  // Breadcrumb navigation — step back up to a course or level without a
+  // theme selected, so the sidebar shows that course/level expanded (its
+  // "clicked" state) and the main pane falls back to its "pick a theme"
+  // prompt, same as first opening that course/level from scratch.
+  function goToCourse(courseId) {
+    setOpenCourseId(courseId);
+    const crs = tree[courseId];
+    const levelIds = crs ? Object.keys(crs.levels).sort() : [];
+    setOpenLevelId(selCourseId === courseId && selLevelId && levelIds.includes(selLevelId) ? selLevelId : (levelIds[0] || null));
+    setSelCourseId(null); setSelLevelId(null); setSelThemeId(null);
+    setResumeLessonId(null); setResumeModuleId(null);
+  }
+  function goToLevel(courseId, levelId) {
+    setOpenCourseId(courseId);
+    setOpenLevelId(levelId);
+    setSelCourseId(null); setSelLevelId(null); setSelThemeId(null);
+    setResumeLessonId(null); setResumeModuleId(null);
+  }
   function registerLessonRef(lessonId) {
     return el => { lessonRefs.current[lessonId] = el; };
   }
@@ -219,6 +237,6 @@ export function useCourseTree(profile, seed) {
   return {
     courses, tree, storyCounts, lessonImages, quizMap, loading, loaded, load,
     openCourseId, openLevelId, selCourseId, selLevelId, selThemeId, resumeLessonId, resumeModuleId,
-    toggleCourse, selectLevelTab, selectTheme, registerLessonRef, registerModuleRef,
+    toggleCourse, selectLevelTab, selectTheme, goToCourse, goToLevel, registerLessonRef, registerModuleRef,
   };
 }

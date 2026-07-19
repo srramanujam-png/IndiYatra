@@ -24,6 +24,7 @@ import AllCoursesPage from "./pages/AllCoursesPage";
 import QuizPlayer from "./pages/QuizPlayer";
 import ForYouPage from "./pages/ForYouPage";
 import AppFooter from "./components/AppFooter";
+import { EntityPreviewProvider } from "./components/EntityPreview";
 const AdminPage  = lazy(() => import("./pages/AdminPage"));
 const EditorPage = lazy(() => import("./pages/EditorPage"));
 
@@ -1225,32 +1226,34 @@ export default function App() {
 
   return (
     <AuthContext.Provider value={authContextValue}>
-      <style>{transitionStyles}</style>
-      <div key={page} className={`page-enter-${navDirection}`} style={{ display: "block", width: "100%" }}>
-        {renderPage()}
-        {!["player", "quiz", "gateway"].includes(page) && <AppFooter />}
-      </div>
-
-      {showAuthModal && (
-        <AuthModal onClose={() => setShowAuthModal(false)} />
-      )}
-      {toastMsg && (
-        <div style={{
-          position: "fixed", bottom: "90px", left: "50%", transform: "translateX(-50%)",
-          background: "#00509E", color: "white", padding: "10px 22px",
-          borderRadius: "999px", fontSize: "0.875rem", fontWeight: 600,
-          boxShadow: "0 4px 20px rgba(0,0,0,0.25)", zIndex: 9999,
-          animation: "fadeUp 0.2s ease both", whiteSpace: "nowrap", pointerEvents: "none",
-        }}>
-          {toastMsg}
+      <EntityPreviewProvider>
+        <style>{transitionStyles}</style>
+        <div key={page} className={`page-enter-${navDirection}`} style={{ display: "block", width: "100%" }}>
+          {renderPage()}
+          {!["player", "quiz", "gateway"].includes(page) && <AppFooter />}
         </div>
-      )}
-      {showProfileModal && (
-        <ProfileModal
-          onClose={() => setShowProfileModal(false)}
-          onSaved={() => refreshProfile()}
-        />
-      )}
+
+        {showAuthModal && (
+          <AuthModal onClose={() => setShowAuthModal(false)} />
+        )}
+        {toastMsg && (
+          <div style={{
+            position: "fixed", bottom: "90px", left: "50%", transform: "translateX(-50%)",
+            background: "#00509E", color: "white", padding: "10px 22px",
+            borderRadius: "999px", fontSize: "0.875rem", fontWeight: 600,
+            boxShadow: "0 4px 20px rgba(0,0,0,0.25)", zIndex: 9999,
+            animation: "fadeUp 0.2s ease both", whiteSpace: "nowrap", pointerEvents: "none",
+          }}>
+            {toastMsg}
+          </div>
+        )}
+        {showProfileModal && (
+          <ProfileModal
+            onClose={() => setShowProfileModal(false)}
+            onSaved={() => refreshProfile()}
+          />
+        )}
+      </EntityPreviewProvider>
     </AuthContext.Provider>
   );
 }

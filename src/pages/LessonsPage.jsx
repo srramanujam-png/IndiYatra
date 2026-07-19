@@ -4,6 +4,7 @@ import { supabase, SAFFRON, HERITAGE, GREEN, logoUrl, LEVEL_LABELS } from "../li
 import { globalStyles } from "../styles/global";
 import PageHeader from "../components/PageHeader";
 import { SkeletonLessonList } from "../components/Skeletons";
+import { useEntityPreview } from "../components/EntityPreview";
 
 const styles = `
   .module-banner { max-width: 860px; margin: 0 auto 24px; padding: 0 1.5rem; }
@@ -108,6 +109,7 @@ export default function LessonsPage({ course, theme, module, levelId, settings, 
   const [loading, setLoading] = useState(true);
   const [quizMap,  setQuizMap]  = useState({});   // lesson_id → quiz_sets row
   const levelMeta = LEVEL_LABELS[levelId] || { label: "All Levels", color: SAFFRON };
+  const { openPreview } = useEntityPreview();
 
   useEffect(() => {
     async function load() {
@@ -185,10 +187,29 @@ export default function LessonsPage({ course, theme, module, levelId, settings, 
           const isComplete = completedLessons.has(lesson.lesson_id);
           const isLocked = course?.sequential_unlock && i > 0 && !completedLessons.has(lessons[i - 1].lesson_id);
           const asset = assets[lesson.asset_id];
+          const quiz = quizMap[lesson.lesson_id];
+          const openThisPreview = () => openPreview({
+            type: "lesson",
+            id: lesson.lesson_id,
+            title: lesson.lesson_name,
+            crumb: `${theme?.title || ""}${theme?.title ? " › " : ""}${module.module_name}`,
+            desc: lesson.lesson_description || "",
+            image: asset?.file_path,
+            pct: null,
+            liked: likes.has("lesson:" + lesson.lesson_id),
+            bookmarked: bookmarks.has("lesson:" + lesson.lesson_id),
+            onToggleLike: () => onToggleLike && onToggleLike("lesson", lesson.lesson_id, lesson.lesson_name),
+            onToggleBookmark: () => onToggleBookmark && onToggleBookmark("lesson", lesson.lesson_id, lesson.lesson_name),
+            onPlay: () => onLessonClick(lesson),
+            playLabel: isComplete ? "Review" : "Learn",
+            // Lessons get a second, distinct CTA for their quiz (only when one exists)
+            onQuiz: quiz ? () => onQuizClick(lesson, quiz) : null,
+            quizLabel: "Quiz",
+          });
           return (
           <div className={`lesson-row ${isComplete ? "completed" : ""} ${isLocked ? "locked" : ""}`}
             key={lesson.lesson_id} style={{ animationDelay: `${i * 0.05}s` }}
-            onClick={isLocked ? undefined : () => onLessonClick(lesson)}>
+            onClick={isLocked ? undefined : openThisPreview}>
             <div className={`lesson-num${isComplete ? " done" : ""}`}>
               {isComplete ? "✓" : i + 1}
             </div>

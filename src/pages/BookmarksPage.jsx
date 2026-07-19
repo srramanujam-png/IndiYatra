@@ -6,6 +6,7 @@ import { useAuthContext } from "../contexts/AuthContext";
 import PageHeader from "../components/PageHeader";
 import { SkeletonBookmarkList } from "../components/Skeletons";
 import { SIGNIN, EMPTY } from "../config/appStrings";
+import { useEntityPreview, SUPPORTS_BOOKMARK } from "../components/EntityPreview";
 
 const BM_ICON = (size = 28, color = "#FF8E00") => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill={color} stroke={color}
@@ -141,6 +142,7 @@ export default function BookmarksPage({
   const [filterModule, setFilterModule] = useState("all");
 
   const isGuest = !user || user.is_anonymous;
+  const { openPreview } = useEntityPreview();
 
   useEffect(() => {
     if (isGuest) { setLoading(false); return; }
@@ -308,8 +310,21 @@ export default function BookmarksPage({
           <div className="bmp-list">
             {filtered.map((item, i) => {
               const meta = TYPE_META[item.content_type] || TYPE_META.lesson;
+              const crumb = [item.course_name, item.content_type !== "theme" ? item.theme_title : null,
+                (item.content_type === "lesson" || item.content_type === "quiz") ? item.module_name : null]
+                .filter(Boolean).join(" › ");
+              const canPreview = SUPPORTS_BOOKMARK[item.content_type] != null; // course/theme/module/lesson/quiz/snippet
+              const rowClick = canPreview
+                ? () => openPreview({
+                    type: item.content_type, id: item.content_id, title: item.item_name, crumb,
+                    bookmarked: true,
+                    onToggleBookmark: () => onToggleBookmark && onToggleBookmark(item.content_type, item.content_id, item.item_name),
+                    onPlay: () => onNavigate && onNavigate(item),
+                    playLabel: "Open",
+                  })
+                : () => onNavigate && onNavigate(item);
               return (
-                <div key={item.id} className="bmp-card unified-row-card" style={{ animationDelay: `${i * 0.04}s` }} onClick={() => onNavigate && onNavigate(item)}>
+                <div key={item.id} className="bmp-card unified-row-card" style={{ animationDelay: `${i * 0.04}s` }} onClick={rowClick}>
                   {/* Colour bar */}
                   <div className="bmp-card-bar" style={{ background: meta.color }} />
 

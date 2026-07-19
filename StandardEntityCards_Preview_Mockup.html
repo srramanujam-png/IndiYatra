@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IndiYatra — Standard Entity Cards + Preview Popup (v2)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Nunito+Sans:wght@400;600;700;800&family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --color-primary: #00509E;
+    --color-secondary: #00924A;
+    --color-accent: #FF8E00;
+    --color-bg-body: #FFFFFF;
+    --color-bg-alt: #B5D7D5;
+    --color-surface: #FEF7FF;
+    --color-text-main: #101828;
+    --color-text-body: #4A5565;
+    --color-border: #E5E7EB;
+    --color-border-muted: #F3F4F6;
+    --gauge-grey: #B7B7B2;
+    --gauge-track: #E9E9E6;
+
+    --scrim-blue:  linear-gradient(to bottom, rgba(0,80,158,0.10) 0%, rgba(10,20,45,0.45) 55%, rgba(16,24,40,0.86) 100%);
+    --scrim-green: linear-gradient(to bottom, rgba(0,146,74,0.10) 0%, rgba(5,30,20,0.45) 55%, rgba(16,24,40,0.86) 100%);
+    --scrim-amber: linear-gradient(to bottom, rgba(255,142,0,0.10) 0%, rgba(35,15,5,0.45) 55%, rgba(16,24,40,0.86) 100%);
+    --scrim-dark:  linear-gradient(to bottom, rgba(16,24,40,0.05) 0%, rgba(16,24,40,0.45) 55%, rgba(16,24,40,0.86) 100%);
+  }
+
+  * , *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito Sans', system-ui, sans-serif;
+    background: #F0EDE8;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 80px;
+  }
+
+  /* ── Page chrome ── */
+  .page-label { font-family: 'Inter', system-ui, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #8B7355; margin-bottom: 8px; text-align: center; }
+  .page-title { font-family: 'Oswald', system-ui, sans-serif; font-size: 27px; font-weight: 700; color: #3D2B00; margin-bottom: 6px; text-align: center; }
+  .page-sub { font-size: 13px; color: #7A6A50; margin-bottom: 20px; text-align: center; max-width: 660px; line-height: 1.55; }
+  .annotation { background: #3D2B00; color: #FFDEA0; font-size: 11px; font-weight: 600; padding: 6px 14px; border-radius: 999px; margin-bottom: 24px; letter-spacing: .04em; font-family: 'Inter', system-ui, sans-serif; }
+
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; background: #fff; border: 1px solid var(--color-border); border-radius: 12px; padding: 14px 20px; margin-bottom: 32px; max-width: 980px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--color-text-body); font-family: 'Inter', system-ui, sans-serif; }
+  .legend-swatch { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; }
+  .legend-swatch.non-cta { background: repeating-linear-gradient(45deg, #00509E, #00509E 3px, #DCE9F5 3px, #DCE9F5 6px); }
+  .legend-swatch.play { background: var(--color-text-main); }
+  .legend-swatch.like { background: #E23B6B; }
+  .legend-swatch.bookmark { background: var(--color-accent); }
+  .legend-swatch.g-grey { background: var(--gauge-grey); }
+  .legend-swatch.g-saffron { background: var(--color-accent); }
+  .legend-swatch.g-blue { background: var(--color-primary); }
+  .legend-swatch.g-green { background: var(--color-secondary); }
+
+  /* ── Phones row ── */
+  .phones-row { display: flex; gap: 40px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+  .phone-block { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .phone-caption { font-size: 12px; font-weight: 700; color: #5A4520; text-transform: uppercase; letter-spacing: .08em; font-family: 'Inter', system-ui, sans-serif; }
+
+  .phone { width: 340px; background: #fff; border-radius: 40px; box-shadow: 0 2px 0 #C0B8AE, 0 8px 32px rgba(0,0,0,0.18), 0 0 0 1px #D8D0C8; overflow: hidden; position: relative; }
+  .phone-notch { height: 32px; background: #fff; position: relative; border-bottom: 1px solid var(--color-border-muted); }
+  .notch-pill { width: 100px; height: 26px; background: #0A0A0A; border-radius: 0 0 16px 16px; position: absolute; top: 0; left: 50%; transform: translateX(-50%); }
+
+  .app-header { height: 48px; background: rgba(255,255,255,0.97); border-bottom: 1px solid var(--color-border); display: flex; align-items: center; justify-content: space-between; padding: 0 14px; }
+  .app-logo { font-family: 'Oswald', system-ui, sans-serif; font-size: 14px; font-weight: 700; color: var(--color-text-main); }
+  .app-logo span { color: var(--color-accent); }
+  .app-screen-tag { font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; font-weight: 600; color: var(--color-text-body); background: var(--color-border-muted); padding: 4px 9px; border-radius: 999px; }
+
+  .phone-container { display: flex; height: 540px; background: #FAFAF9; overflow: hidden; }
+
+  .phone-sidebar { width: 78px; flex-shrink: 0; background: #EAF6F5; border-right: 1px solid var(--color-border); display: flex; flex-direction: column; padding: 8px 3px; gap: 6px; overflow-y: auto; }
+  .phone-sidebar::-webkit-scrollbar { display: none; }
+  .sidebar-item { display: flex; flex-direction: column; align-items: center; padding: 5px 2px; border-radius: 8px; text-align: center; cursor: pointer; color: var(--color-text-body); }
+  .sidebar-item-icon { font-size: 14px; margin-bottom: 2px; width: 26px; height: 26px; border-radius: 50%; background: #ffffff; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+  .sidebar-item-label { font-family: 'Inter', system-ui, sans-serif; font-size: 7.5px; font-weight: 700; line-height: 1.1; }
+  .sidebar-item.active { color: var(--color-primary); background: rgba(0, 80, 158, 0.08); }
+  .sidebar-item.active .sidebar-item-icon { background: var(--color-primary); color: #fff; }
+
+  .courses-sidebar { width: 92px; flex-shrink: 0; background: #EAF6F5; border-right: 1px solid var(--color-border); display: flex; flex-direction: column; padding: 8px 4px; gap: 4px; overflow-y: auto; }
+  .courses-sidebar::-webkit-scrollbar { display: none; }
+  .accordion-course { font-family: 'Oswald', system-ui, sans-serif; font-size: 10px; font-weight: 700; color: var(--color-primary); padding: 4px 6px; background: rgba(0, 80, 158, 0.06); border-radius: 6px; margin-bottom: 2px; }
+  .accordion-theme-list { display: flex; flex-direction: column; gap: 2px; padding-left: 2px; }
+  .accordion-theme { font-family: 'Nunito Sans', system-ui, sans-serif; font-size: 8px; font-weight: 600; color: var(--color-text-body); padding: 3px 4px; cursor: pointer; border-radius: 4px; line-height: 1.25; }
+  .accordion-theme.active { background: var(--color-secondary); color: white; font-weight: 700; }
+
+  .phone-body { flex: 1; height: 100%; overflow-y: auto; background: #FAFAF9; padding: 10px; display: flex; flex-direction: column; gap: 10px; }
+  .phone-body::-webkit-scrollbar { display: none; }
+  .section-heading { font-family: 'Oswald', system-ui, sans-serif; font-size: 13px; font-weight: 500; color: var(--color-text-main); margin: 6px 2px 2px; }
+
+  /* ── Standard entity row card (Course / Theme / Module / Lesson / Snippet) ── */
+  .row-card { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--color-border); border-radius: 12px; padding: 8px; cursor: pointer; transition: box-shadow .15s, border-color .15s; }
+  .row-card:hover { border-color: var(--color-primary); box-shadow: 0 2px 8px rgba(0,80,158,0.10); }
+
+  /* Thumb column: circular photo, optional progress ring, centered play button, optional % caption */
+  .row-thumb-col { display: flex; flex-direction: column; align-items: center; gap: 2px; flex-shrink: 0; }
+  .row-gauge { position: relative; width: 48px; height: 48px; }
+  .row-gauge-ring { position: absolute; inset: 0; transform: rotate(-90deg); }
+  .row-thumb-photo { position: absolute; border-radius: 50%; background-size: cover; background-position: center; }
+  .row-gauge.has-ring .row-thumb-photo { top: 3px; left: 3px; right: 3px; bottom: 3px; }
+  .row-gauge:not(.has-ring) .row-thumb-photo { top: 0; left: 0; right: 0; bottom: 0; }
+  .mini-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,0.92); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.25); z-index: 2; }
+  .mini-play svg { width: 8px; height: 8px; fill: var(--color-text-main); margin-left: 1px; }
+  .mini-play:hover { background: #fff; }
+  .row-pct-label { font-family: 'Inter', system-ui, sans-serif; font-size: 8.5px; font-weight: 800; color: var(--color-text-main); }
+
+  .row-body { flex: 1; min-width: 0; }
+  .row-type { display: inline-block; font-family: 'Inter', system-ui, sans-serif; font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 1px 6px; border-radius: 999px; margin-bottom: 2px; }
+  .row-title { font-family: 'Nunito Sans', system-ui, sans-serif; font-size: 13px; font-weight: 700; color: var(--color-text-main); line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row-crumb { font-family: 'Inter', system-ui, sans-serif; font-size: 10px; color: var(--color-text-body); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Like / bookmark chips — stacked at the row's right edge */
+  .row-actions { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+  .chip { display: flex; align-items: center; gap: 3px; border: none; background: var(--color-border-muted); border-radius: 999px; padding: 3px 7px; font-family: 'Inter', system-ui, sans-serif; font-size: 9.5px; font-weight: 700; color: var(--color-text-body); cursor: pointer; transition: background .15s, color .15s; }
+  .chip:active { transform: translateY(1px); }
+  .chip-icon { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 2.2; flex-shrink: 0; }
+  .chip.like.active { background: rgba(255,142,0,0.14); color: var(--color-accent); }
+  .chip.like.active .chip-icon { fill: var(--color-accent); stroke: var(--color-accent); }
+  .chip.bookmark.active { background: rgba(255,142,0,0.14); color: var(--color-accent); }
+  .chip.bookmark.active .chip-icon { fill: var(--color-accent); stroke: var(--color-accent); }
+
+  .tag-course  { background: rgba(0,80,158,0.10);  color: var(--color-primary); }
+  .tag-theme   { background: rgba(0,146,74,0.10);  color: var(--color-secondary); }
+  .tag-module  { background: rgba(255,142,0,0.12); color: #B96500; }
+  .tag-lesson  { background: rgba(16,24,40,0.08);  color: var(--color-text-main); }
+  .tag-snippet { background: rgba(0,80,158,0.10);  color: var(--color-primary); }
+
+  /* ── Discover grid (magazine-style card — same family as Snippet card) ── */
+  .discover-grid { display: grid; grid-template-columns: repeat(2, 1fr); grid-auto-rows: 168px; gap: 10px; }
+  .mag-card { border-radius: 14px; position: relative; overflow: hidden; cursor: pointer; background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: space-between; padding: 8px; box-shadow: 0 3px 8px rgba(16,24,40,0.08); }
+  .mag-card::before { content: ''; position: absolute; inset: 0; z-index: 1; }
+  .mag-card.t-course::before { background: var(--scrim-blue); }
+  .mag-card.t-theme::before { background: var(--scrim-green); }
+  .mag-card.t-module::before { background: var(--scrim-amber); }
+  .mag-card.t-lesson::before { background: var(--scrim-dark); }
+  .mag-card.t-snippet::before { background: var(--scrim-amber); }
+  .mag-top-row { position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: flex-start; }
+  .mag-badge { font-family: 'Inter', system-ui, sans-serif; font-size: 8px; font-weight: 700; color: #fff; padding: 3px 7px; border-radius: 99px; background: rgba(16,24,40,0.6); backdrop-filter: blur(4px); text-transform: uppercase; letter-spacing: .04em; }
+  .mag-actions { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+  .mag-chip { display: flex; align-items: center; gap: 3px; border: none; background: rgba(255,255,255,0.25); backdrop-filter: blur(4px); border-radius: 999px; padding: 3px 7px; color: rgba(255,255,255,0.95); font-family: 'Inter', system-ui, sans-serif; font-size: 8.5px; font-weight: 700; cursor: pointer; }
+  .mag-chip svg { width: 10px; height: 10px; stroke: currentColor; fill: none; stroke-width: 2.4; }
+  .mag-chip.active { background: rgba(255,255,255,0.92); color: var(--color-accent); }
+  .mag-chip.active svg { fill: var(--color-accent); stroke: var(--color-accent); }
+  .mag-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.9); border: none; display: flex; align-items: center; justify-content: center; z-index: 2; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+  .mag-play svg { width: 13px; height: 13px; fill: var(--color-text-main); margin-left: 1px; }
+  .mag-title { position: relative; z-index: 2; font-size: 12.5px; font-weight: 700; color: #fff; line-height: 1.25; text-shadow: 0 1px 2px rgba(0,0,0,0.4); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; padding-right: 34px; }
+  .mag-title.no-gauge { padding-right: 0; }
+  .mag-gauge { position: absolute; z-index: 3; bottom: 8px; right: 8px; width: 30px; height: 30px; }
+
+  .tab-bar { display: flex; border-top: 1px solid var(--color-border); background: #fff; }
+  .tab-bar button { flex: 1; border: none; background: none; padding: 10px 0 12px; font-family: 'Inter', system-ui, sans-serif; font-size: 10px; font-weight: 600; color: var(--color-text-body); cursor: default; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .tab-bar button.active { color: var(--color-primary); }
+  .tab-dot { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+
+  /* Circular gauge badge (used on grid tiles & popup image) — white disc, ring, centered % */
+  .gauge-badge { position: relative; width: 100%; height: 100%; }
+  .gauge-badge-ring { position: absolute; inset: 0; transform: rotate(-90deg); }
+  .gauge-badge-face { position: absolute; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  .gauge-badge-pct { font-family: 'Inter', system-ui, sans-serif; font-weight: 800; color: var(--color-text-main); }
+
+  /* ══════════════ POPUP ══════════════ */
+  .popup-overlay { position: fixed; inset: 0; background: rgba(16,24,40,0.55); display: none; align-items: center; justify-content: center; z-index: 999; padding: 24px; backdrop-filter: blur(1.5px); }
+  .popup-overlay.open { display: flex; animation: fadeIn .18s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .popup-card { width: 100%; max-width: 340px; background: #fff; border-radius: 20px; border: 1px solid var(--color-border); overflow: hidden; position: relative; box-shadow: 0 20px 48px rgba(16,24,40,0.28); animation: popIn .18s ease; }
+  @keyframes popIn { from { opacity: 0; transform: translateY(10px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+  .popup-close { position: absolute; top: 12px; right: 12px; width: 34px; height: 34px; border-radius: 50%; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(8px); border: 1px solid rgba(0, 0, 0, 0.08); color: var(--color-text-main); cursor: pointer; z-index: 5; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: background .15s, transform .15s; }
+  .popup-close:hover { background: #fff; transform: scale(1.08); }
+
+  .popup-actions { position: absolute; top: 12px; left: 12px; z-index: 5; display: flex; gap: 8px; }
+  .popup-chip { height: 34px; padding: 0 10px; border-radius: 999px; background: rgba(255,255,255,0.85); backdrop-filter: blur(8px); border: 1px solid rgba(0,0,0,0.08); display: flex; align-items: center; gap: 5px; font-family: 'Inter', system-ui, sans-serif; font-size: 12px; font-weight: 700; color: var(--color-text-body); box-shadow: 0 2px 8px rgba(0,0,0,0.08); cursor: pointer; transition: background .15s, transform .15s, color .15s; }
+  .popup-chip:hover { background: #fff; transform: scale(1.05); }
+  .popup-chip svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.2; }
+  .popup-chip.active { color: var(--color-accent); }
+  .popup-chip.active svg { fill: var(--color-accent); stroke: var(--color-accent); }
+
+  .popup-image { height: 172px; width: 100%; position: relative; background-size: cover; background-position: center; }
+  .popup-image::after { content: ''; position: absolute; inset: 0; }
+  .popup-image.t-course::after { background: var(--scrim-blue); }
+  .popup-image.t-theme::after { background: var(--scrim-green); }
+  .popup-image.t-module::after { background: var(--scrim-amber); }
+  .popup-image.t-lesson::after { background: var(--scrim-dark); }
+  .popup-image.t-snippet::after { background: var(--scrim-amber); }
+  .popup-type-badge { position: absolute; bottom: 12px; left: 16px; z-index: 2; font-family: 'Inter', system-ui, sans-serif; font-size: 9.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; color: #fff; background: rgba(16,24,40,0.55); backdrop-filter: blur(4px); }
+  .popup-gauge { position: absolute; bottom: 10px; right: 14px; z-index: 3; width: 42px; height: 42px; }
+
+  .popup-content { padding: 18px 20px 20px; }
+  .popup-crumb { font-family: 'Inter', system-ui, sans-serif; font-size: 11px; color: var(--color-text-body); margin-bottom: 6px; }
+  .popup-title { font-family: 'Nunito Sans', system-ui, sans-serif; font-size: 19px; font-weight: 700; color: var(--color-text-main); line-height: 1.25; margin-bottom: 8px; }
+  .popup-desc { font-family: 'Nunito Sans', system-ui, sans-serif; font-size: 14px; font-weight: 400; color: var(--color-text-body); line-height: 1.5; margin-bottom: 18px; }
+
+  .popup-footer { display: flex; gap: 10px; align-items: center; }
+  .popup-open-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Inter', system-ui, sans-serif; font-weight: 600; font-size: 13.5px; color: #fff; background: var(--color-primary); border: none; border-radius: 12px; padding: 12px 16px; cursor: pointer; box-shadow: 0 1px 0.5px 0.05px rgba(29,41,61,0.15); }
+  .popup-open-btn svg { width: 13px; height: 13px; fill: #fff; }
+
+  .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px); background: #101828; color: #fff; font-family: 'Inter', system-ui, sans-serif; font-size: 12.5px; padding: 10px 18px; border-radius: 999px; opacity: 0; pointer-events: none; transition: opacity .18s, transform .18s; z-index: 1000; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 380px) { .phone { width: 100%; max-width: 320px; } }
+</style>
+</head>
+<body>
+
+  <div class="page-label">Feature Mockup · v2</div>
+  <div class="page-title">Standard Entity Cards + Preview Popup</div>
+  <div class="page-sub">
+    One consistent card pattern for Course, Theme, Module, Lesson and Snippet. Tapping a card's body opens a preview
+    popup — image, category, title, description, and a ✕ to close (which returns you to exactly where you were,
+    since this never navigates away — it's an overlay on top of the same screen). Every card now also carries a
+    <strong>like</strong> and <strong>bookmark</strong> icon (each with a count, both toggle and turn saffron when
+    active), a <strong>play button</strong> that fires the same action the row's own CTA used to, and — for Course /
+    Theme / Module only — a colour-coded <strong>progress dial</strong>.
+  </div>
+  <div class="annotation">Tap a card body to preview · tap ▶ to play · tap ♥ / 🔖 to toggle</div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-swatch non-cta"></span> Card body → opens preview popup</div>
+    <div class="legend-item"><span class="legend-swatch play"></span> Play button → same action as the old CTA</div>
+    <div class="legend-item"><span class="legend-swatch like"></span> Like (♥) — toggles, saffron + count when liked</div>
+    <div class="legend-item"><span class="legend-swatch bookmark"></span> Bookmark (🔖) — toggles, saffron + count when saved</div>
+    <div class="legend-item"><span class="legend-swatch g-grey"></span> 0–30%</div>
+    <div class="legend-item"><span class="legend-swatch g-saffron"></span> 31–60%</div>
+    <div class="legend-item"><span class="legend-swatch g-blue"></span> 61–80%</div>
+    <div class="legend-item"><span class="legend-swatch g-green"></span> 81–100% (Course/Theme/Module only)</div>
+  </div>
+
+  <div class="phones-row">
+
+    <!-- ═══════ FOR YOU SCREEN ═══════ -->
+    <div class="phone-block">
+      <div class="phone-caption">For You</div>
+      <div class="phone">
+        <div class="phone-notch"><div class="notch-pill"></div></div>
+        <div class="app-header">
+          <div class="app-logo">Indi<span>Yatra</span></div>
+          <div class="app-screen-tag">For You</div>
+        </div>
+
+        <div class="phone-container">
+          <div class="phone-sidebar">
+            <div class="sidebar-item active"><div class="sidebar-item-icon">⏳</div><div class="sidebar-item-label">Resume</div></div>
+            <div class="sidebar-item"><div class="sidebar-item-icon">📚</div><div class="sidebar-item-label">Courses</div></div>
+            <div class="sidebar-item"><div class="sidebar-item-icon">✨</div><div class="sidebar-item-label">For You</div></div>
+            <div class="sidebar-item"><div class="sidebar-item-icon">❤️</div><div class="sidebar-item-label">Likes</div></div>
+            <div class="sidebar-item"><div class="sidebar-item-icon">🔖</div><div class="sidebar-item-label">Saved</div></div>
+          </div>
+
+          <div class="phone-body">
+            <div class="section-heading">Continue learning</div>
+            <div class="row-card" data-entity="lesson-1" onclick="openPopup('lesson-1', event)">
+              <div class="row-thumb-col">
+                <div class="row-gauge" data-gauge="lesson-1">
+                  <div class="row-thumb-photo" style="background-image:url('https://picsum.photos/seed/haldighati/120/120')"></div>
+                  <button class="mini-play" onclick="playAction(event,'lesson-1')" aria-label="Play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+                </div>
+              </div>
+              <div class="row-body">
+                <span class="row-type tag-lesson">Lesson</span>
+                <div class="row-title">Battle of Haldighati</div>
+                <div class="row-crumb">Empire & Resistance</div>
+              </div>
+              <div class="row-actions">
+                <button class="chip like" data-chip="like" data-entity="lesson-1" onclick="toggleLike(event,'lesson-1')"><svg class="chip-icon" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span data-count="like">0</span></button>
+                <button class="chip bookmark" data-chip="bookmark" data-entity="lesson-1" onclick="toggleBookmark(event,'lesson-1')"><svg class="chip-icon" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span data-count="bookmark">0</span></button>
+              </div>
+            </div>
+
+            <div class="section-heading">Saved by others</div>
+            <div class="row-card" data-entity="module-1" onclick="openPopup('module-1', event)">
+              <div class="row-thumb-col">
+                <div class="row-gauge" data-gauge="module-1">
+                  <div class="row-thumb-photo" style="background-image:url('https://picsum.photos/seed/miniature/120/120')"></div>
+                  <button class="mini-play" onclick="playAction(event,'module-1')" aria-label="Play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+                </div>
+                <span class="row-pct-label" data-pct-label="module-1"></span>
+              </div>
+              <div class="row-body">
+                <span class="row-type tag-module">Module</span>
+                <div class="row-title">Miniature Painting</div>
+                <div class="row-crumb">Art &amp; Patronage</div>
+              </div>
+              <div class="row-actions">
+                <button class="chip like" data-chip="like" data-entity="module-1" onclick="toggleLike(event,'module-1')"><svg class="chip-icon" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span data-count="like">0</span></button>
+                <button class="chip bookmark" data-chip="bookmark" data-entity="module-1" onclick="toggleBookmark(event,'module-1')"><svg class="chip-icon" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span data-count="bookmark">0</span></button>
+              </div>
+            </div>
+
+            <div class="row-card" data-entity="snippet-1" onclick="openPopup('snippet-1', event)">
+              <div class="row-thumb-col">
+                <div class="row-gauge" data-gauge="snippet-1">
+                  <div class="row-thumb-photo" style="background-image:url('https://picsum.photos/seed/ashoka/120/120')"></div>
+                  <button class="mini-play" onclick="playAction(event,'snippet-1')" aria-label="Play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+                </div>
+              </div>
+              <div class="row-body">
+                <span class="row-type tag-snippet">Snippet</span>
+                <div class="row-title">Ashoka's Edicts</div>
+                <div class="row-crumb">Empire of Ashoka</div>
+              </div>
+              <div class="row-actions">
+                <button class="chip like" data-chip="like" data-entity="snippet-1" onclick="toggleLike(event,'snippet-1')"><svg class="chip-icon" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span data-count="like">0</span></button>
+                <button class="chip bookmark" data-chip="bookmark" data-entity="snippet-1" onclick="toggleBookmark(event,'snippet-1')"><svg class="chip-icon" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span data-count="bookmark">0</span></button>
+              </div>
+            </div>
+
+            <div class="section-heading">Recommended</div>
+            <div class="row-card" data-entity="theme-1" onclick="openPopup('theme-1', event)">
+              <div class="row-thumb-col">
+                <div class="row-gauge" data-gauge="theme-1">
+                  <div class="row-thumb-photo" style="background-image:url('https://picsum.photos/seed/temples/120/120')"></div>
+                  <button class="mini-play" onclick="playAction(event,'theme-1')" aria-label="Play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+                </div>
+                <span class="row-pct-label" data-pct-label="theme-1"></span>
+              </div>
+              <div class="row-body">
+                <span class="row-type tag-theme">Theme</span>
+                <div class="row-title">Sacred Architecture</div>
+                <div class="row-crumb">South Indian Heritage</div>
+              </div>
+              <div class="row-actions">
+                <button class="chip like" data-chip="like" data-entity="theme-1" onclick="toggleLike(event,'theme-1')"><svg class="chip-icon" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span data-count="like">0</span></button>
+                <button class="chip bookmark" data-chip="bookmark" data-entity="theme-1" onclick="toggleBookmark(event,'theme-1')"><svg class="chip-icon" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span data-count="bookmark">0</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-bar">
+          <button class="active"><span class="tab-dot">🏠</span>For You</button>
+          <button><span class="tab-dot">📚</span>Courses</button>
+          <button><span class="tab-dot">🔎</span>Discover</button>
+          <button><span class="tab-dot">👤</span>Profile</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ COURSES SCREEN ═══════ -->
+    <div class="phone-block">
+      <div class="phone-caption">Courses</div>
+      <div class="phone">
+        <div class="phone-notch"><div class="notch-pill"></div></div>
+        <div class="app-header">
+          <div class="app-logo">Indi<span>Yatra</span></div>
+          <div class="app-screen-tag">All Courses</div>
+        </div>
+
+        <div class="phone-container">
+          <div class="courses-sidebar">
+            <div class="accordion-course">Mughal India</div>
+            <div class="accordion-theme-list">
+              <div class="accordion-theme">Art &amp; Patronage</div>
+              <div class="accordion-theme active">Empire &amp; Resist.</div>
+            </div>
+            <div class="accordion-course" style="margin-top: 12px; background: rgba(0,0,0,0.03); color: var(--color-text-body);">Dance Forms</div>
+            <div class="accordion-course" style="background: rgba(0,0,0,0.03); color: var(--color-text-body);">Ancient India</div>
+          </div>
+
+          <div class="phone-body">
+            <div class="section-heading">All courses</div>
+            <div class="row-card" data-entity="course-1" onclick="openPopup('course-1', event)">
+              <div class="row-thumb-col">
+                <div class="row-gauge" data-gauge="course-1">
+                  <div class="row-thumb-photo" style="background-image:url('https://picsum.photos/seed/dances/120/120')"></div>
+                  <button class="mini-play" onclick="playAction(event,'course-1')" aria-label="Play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+                </div>
+                <span class="row-pct-label" data-pct-label="course-1"></span>
+              </div>
+              <div class="row-body">
+                <span class="row-type tag-course">Course</span>
+                <div class="row-title">Classical Dances</div>
+                <div class="row-crumb">12 themes · 48 lessons</div>
+              </div>
+              <div class="row-actions">
+                <button class="chip like" data-chip="like" data-entity="course-1" onclick="toggleLike(event,'course-1')"><svg class="chip-icon" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span data-count="like">0</span></button>
+                <button class="chip bookmark" data-chip="bookmark" data-entity="course-1" onclick="toggleBookmark(event,'course-1')"><svg class="chip-icon" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span data-count="bookmark">0</span></button>
+              </div>
+            </div>
+            <div class="row-card" data-entity="course-2" onclick="openPopup('course-2', event)">
+              <div class="row-thumb-col">
+                <div class="row-gauge" data-gauge="course-2">
+                  <div class="row-thumb-photo" style="background-image:url('https://picsum.photos/seed/mughal/120/120')"></div>
+                  <button class="mini-play" onclick="playAction(event,'course-2')" aria-label="Play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+                </div>
+                <span class="row-pct-label" data-pct-label="course-2"></span>
+              </div>
+              <div class="row-body">
+                <span class="row-type tag-course">Course</span>
+                <div class="row-title">Mughal India</div>
+                <div class="row-crumb">9 themes · 36 lessons</div>
+              </div>
+              <div class="row-actions">
+                <button class="chip like" data-chip="like" data-entity="course-2" onclick="toggleLike(event,'course-2')"><svg class="chip-icon" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span data-count="like">0</span></button>
+                <button class="chip bookmark" data-chip="bookmark" data-entity="course-2" onclick="toggleBookmark(event,'course-2')"><svg class="chip-icon" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span data-count="bookmark">0</span></button>
+              </div>
+            </div>
+
+            <div class="section-heading">Empire &amp; Resistance</div>
+            <div class="row-card" data-entity="theme-2" onclick="openPopup('theme-2', event)">
+              <div class="row-thumb-col">
+                <div class="row-gauge" data-gauge="theme-2">
+                  <div class="row-thumb-photo" style="background-image:url('https://picsum.photos/seed/empire/120/120')"></div>
+                  <button class="mini-play" onclick="playAction(event,'theme-2')" aria-label="Play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+                </div>
+                <span class="row-pct-label" data-pct-label="theme-2"></span>
+              </div>
+              <div class="row-body">
+                <span class="row-type tag-theme">Theme</span>
+                <div class="row-title">Empire &amp; Resistance</div>
+                <div class="row-crumb">Mughal India</div>
+              </div>
+              <div class="row-actions">
+                <button class="chip like" data-chip="like" data-entity="theme-2" onclick="toggleLike(event,'theme-2')"><svg class="chip-icon" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span data-count="like">0</span></button>
+                <button class="chip bookmark" data-chip="bookmark" data-entity="theme-2" onclick="toggleBookmark(event,'theme-2')"><svg class="chip-icon" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span data-count="bookmark">0</span></button>
+              </div>
+            </div>
+            <div class="row-card" data-entity="module-1" onclick="openPopup('module-1', event)">
+              <div class="row-thumb-col">
+                <div class="row-gauge" data-gauge="module-1">
+                  <div class="row-thumb-photo" style="background-image:url('https://picsum.photos/seed/miniature2/120/120')"></div>
+                  <button class="mini-play" onclick="playAction(event,'module-1')" aria-label="Play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+                </div>
+                <span class="row-pct-label" data-pct-label="module-1"></span>
+              </div>
+              <div class="row-body">
+                <span class="row-type tag-module">Module</span>
+                <div class="row-title">Miniature Painting</div>
+                <div class="row-crumb">Art &amp; Patronage</div>
+              </div>
+              <div class="row-actions">
+                <button class="chip like" data-chip="like" data-entity="module-1" onclick="toggleLike(event,'module-1')"><svg class="chip-icon" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span data-count="like">0</span></button>
+                <button class="chip bookmark" data-chip="bookmark" data-entity="module-1" onclick="toggleBookmark(event,'module-1')"><svg class="chip-icon" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span data-count="bookmark">0</span></button>
+              </div>
+            </div>
+            <div class="row-card" data-entity="lesson-1" onclick="openPopup('lesson-1', event)">
+              <div class="row-thumb-col">
+                <div class="row-gauge" data-gauge="lesson-1">
+                  <div class="row-thumb-photo" style="background-image:url('https://picsum.photos/seed/haldighati2/120/120')"></div>
+                  <button class="mini-play" onclick="playAction(event,'lesson-1')" aria-label="Play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+                </div>
+              </div>
+              <div class="row-body">
+                <span class="row-type tag-lesson">Lesson</span>
+                <div class="row-title">Battle of Haldighati</div>
+                <div class="row-crumb">Empire &amp; Resistance</div>
+              </div>
+              <div class="row-actions">
+                <button class="chip like" data-chip="like" data-entity="lesson-1" onclick="toggleLike(event,'lesson-1')"><svg class="chip-icon" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span data-count="like">0</span></button>
+                <button class="chip bookmark" data-chip="bookmark" data-entity="lesson-1" onclick="toggleBookmark(event,'lesson-1')"><svg class="chip-icon" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span data-count="bookmark">0</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-bar">
+          <button><span class="tab-dot">🏠</span>For You</button>
+          <button class="active"><span class="tab-dot">📚</span>Courses</button>
+          <button><span class="tab-dot">🔎</span>Discover</button>
+          <button><span class="tab-dot">👤</span>Profile</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ DISCOVER SCREEN (grid / magazine style) ═══════ -->
+    <div class="phone-block">
+      <div class="phone-caption">Discover</div>
+      <div class="phone">
+        <div class="phone-notch"><div class="notch-pill"></div></div>
+        <div class="app-header">
+          <div class="app-logo">Indi<span>Yatra</span></div>
+          <div class="app-screen-tag">Discover</div>
+        </div>
+
+        <div class="phone-container" style="height: 540px;">
+          <div class="phone-body" style="padding: 12px;">
+            <div class="section-heading">Explore all</div>
+            <div class="discover-grid">
+
+              <div class="mag-card t-course" data-entity="course-1" style="background-image:url('https://picsum.photos/seed/dances2/200/200')" onclick="openPopup('course-1', event)">
+                <div class="mag-top-row">
+                  <span class="mag-badge">Course</span>
+                  <div class="mag-actions">
+                    <button class="mag-chip like" data-chip="like" data-entity="course-1" onclick="toggleLike(event,'course-1')"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span data-count="like">0</span></button>
+                    <button class="mag-chip bookmark" data-chip="bookmark" data-entity="course-1" onclick="toggleBookmark(event,'course-1')"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span data-count="bookmark">0</span></button>
+                  </div>
+                </div>
+                <button class="mag-play" onclick="playAction(event,'course-1')" aria-label="Play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+                <div class="mag-gauge" data-gauge="course-1"></div>
+                <div class="mag-title" data-mag-title="course-1">Classical Dances</div>
+              </div>
+
+              <div class="mag-card t-theme" data-entity="theme-1" style="background-image:url('https://picsum.photos/seed/temples2/200/200')" onclick="openPopup('theme-1', event)">
+                <div class="mag-top-row">
+                  <span class="mag-badge">Theme</span>
+                  <div class="mag-actions">
+                    <button class="mag-chip like" data-chip="like" data-entity="theme-1" onclick="toggleLike(event,'theme-1')"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span data-count="like">0</span></button>
+                    <button class="mag-chip bookmark" data-chip="bookmark" data-entity="theme-1" onclick="toggleBookmark(event,'theme-1')"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span data-count="bookmark">0</span></button>
+                  </div>
+                </div>
+                <button class="mag-play" onclick="playAction(event,'theme-1')" aria-label="Play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+                <div class="mag-gauge" data-gauge="theme-1"></div>
+                <div class="mag-title" data-mag-title="theme-1">Sacred Architecture</div>
+              </div>
+
+              <div class="mag-card t-module" data-entity="module-1" style="background-image:url('https://picsum.photos/seed/miniature3/200/200')" onclick="openPopup('module-1', event)">
+                <div class="mag-top-row">
+                  <span class="mag-badge">Module</span>
+                  <div class="mag-actions">
+                    <button class="mag-chip like" data-chip="like" data-entity="module-1" onclick="toggleLike(event,'module-1')"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span data-count="like">0</span></button>
+                    <button class="mag-chip bookmark" data-chip="bookmark" data-entity="module-1" onclick="toggleBookmark(event,'module-1')"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span data-count="bookmark">0</span></button>
+                  </div>
+                </div>
+                <button class="mag-play" onclick="playAction(event,'module-1')" aria-label="Play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+                <div class="mag-gauge" data-gauge="module-1"></div>
+                <div class="mag-title" data-mag-title="module-1">Miniature Painting</div>
+              </div>
+
+              <div class="mag-card t-lesson" data-entity="lesson-1" style="background-image:url('https://picsum.photos/seed/haldighati3/200/200')" onclick="openPopup('lesson-1', event)">
+                <div class="mag-top-row">
+                  <span class="mag-badge">Lesson</span>
+                  <div class="mag-actions">
+                    <button class="mag-chip like" data-chip="like" data-entity="lesson-1" onclick="toggleLike(event,'lesson-1')"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span data-count="like">0</span></button>
+                    <button class="mag-chip bookmark" data-chip="bookmark" data-entity="lesson-1" onclick="toggleBookmark(event,'lesson-1')"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span data-count="bookmark">0</span></button>
+                  </div>
+                </div>
+                <button class="mag-play" onclick="playAction(event,'lesson-1')" aria-label="Play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+                <div class="mag-title no-gauge" data-mag-title="lesson-1">Battle of Haldighati</div>
+              </div>
+
+              <div class="mag-card t-snippet" data-entity="snippet-1" style="background-image:url('https://picsum.photos/seed/ashoka2/200/200')" onclick="openPopup('snippet-1', event)">
+                <div class="mag-top-row">
+                  <span class="mag-badge">Snippet</span>
+                  <div class="mag-actions">
+                    <button class="mag-chip like" data-chip="like" data-entity="snippet-1" onclick="toggleLike(event,'snippet-1')"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span data-count="like">0</span></button>
+                    <button class="mag-chip bookmark" data-chip="bookmark" data-entity="snippet-1" onclick="toggleBookmark(event,'snippet-1')"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span data-count="bookmark">0</span></button>
+                  </div>
+                </div>
+                <button class="mag-play" onclick="playAction(event,'snippet-1')" aria-label="Play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+                <div class="mag-title no-gauge" data-mag-title="snippet-1">Ashoka's Edicts</div>
+              </div>
+
+              <div class="mag-card t-course" data-entity="course-2" style="background-image:url('https://picsum.photos/seed/mughal3/200/200')" onclick="openPopup('course-2', event)">
+                <div class="mag-top-row">
+                  <span class="mag-badge">Course</span>
+                  <div class="mag-actions">
+                    <button class="mag-chip like" data-chip="like" data-entity="course-2" onclick="toggleLike(event,'course-2')"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span data-count="like">0</span></button>
+                    <button class="mag-chip bookmark" data-chip="bookmark" data-entity="course-2" onclick="toggleBookmark(event,'course-2')"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span data-count="bookmark">0</span></button>
+                  </div>
+                </div>
+                <button class="mag-play" onclick="playAction(event,'course-2')" aria-label="Play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+                <div class="mag-gauge" data-gauge="course-2"></div>
+                <div class="mag-title" data-mag-title="course-2">Mughal India</div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-bar">
+          <button><span class="tab-dot">🏠</span>For You</button>
+          <button><span class="tab-dot">📚</span>Courses</button>
+          <button class="active"><span class="tab-dot">🔎</span>Discover</button>
+          <button><span class="tab-dot">👤</span>Profile</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════ POPUP OVERLAY ══════════════ -->
+  <div class="popup-overlay" id="popupOverlay" onclick="if(event.target===this) closePopup()">
+    <div class="popup-card">
+      <button class="popup-close" onclick="closePopup(event)" aria-label="Close">✕</button>
+
+      <div class="popup-actions">
+        <button class="popup-chip like" id="popupLike" onclick="toggleLike(event, null)" aria-label="Like">
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span data-count="like">0</span>
+        </button>
+        <button class="popup-chip bookmark" id="popupBookmark" onclick="toggleBookmark(event, null)" aria-label="Bookmark">
+          <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          <span data-count="bookmark">0</span>
+        </button>
+      </div>
+
+      <div class="popup-image" id="popupImage">
+        <span class="popup-type-badge" id="popupTypeBadge">Lesson</span>
+        <div class="popup-gauge" id="popupGauge"></div>
+      </div>
+
+      <div class="popup-content">
+        <div class="popup-crumb" id="popupCrumb">Mughal India › Empire &amp; Resistance</div>
+        <div class="popup-title" id="popupTitle">The Battle of Haldighati</div>
+        <div class="popup-desc" id="popupDesc">How Rana Pratap and Akbar's forces clashed in 1576 — and why the battle became a lasting symbol of resistance.</div>
+        <div class="popup-footer">
+          <button class="popup-open-btn" id="popupOpenBtn" onclick="playAction(event, null)">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <span id="popupOpenLabel">Start lesson</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  // ── Entity data store — single source of truth for both cards and popup ──
+  const ENTITIES = {
+    'course-1': { type: 'course', typeLabel: 'Course', crumb: '', title: "Classical Dance Forms of India",
+      desc: "A journey through Bharatanatyam, Kathak, Odissi and more — trace 2,000 years of movement, mythology and technique.",
+      cta: "Open course", img: 'https://picsum.photos/seed/dances/500/360', pct: 18, likes: 128, bookmarks: 64, liked: true, bookmarked: false },
+    'course-2': { type: 'course', typeLabel: 'Course', crumb: '', title: "Mughal India",
+      desc: "Nine themes tracing the rise, art, and fall of the Mughal empire — from Babur's conquest to Bahadur Shah's exile.",
+      cta: "Open course", img: 'https://picsum.photos/seed/mughal/500/360', pct: 55, likes: 95, bookmarks: 40, liked: false, bookmarked: true },
+    'theme-1': { type: 'theme', typeLabel: 'Theme', crumb: 'South Indian Heritage', title: "Temples & Sacred Architecture",
+      desc: "Explore how temple design encodes cosmology — from Dravidian gopurams to Nagara shikharas.",
+      cta: "Explore theme", img: 'https://picsum.photos/seed/temples/500/360', pct: 68, likes: 61, bookmarks: 22, liked: false, bookmarked: false },
+    'theme-2': { type: 'theme', typeLabel: 'Theme', crumb: 'Mughal India', title: "Empire & Resistance",
+      desc: "Conquest, rebellion and the regional kingdoms that resisted Mughal expansion across two centuries.",
+      cta: "Continue theme", img: 'https://picsum.photos/seed/empire/500/360', pct: 90, likes: 140, bookmarks: 78, liked: true, bookmarked: true },
+    'module-1': { type: 'module', typeLabel: 'Module', crumb: 'Mughal India › Art & Patronage', title: "Mughal Miniature Painting",
+      desc: "Six lessons on pigment, perspective and patronage in the Mughal ateliers of Akbar and Jahangir.",
+      cta: "Start module", img: 'https://picsum.photos/seed/miniature/500/360', pct: 47, likes: 33, bookmarks: 15, liked: false, bookmarked: false },
+    'lesson-1': { type: 'lesson', typeLabel: 'Lesson', crumb: 'Mughal India › Empire & Resistance', title: "The Battle of Haldighati",
+      desc: "How Rana Pratap and Akbar's forces clashed in 1576 — and why the battle became a lasting symbol of resistance.",
+      cta: "Start lesson", img: 'https://picsum.photos/seed/haldighati/500/360', pct: null, likes: 210, bookmarks: 99, liked: true, bookmarked: false },
+    'snippet-1': { type: 'snippet', typeLabel: 'Snippet', crumb: 'Ancient India › Empire of Ashoka', title: "Ashoka's Edicts in Prakrit",
+      desc: "Did you know? Ashoka's rock edicts were carved in Prakrit using Brahmi script — some of the earliest deciphered Indian inscriptions.",
+      cta: "Play snippet", img: 'https://picsum.photos/seed/ashoka/500/360', pct: null, likes: 58, bookmarks: 12, liked: false, bookmarked: true }
+  };
+
+  // ── Gauge colour rule: 0–30 grey · 31–60 saffron · 61–80 blue · 81–100 green ──
+  function gaugeColor(pct) {
+    if (pct > 80) return 'var(--color-secondary)';
+    if (pct > 60) return 'var(--color-primary)';
+    if (pct > 30) return 'var(--color-accent)';
+    return 'var(--gauge-grey)';
+  }
+
+  function ringSVG(pct, size, strokeW) {
+    const r = (size - strokeW) / 2, c = size / 2;
+    const circumference = 2 * Math.PI * r;
+    const dash = circumference * (1 - Math.min(100, Math.max(0, pct)) / 100);
+    const color = gaugeColor(pct);
+    return `<svg class="row-gauge-ring" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+      <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="var(--gauge-track)" stroke-width="${strokeW}"/>
+      <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${color}" stroke-width="${strokeW}" stroke-linecap="round" stroke-dasharray="${circumference}" stroke-dashoffset="${dash}"/>
+    </svg>`;
+  }
+
+  // Renders the ring-around-thumb version used on row cards
+  function renderRowGauges() {
+    document.querySelectorAll('.row-gauge[data-gauge]').forEach(el => {
+      const id = el.getAttribute('data-gauge');
+      const e = ENTITIES[id];
+      if (e && e.pct != null) {
+        el.classList.add('has-ring');
+        el.insertAdjacentHTML('afterbegin', ringSVG(e.pct, 48, 3));
+        const label = document.querySelector(`[data-pct-label="${id}"]`);
+        if (label) { label.textContent = e.pct + '%'; }
+      }
+    });
+  }
+  function getComputedColor(pct) {
+    // resolve the css var to an actual colour string for the small text label
+    if (pct > 80) return '#00924A';
+    if (pct > 60) return '#00509E';
+    if (pct > 30) return '#FF8E00';
+    return '#B7B7B2';
+  }
+
+  // Renders the standalone circular badge used on grid tiles + popup image
+  function badgeSVG(pct, size) {
+    const strokeW = size * 0.1;
+    const r = (size - strokeW) / 2, c = size / 2;
+    const circumference = 2 * Math.PI * r;
+    const dash = circumference * (1 - Math.min(100, Math.max(0, pct)) / 100);
+    const color = getComputedColor(pct);
+    const faceInset = strokeW;
+    const faceSize = size - faceInset * 2;
+    return `<div class="gauge-badge">
+      <svg class="gauge-badge-ring" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="transform:rotate(-90deg)">
+        <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="var(--gauge-track)" stroke-width="${strokeW}"/>
+        <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${color}" stroke-width="${strokeW}" stroke-linecap="round" stroke-dasharray="${circumference}" stroke-dashoffset="${dash}"/>
+      </svg>
+      <div class="gauge-badge-face" style="top:${faceInset}px;left:${faceInset}px;width:${faceSize}px;height:${faceSize}px;">
+        <span class="gauge-badge-pct" style="font-size:${size * 0.28}px;">${pct}%</span>
+      </div>
+    </div>`;
+  }
+  function renderBadgeGauges() {
+    document.querySelectorAll('.mag-gauge[data-gauge]').forEach(el => {
+      const id = el.getAttribute('data-gauge');
+      const e = ENTITIES[id];
+      if (e && e.pct != null) el.innerHTML = badgeSVG(e.pct, 30);
+    });
+  }
+
+  // ── Card chip (like/bookmark) initial render ──
+  function renderChips() {
+    document.querySelectorAll('[data-chip]').forEach(btn => {
+      const kind = btn.getAttribute('data-chip'); // like | bookmark
+      const id = btn.getAttribute('data-entity');
+      const e = ENTITIES[id];
+      if (!e) return;
+      const active = kind === 'like' ? e.liked : e.bookmarked;
+      const count = kind === 'like' ? e.likes : e.bookmarks;
+      btn.classList.toggle('active', active);
+      const countEl = btn.querySelector(`[data-count="${kind}"]`);
+      if (countEl) countEl.textContent = count;
+    });
+  }
+
+  function syncCardChips(id) {
+    document.querySelectorAll(`[data-chip][data-entity="${id}"]`).forEach(btn => {
+      const kind = btn.getAttribute('data-chip');
+      const e = ENTITIES[id];
+      const active = kind === 'like' ? e.liked : e.bookmarked;
+      const count = kind === 'like' ? e.likes : e.bookmarks;
+      btn.classList.toggle('active', active);
+      const countEl = btn.querySelector(`[data-count="${kind}"]`);
+      if (countEl) countEl.textContent = count;
+    });
+    // mag-card title padding depends on whether a gauge badge is present — unaffected by chip toggle, no-op here
+  }
+
+  function syncPopupChips(id) {
+    const e = ENTITIES[id];
+    const likeBtn = document.getElementById('popupLike');
+    const bmBtn = document.getElementById('popupBookmark');
+    likeBtn.classList.toggle('active', e.liked);
+    likeBtn.querySelector('[data-count="like"]').textContent = e.likes;
+    bmBtn.classList.toggle('active', e.bookmarked);
+    bmBtn.querySelector('[data-count="bookmark"]').textContent = e.bookmarks;
+  }
+
+  function toggleLike(evt, idOverride) {
+    if (evt) evt.stopPropagation();
+    const id = idOverride || currentId;
+    if (!id) return;
+    const e = ENTITIES[id];
+    e.liked = !e.liked;
+    e.likes += e.liked ? 1 : -1;
+    syncCardChips(id);
+    if (currentId === id) syncPopupChips(id);
+    showToast(e.liked ? 'Liked' : 'Removed like');
+  }
+
+  function toggleBookmark(evt, idOverride) {
+    if (evt) evt.stopPropagation();
+    const id = idOverride || currentId;
+    if (!id) return;
+    const e = ENTITIES[id];
+    e.bookmarked = !e.bookmarked;
+    e.bookmarks += e.bookmarked ? 1 : -1;
+    syncCardChips(id);
+    if (currentId === id) syncPopupChips(id);
+    showToast(e.bookmarked ? 'Saved to bookmarks' : 'Removed from bookmarks');
+  }
+
+  // ── Play button — fires the same action the row's own CTA used to trigger ──
+  function playAction(evt, idOverride) {
+    if (evt) evt.stopPropagation();
+    const id = idOverride || currentId;
+    if (!id) return;
+    const e = ENTITIES[id];
+    showToast('▶ ' + e.cta + ' — same action as the underlying tab’s CTA');
+  }
+
+  // ── Popup open/close ──
+  let currentId = null;
+  let originScrollEl = null;
+  let originScrollTop = 0;
+
+  function openPopup(id, evt) {
+    const e = ENTITIES[id];
+    if (!e) return;
+    currentId = id;
+
+    // Remember exactly where the user was in the underlying scroll list so
+    // closing the popup (✕) always lands them back in the same spot.
+    const originCard = evt ? evt.currentTarget : null;
+    originScrollEl = originCard ? originCard.closest('.phone-body') : null;
+    originScrollTop = originScrollEl ? originScrollEl.scrollTop : 0;
+
+    const img = document.getElementById('popupImage');
+    img.style.backgroundImage = `url('${e.img}')`;
+    img.className = 'popup-image t-' + e.type;
+    document.getElementById('popupTypeBadge').textContent = e.typeLabel;
+    document.getElementById('popupCrumb').textContent = e.crumb;
+    document.getElementById('popupCrumb').style.display = e.crumb ? 'block' : 'none';
+    document.getElementById('popupTitle').textContent = e.title;
+    document.getElementById('popupDesc').textContent = e.desc;
+    document.getElementById('popupOpenLabel').textContent = e.cta;
+
+    const gaugeEl = document.getElementById('popupGauge');
+    gaugeEl.innerHTML = e.pct != null ? badgeSVG(e.pct, 42) : '';
+    gaugeEl.style.display = e.pct != null ? 'block' : 'none';
+
+    syncPopupChips(id);
+
+    document.getElementById('popupOverlay').classList.add('open');
+  }
+
+  function closePopup(evt) {
+    if (evt) evt.stopPropagation();
+    document.getElementById('popupOverlay').classList.remove('open');
+    // Restore the underlying screen's scroll position exactly — the popup
+    // is an overlay, not a navigation, so nothing should have moved, but we
+    // enforce it explicitly in case the browser nudged focus/scroll.
+    if (originScrollEl) originScrollEl.scrollTop = originScrollTop;
+    currentId = null;
+    originScrollEl = null;
+  }
+
+  let toastTimer = null;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePopup(); });
+
+  // ── init ──
+  renderRowGauges();
+  renderBadgeGauges();
+  renderChips();
+</script>
+
+</body>
+</html>

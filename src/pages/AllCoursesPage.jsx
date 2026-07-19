@@ -5,16 +5,24 @@ import PageHeader from "../components/PageHeader";
 import ModuleGauge from "../components/ModuleGauge";
 import { useCourseTree } from "../hooks/useCourseTree";
 import { levelNumber, levelShortLabel, moduleProgress, lessonStatus } from "../lib/courseTree";
+import { useEntityPreview } from "../components/EntityPreview";
 
 // Teal — brandbook accent reserved for course-browsing chrome (matches HomePage course cards)
-const TEAL    = "#4AADA8";
-const TEAL_BG = "#EAF6F5";
+const TEAL    = "#48A9A6";
+const TEAL_BG = "#EDF6F6";
 const TEAL_BD = "#C2E4E2";
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = `
-  .ac-headline { max-width: 1200px; margin: 0 auto; padding: 14px 1.25rem 10px; }
+  /* Page gutter — same left/right margin scale as the shared .page-wrap
+     used elsewhere in the app (src/styles/global.js), so Courses lines up
+     with every other page instead of running its own numbers. */
+  .ac-page-wrap { max-width: 1200px; margin: 0 auto; padding: 0 1.25rem; }
+  @media (max-width: 768px) { .ac-page-wrap { padding: 0 1rem; } }
+  @media (max-width: 480px) { .ac-page-wrap { padding: 0 0.875rem; } }
+
+  .ac-headline { padding: 14px 0 10px; }
   .ac-headline-title {
     font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.375rem; font-weight: 700;
     color: ${HERITAGE};
@@ -23,9 +31,13 @@ const styles = `
     font-family: 'Nunito Sans', system-ui, sans-serif; font-size: 0.8125rem; color: #6B7280;
     margin-top: 2px;
   }
+  .ac-crumb { cursor: pointer; }
+  .ac-crumb:hover { color: ${TEAL}; text-decoration: underline; }
+  .ac-crumb-current { color: #6B7280; cursor: default; }
+  .ac-crumb-sep { color: #9CA3AF; padding: 0 2px; }
 
   .ac-body {
-    display: flex; max-width: 1200px; margin: 0 auto;
+    display: flex;
     height: calc(100dvh - 64px - 66px);
     min-height: 420px;
     border: 1px solid ${TEAL_BD}; border-radius: 14px; overflow: hidden;
@@ -40,11 +52,11 @@ const styles = `
   .ac-course-row {
     padding: 12px 10px; cursor: pointer; user-select: none;
     font-family: 'Nunito Sans', system-ui, sans-serif; font-weight: 700; font-size: 0.8125rem;
-    color: #101828; border-left: 3px solid transparent;
+    color: #101828;
     word-wrap: break-word; overflow-wrap: break-word;
   }
   .ac-course-row.open {
-    background: ${TEAL_BG}; color: ${TEAL}; border-left-color: ${TEAL};
+    background: ${TEAL_BG}; color: ${TEAL};
   }
   .ac-level-tabs {
     display: flex; justify-content: center; gap: 6px;
@@ -60,16 +72,14 @@ const styles = `
   }
   .ac-level-tab-label { font-size: 0.34375rem; font-weight: 700; letter-spacing: 0.01em; text-transform: uppercase; }
   .ac-level-tab-num   { font-size: 0.6875rem; font-weight: 800; margin-top: 1px; }
-  .ac-level-tab.active { background: ${SAFFRON}; color: #fff; border-color: ${SAFFRON}; }
+  .ac-level-tab.active { background: ${TEAL}; color: #fff; border-color: ${TEAL}; }
   .ac-theme-row {
     padding: 8px 10px 8px 18px; cursor: pointer; user-select: none;
     font-family: 'Nunito Sans', system-ui, sans-serif; font-size: 0.75rem; color: #4A5565;
     word-wrap: break-word; overflow-wrap: break-word;
-    border-left: 3px solid transparent;
   }
   .ac-theme-row.active {
     background: ${TEAL_BG}; color: ${TEAL}; font-weight: 700;
-    border-left-color: ${TEAL}; padding-left: 23px;
   }
   .ac-sidebar-empty { padding: 20px 12px; font-size: 0.75rem; color: #9CA3AF; }
 
@@ -78,18 +88,19 @@ const styles = `
   .ac-feed-pane {
     flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
     padding: 8px;
+    scrollbar-width: none; -ms-overflow-style: none; /* Firefox / old Edge */
   }
-  .ac-pane-label {
-    font-family: 'Inter', system-ui, sans-serif; font-size: 0.6875rem; font-weight: 700;
-    letter-spacing: 0.08em; text-transform: uppercase; color: #9CA3AF; margin-bottom: 14px;
-  }
+  .ac-feed-pane::-webkit-scrollbar { display: none; } /* Chrome / Safari */
   .ac-empty {
     display: flex; align-items: center; justify-content: center; height: 100%;
     color: #9CA3AF; font-size: 0.8125rem; text-align: center; padding: 20px;
     font-family: 'Nunito Sans', system-ui, sans-serif;
   }
 
-  .unified-module-block { padding: 10px; }
+  .unified-module-block {
+    padding: 10px; border-radius: 12px; overflow: hidden; margin-bottom: 14px;
+    border: 1px solid rgba(0,0,0,0.06); background-color: #fff;
+  }
   .unified-module-block.module-target {
     border-radius: 12px; border: 2px solid ${SAFFRON}; box-shadow: 0 0 0 3px ${SAFFRON}22;
   }
@@ -102,21 +113,21 @@ const styles = `
   }
   .ac-module-subrow { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
   .ac-module-meta {
-    font-family: 'Inter', system-ui, sans-serif; font-size: 0.6875rem; color: #6B7280;
+    font-family: 'Inter', system-ui, sans-serif; font-size: 0.6875rem; color: #101828;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .ac-module-social { flex-shrink: 0; display: flex; gap: 2px; }
+  .ac-module-social { flex-shrink: 0; display: flex; gap: 8px; }
 
   .bm-btn, .like-btn {
     flex-shrink: 0; background: none; border: none; cursor: pointer;
-    font-size: 1.125rem; line-height: 1; padding: 6px; border-radius: 8px;
+    font-size: 1.125rem; line-height: 1; padding: 4px; border-radius: 8px;
     color: #6B6B6B; transition: color 0.15s, transform 0.15s;
     display: flex; align-items: center; justify-content: center;
   }
-  .bm-btn:hover { color: ${SAFFRON}; transform: scale(1.15); }
-  .bm-btn.saved { color: ${SAFFRON}; }
-  .like-btn:hover { color: #D85A30; transform: scale(1.15); }
-  .like-btn.liked { color: #D85A30; }
+  .bm-btn:hover { color: #101828; transform: scale(1.15); }
+  .bm-btn.saved { color: #101828; }
+  .like-btn:hover { color: #101828; transform: scale(1.15); }
+  .like-btn.liked { color: #101828; }
 
   .ac-lesson-card {
     background: #FFFFFF; border: 1px solid rgba(0,0,0,0.08); border-radius: 12px;
@@ -126,43 +137,47 @@ const styles = `
   .ac-lesson-card.resume-target { border: 2px solid ${SAFFRON}; box-shadow: 0 0 0 3px ${SAFFRON}22; }
   @keyframes acFadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
   .ac-lesson-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-  /* Circular thumbnail — a lesson's own snippet photo (or, for now, a
-     stable placeholder — see lessonThumb()) with the done-tick / lesson
-     number as a translucent badge layered on top, so the photo stays
-     visible underneath. */
+  /* Lesson number / done-tick — plain text, no circle/background, so it
+     reads as a simple status marker next to the lesson name rather than
+     a thumbnail-shaped icon. */
   .ac-lesson-num {
-    position: relative; flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
-    overflow: hidden; background: rgba(0,0,0,0.06);
+    flex-shrink: 0; min-width: 18px; text-align: center;
+    font-family: 'Inter', system-ui, sans-serif; font-size: 0.8125rem; font-weight: 700;
+    color: #101828;
   }
-  .ac-lesson-num-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
-  .ac-lesson-num-badge {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    font-family: 'Inter', system-ui, sans-serif; font-size: 0.75rem; font-weight: 700; color: #fff;
-    background: rgba(0,0,0,0.38); text-shadow: 0 1px 2px rgba(0,0,0,0.45);
-  }
-  .ac-lesson-num.done   .ac-lesson-num-badge { background: ${GREEN}8C;   font-size: 0.875rem; font-weight: 800; }
-  .ac-lesson-num.resume .ac-lesson-num-badge { background: ${SAFFRON}8C; }
+  .ac-lesson-num.done { color: ${GREEN}; font-size: 1rem; font-weight: 800; }
   .ac-lesson-title {
     flex: 1; min-width: 0;
     font-family: 'Nunito Sans', system-ui, sans-serif; font-weight: 700; font-size: 0.9375rem;
     color: #101828; line-height: 1.3;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .ac-continue-tag {
     flex-shrink: 0; background: ${SAFFRON}; color: #fff; font-size: 0.625rem; font-weight: 700;
     padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em; margin-left: 6px;
   }
-  .ac-lesson-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-  .ac-lesson-social { display: flex; gap: 0; margin-right: auto; }
+  /* Resume-point play button — same glyph/colour as the header's "Resume
+     Yatra" action, so the two read as the same affordance. */
+  .ac-continue-play {
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%; margin-left: 6px;
+    background: none; border: none; cursor: pointer; color: ${SAFFRON};
+    transition: background 0.12s;
+  }
+  .ac-continue-play:hover { background: #F3F4F6; }
+  .ac-lesson-actions { display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; }
+  .ac-lesson-social { display: flex; gap: 0; margin-right: auto; flex-shrink: 0; }
   .ac-btn-read {
+    flex-shrink: 0;
     background: ${SAFFRON}; color: #fff; border: none; border-radius: 999px;
-    padding: 6px 16px; font-family: 'Inter', system-ui, sans-serif; font-size: 0.75rem;
+    padding: 6px 12px; font-family: 'Inter', system-ui, sans-serif; font-size: 0.75rem;
     font-weight: 600; cursor: pointer; transition: opacity 0.15s; white-space: nowrap;
   }
   .ac-btn-read:hover { opacity: 0.88; }
   .ac-btn-quiz {
+    flex-shrink: 0;
     background: ${HERITAGE}; color: #fff; border: none; border-radius: 999px;
-    padding: 6px 16px; font-family: 'Inter', system-ui, sans-serif; font-size: 0.75rem;
+    padding: 6px 12px; font-family: 'Inter', system-ui, sans-serif; font-size: 0.75rem;
     font-weight: 600; cursor: pointer; transition: opacity 0.15s; white-space: nowrap;
   }
   .ac-btn-quiz:hover { opacity: 0.88; }
@@ -181,6 +196,12 @@ const styles = `
   @media (max-width: 768px) {
     .ac-body { height: calc(100dvh - 64px - 66px - 64px); }
   }
+  /* Narrow phones — the sidebar's fixed 132px eats a big share of the
+     screen, so give the Read/Quiz pills a little more room to breathe. */
+  @media (max-width: 400px) {
+    .ac-sidebar { width: 112px; }
+    .ac-btn-read, .ac-btn-quiz { padding: 5px 10px; font-size: 0.6875rem; }
+  }
 
   /* ── Desktop: sidebar + 2-column module feed (more compact use of the
      extra width instead of one long single-column list) ── */
@@ -189,7 +210,7 @@ const styles = `
       display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
       align-content: start; gap: 14px 18px;
     }
-    .ac-pane-label, .ac-empty { grid-column: 1 / -1; }
+    .ac-empty { grid-column: 1 / -1; }
     .unified-module-block { margin-bottom: 0; }
   }
 `;
@@ -227,8 +248,9 @@ export default function AllCoursesPage({
   const {
     courses, tree, storyCounts, lessonImages, quizMap, loading, load,
     openCourseId, openLevelId, selCourseId, selLevelId, selThemeId, resumeLessonId, resumeModuleId,
-    toggleCourse, selectLevelTab, selectTheme, registerLessonRef, registerModuleRef,
+    toggleCourse, selectLevelTab, selectTheme, goToCourse, goToLevel, registerLessonRef, registerModuleRef,
   } = useCourseTree(profile, courseTreeSeed);
+  const { openPreview } = useEntityPreview();
 
   // Lesson-row thumbnail — real snippet image when the lesson has one
   // (lessonImages, from useCourseTree), otherwise a stable per-lesson
@@ -236,6 +258,29 @@ export default function AllCoursesPage({
   // something to show until real lesson cover images exist.
   function lessonThumb(lessonId) {
     return lessonImages[lessonId] || `https://picsum.photos/seed/${lessonId}/96/96`;
+  }
+
+  // Same play glyph as the header's "Resume Yatra" button (PageHeader's IcPlay).
+  function PlaySVG() {
+    return (
+      <svg width="15" height="15" viewBox="0 0 24 24">
+        <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" />
+      </svg>
+    );
+  }
+
+  // Module card background — the module's own cover photo, tiled across the
+  // full card height (module header + all its lesson rows) and washed out
+  // with a translucent white layer so it reads as a light background, not
+  // a dark photo. Falls back to a stable per-module placeholder so every
+  // card gets a tile even before real cover images are uploaded.
+  function moduleBgStyle(moduleId, imageUrl) {
+    const img = imageUrl || `https://picsum.photos/seed/module-${moduleId}/240/240`;
+    return {
+      backgroundImage: `linear-gradient(rgba(255,255,255,0.6), rgba(255,255,255,0.6)), url(${img})`,
+      backgroundRepeat: "no-repeat, repeat",
+      backgroundSize: "100% 100%, 130px 130px",
+    };
   }
 
   useEffect(() => {
@@ -280,9 +325,28 @@ export default function AllCoursesPage({
         ]}
       />
 
+      <div className="ac-page-wrap">
       <div className="ac-headline">
         <div className="ac-headline-title">All Courses</div>
-        <div className="ac-headline-path">{pathParts.length > 0 ? pathParts.join(" / ") : "Select a course to begin browsing"}</div>
+        <div className="ac-headline-path">
+          {pathParts.length > 0 ? (
+            <>
+              <span className="ac-crumb" onClick={() => goToCourse(selCourseId)}>{activeCourse?.course_name}</span>
+              {levelPathPart && (
+                <>
+                  <span className="ac-crumb-sep">/</span>
+                  <span className="ac-crumb" onClick={() => goToLevel(selCourseId, selLevelId)}>{levelPathPart}</span>
+                </>
+              )}
+              {activeTheme && (
+                <>
+                  <span className="ac-crumb-sep">/</span>
+                  <span className="ac-crumb-current">{activeTheme.title}</span>
+                </>
+              )}
+            </>
+          ) : "Select a course to begin browsing"}
+        </div>
       </div>
 
       <div className="ac-body">
@@ -345,7 +409,6 @@ export default function AllCoursesPage({
         {/* ── Main pane: merged Module → Lesson feed ── */}
         <div className="ac-main">
           <div className="ac-feed-pane">
-            <div className="ac-pane-label">{activeTheme ? activeTheme.title : "Modules & Lessons"}</div>
             {loading ? (
               <div className="ac-empty">Loading…</div>
             ) : !activeTheme ? (
@@ -360,14 +423,35 @@ export default function AllCoursesPage({
               const themeParam  = { theme_id: selThemeId, title: activeTheme.title };
               const courseParam = { course_id: selCourseId, course_name: activeCourse?.course_name };
               const isModuleTarget = resumeModuleId === mid;
+              const openModulePreview = () => openPreview({
+                type: "module",
+                id: mid,
+                title: mod.name,
+                crumb: activeTheme.title,
+                desc: mod.description || "",
+                image: mod.image_url,
+                pct,
+                liked: likes.has("module:" + mid),
+                bookmarked: bookmarks.has("module:" + mid),
+                onToggleLike: () => onToggleLike && onToggleLike("module", mid, mod.name),
+                onToggleBookmark: () => onToggleBookmark && onToggleBookmark("module", mid, mod.name),
+                // Module has no page of its own — this CTA used to jump into
+                // the module's first lesson, which was a surprising place to
+                // land. It now just closes the pop-up (EntityPreviewPopup's
+                // runPlay() already calls closePreview() before this runs),
+                // returning you to the Course page exactly as it was.
+                onPlay: () => {},
+                playLabel: "Browse module",
+              });
               return (
                 <div
                   className={"ac-module-section unified-module-block" + (isModuleTarget ? " module-target" : "")}
                   key={mid}
                   ref={registerModuleRef(mid)}
+                  style={moduleBgStyle(mid, mod.image_url)}
                 >
-                  <div className="ac-module-header">
-                    <ModuleGauge pct={pct} size={40} image={mod.image_url} alt={mod.name} />
+                  <div className="ac-module-header" onClick={openModulePreview} style={{ cursor: "pointer" }}>
+                    <ModuleGauge pct={pct} size={40} />
                     <div className="ac-module-name">{mod.name}</div>
                     {isModuleTarget && <span className="ac-continue-tag">Opened</span>}
                   </div>
@@ -379,12 +463,12 @@ export default function AllCoursesPage({
                       <button
                         className={"like-btn" + (likes.has("module:" + mid) ? " liked" : "")}
                         title={likes.has("module:" + mid) ? "Unlike" : "Like module"}
-                        onClick={() => onToggleLike && onToggleLike("module", mid, mod.name)}
+                        onClick={e => { e.stopPropagation(); onToggleLike && onToggleLike("module", mid, mod.name); }}
                       ><svg width="19" height="19" viewBox="0 0 24 24" fill={likes.has("module:" + mid) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.8 4.6c-1.7-1.6-4.4-1.6-6 .1L12 7.5 9.2 4.7c-1.6-1.7-4.3-1.7-6 0-1.7 1.7-1.7 4.4 0 6.1L12 19l8.8-8.2c1.7-1.7 1.7-4.4 0-6.1z"/></svg></button>
                       <button
                         className={"bm-btn" + (bookmarks.has("module:" + mid) ? " saved" : "")}
                         title={bookmarks.has("module:" + mid) ? "Remove bookmark" : "Bookmark module"}
-                        onClick={() => onToggleBookmark && onToggleBookmark("module", mid, mod.name)}
+                        onClick={e => { e.stopPropagation(); onToggleBookmark && onToggleBookmark("module", mid, mod.name); }}
                       ><svg width="19" height="19" viewBox="0 0 24 24" fill={bookmarks.has("module:" + mid) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
                     </div>
                   </div>
@@ -394,43 +478,68 @@ export default function AllCoursesPage({
                     const status = lessonStatus(lesson.lesson_id, completedLessons, lessonProgress);
                     const quiz = quizMap[lesson.lesson_id];
                     const isResumeTarget = resumeLessonId === lesson.lesson_id;
+                    const openLessonPreview = () => openPreview({
+                      type: "lesson",
+                      id: lesson.lesson_id,
+                      title: lesson.lesson_name,
+                      crumb: `${activeTheme.title} › ${mod.name}`,
+                      desc: lesson.description || "",
+                      image: lessonThumb(lesson.lesson_id),
+                      pct: null,
+                      liked: likes.has("lesson:" + lesson.lesson_id),
+                      bookmarked: bookmarks.has("lesson:" + lesson.lesson_id),
+                      onToggleLike: () => onToggleLike && onToggleLike("lesson", lesson.lesson_id, lesson.lesson_name),
+                      onToggleBookmark: () => onToggleBookmark && onToggleBookmark("lesson", lesson.lesson_id, lesson.lesson_name),
+                      onPlay: () => onLessonSelect && onLessonSelect(lesson, modParam, themeParam, selLevelId, courseParam),
+                      playLabel: "Read",
+                      onQuiz: quiz ? () => onQuizClick && onQuizClick(lesson, quiz, modParam, themeParam, selLevelId, courseParam) : null,
+                      quizLabel: "Quiz",
+                    });
                     return (
                       <div
                         className={"ac-lesson-card" + (isResumeTarget ? " resume-target" : "")}
                         key={lesson.lesson_id}
-                        style={{ animationDelay: `${i * 0.03}s` }}
+                        style={{ animationDelay: `${i * 0.03}s`, cursor: "pointer" }}
                         ref={registerLessonRef(lesson.lesson_id)}
+                        onClick={openLessonPreview}
                       >
                         <div className="ac-lesson-top">
-                          <div className={"ac-lesson-num" + (status === "done" ? " done" : status === "resume" ? " resume" : "")}>
-                            <img className="ac-lesson-num-img" src={lessonThumb(lesson.lesson_id)} alt="" />
-                            <span className="ac-lesson-num-badge">{status === "done" ? "✓" : i + 1}</span>
+                          <div className={"ac-lesson-num" + (status === "done" ? " done" : "")}>
+                            {status === "done" ? "✓" : i + 1}
                           </div>
                           <div className="ac-lesson-title">
                             {lesson.lesson_name}
-                            {isResumeTarget && <span className="ac-continue-tag">Continue</span>}
                           </div>
+                          {isResumeTarget && (
+                            <button
+                              className="ac-continue-play"
+                              title="Resume"
+                              onClick={e => { e.stopPropagation(); onLessonSelect && onLessonSelect(lesson, modParam, themeParam, selLevelId, courseParam); }}
+                            >
+                              <PlaySVG />
+                            </button>
+                          )}
                         </div>
                         <div className="ac-lesson-actions">
                           <div className="ac-lesson-social">
                             <button
                               className={"like-btn" + (likes.has("lesson:" + lesson.lesson_id) ? " liked" : "")}
                               title={likes.has("lesson:" + lesson.lesson_id) ? "Unlike" : "Like lesson"}
-                              onClick={() => onToggleLike && onToggleLike("lesson", lesson.lesson_id, lesson.lesson_name)}
+                              onClick={e => { e.stopPropagation(); onToggleLike && onToggleLike("lesson", lesson.lesson_id, lesson.lesson_name); }}
                             ><svg width="18" height="18" viewBox="0 0 24 24" fill={likes.has("lesson:" + lesson.lesson_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.8 4.6c-1.7-1.6-4.4-1.6-6 .1L12 7.5 9.2 4.7c-1.6-1.7-4.3-1.7-6 0-1.7 1.7-1.7 4.4 0 6.1L12 19l8.8-8.2c1.7-1.7 1.7-4.4 0-6.1z"/></svg></button>
                             <button
                               className={"bm-btn" + (bookmarks.has("lesson:" + lesson.lesson_id) ? " saved" : "")}
                               title={bookmarks.has("lesson:" + lesson.lesson_id) ? "Remove bookmark" : "Bookmark lesson"}
-                              onClick={() => onToggleBookmark && onToggleBookmark("lesson", lesson.lesson_id, lesson.lesson_name)}
+                              onClick={e => { e.stopPropagation(); onToggleBookmark && onToggleBookmark("lesson", lesson.lesson_id, lesson.lesson_name); }}
                             ><svg width="18" height="18" viewBox="0 0 24 24" fill={bookmarks.has("lesson:" + lesson.lesson_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
                           </div>
                           <button className="ac-btn-read"
-                            onClick={() => onLessonSelect && onLessonSelect(lesson, modParam, themeParam, selLevelId, courseParam)}>
+                            onClick={e => { e.stopPropagation(); onLessonSelect && onLessonSelect(lesson, modParam, themeParam, selLevelId, courseParam); }}>
                             Read
                           </button>
                           <button className="ac-btn-quiz" disabled={!quiz}
                             title={quiz ? "Take quiz" : "No quiz available"}
-                            onClick={() => quiz && onQuizClick && onQuizClick(lesson, quiz, modParam, themeParam, selLevelId, courseParam)}>
+                            onClick={e => { e.stopPropagation(); quiz && onQuizClick && onQuizClick(lesson, quiz, modParam, themeParam, selLevelId, courseParam); }}>
                             Quiz
                           </button>
                         </div>
@@ -442,6 +551,7 @@ export default function AllCoursesPage({
             })}
           </div>
         </div>
+      </div>
       </div>
     </>
   );

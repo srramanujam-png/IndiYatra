@@ -1,13 +1,14 @@
-import { useState, useEffect } from "react";
 import { gaugeColor, GAUGE_TRACK } from "../lib/courseTree";
 
-// ─── Circular progress ring wrapping a module cover photo ──────────────────
-// Full 360° ring (12 o'clock start, clockwise) around a circular photo —
-// the ring shows progress, the photo is the module's cover image. Falls
-// back to the plain percentage badge (today's look) when `image` is
-// missing or fails to load, so partial photo coverage never looks broken.
+// ─── Circular progress ring — transparent middle ────────────────────────────
+// Full 360° ring (12 o'clock start, clockwise), just the ring — no photo
+// filling the middle, so it reads cleanly as a progress indicator sitting
+// on top of a module card's own background (which now carries the cover
+// photo itself, tiled across the whole card — see AllCoursesPage). The
+// percentage label is always near-black rather than progress-colored, so
+// it stays legible against that background regardless of pct.
 // Used by AllCoursesPage's module header.
-export default function ModuleGauge({ pct, size = 84, image, alt = "" }) {
+export default function ModuleGauge({ pct, size = 84 }) {
   const color     = gaugeColor(pct);
   const clamped   = Math.min(100, Math.max(0, pct));
   const strokeW   = size * 0.09;
@@ -16,14 +17,6 @@ export default function ModuleGauge({ pct, size = 84, image, alt = "" }) {
   const cy        = size / 2;
   const circumference = 2 * Math.PI * r;
   const dashOffset     = circumference * (1 - clamped / 100);
-  const photoInset     = strokeW + size * 0.06; // gap between ring and photo
-  const photoSize      = size - photoInset * 2;
-
-  const [imgError, setImgError] = useState(false);
-  // Reset the error flag if a different image URL comes in (e.g. list
-  // re-renders with a different module) so a prior failure doesn't stick.
-  useEffect(() => { setImgError(false); }, [image]);
-  const showImage = !!image && !imgError;
 
   return (
     <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
@@ -39,26 +32,13 @@ export default function ModuleGauge({ pct, size = 84, image, alt = "" }) {
           />
         )}
       </svg>
-      {showImage ? (
-        <img
-          src={image}
-          alt={alt}
-          onError={() => setImgError(true)}
-          style={{
-            position: "absolute", top: photoInset, left: photoInset,
-            width: photoSize, height: photoSize,
-            borderRadius: "50%", objectFit: "cover",
-          }}
-        />
-      ) : (
-        <div style={{
-          position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
-        }}>
-          <span style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: size * 0.22, color }}>
-            {pct}%
-          </span>
-        </div>
-      )}
+      <div style={{
+        position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        <span style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: size * 0.22, color: "#101828" }}>
+          {pct}%
+        </span>
+      </div>
     </div>
   );
 }

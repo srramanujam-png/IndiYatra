@@ -3,6 +3,7 @@ import { supabase, SAFFRON, HERITAGE, GREEN, logoUrl, LEVEL_LABELS, VISIBILITY_B
 import { globalStyles } from "../styles/global";
 import PageHeader from "../components/PageHeader";
 import { SkeletonModuleList } from "../components/Skeletons";
+import { useEntityPreview } from "../components/EntityPreview";
 
 const styles = `
   .theme-banner { max-width: 1200px; margin: 0 auto 28px; padding: 0 1.5rem; }
@@ -116,6 +117,7 @@ export default function ModulesPage({ course, theme, levelId, settings, complete
   const [lessonsByModule, setLessonsByModule] = useState({});
   const [loading, setLoading]       = useState(true);
   const levelMeta = LEVEL_LABELS[levelId] || { label: "All Levels", color: SAFFRON };
+  const { openPreview } = useEntityPreview();
 
   useEffect(() => {
     async function load() {
@@ -221,12 +223,28 @@ export default function ModulesPage({ course, theme, levelId, settings, complete
                 && prevLessons.length > 0
                 && !prevLessons.every(id => completedLessons.has(id));
 
+              const openThisPreview = () => openPreview({
+                type: "module",
+                id: mod.module_id,
+                title: mod.module_name,
+                crumb: theme?.title || "",
+                desc: mod.description || "",
+                image: asset?.file_path,
+                pct,
+                liked: likes.has("module:" + mod.module_id),
+                bookmarked: bookmarks.has("module:" + mod.module_id),
+                onToggleLike: () => onToggleLike && onToggleLike("module", mod.module_id, mod.module_name),
+                onToggleBookmark: () => onToggleBookmark && onToggleBookmark("module", mod.module_id, mod.module_name),
+                onPlay: () => onModuleClick(mod),
+                playLabel: ctaLabel.replace(" →", "").replace(" ✓", ""),
+              });
+
               return (
                 <div
                   className={`module-row ${state} ${isLocked ? "locked" : ""}`}
                   key={mod.module_id}
                   style={{ animationDelay: `${i * 0.05}s` }}
-                  onClick={isLocked ? undefined : () => onModuleClick(mod)}
+                  onClick={isLocked ? undefined : openThisPreview}
                 >
                   {/* Thumbnail */}
                   <div className="module-row-thumb">

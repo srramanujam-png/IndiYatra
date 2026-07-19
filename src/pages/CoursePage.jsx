@@ -3,6 +3,7 @@ import { supabase, SAFFRON, HERITAGE, GREEN, logoUrl, LEVEL_LABELS } from "../li
 import { globalStyles } from "../styles/global";
 import PageHeader from "../components/PageHeader";
 import { SkeletonCourseThemes } from "../components/Skeletons";
+import { useEntityPreview } from "../components/EntityPreview";
 
 const styles = `
   .level-tabs {
@@ -124,6 +125,7 @@ export default function CoursePage({ course, settings, completedLessons = new Se
   const [lessonsByModule, setLessonsByModule] = useState({});
   const [selectedLevel, setSelectedLevel] = useState(null);
   const [loading, setLoading]     = useState(true);
+  const { openPreview } = useEntityPreview();
 
   useEffect(() => {
     async function load() {
@@ -279,12 +281,26 @@ export default function CoursePage({ course, settings, completedLessons = new Se
                     const isLocked = course?.sequential_unlock && ti > 0
                       && prevTheme.total > 0 && prevTheme.done < prevTheme.total;
 
+                    const openThisPreview = () => openPreview({
+                      type: "theme",
+                      id: theme.theme_id,
+                      title: theme.title,
+                      crumb: course?.course_name || "",
+                      desc: theme.description || "",
+                      image: asset?.file_path,
+                      pct,
+                      bookmarked: bookmarks.has("theme:" + theme.theme_id),
+                      onToggleBookmark: () => onToggleBookmark && onToggleBookmark("theme", theme.theme_id, theme.title),
+                      onPlay: () => onThemeClick({ theme, levelId: selectedLevel }),
+                      playLabel: ctaLabel.replace(" →", "").replace(" ✓", ""),
+                    });
+
                     return (
                       <div
                         className={`theme-row ${state} ${isLocked ? "locked" : ""}`}
                         key={theme.theme_id}
                         style={{ animationDelay: `${ti * 0.06}s` }}
-                        onClick={isLocked ? undefined : () => onThemeClick({ theme, levelId: selectedLevel })}
+                        onClick={isLocked ? undefined : openThisPreview}
                       >
                         {/* Thumbnail */}
                         <div className="theme-row-thumb">
