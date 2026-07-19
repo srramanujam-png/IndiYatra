@@ -80,7 +80,15 @@ Stop delegating and reassess if: a security verify step fails twice on the same 
 
 ---
 
-## 7. Standing context to paste into new sessions
+## 7. Hosting & images (decided 19 Jul 2026)
+
+**Stack: Vercel (app) + Supabase (database, auth, AND images). Do not add a separate image host/CDN.** Rationale: Supabase Storage is already integrated (the `content-images` bucket + admin upload flow) and is CDN-backed on all plans. Free tier = 1 GB storage / 5 GB egress per month; Pro ($25/mo, needed anyway for the database once classrooms use the app daily) = 100 GB storage / 250 GB egress — roughly 2 million views/month of a 120 KB image. Every alternative (R2, ImageKit, Cloudinary) adds a second account/bill/integration for marginal benefit at this scale.
+
+**The cost lever is image SIZE, not host.** When roadmap 4.1 (imagery-forward cards) is built, include automatic resize + WebP compression in the admin upload flow (target ≤ ~150 KB per cover) — compress at upload, don't rely on Supabase's on-the-fly transformations (Pro-only, per-image fees). Revisit hosting only if egress charges actually appear on a bill; the escape hatch then is Cloudflare R2 (zero egress fees), an easy migration for an AI session.
+
+---
+
+## 8. Standing context to paste into new sessions
 
 Keep this block handy for the top of any working session:
 
