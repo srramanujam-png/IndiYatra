@@ -39,3 +39,8 @@ To Do*.docx
 test_write*.tmp
 test_write*.txt
 sync_test.txt
+
+# C3 cleanup additions
+~$*
+*.tmp
+ays-quiz-cloner.zip

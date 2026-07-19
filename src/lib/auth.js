@@ -51,7 +51,6 @@ export async function updateDisplayName(userId, displayName) {
   return { data, error };
 }
 
-
 export async function updateShareMessage(userId, message) {
   const { data, error } = await supabaseClient
     .from("profiles")
@@ -216,14 +215,6 @@ export async function deleteBookmark(userId, contentType, contentId) {
   return { data, error };
 }
 
-export async function loadUserBookmarksRich() {
-  const { data, error } = await supabaseClient.rpc("get_user_bookmarks");
-  if (error) {
-    console.error("[loadUserBookmarksRich] RPC failed:", JSON.stringify(error));
-  }
-  return { data, error };
-}
-
 // ─── Generic likes (module / lesson / quiz / question) ───────────────────────
 // Snippet likes keep using snippet_likes + insertLike/deleteLike above.
 // These four content types share the plain `likes` table instead.
@@ -274,22 +265,10 @@ export async function loadUserLikesByType() {
   return { data, error };
 }
 
-export async function getTopLikedLessons(limit = 20) {
-  const { data, error } = await supabaseClient.rpc("get_top_liked_lessons", { p_limit: limit });
-  if (error) console.error("[getTopLikedLessons] RPC failed:", JSON.stringify(error));
-  return { data: data || [], error };
-}
-
-export async function getTopSavedLessons(limit = 20) {
-  const { data, error } = await supabaseClient.rpc("get_top_saved_lessons", { p_limit: limit });
-  if (error) console.error("[getTopSavedLessons] RPC failed:", JSON.stringify(error));
-  return { data: data || [], error };
-}
-
-// Community leaderboards spanning module + lesson + snippet ("story").
-// Supersede getTopLikedLessons/getTopSavedLessons above (lessons-only) for
-// ForYouPage's "Most Liked"/"Most Bookmarked" panels. Quiz/question are
-// excluded server-side since they mirror their paired lesson/snippet.
+// Community leaderboards spanning module + lesson + snippet ("story"),
+// used for ForYouPage's "Most Liked"/"Most Bookmarked" panels. Quiz/question
+// are excluded server-side since they mirror their paired lesson/snippet.
+// (Older lessons-only variants were removed in the C2 dead-code sweep.)
 export async function getTopLikedItems(limit = 20) {
   const { data, error } = await supabaseClient.rpc("get_top_liked_items", { p_limit: limit });
   if (error) console.error("[getTopLikedItems] RPC failed:", JSON.stringify(error));
@@ -355,14 +334,6 @@ export async function getPairedContent(contentType, contentId) {
 
 // ─── Admin helpers ───────────────────────────────────────────────────────────
 
-export async function loadUserRole(userId) {
-  const { data, error } = await supabaseClient
-    .from("user_roles_mapping")
-    .select("role_id")
-    .eq("profile_id", userId);
-  return { data, error };
-}
-
 export async function adminGetUsers() {
   const { data, error } = await supabaseClient.rpc("admin_get_users");
   if (error) console.error("[adminGetUsers] RPC failed:", JSON.stringify(error));
@@ -407,25 +378,6 @@ export async function adminDeleteTerm(termId) {
     .delete()
     .eq("term_id", termId);
   if (error) console.error("[adminDeleteTerm] failed:", JSON.stringify(error));
-  return { data, error };
-}
-
-export async function adminUpsertTranslation(termId, languageId, name) {
-  const { data, error } = await supabaseClient
-    .from("taxonomy_term_translations")
-    .upsert({ term_id: termId, language_id: languageId, name },
-             { onConflict: "term_id,language_id" });
-  if (error) console.error("[adminUpsertTranslation] failed:", JSON.stringify(error));
-  return { data, error };
-}
-
-export async function adminDeleteTranslation(termId, languageId) {
-  const { data, error } = await supabaseClient
-    .from("taxonomy_term_translations")
-    .delete()
-    .eq("term_id", termId)
-    .eq("language_id", languageId);
-  if (error) console.error("[adminDeleteTranslation] failed:", JSON.stringify(error));
   return { data, error };
 }
 
@@ -503,15 +455,6 @@ export async function updateDraftStatus(draftId, status, comment) {
     .insert({ draft_id: draftId, action: status, actor_id: actorId, comment: comment || null })
     .then(({ error: e }) => { if (e) console.warn("[updateDraftStatus] event insert:", e); });
 
-  return { data, error };
-}
-
-export async function addWorkflowEvent(draftId, action, comment) {
-  const actorId = (await supabaseClient.auth.getUser()).data?.user?.id;
-  const { data, error } = await supabaseClient
-    .from("content_workflow_events")
-    .insert({ draft_id: draftId, action, actor_id: actorId, comment: comment || null });
-  if (error) console.error("[addWorkflowEvent] INSERT failed:", JSON.stringify(error));
   return { data, error };
 }
 
@@ -697,29 +640,6 @@ export async function checkActiveDrafts(contentIds, contentType, languageId) {
   const { data, error } = await q;
   if (error) console.error("[checkActiveDrafts]", error);
   return { data: data || [], error };
-}
-
-// grantEditorialRole(profileId, roleId)
-// Idempotent: inserts (profile_id, role_id) into user_roles_mapping.
-// roleId must be a canonical ROLE_XX value (ROLE_02, ROLE_05, ROLE_06).
-export async function grantEditorialRole(profileId, roleId) {
-  const { data, error } = await supabaseClient
-    .from("user_roles_mapping")
-    .upsert({ profile_id: profileId, role_id: roleId }, { onConflict: "profile_id,role_id" });
-  if (error) console.error("[grantEditorialRole]", error);
-  return { data, error };
-}
-
-// revokeEditorialRole(profileId, roleId)
-// Removes (profile_id, role_id) from user_roles_mapping.
-export async function revokeEditorialRole(profileId, roleId) {
-  const { data, error } = await supabaseClient
-    .from("user_roles_mapping")
-    .delete()
-    .eq("profile_id", profileId)
-    .eq("role_id", roleId);
-  if (error) console.error("[revokeEditorialRole]", error);
-  return { data, error };
 }
 
 // ─── Content-role helpers (content_role_assignments) ─────────────────────────
@@ -1319,7 +1239,6 @@ export async function adminImportSnippetsFull(rows) {
   return stats;
 }
 
-
 // adminDryRunImport(rows)
 //
 // Dry-run pass: resolves every unique text value in each lookup column
@@ -1443,7 +1362,6 @@ export async function adminDryRunImport(rows) {
     counts: { total: rows.length, ok: okCount, warn: warnCount, error: errorCount },
   };
 }
-
 
 // ── Admin token raw access ────────────────────────────────────────────────────
 
@@ -2065,7 +1983,6 @@ export async function adminImportQuestions(rows) {
 //   3. Add any new question_keys to quiz_questions (idempotent)
 //
 // Returns an error array (with hidden _quizSetsCreated / _quizLinksCreated counts).
-
 export async function adminWireQuizzes(snippetIds) {
   const errors = [];
   errors._quizSetsCreated  = 0;

@@ -41,54 +41,10 @@ export const globalStyles = `
   .page-title    { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 2rem; font-weight: 500; color: var(--color-text-main); margin-bottom: 4px; }
   .page-subtitle { font-size: 0.9375rem; color: var(--color-text-body); font-family: 'Nunito Sans', system-ui, sans-serif; }
 
-  /* ── Settings drawer ── */
-  .settings-overlay {
-    position: fixed; inset: 0; z-index: 500;
-    background: rgba(0,0,0,0.45); backdrop-filter: blur(3px);
-    display: flex; justify-content: flex-end;
-    animation: fadeIn 0.2s ease;
-  }
-  .settings-drawer {
-    width: 320px; max-width: 90vw; background: white; height: 100%;
-    display: flex; flex-direction: column;
-    box-shadow: -8px 0 40px rgba(0,0,0,0.2);
-    animation: slideInRight 0.25s ease;
-  }
-  .settings-drawer-header {
-    padding: 20px 24px; border-bottom: 1px solid var(--color-border);
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .settings-drawer-title { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.25rem; font-weight: 500; color: var(--color-primary); }
-  .settings-close {
-    background: none; border: none; cursor: pointer; font-size: 1.25rem; color: var(--color-text-body);
-    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
-    border-radius: 50%; transition: background 0.2s, color 0.2s;
-  }
-  .settings-close:hover { background: var(--color-border-muted); color: var(--color-text-main); }
+  /* ── Settings (drawer CSS removed with dead SettingsDrawer.jsx — C1;
+        these two classes remain in use by SettingsPage) ── */
   .settings-body { flex: 1; overflow-y: auto; padding: 24px; }
-  .settings-section { margin-bottom: 28px; }
-  .settings-label {
-    font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--color-text-body); margin-bottom: 12px; font-family: 'Inter', system-ui, sans-serif;
-  }
   .lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .lang-option {
-    padding: 9px 12px; border-radius: 12px; border: 1px solid var(--color-border);
-    background: white; cursor: pointer; font-size: 0.8125rem; font-weight: 600; color: var(--color-text-body);
-    font-family: 'Nunito Sans', system-ui, sans-serif;
-    transition: all 0.15s; text-align: left;
-  }
-  .lang-option:hover { border-color: var(--color-accent); color: var(--color-accent); }
-  .lang-option.active { border-color: var(--color-accent); background: rgba(255,142,0,0.07); color: var(--color-accent); font-weight: 700; }
-  .font-size-row { display: flex; gap: 8px; }
-  .fs-option {
-    flex: 1; padding: 10px; border-radius: 12px; border: 1px solid var(--color-border);
-    background: white; cursor: pointer; font-weight: 700; color: var(--color-text-body);
-    font-family: 'Nunito Sans', system-ui, sans-serif;
-    transition: all 0.15s; text-align: center;
-  }
-  .fs-option:hover { border-color: var(--color-accent); color: var(--color-accent); }
-  .fs-option.active { border-color: var(--color-accent); background: rgba(255,142,0,0.07); color: var(--color-accent); }
 
   /* ── Misc shared ── */
   .loading { text-align: center; padding: 60px 1rem; font-family: 'Oswald', sans-serif; font-size: 1.25rem; color: var(--color-accent); }
