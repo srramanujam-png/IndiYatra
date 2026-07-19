@@ -52,6 +52,18 @@ apply unless the app is marketed to US users. **GDPR** similarly only if EU user
 targeted. Treat DPDP as the design bar — it is the strictest of the three on age (18)
 and the one with jurisdiction.
 
+### Decision record: "market it as not-for-children" — considered and rejected (19 Jul 2026)
+
+The idea of avoiding child-data obligations by repositioning IndiYatra as a
+general-audience site was considered and rejected. Reasons: regulators assess what a
+service *is*, not its marketing label — the class bands (Classes 3–5/6–8/9–12) are baked
+into the database, content, and copy; under COPPA-style "directed to children" tests a
+disclaimer over a product visibly built for schoolchildren counts for nothing and can
+read as deliberate evasion; and the DPDP Act has no "directed to children" threshold at
+all — its obligations attach to processing any under-18 user's data, so not asking ages
+is not a defence, merely an absence of reasonable steps. Repositioning would also gut
+the product's purpose. **Do not revisit; proceed with actions B and C instead.**
+
 ## 3. Gap analysis
 
 The biggest structural gap: **the app has no concept of age at all.** There is no age
