@@ -5,6 +5,7 @@ import { AuthContext } from "./contexts/AuthContext";
 import AuthModal     from "./components/AuthModal";
 import ProfileModal  from "./components/ProfileModal";
 import { supabase, LEVEL_LABELS } from "./lib/supabase";
+import { pageToHash, parseHash, isDeepHash } from "./lib/router";
 import { loadSettings, saveSettings, DEFAULT_SETTINGS } from "./hooks/useSettings";
 import { APP_NAME, DEFAULT_SNIPPET_SHARE_MSG, PLAYLIST } from "./config/appStrings";
 import { awardForLessonComplete } from "./lib/awards";
@@ -233,11 +234,67 @@ export default function App() {
   }, [profile?.id]);
 
   // Show gateway to first-time visitors only — fires once auth finishes loading.
+  // Skipped when the URL carries a deep link (roadmap 2.3): the link wins.
   useEffect(() => {
     if (authLoading) return;
+    if (isDeepHash(window.location.hash)) return;
     if (!user && !localStorage.getItem("indiyatra_visited")) {
       localStorage.setItem("indiyatra_visited", "1");
       setPage("gateway");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading]);
+
+  // ── Hash routing (roadmap 2.3 / manual B2) ─────────────────────────────────
+  // State → URL: reflect the current page in location.hash (creates history
+  // entries, enabling browser Back/Forward). URL → state: on hashchange (Back/
+  // Forward or hand-typed link) or initial load, navigate using the existing
+  // reconstruction helpers. navigateFromHashRef avoids stale closures.
+  const navigateFromHashRef = useRef(null);
+
+  // Latest page + hash-relevant context, for the stable hashchange listener.
+  const pageRef = useRef({ page: "home", ctx: {} });
+  pageRef.current = {
+    page,
+    ctx: {
+      courseId:   selectedCourse?.course_id,
+      lessonId:   selectedLesson?.lesson_id,
+      quizId:     selectedQuiz?.quiz_id,
+      isPlaylist: !!playlistSnippetIds,
+    },
+  };
+
+  useEffect(() => {
+    const target = pageToHash(page, {
+      courseId:   selectedCourse?.course_id,
+      lessonId:   selectedLesson?.lesson_id,
+      quizId:     selectedQuiz?.quiz_id,
+      isPlaylist: !!playlistSnippetIds,
+    });
+    if (window.location.hash !== target) window.location.hash = target;
+  }, [page, selectedCourse, selectedLesson, selectedQuiz, playlistSnippetIds]);
+
+  useEffect(() => {
+    function onHashChange() {
+      const current = window.location.hash;
+      // If the hash already matches the rendered page, this event is the echo
+      // of our own programmatic assignment above — ignore it.
+      const rendered = pageToHash(pageRef.current.page, pageRef.current.ctx);
+      if (current === rendered) return;
+      navigateFromHashRef.current?.(current);
+    }
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
+
+  // Deep link / refresh restore — run once after auth settles so that
+  // progress-dependent pages load with the user's data available.
+  const didRestoreRef = useRef(false);
+  useEffect(() => {
+    if (authLoading || didRestoreRef.current) return;
+    didRestoreRef.current = true;
+    if (isDeepHash(window.location.hash)) {
+      navigateFromHashRef.current?.(window.location.hash);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading]);
@@ -774,6 +831,49 @@ export default function App() {
     try { await signOut(); } catch (e) { console.warn("signOut:", e); }
     setPage("home");
   }
+
+  // URL → state (roadmap 2.3). Reuses the existing reconstruction helpers so a
+  // cold deep link fetches everything it needs; warm Back/Forward hits the
+  // fast path when the entity is already selected. Assigned to a ref each
+  // render so the stable hashchange listener always sees fresh state.
+  navigateFromHashRef.current = function navigateFromHash(hash) {
+    const { name, id } = parseHash(hash);
+    switch (name) {
+      case "home":        setPage("home"); break;
+      case "gateway":     setPage("gateway"); break;
+      case "for-you":     setForYouInitialSection("resume"); setPage("for-you"); break;
+      case "all-courses": setAllCoursesSeed(null); setPage("all-courses"); break;
+      case "dashboard":
+      case "settings":
+      case "discover":
+      case "likes":
+      case "bookmarks":
+      case "admin":
+      case "editor":
+        setPage(name); break;
+      case "course":
+        if (selectedCourse?.course_id === id) setPage("navigator");
+        else handleBookmarkNavigate({ content_type: "course", content_id: id });
+        break;
+      case "course-overview":
+        if (selectedCourse?.course_id === id) setPage("course");
+        else handleBookmarkNavigate({ content_type: "course", content_id: id });
+        break;
+      case "lesson":
+        if (selectedLesson?.lesson_id === id) setPage("player");
+        else handleOpenLessonById(id);
+        break;
+      case "quiz":
+        if (selectedQuiz?.quiz_id === id) setPage("quiz");
+        else handleBookmarkNavigate({ content_type: "quiz", content_id: id });
+        break;
+      // State-only routes — can't be reconstructed cold; fall back sensibly.
+      case "modules":  setPage(selectedTheme  ? "modules" : "all-courses"); break;
+      case "lessons":  setPage(selectedModule ? "lessons" : "all-courses"); break;
+      case "play":     setPage(playlistSnippetIds ? "player" : "for-you"); break;
+      default:         setPage("home");
+    }
+  };
 
   const authContextValue = {
     user,
