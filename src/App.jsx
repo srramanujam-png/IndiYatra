@@ -7,6 +7,7 @@ import ProfileModal  from "./components/ProfileModal";
 import { supabase, LEVEL_LABELS } from "./lib/supabase";
 import { pageToHash, parseHash, isDeepHash } from "./lib/router";
 import { loadSettings, saveSettings, DEFAULT_SETTINGS } from "./hooks/useSettings";
+import { onFetchError } from "./lib/fetchStatus";
 import { APP_NAME, DEFAULT_SNIPPET_SHARE_MSG, PLAYLIST } from "./config/appStrings";
 import { track } from "./lib/track";
 import SettingsPage from "./pages/SettingsPage";
@@ -63,6 +64,8 @@ export default function App() {
   const [bookmarks,    setBookmarks]    = useState(new Set());
   const [likes,        setLikes]        = useState(new Set()); // module/lesson/quiz/question likes (generic `likes` table; snippet likes stay local to SnippetPlayer)
   const [toastMsg,     setToastMsg]     = useState("");
+  const [fetchErr,     setFetchErr]     = useState(null); // 2.8: surfaced fetch failure {status, table}
+  const fetchErrMuteRef = useRef(0);                      // don't re-show within 30s of dismiss
   const [isAdmin,      setIsAdmin]      = useState(false);
   const [isCreator,    setIsCreator]    = useState(false);
   const [userEditorialRole, setUserEditorialRole] = useState(null);
@@ -302,6 +305,15 @@ export default function App() {
   // Load language list once
   useEffect(() => {
     supabase("languages", "?select=*&order=language").then(data => setLanguages(data || []));
+  }, []);
+
+  // 2.8 (A8/B3): surface data-fetch failures — a 401/403 here usually means an
+  // RLS regression and must NOT look like "no content".
+  useEffect(() => {
+    return onFetchError(report => {
+      if (Date.now() - fetchErrMuteRef.current < 30000) return; // recently dismissed
+      setFetchErr(prev => prev || { status: report.status, table: report.table });
+    });
   }, []);
 
   function handleSnippetAdvance(lessonId, index) {
@@ -1354,6 +1366,37 @@ export default function App() {
             onClose={() => setShowProfileModal(false)}
             onSaved={() => refreshProfile()}
           />
+        )}
+        {fetchErr && (
+          <div role="alert" style={{
+            position: "fixed", top: "10px", left: "50%", transform: "translateX(-50%)",
+            display: "flex", alignItems: "center", gap: "12px",
+            background: "white", border: "1px solid var(--color-danger)",
+            color: "var(--color-text-body)", padding: "10px 14px 10px 18px",
+            borderRadius: "12px", fontSize: "0.85rem", zIndex: 10000,
+            boxShadow: "0 4px 20px rgba(0,0,0,0.18)", maxWidth: "92vw",
+          }}>
+            <i className="ti ti-cloud-off" style={{ color: "var(--color-danger)", fontSize: "1.1rem" }} />
+            <span>
+              {fetchErr.status === 401 || fetchErr.status === 403
+                ? "Some content couldn't load (permission problem)."
+                : fetchErr.status === 0
+                  ? "You seem to be offline — some content couldn't load."
+                  : "Some content couldn't load right now."}
+            </span>
+            <button
+              onClick={() => window.location.reload()}
+              style={{
+                padding: "5px 14px", borderRadius: "999px", border: "none", cursor: "pointer",
+                background: "var(--color-primary)", color: "white", fontWeight: 600, fontSize: "0.8rem",
+              }}
+            >Retry</button>
+            <button
+              aria-label="Dismiss"
+              onClick={() => { fetchErrMuteRef.current = Date.now(); setFetchErr(null); }}
+              style={{ border: "none", background: "none", cursor: "pointer", color: "var(--color-text-muted)", fontSize: "1rem", padding: "2px" }}
+            ><i className="ti ti-x" /></button>
+          </div>
         )}
       </EntityPreviewProvider>
     </AuthContext.Provider>

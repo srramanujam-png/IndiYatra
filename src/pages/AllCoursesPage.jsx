@@ -6,6 +6,7 @@ import ModuleGauge from "../components/ModuleGauge";
 import { useCourseTree } from "../hooks/useCourseTree";
 import { levelNumber, levelShortLabel, moduleProgress, lessonStatus } from "../lib/courseTree";
 import { useEntityPreview } from "../components/EntityPreview";
+import { ErrorState } from "../components/ErrorState";
 
 // Teal — brandbook accent reserved for course-browsing chrome (matches HomePage course cards)
 const TEAL    = "var(--color-browse)";
@@ -354,6 +355,9 @@ export default function AllCoursesPage({
         <div className="ac-sidebar">
           {loading ? (
             <div className="ac-sidebar-empty">Loading…</div>
+          ) : courses.error ? (
+            /* 2.8: a failed fetch is NOT "no courses" */
+            <ErrorState compact title="Couldn't load courses" onRetry={load} />
           ) : courses.length === 0 ? (
             <div className="ac-sidebar-empty">No courses found.</div>
           ) : courses.map(course => {

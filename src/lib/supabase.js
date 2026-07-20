@@ -7,18 +7,34 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
   );
 }
 
+import { reportFetchError } from "./fetchStatus";
+
+// 2.8 (A8/B3): failures no longer render as silent "no content". The helper
+// still returns an array (so every `(rows || []).map` call site keeps
+// working), but on failure the array is TAGGED with `.error` and the failure
+// is broadcast on the fetchStatus bus, which App.jsx surfaces as a banner.
+// Callers that want per-surface error UI can check `rows.error`.
 export async function supabase(table, query = "") {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query}`, {
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${SUPABASE_KEY}`,
-      "Content-Type": "application/json",
-    },
-  });
+  let res;
+  try {
+    res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query}`, {
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json",
+      },
+    });
+  } catch (e) {
+    // Network-level failure (offline, DNS, CORS)
+    console.error(`Supabase network error on ${table}:`, e);
+    reportFetchError({ source: "rest", status: 0, table, message: String(e?.message || e) });
+    return Object.assign([], { error: { status: 0, table, message: "network" } });
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     console.error(`Supabase error [${res.status}] on ${table}:`, err);
-    return [];
+    reportFetchError({ source: "rest", status: res.status, table, message: err?.message || "" });
+    return Object.assign([], { error: { status: res.status, table, message: err?.message || "" } });
   }
   return res.json();
 }
