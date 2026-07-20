@@ -8,7 +8,6 @@ import { supabase, LEVEL_LABELS } from "./lib/supabase";
 import { pageToHash, parseHash, isDeepHash } from "./lib/router";
 import { loadSettings, saveSettings, DEFAULT_SETTINGS } from "./hooks/useSettings";
 import { APP_NAME, DEFAULT_SNIPPET_SHARE_MSG, PLAYLIST } from "./config/appStrings";
-import { awardForLessonComplete } from "./lib/awards";
 import { track } from "./lib/track";
 import SettingsPage from "./pages/SettingsPage";
 import HomePage      from "./pages/HomePage";
@@ -393,11 +392,10 @@ export default function App() {
 
     setEarnedBadges(badges);
 
-    // Award forest tokens + check badge criteria (fire-and-forget)
-    if (user && !user.is_anonymous) {
-      awardForLessonComplete(user.id, badges, points || 0)
-        .catch(e => console.warn("award:", e));
-    }
+    // 2.4: tokens + badges are now awarded SERVER-SIDE by a DB trigger on the
+    // lesson_completions INSERT (supabase/phase2_server_awarding.sql). The
+    // saveCompletion() call above is what fires it — nothing to do here.
+    // `badges` (the tier list) is still computed locally for the completion UI.
   }
 
   function saveLastVisited(routeObj) {

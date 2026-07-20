@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { SAFFRON, HERITAGE, GREEN, DEFAULT_LANG_ID } from "../lib/supabase";
-import { supabaseClient, saveQuizAttempt, getAttemptCount, saveSnippetQuestion, saveStandaloneQuestion } from "../lib/auth";
+import { supabaseClient, saveQuizAttempt, getAttemptCount, saveSnippetQuestion, saveStandaloneQuestion, gradeQuizAnswer, getFullQuestionRow } from "../lib/auth";
 import { track } from "../lib/track";
 import PageHeader from "../components/PageHeader";
 import { globalStyles } from "../styles/global";
@@ -501,14 +501,19 @@ export default function QuizPlayer({
     } else if (quiz?.shuffle_questions) {
       qs = shuffle(qs);
     }
+    // 2.4 (A3): questions arrive with a server-shuffled `options` text[] and
+    // NO answer labels. q.correct_option is null until the server reveals it
+    // (after the learner answers, times out, or finishes). The legacy shape
+    // (correct_option + wrong_option_1..3) is kept as a fallback for any
+    // stale caller.
     return qs.map(q => ({
       ...q,
-      _options: shuffle([
-        { label: q.correct_option, isCorrect: true },
-        { label: q.wrong_option_1, isCorrect: false },
-        { label: q.wrong_option_2, isCorrect: false },
-        { label: q.wrong_option_3, isCorrect: false },
-      ])
+      _options: shuffle(
+        (q.options && q.options.length
+          ? q.options
+          : [q.correct_option, q.wrong_option_1, q.wrong_option_2, q.wrong_option_3].filter(Boolean)
+        ).map(label => ({ label }))
+      ),
     }));
   });
 
@@ -532,6 +537,7 @@ export default function QuizPlayer({
   const sheetGrabY = useRef(null);
   const [signinToast, setSigninToast] = useState("");
   const toastTimerRef = useRef(null);
+  const gradingRef    = useRef(false); // 2.4: one grading RPC in flight at a time
 
   // Edit panel state
   const [showEditPanel, setShowEditPanel] = useState(false);
@@ -600,12 +606,13 @@ export default function QuizPlayer({
         if (prev <= 1) {
           clearInterval(qTimerRef.current);
           qTimerRef.current = null;
-          // Record as unanswered (null)
+          // Record as unanswered (null); ask the server to reveal the answer
           setAnswers(m => {
             const next = new Map(m);
             if (!next.has(current)) next.set(current, { chosen: null, isCorrect: null, revealed: true });
             return next;
           });
+          revealCorrect(current);
           return 0;
         }
         return prev - 1;
@@ -636,9 +643,43 @@ export default function QuizPlayer({
   }, [phase]);
 
   // ── Answer a question ─────────────────────────────────────────────────────
-  function selectOption(optionLabel, isCorrect) {
-    if (isAnswered) return;
+  // 2.4 (A3): the client no longer knows the correct answer up front — it asks
+  // the grading RPC when the learner commits. The RPC's reveal is stored on
+  // the question object (render re-reads it after setAnswers re-renders).
+  function revealCorrect(idx) {
+    const qq = questions[idx];
+    if (!qq || qq.correct_option != null || !qq.question_id) return;
+    gradeQuizAnswer(qq.question_type, qq.question_id, null)
+      .then(({ data }) => {
+        if (data?.correct_option != null) {
+          qq.correct_option = data.correct_option;
+          setAnswers(m => new Map(m)); // trigger re-render with the reveal
+        }
+      })
+      .catch(e => console.warn("[revealCorrect]", e));
+  }
+
+  async function selectOption(optionLabel) {
+    if (isAnswered || gradingRef.current) return;
     clearQTimer();
+
+    let isCorrect;
+    if (q.correct_option != null) {
+      // Answer already revealed locally (staff/legacy fallback path)
+      isCorrect = optionLabel === q.correct_option;
+    } else {
+      gradingRef.current = true;
+      const { data, error } = await gradeQuizAnswer(q.question_type, q.question_id, optionLabel);
+      gradingRef.current = false;
+      if (error || !data) {
+        showSigninToast("Couldn't check your answer — please tap again");
+        startQTimer();
+        return;
+      }
+      isCorrect = data.is_correct === true;
+      q.correct_option = data.correct_option; // reveal for styling + explanation
+    }
+
     setAnswers(m => {
       const next = new Map(m);
       next.set(current, { chosen: optionLabel, isCorrect, revealed: true });
@@ -761,9 +802,20 @@ export default function QuizPlayer({
       finishQuiz();
     }
   }
-  function finishQuiz() {
+  async function finishQuiz() {
     clearQTimer();
     if (quizTimerRef.current) clearInterval(quizTimerRef.current);
+
+    // 2.4: reveal correct answers for skipped questions (review screen needs
+    // them); answered questions were already revealed by the grading RPC.
+    const unrevealed = questions.filter(qq => qq.correct_option == null && qq.question_id);
+    if (unrevealed.length > 0) {
+      await Promise.all(unrevealed.map(qq =>
+        gradeQuizAnswer(qq.question_type, qq.question_id, null)
+          .then(({ data }) => { if (data?.correct_option != null) qq.correct_option = data.correct_option; })
+          .catch(() => {})
+      ));
+    }
 
     let correct = 0, wrong = 0, skipped = 0, totalPoints = 0, earnedPoints = 0;
     const answersArr = questions.map((q, i) => {
@@ -785,11 +837,23 @@ export default function QuizPlayer({
     setScoreData({ correct, wrong, skipped, total, totalPoints, earnedPoints, answersArr, passed });
     setPhase("score");
 
-    // Save attempt
+    // Save attempt — 2.4: server re-grades and scores; client sends choices only
     if (user) {
       setAttemptCount(c => (c ?? 0) + 1); // increment eagerly so score screen reflects new count
       setSaving(true);
-      saveQuizAttempt(user.id, quiz.quiz_id, earnedPoints, totalPoints, answersArr)
+      const payload = questions.map((q, i) => ({
+        ref_id:        q._ref_id,
+        question_id:   q.question_id,
+        question_type: q.question_type,
+        chosen_option: answers.get(i)?.chosen ?? null,
+      }));
+      saveQuizAttempt(user.id, quiz.quiz_id, payload)
+        .then(({ data }) => {
+          if (data && (data.score !== earnedPoints || data.max_score !== totalPoints)) {
+            console.warn("[finishQuiz] server score differs from local:",
+              data.score + "/" + data.max_score, "vs", earnedPoints + "/" + totalPoints);
+          }
+        })
         .finally(() => setSaving(false));
       track("quiz_complete", {
         contentType: "quiz", contentId: quiz.quiz_id,
@@ -799,8 +863,14 @@ export default function QuizPlayer({
   }
 
   // ── Edit panel ────────────────────────────────────────────────────────────
-  function openEditPanel() {
+  async function openEditPanel() {
     if (!q) return;
+    // 2.4: learner payloads no longer carry answer fields — staff fetch the
+    // full row directly (RLS grants editorial staff read on question tables).
+    if (q.correct_option == null && q.question_id) {
+      const { data } = await getFullQuestionRow(q.question_type, q.question_id);
+      if (data) Object.assign(q, data);
+    }
     setEditDraft({
       // Snippet translation fields (populated for Type 1 from question obj)
       hook:             q.hook             || "",
@@ -884,8 +954,9 @@ export default function QuizPlayer({
     if (!isAnswered) return ans?.chosen === opt.label ? "selected" : "";
     const a = answers.get(current);
     if (!a || a.chosen === null) return ""; // unanswered (timer)
-    if (opt.isCorrect) return "correct locked";
-    if (a.chosen === opt.label) return "wrong locked";
+    // 2.4: correctness is known only after the server reveal
+    if (q.correct_option != null && opt.label === q.correct_option) return "correct locked";
+    if (a.chosen === opt.label) return a.isCorrect ? "correct locked" : "wrong locked";
     return "locked";
   }
 
@@ -1320,7 +1391,7 @@ export default function QuizPlayer({
                 <button
                   key={opt.label}
                   className={`qp-option fs-body ${getOptionClass(opt)}`}
-                  onClick={() => selectOption(opt.label, opt.isCorrect)}
+                  onClick={() => selectOption(opt.label)}
                   disabled={isAnswered}
                 >
                   <span className="qp-option-marker">{OPTION_LABELS[oi]}</span>

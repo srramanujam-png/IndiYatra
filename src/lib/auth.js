@@ -307,8 +307,10 @@ export async function getPairedContent(contentType, contentId) {
   }
 
   if (contentType === "question") {
+    // 2.4: snippet_question_map is an answer-free view (question tables are
+    // staff-only now) — pairing only needs key ↔ snippet.
     const { data } = await supabaseClient
-      .from("snippet_questions")
+      .from("snippet_question_map")
       .select("snippet_id")
       .eq("question_key", contentId)
       .not("snippet_id", "is", null)
@@ -319,7 +321,7 @@ export async function getPairedContent(contentType, contentId) {
 
   if (contentType === "snippet") {
     const { data } = await supabaseClient
-      .from("snippet_questions")
+      .from("snippet_question_map")
       .select("question_key")
       .eq("snippet_id", contentId)
       .not("question_key", "is", null)
@@ -1621,17 +1623,20 @@ export async function getQuizQuestions(quizId, languageId) {
   const snippetRefs    = refs.filter(r => r.question_type === "snippet");
   const standaloneRefs = refs.filter(r => r.question_type === "standalone");
 
+  // 2.4 (A3): question rows come from a SECURITY DEFINER RPC that returns a
+  // server-shuffled `options` text[] and NO correct/wrong labels. Grading
+  // happens server-side (gradeQuizAnswer / submitQuizAttempt).
+  const { data: secureRows, error: secErr } = await supabaseClient
+    .rpc("get_quiz_questions_secure", { p_quiz_id: quizId });
+  if (secErr) { console.error("[getQuizQuestions] secure rows", secErr); return { data: [], error: secErr }; }
+
   // ── Type 1: snippet_questions ─────────────────────────────────────────────
   let snippetQMap = {};   // question_key → enriched question row
   if (snippetRefs.length > 0) {
-    const keys = snippetRefs.map(r => r.question_key);
+    const keys = new Set(snippetRefs.map(r => r.question_key));
 
-    // Fetch all languages for these keys, then prefer requested lang → LANG_03 → any
-    const { data: sqAllRows, error: sqErr } = await supabaseClient
-      .from("snippet_questions")
-      .select("*")
-      .in("question_key", keys);
-    if (sqErr) console.error("[getQuizQuestions] snippet_questions", sqErr);
+    // All languages for these keys; prefer requested lang → LANG_03 → any
+    const sqAllRows = (secureRows || []).filter(r => r.question_type === "snippet" && keys.has(r.question_key));
     const sqByKeyLang = {};
     (sqAllRows || []).forEach(q => {
       if (!sqByKeyLang[q.question_key]) sqByKeyLang[q.question_key] = {};
@@ -1689,14 +1694,10 @@ export async function getQuizQuestions(quizId, languageId) {
   // ── Type 2: standalone_questions ──────────────────────────────────────────
   let standaloneQMap = {};   // question_key → enriched question row
   if (standaloneRefs.length > 0) {
-    const keys = standaloneRefs.map(r => r.question_key);
+    const keys = new Set(standaloneRefs.map(r => r.question_key));
 
-    // Fetch all languages, prefer requested lang → LANG_03 → any
-    const { data: stAllRows, error: stErr } = await supabaseClient
-      .from("standalone_questions")
-      .select("*")
-      .in("question_key", keys);
-    if (stErr) console.error("[getQuizQuestions] standalone_questions", stErr);
+    // All languages for these keys; prefer requested lang → LANG_03 → any
+    const stAllRows = (secureRows || []).filter(r => r.question_type === "standalone" && keys.has(r.question_key));
     const stByKeyLang = {};
     (stAllRows || []).forEach(q => {
       if (!stByKeyLang[q.question_key]) stByKeyLang[q.question_key] = {};
@@ -1732,22 +1733,38 @@ export async function getQuizQuestions(quizId, languageId) {
   return { data: resolved, error: null };
 }
 
-export async function saveQuizAttempt(userId, quizId, score, maxScore, answers) {
-  const { data, error } = await supabaseClient
-    .from("quiz_attempts")
-    .insert({
-      profile_id:   userId,
-      quiz_id:      quizId,
-      score,
-      max_score:    maxScore,
-      started_at:   new Date().toISOString(),
-      completed_at: new Date().toISOString(),
-      answers,
-    })
-    .select()
-    .single();
+// 2.4 (A2/A3): attempts are graded and inserted SERVER-SIDE. The client sends
+// only what the learner chose; the RPC verifies quiz membership, resolves the
+// correct answers, computes the score, enforces max_attempts, and inserts as
+// auth.uid(). Returns { attempt_id, score, max_score, answers[] } (graded).
+export async function saveQuizAttempt(userId, quizId, answersPayload) {
+  const { data, error } = await supabaseClient.rpc("submit_quiz_attempt", {
+    p_quiz_id: quizId,
+    p_answers: answersPayload,
+  });
   if (error) console.error("[saveQuizAttempt] FAILED:", JSON.stringify(error));
-  else       console.log("[saveQuizAttempt] OK — id:", data?.id, "quiz_id:", data?.quiz_id);
+  else       console.log("[saveQuizAttempt] OK — id:", data?.attempt_id, "score:", data?.score, "/", data?.max_score);
+  return { data, error };
+}
+
+// 2.4 (A3): per-question grading — returns { is_correct, correct_option }.
+// chosen = null reveals the answer for a skipped/timed-out question.
+export async function gradeQuizAnswer(questionType, questionId, chosen) {
+  const { data, error } = await supabaseClient.rpc("grade_quiz_answer", {
+    p_question_type: questionType,
+    p_question_id:   questionId,
+    p_chosen:        chosen ?? null,
+  });
+  if (error) { console.error("[gradeQuizAnswer]", JSON.stringify(error)); return { data: null, error }; }
+  return { data: Array.isArray(data) ? data[0] : data, error: null };
+}
+
+// 2.4: full question row (incl. correct/wrong options) for the staff edit
+// panels. RLS restricts these tables to editorial staff — learners get a 403.
+export async function getFullQuestionRow(questionType, questionId) {
+  const table = questionType === "standalone" ? "standalone_questions" : "snippet_questions";
+  const { data, error } = await supabaseClient
+    .from(table).select("*").eq("question_id", questionId).maybeSingle();
   return { data, error };
 }
 
