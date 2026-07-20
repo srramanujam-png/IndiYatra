@@ -13,11 +13,21 @@ import {
   adminAddTerm, adminUpdateTerm, adminDeleteTerm,
   uploadContentImage,
   adminGetCommentReports, adminSetReportStatus, adminGetRecentComments, adminDeleteComment,
+  getTeamMembers, adminSetEditorialRole,
 } from "../lib/auth";
 import { globalStyles } from "../styles/global";
 import PageHeader from "../components/PageHeader";
 
-const TABS = ["Overview", "Users", "Comments", "Tokens", "Content", "Taxonomy", "Badges", "Featured", "Order", "Import"];
+const TABS = ["Overview", "Users", "Team", "Comments", "Tokens", "Content", "Taxonomy", "Badges", "Featured", "Order", "Import"];
+
+// 2.9 (ED-A): global editorial roles grantable from the Team tab
+const EDITORIAL_ROLE_OPTIONS = [
+  { value: "",           label: "— none —" },
+  { value: "editor",     label: "Editor" },
+  { value: "verifier",   label: "Verifier" },
+  { value: "supervisor", label: "Supervisor" },
+  { value: "creator",    label: "Creator" },
+];
 const CONTENT_SUBS = ["Levels", "Courses", "Themes", "Modules", "Lessons", "Snippets"];
 const TOKEN_TYPES = FOREST_TOKEN_TYPES;  // from appStrings
 
@@ -148,6 +158,12 @@ export default function AdminPage({
 
   // ── Users ────────────────────────────────────────────────────────────────────
   const [usersLoading, setUsersLoading] = useState(false);
+
+  // ── Team (2.9 / ED-A) ────────────────────────────────────────────────────────
+  const [team,        setTeam]        = useState(null);   // null = not loaded
+  const [teamLoading, setTeamLoading] = useState(false);
+  const [teamMsg,     setTeamMsg]     = useState("");
+  const [teamSaving,  setTeamSaving]  = useState(null);   // profile_id being saved
   const [users,      setUsers]      = useState(null);
   const [userSearch, setUserSearch] = useState("");
 
@@ -297,6 +313,8 @@ export default function AdminPage({
   useEffect(() => {
     if (!isAdmin) return;
     if (activeTab === "Users"    && users === null)   loadUsers();
+    if (activeTab === "Team"     && team === null)    loadTeam();
+    if (activeTab === "Team"     && users === null)   loadUsers();  // for the add-member picker
     if (activeTab === "Comments" && modReports === null) loadModeration(modView);
     if (activeTab === "Tokens"   && tokenRowsRaw === null)  loadTokens();
     if (activeTab === "Tokens"   && tokenCatalogue.length === 0) loadTokenCatalogue();
@@ -334,6 +352,29 @@ export default function AdminPage({
     const { data } = await adminGetUsers();
     setUsers(data || []);
     setUsersLoading(false);
+  }
+
+  async function loadTeam() {
+    setTeamLoading(true);
+    setTeamMsg("");
+    const { data, error } = await getTeamMembers();
+    if (error) setTeamMsg("Couldn't load team — run supabase/phase2_editorial_roles.sql first. (" + (error.message || "") + ")");
+    setTeam(data || []);
+    setTeamLoading(false);
+  }
+
+  async function handleSetRole(profileId, role) {
+    setTeamSaving(profileId);
+    setTeamMsg("");
+    const { error } = await adminSetEditorialRole(profileId, role || null);
+    if (error) setTeamMsg("Role change failed: " + (error.message || "unknown error"));
+    else await loadTeam();
+    setTeamSaving(null);
+  }
+
+  async function handleAddTeamMember(profileId, role) {
+    if (!profileId || !role) return;
+    await handleSetRole(profileId, role);
   }
 
   async function loadTokens() {
@@ -1344,6 +1385,67 @@ export default function AdminPage({
               </div>
             )}
 
+            {/* ── TEAM (2.9 / ED-A — editorial roles without SQL) ───────── */}
+            {activeTab === "Team" && (
+              <div className="page-section">
+                <div className="page-section-head">
+                  <div className="page-section-title">Editorial Team</div>
+                  {team && <div className="page-section-meta">{team.length} member{team.length === 1 ? "" : "s"}</div>}
+                </div>
+                <p style={{ color: "var(--color-text-muted)", fontSize: "0.85rem", margin: "0 0 16px" }}>
+                  Grant or change global editorial roles here — no SQL needed. Per-content task
+                  assignment stays in the Editorial Workspace (Supervise → Assign Tasks).
+                </p>
+                {teamMsg && <p style={{ color: "var(--color-danger)", fontSize: "0.85rem" }}>{teamMsg}</p>}
+
+                {/* Add member */}
+                <TeamAddRow users={users || []} team={team || []} onAdd={handleAddTeamMember} busy={!!teamSaving} />
+
+                {teamLoading ? <p style={{ color: "#aaa" }}>Loading…</p> : (
+                  <div className="admin-table-wrap">
+                    <table className="admin-table">
+                      <thead><tr><th>Name</th><th>Global roles</th><th>Open assignments</th><th>Set role</th></tr></thead>
+                      <tbody>
+                        {(team || []).map(m => {
+                          const editorialRole = ["supervisor", "verifier", "editor", "creator"]
+                            .find(r => (m.global_roles || []).includes(r)) || "";
+                          return (
+                            <tr key={m.profile_id}>
+                              <td style={{ fontWeight: 600 }}>{m.display_name}</td>
+                              <td>
+                                {(m.global_roles || []).length === 0
+                                  ? <span style={{ color: "#bbb" }}>assignments only</span>
+                                  : m.global_roles.map(r => (
+                                      <span key={r} className={"role-pill " + (r === "admin" ? "admin" : "learner")} style={{ marginRight: 4 }}>{r}</span>
+                                    ))}
+                              </td>
+                              <td>{m.assignment_count}</td>
+                              <td>
+                                <select
+                                  value={editorialRole}
+                                  disabled={teamSaving === m.profile_id}
+                                  onChange={e => handleSetRole(m.profile_id, e.target.value || null)}
+                                  style={{ padding: "6px 8px", borderRadius: 8, border: "1px solid var(--color-border)" }}
+                                >
+                                  {EDITORIAL_ROLE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                                </select>
+                                {teamSaving === m.profile_id && <span style={{ marginLeft: 8, color: "var(--color-text-muted)" }}>Saving…</span>}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        {(team || []).length === 0 && !teamLoading && (
+                          <tr><td colSpan={4} style={{ textAlign: "center", color: "#aaa", padding: "32px" }}>
+                            No editorial team yet — add your first member above.
+                          </td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* ── COMMENTS (moderation queue — roadmap 1.5) ─────────────── */}
             {activeTab === "Comments" && (
               <div className="page-section">
@@ -2329,5 +2431,45 @@ export default function AdminPage({
         </>
       )}
     </>
+  );
+}
+
+// ── TeamAddRow (2.9 / ED-A) — pick a user by name, grant a first role ────────
+function TeamAddRow({ users, team, onAdd, busy }) {
+  const [name, setName] = useState("");
+  const [role, setRole] = useState("editor");
+  const teamIds = new Set(team.map(m => m.profile_id));
+  const candidates = users.filter(u => !teamIds.has(u.profile_id) && u.display_name);
+  const match = candidates.find(u => (u.display_name || "").toLowerCase() === name.trim().toLowerCase());
+
+  return (
+    <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 16 }}>
+      <input
+        className="admin-search"
+        style={{ maxWidth: 260 }}
+        list="team-add-users"
+        placeholder="Add member — type a name…"
+        value={name}
+        onChange={e => setName(e.target.value)}
+      />
+      <datalist id="team-add-users">
+        {candidates.map(u => <option key={u.profile_id} value={u.display_name} />)}
+      </datalist>
+      <select value={role} onChange={e => setRole(e.target.value)}
+        style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--color-border)" }}>
+        {EDITORIAL_ROLE_OPTIONS.filter(o => o.value).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+      <button
+        className="btn-primary"
+        disabled={!match || busy}
+        onClick={() => { onAdd(match.profile_id, role); setName(""); }}
+        style={{ opacity: !match || busy ? 0.5 : 1 }}
+      >
+        Add to team
+      </button>
+      {name.trim() && !match && (
+        <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>pick an exact name from the list</span>
+      )}
+    </div>
   );
 }

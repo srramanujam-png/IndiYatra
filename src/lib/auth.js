@@ -391,6 +391,31 @@ export async function adminGetTokens() {
 
 // ─── Editorial Workflow helpers ──────────────────────────────────────────────
 
+// 2.9 (ED-A): ONE RPC answers workspace entry + default view + creator + admin.
+// Returns { role, is_creator, has_assignments, is_admin, can_enter, default_view }.
+export async function getWorkspaceAccess() {
+  const { data, error } = await supabaseClient.rpc("get_workspace_access");
+  if (error) console.error("[getWorkspaceAccess] RPC failed:", JSON.stringify(error));
+  return { data, error };
+}
+
+// 2.9 (ED-A): Team tab — grant/revoke a global editorial role without SQL.
+// role: 'editor' | 'verifier' | 'supervisor' | 'creator' | null (revoke).
+export async function adminSetEditorialRole(profileId, role) {
+  const { data, error } = await supabaseClient.rpc("admin_set_editorial_role", {
+    p_profile: profileId, p_role: role ?? null,
+  });
+  if (error) console.error("[adminSetEditorialRole] RPC failed:", JSON.stringify(error));
+  return { data, error };
+}
+
+// 2.9 (ED-A): Team tab listing — staff + per-content assignees with counts.
+export async function getTeamMembers() {
+  const { data, error } = await supabaseClient.rpc("get_team_members");
+  if (error) console.error("[getTeamMembers] RPC failed:", JSON.stringify(error));
+  return { data, error };
+}
+
 export async function getEditorialRole() {
   const { data, error } = await supabaseClient.rpc("get_editorial_role");
   if (error) console.error("[getEditorialRole] RPC failed:", JSON.stringify(error));

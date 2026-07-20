@@ -1611,6 +1611,16 @@ export default function EditorPage({
   };
   const rm = roleMeta[role] || roleMeta.editor;
 
+  // 2.9 (ED-A.3): view switcher instead of view lock — higher roles can also
+  // work in the lower-role views (Supervise · Verify · My Tasks).
+  const availableViews =
+    role === "supervisor" ? ["supervisor", "verifier", "editor"] :
+    role === "verifier"   ? ["verifier", "editor"] :
+    ["editor"];
+  const [view, setView] = useState(role);
+  const activeView = availableViews.includes(view) ? view : role;
+  const viewLabels = { supervisor: "Supervise", verifier: "Verify", editor: "My Tasks" };
+
   const navLinks = [
     { label: "Home",        onClick: onHome         },
     { label: "Courses", onClick: onAllCourses   },
@@ -1643,15 +1653,31 @@ export default function EditorPage({
           <div className="ep-role-badge">{rm.label}</div>
           <h1>Editorial Workspace</h1>
           <p>
-            {role === "supervisor" && "Assign tasks, track progress, and publish approved content."}
-            {role === "verifier"   && "Review submitted drafts and recommend them for approval."}
-            {role === "editor"     && "View your assigned tasks and work on translations and edits."}
+            {activeView === "supervisor" && "Assign tasks, track progress, and publish approved content."}
+            {activeView === "verifier"   && "Review submitted drafts and recommend them for approval."}
+            {activeView === "editor"     && "View your assigned tasks and work on translations and edits."}
           </p>
+          {availableViews.length > 1 && (
+            <div style={{ display: "inline-flex", gap: 4, marginTop: 12, padding: 4,
+                          background: "rgba(255,255,255,0.15)", borderRadius: 999 }}>
+              {availableViews.map(v => (
+                <button key={v} onClick={() => setView(v)}
+                  style={{
+                    padding: "6px 16px", borderRadius: 999, border: "none", cursor: "pointer",
+                    fontWeight: 600, fontSize: "0.85rem",
+                    background: activeView === v ? "white" : "transparent",
+                    color: activeView === v ? "var(--color-primary)" : "white",
+                  }}>
+                  {viewLabels[v]}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        {role === "supervisor" && <SupervisorView languages={languages} showToast={showToast} />}
-        {role === "verifier"   && <VerifierView showToast={showToast} />}
-        {role === "editor"     && <EditorView   showToast={showToast} />}
+        {activeView === "supervisor" && <SupervisorView languages={languages} showToast={showToast} />}
+        {activeView === "verifier"   && <VerifierView showToast={showToast} />}
+        {activeView === "editor"     && <EditorView   showToast={showToast} />}
       </div>
 
       {toast && <div className="ep-toast">{toast}</div>}

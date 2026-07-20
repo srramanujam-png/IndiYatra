@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useAuth } from "./hooks/useAuth";
-import { supabaseClient, signOut, loadCompletions, saveCompletion, updateLastVisited, loadLessonProgress, upsertLessonProgress, deleteLessonProgress, loadUserBookmarks, insertBookmark, deleteBookmark, loadUserGenericLikes, insertGenericLike, deleteGenericLike, insertLike, deleteLike, getPairedContent, getEditorialRole, getQuizQuestions, getQuizForLesson } from "./lib/auth";
+import { supabaseClient, signOut, loadCompletions, saveCompletion, updateLastVisited, loadLessonProgress, upsertLessonProgress, deleteLessonProgress, loadUserBookmarks, insertBookmark, deleteBookmark, loadUserGenericLikes, insertGenericLike, deleteGenericLike, insertLike, deleteLike, getPairedContent, getEditorialRole, getWorkspaceAccess, getQuizQuestions, getQuizForLesson } from "./lib/auth";
 import { AuthContext } from "./contexts/AuthContext";
 import AuthModal     from "./components/AuthModal";
 import ProfileModal  from "./components/ProfileModal";
@@ -172,40 +172,20 @@ export default function App() {
         setLikes(new Set(data.map(l => l.content_type + ":" + l.content_id)));
       }
     });
-    // Use SECURITY DEFINER RPC so it works regardless of RLS on user_roles_mapping
-    supabaseClient.rpc("is_admin").then(({ data }) => {
-      setIsAdmin(data === true);
-    });
-    supabaseClient
-      .from("user_roles_mapping")
-      .select("role_id")
-      .eq("profile_id", user.id)
-      .eq("role_id", "ROLE_07")
-      .maybeSingle()
-      .then(({ data }) => { setIsCreator(!!data); });
-    getEditorialRole().then(({ data, error }) => {
-      if (data) {
-        // RPC returned a role string
-        setUserEditorialRole(data);
+    // 2.9 (ED-A): ONE consolidated RPC answers admin flag, creator flag,
+    // editorial role, and workspace entry — replacing the three parallel
+    // mechanisms (is_admin RPC + ROLE_07 table read + get_editorial_role with
+    // a drift-prone client-side fallback).
+    getWorkspaceAccess().then(({ data, error }) => {
+      if (data && !error) {
+        setIsAdmin(data.is_admin === true);
+        setIsCreator(data.is_creator === true || data.has_assignments === true);
+        setUserEditorialRole(data.default_view || null);
       } else {
-        // RPC not deployed or returned null — fall back to direct table read
-        // Uses supabaseClient to join roles table so ROLE_XX format also works
-        supabaseClient
-          .from("user_roles_mapping")
-          .select("role_id, roles(role_name)")
-          .eq("profile_id", user.id)
-          .then(({ data: roleData }) => {
-            if (!roleData?.length) return;
-            // Match by role_name only — all role_ids use ROLE_XX format
-            let r = null;
-            for (const row of roleData) {
-              const rn = (row.roles?.role_name || "").toLowerCase();
-              if (rn === "supervisor") { r = "supervisor"; break; }
-              if (rn === "verifier")   { r = "verifier";   break; }
-              if (rn === "editor")     { r = "editor";     break; }
-            }
-            if (r) setUserEditorialRole(r);
-          });
+        // get_workspace_access not deployed yet — degrade to the old RPCs
+        // (no direct-table fallback; that drift path is deliberately gone).
+        supabaseClient.rpc("is_admin").then(({ data: adm }) => setIsAdmin(adm === true));
+        getEditorialRole().then(({ data: role }) => { if (role) setUserEditorialRole(role); });
       }
     });
   }, [user?.id]);
