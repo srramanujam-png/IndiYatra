@@ -38,7 +38,7 @@ Three conflicts between the source docs — decide once, in writing, in this fil
 
 ---
 
-## Phase 1 — Make it safe (before any wider release)
+## Phase 1 — Make it safe (before any wider release) ✅ COMPLETE (19 Jul 2026)
 
 *Nothing user-visible; everything here protects children, content, and the integrity of the gamification the whole overhaul is built on.*
 
@@ -57,7 +57,7 @@ Three conflicts between the source docs — decide once, in writing, in this fil
 
 ---
 
-## Phase 2 — Make it sound (foundation everything else builds on)
+## Phase 2 — Make it sound (foundation everything else builds on) ✅ COMPLETE (20 Jul 2026, incl. live-DB run + migration-zero snapshot — see PHASE2_PROGRESS.md)
 
 *Do this before restyling anything, or every later phase gets done twice.*
 

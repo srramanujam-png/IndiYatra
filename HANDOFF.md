@@ -1,4 +1,13 @@
 # IndiYatra — Session Handoff Document
+
+> ⚠️ **HISTORICAL (pre-overhaul).** Since 19 Jul 2026 the current sources of
+> truth are: `OVERHAUL_ROADMAP.md` (what, in what order — Phases 1–2 complete),
+> `PHASE2_PROGRESS.md` (latest session record + next-session prompt),
+> `MAINTENANCE_MANUAL.md` (how the code works), and
+> `supabase/migrations/README.md` (DB change process; note: the one-off SQL
+> scripts this document references now live in `supabase/archive/`).
+> Use this file only for deep history of sessions 1–34.
+
 **Last updated:** July 6, 2026 (All Courses drawer — quick-commerce style category browser, item 3 from To Do.docx)
 **Project:** IndiYatra — multilingual heritage learning platform
 **Stack:** React + Vite + Supabase (no backend, REST only)

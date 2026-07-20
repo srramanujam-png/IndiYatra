@@ -1,13 +1,33 @@
 # Phase 2 progress — Session Record
 
-**Date:** 20 July 2026 (third session) · **Done by:** Claude (Fable)
-**Commits this session:** `93be0b0` (2.4) · `a84deea` (2.7) · `e29d9f6` (2.8) · `9f542e0` (2.9) · `8f9b2b3` (2.10 prep)
+**Date:** 20 July 2026 (third session, including the live-DB run) · **Done by:** Claude (Fable) + Gopal
+**Commits this session:** `93be0b0` (2.4) · `a84deea` (2.7) · `e29d9f6` (2.8) · `9f542e0` (2.9) ·
+`8f9b2b3` (2.10 prep) · `a2ed5aa` (2.10 snapshot) + checker/test fixes in between. **All pushed.**
 
 ## Roadmap status
 
-**Phase 2 — ALL CODE-SIDE ITEMS DONE** (2.1–2.4, 2.6–2.10; 2.5 was closed in the
-Phase 1 live-DB audit). Remaining: your live-DB run below, then Phase 2's exit
-criteria are fully met.
+**Phase 2 — COMPLETE, INCLUDING THE LIVE-DB RUN (20 Jul 2026).** All items
+2.1–2.10 done (2.5 was closed in the Phase 1 live-DB audit). Exit criteria met.
+
+**Live-DB run record (same day, done with Gopal):**
+- All phase-1/2 scripts applied; reconciliation checker all ✓ (the FLAGGED §2
+  stragglers — cover images, taxonomy seeds, sub_role RPCs, token_type CHECK
+  drop — turned out to be already applied).
+- RLS test suite: **all PASS** against the live DB. Two test-harness bugs found
+  and fixed during the run (checker used wrong column name `content_type` →
+  `entity_type`; behavioral tests impersonated the oldest profile, which was
+  editorial staff → false FAIL B4a; also switched reporting from NOTICEs, which
+  the dashboard editor swallows, to a final RAISE EXCEPTION that carries the
+  report). One genuine confirmation: question-table policies on the live DB are
+  exactly correct — learners cannot read answers.
+- **Migration-zero snapshot taken** (`supabase/migrations/00000000000000_migration_zero.sql`,
+  pg_dump 17.6 against live PG 17.6, schema-only: 42 tables / 124 policies /
+  48 functions, all Phase 1/2 objects verified present). 62 historical scripts
+  moved to `supabase/archive/`. From now on: one numbered migration per schema
+  change (`supabase/migrations/README.md`).
+- Pushed to GitHub (`feature/quiz` @ `a2ed5aa`); CI runs from this push onward.
+- DB password was shared in-chat for the dump — **reset it** (Settings →
+  Database → Reset database password) if not already done.
 
 - **2.4 Server-side awarding + quiz grading** (`supabase/phase2_server_awarding.sql`):
   DB trigger on `lesson_completions` INSERT awards dharma/tulsi/ashoka/lotus/peepal/banyan
@@ -53,21 +73,16 @@ criteria are fully met.
 
 ## Your to-dos (only you can do these)
 
-1. **The live-DB session (~20 min)** — follow `supabase/migrations/README.md`
-   step by step: run outstanding scripts (incl. `phase2_server_awarding.sql` and
-   `phase2_editorial_roles.sql`) → checker until all ✓ → RLS tests until all PASS
-   → take the migration-zero snapshot → commit it and archive the old scripts.
-   ⚠️ `phase2_server_awarding.sql` and the new app build must go live together —
-   an old client can't save quiz attempts after the script runs, and the new
-   client can't save them before it runs.
-2. **Push to GitHub** (feature/quiz) — 5 new commits are local-only. The new CI
-   workflow will run on push; check the Actions tab.
+1. ~~Live-DB session~~ **DONE 20 Jul** · ~~Push to GitHub~~ **DONE 20 Jul**
+2. **Reset the database password** (Settings → Database) — it was shared in-chat
+   for the snapshot. Ten seconds; the app is unaffected.
 3. **Smoke-test:** complete a lesson (tokens should appear on Dashboard — now
    awarded by the DB); play a quiz signed-in (answer feedback should still be
    instant; score saves; retake past max_attempts should fail); open a quiz page
    with devtools → Network and confirm no `correct_option` in any response before
    answering; Admin → Team: grant a test account "editor", open Editorial
-   Workspace as them; as supervisor, try the new view switcher.
+   Workspace as them; as supervisor, try the new view switcher. Check the GitHub
+   Actions tab shows green on the latest push.
 4. **Pending from last session:** lawyer review of the DPDP Rules (compliance
    memo action A).
 

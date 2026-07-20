@@ -12,9 +12,12 @@
 |---|---|---|
 | **Git repository index corruption.** At Session 34 start, every tracked file showed staged-as-deleted while present-and-untracked on disk; a prior repair left `.git/RESCUE_BACKUP_20260712/`. Branch `backup-before-undo` sits 2 commits ahead of `feature/quiz` — unreconciled. Needs a decision **before the next commit/push**. | S34 | ⚠ **Open, blocking.** Added to roadmap as Phase 0 pre-flight (0.4) |
 
-## 2. SQL flagged "run against live DB" — state unknown
+## 2. SQL flagged "run against live DB" — ✅ RESOLVED 20 Jul 2026
 
-The docs flag several scripts as written-but-possibly-never-run. Current live state is unverifiable from the repo; reconcile all at once during the roadmap's migration-zero snapshot (C4 / new item 2.10):
+Reconciled during the 2.10 live-DB run: the reconciliation checker verified ALL
+of the items below were already applied to the live DB (incl. the token_type
+CHECK drop — a checker false-positive initially flagged it). Migration-zero
+snapshot taken; live state is now fully known. Original list kept for history:
 
 - `supabase/module_cover_image.sql` (S32 — cover-image columns, `content-images` bucket, updated `get_course_tree()`; §2/§3 features silently no-op without it)
 - `taxonomy_seed.sql` → later superseded by `taxonomy_seed_consolidated.sql` + `snippet_taxonomy_mapping.sql` (S23/S28 — Discover shows nothing without them)
