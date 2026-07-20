@@ -36,10 +36,13 @@ SELECT 13, 'snippet_taxonomy_mapping.sql', 'snippet taxonomy mappings (expect ~9
        ELSE '✗ RUN IT — snippet tagging missing' END
 UNION ALL
 SELECT 14, '(inline ALTER — see migrations/README)', 'user_tokens token_type CHECK dropped (custom token types)',
+  -- Looks for the original hardcoded type-list CHECK (renders as token_type = ANY (ARRAY[...])).
+  -- Must NOT match ut_quantity_sane (the 1.2 stopgap we keep), which also mentions token_type.
   CASE WHEN NOT EXISTS (
-    SELECT 1 FROM information_schema.check_constraints cc
-    JOIN information_schema.constraint_column_usage u ON u.constraint_name = cc.constraint_name
-    WHERE u.table_name='user_tokens' AND cc.check_clause LIKE '%token_type%')
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'user_tokens'::regclass AND contype = 'c'
+      AND conname <> 'ut_quantity_sane'
+      AND pg_get_constraintdef(oid) LIKE '%token_type%ARRAY%')
        THEN '✓ dropped' ELSE '✗ ALTER TABLE user_tokens DROP CONSTRAINT user_tokens_token_type_check' END
 UNION ALL
 SELECT 15, 'drafts_with_subrole.sql', 'get_my_drafts() returns sub_role',
