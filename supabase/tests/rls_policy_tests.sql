@@ -73,10 +73,21 @@ BEGIN
 
   -- ═══ Part B — behavioral checks (simulated signed-in learner) ════════════
 
-  SELECT id INTO v_profile FROM profiles ORDER BY created_at LIMIT 1;
+  -- Impersonate a genuine LEARNER: a profile with no admin/editorial/creator
+  -- role. (v1 of this test took the oldest profile, which on a real DB is
+  -- usually the owner or an early staff member — staff can legitimately read
+  -- question tables, producing a false FAIL on B4a.)
+  SELECT p.id INTO v_profile FROM profiles p
+  WHERE NOT EXISTS (
+    SELECT 1 FROM user_roles_mapping urm
+    JOIN roles r ON r.role_id = urm.role_id
+    WHERE urm.profile_id = p.id
+      AND LOWER(r.role_name) IN ('admin','editor','verifier','supervisor','creator'))
+  ORDER BY p.created_at LIMIT 1;
   IF v_profile IS NULL THEN
-    rep := rep || E'SKIP B*: no profiles in DB — behavioral tests skipped\n';
+    rep := rep || E'SKIP B*: no learner (role-free) profile in DB — behavioral tests skipped\n';
   ELSE
+    rep := rep || 'INFO: impersonating learner profile ' || left(v_profile::text, 8) || E'…\n';
     SELECT id INTO v_other FROM profiles WHERE id <> v_profile ORDER BY created_at LIMIT 1;
 
     -- become that user (reverted by the rollback at the end)
