@@ -188,6 +188,16 @@ CREATE TRIGGER trg_award_on_lesson_completion
 DROP POLICY IF EXISTS "user_tokens_own_insert" ON user_tokens;
 DROP POLICY IF EXISTS "user_badges_own_insert" ON user_badges;
 
+-- The Admin token/badge manager (adminAwardToken + list/edit/delete in
+-- AdminPage) writes these tables directly — allow admins only.
+DROP POLICY IF EXISTS "user_tokens_admin_all" ON user_tokens;
+CREATE POLICY "user_tokens_admin_all" ON user_tokens
+  FOR ALL USING (is_admin()) WITH CHECK (is_admin());
+
+DROP POLICY IF EXISTS "user_badges_admin_all" ON user_badges;
+CREATE POLICY "user_badges_admin_all" ON user_badges
+  FOR ALL USING (is_admin()) WITH CHECK (is_admin());
+
 
 -- ═════════════════════════════════════════════════════════════════════════════
 -- §3  QUIZ ANSWERS SERVER-SIDE (A3) — table lockdown

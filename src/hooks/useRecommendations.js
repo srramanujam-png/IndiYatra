@@ -18,6 +18,7 @@ export function useRecommendations({ userId, limit = 8 }) {
 
   useEffect(() => {
     if (!userId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset on sign-out; refactor with 3.6
       setRecommendations([]);
       return;
     }

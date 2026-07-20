@@ -834,50 +834,11 @@ export async function adminAwardToken(profileId, tokenType, quantity) {
 
 // ─── Bulk import helpers (Excel import tab) ─────────────────────────────────
 //
-// ── Import string-similarity helpers ─────────────────────────────────────────
+// ── Import lookup helper ──────────────────────────────────────────────────────
+// (2.7 cleanup: the unused Levenshtein fuzzy-lookup trio was removed — import
+// matching is deliberately exact-only, see comment below.)
 
-function _lev(a, b) {
-  const m = a.length, n = b.length;
-  if (!m) return n; if (!n) return m;
-  const row = Array.from({ length: n + 1 }, (_, j) => j);
-  for (let i = 1; i <= m; i++) {
-    let prev = i;
-    for (let j = 1; j <= n; j++) {
-      const val = a[i - 1] === b[j - 1]
-        ? row[j - 1]
-        : 1 + Math.min(prev, row[j], row[j - 1]);
-      row[j - 1] = prev; prev = val;
-    }
-    row[n] = prev;
-  }
-  return row[n];
-}
-
-function _sim(a, b) {
-  if (a === b) return 1;
-  const mx = Math.max(a.length, b.length);
-  return mx === 0 ? 1 : 1 - _lev(a, b) / mx;
-}
-
-// Returns { id, matchedNorm, score, type:"exact"|"fuzzy" } or null
-// Caches fuzzy hits back into normMap so repeated lookups are O(1).
-function _fuzzyLookup(needle, normMap, threshold = 0.8) {
-  if (!needle) return null;
-  if (normMap[needle] !== undefined)
-    return { id: normMap[needle], matchedNorm: needle, score: 1, type: "exact" };
-  let bestId = null, bestNorm = null, bestScore = 0;
-  for (const [k, id] of Object.entries(normMap)) {
-    const s = _sim(needle, k);
-    if (s > bestScore) { bestScore = s; bestId = id; bestNorm = k; }
-  }
-  if (bestId !== null && bestScore >= threshold) {
-    normMap[needle] = bestId;   // cache so next identical typo is instant
-    return { id: bestId, matchedNorm: bestNorm, score: bestScore, type: "fuzzy" };
-  }
-  return null;
-}
-
-// Exact-only variant — used by adminImportSnippetsFull so deliberate
+// Exact-only lookup — used by adminImportSnippetsFull so deliberate
 // minor variations in lesson/module/theme/course/language names are never
 // silently collapsed into an existing record.
 function _exactLookup(needle, normMap) {

@@ -17,12 +17,12 @@ export function loadSettings(userId = null) {
   try {
     const raw = localStorage.getItem(storageKey(userId));
     if (raw) return JSON.parse(raw);
-  } catch {}
+  } catch { /* corrupted/blocked localStorage — fall through to defaults */ }
   return { ...DEFAULT_SETTINGS };
 }
 
 export function saveSettings(s, userId = null) {
   try {
     localStorage.setItem(storageKey(userId), JSON.stringify(s));
-  } catch {}
+  } catch { /* private mode / quota — settings just won't persist */ }
 }

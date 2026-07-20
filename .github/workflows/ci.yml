@@ -1,0 +1,38 @@
+# IndiYatra CI (Roadmap 2.7 / R4, C5) — lint, unit tests, build, dependency audit.
+# SQL/RLS tests can't run here (they need the live Supabase DB): run
+# supabase/tests/rls_policy_tests.sql in the SQL Editor after every schema change.
+name: CI
+
+on:
+  push:
+    branches: [feature/quiz, main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Lint
+        run: npx eslint src/lib src/hooks src/config
+        # Full "eslint ." has known legacy errors in pages/ (tracked for 3.6
+        # component migration). Gate the clean directories; widen as pages are
+        # migrated.
+      - name: Unit tests
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Dependency audit (A9 / R4)
+        run: npm audit --audit-level=high
+        continue-on-error: true
+        # xlsx has known advisories and is slated for removal in A9/5.5 —
+        # keep visible but non-blocking until then.
+      - name: Dead code check (knip)
+        run: npx --yes knip --no-exit-code
+        # Informational for now; make blocking once the 2.2 cleanup is proven
+        # stable against knip's detection.
