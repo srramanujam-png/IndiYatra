@@ -109,6 +109,28 @@ plumbing, not a re-architecture.
 | H | Publish grievance contact (email) in policy + footer; write a one-page breach-response note (who emails the DPB, who emails parents) | Before wider release | |
 | I | Nudge display-name field toward first name / nickname ("What should we call you?") and stop snapshotting `user_name` into new comments (join at read time) | Phase 3 | Data minimisation. |
 
+### Design note for action C: minimising consent drop-off (added 19 Jul 2026)
+
+Verifiable parental consent will cost some conversions — every consent flow does. The
+mitigation is placement and friction, not avoidance:
+
+1. **Try-before-consent.** Keep the generous anonymous guest mode (already built): full
+   reading/browsing/quizzes with no account. The consent wall appears only at the moment
+   of value — "Sign up to save your forest and your streak" — when the child is already
+   invested, not at first open.
+2. **One-tap parent approval.** Child enters a parent's email/WhatsApp; parent receives a
+   short message with a single approve link. No parent account, no form, no password —
+   parent-account creation is where consent funnels die.
+3. **Frame as a parent benefit.** "See what your child is learning each week" turns the
+   consent contact into a parent-facing channel (the share-message feature already points
+   this way); for this audience, parents recommend apps to parents.
+4. **School channel.** The Draft DPDP Rules contemplated educational-institution
+   exemptions — class-wide onboarding via schools may carry consent institutionally.
+   Confirm scope in the action-A lawyer review; potentially the highest-volume,
+   zero-drop-off path.
+5. **Measure it.** Instrument the funnel with the 2.6 events table
+   (`consent_sent` → `consent_approved`) so drop-off is a number, not a fear.
+
 **Rules for every future feature** (R1 ongoing check, binds Phases 3–5): no targeted
 advertising ever; no third-party trackers (R3 events stay self-hosted, keyed to
 pseudonymous IDs); no public display of full names or contact data; any new
