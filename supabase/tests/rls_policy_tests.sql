@@ -34,14 +34,18 @@ BEGIN
     THEN 'PASS A2: awarding trigger present on lesson_completions'
     ELSE 'FAIL A2: trg_award_on_lesson_completion missing' END || E'\n';
 
-  rep := rep || CASE WHEN
-      NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
-                  AND policyname LIKE '%public_read'
-                  AND tablename IN ('snippet_questions','standalone_questions'))
+  -- A3: the ONLY SELECT policy allowed on each question table is its
+  -- *_staff_read policy — any other SELECT policy (whatever its name, incl.
+  -- dashboard-created legacy ones) is a leak of correct_option.
+  SELECT count(*) INTO n FROM pg_policies
+  WHERE schemaname='public' AND cmd='SELECT'
+    AND tablename IN ('snippet_questions','standalone_questions')
+    AND policyname NOT IN ('snippet_questions_staff_read','standalone_questions_staff_read');
+  rep := rep || CASE WHEN n = 0
       AND EXISTS (SELECT 1 FROM pg_policies WHERE tablename='snippet_questions'    AND policyname='snippet_questions_staff_read')
       AND EXISTS (SELECT 1 FROM pg_policies WHERE tablename='standalone_questions' AND policyname='standalone_questions_staff_read')
     THEN 'PASS A3: question tables are staff-read-only'
-    ELSE 'FAIL A3: question-table read policies wrong' END || E'\n';
+    ELSE 'FAIL A3: stray/missing SELECT policy on question tables (' || n || ' stray) — list with: SELECT * FROM pg_policies WHERE tablename LIKE ''%questions''' END || E'\n';
 
   SELECT count(*) INTO n FROM pg_policies
   WHERE tablename='lesson_completions' AND cmd IN ('DELETE','ALL');
