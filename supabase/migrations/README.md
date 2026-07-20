@@ -23,8 +23,10 @@ records only.
       If every row is ✓, they were already applied — skip this and move on.
 2. **Run `supabase/phase2_reconciliation_check.sql`** (read-only) → fix any ✗ →
    re-run until every row is ✓.
-3. **Run `supabase/tests/rls_policy_tests.sql`** (read-only, rolls back) →
-   every line must say PASS.
+3. **Run `supabase/tests/rls_policy_tests.sql`** (rolls back everything it
+   touches) → the report arrives as an **ERROR message — that's intentional**
+   (the dashboard editor doesn't show NOTICEs, and the exception doubles as
+   the rollback). Read the error text: every line must say PASS or SKIP.
 4. **Take the snapshot.** With the Supabase CLI (recommended):
    ```
    supabase login
