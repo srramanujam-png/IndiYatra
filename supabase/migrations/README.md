@@ -16,9 +16,11 @@ records only.
    2. `phase2_events.sql` (if not yet run)
    3. `phase2_server_awarding.sql`  ← **deploy together with the 2.4 app build**
    4. `phase2_editorial_roles.sql`
-   5. Any file flagged ✗ by the checker in step 2 (cover images, taxonomy
-      seeds, sub_role RPCs, and the one inline ALTER:
-      `ALTER TABLE user_tokens DROP CONSTRAINT user_tokens_token_type_check;`)
+   5. *Only if* the checker in step 2 flags a ✗: run the file it names.
+      The likely candidates are the historical "possibly never run" stragglers
+      (cover images, taxonomy seeds, sub_role RPCs, and one inline ALTER:
+      `ALTER TABLE user_tokens DROP CONSTRAINT user_tokens_token_type_check;`).
+      If every row is ✓, they were already applied — skip this and move on.
 2. **Run `supabase/phase2_reconciliation_check.sql`** (read-only) → fix any ✗ →
    re-run until every row is ✓.
 3. **Run `supabase/tests/rls_policy_tests.sql`** (read-only, rolls back) →
