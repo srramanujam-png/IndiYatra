@@ -31,8 +31,8 @@ SELECT 12, 'taxonomy_seed_consolidated.sql', 'taxonomy_terms rows (expect > 0)',
 UNION ALL
 SELECT 13, 'snippet_taxonomy_mapping.sql', 'snippet taxonomy mappings (expect ~931 snippets tagged)',
   CASE WHEN EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name='content_taxonomy_mapping')
-        AND (SELECT count(*) FROM content_taxonomy_mapping WHERE content_type='snippet') > 0
-       THEN '✓ ' || (SELECT count(*)::text FROM content_taxonomy_mapping WHERE content_type='snippet') || ' rows'
+        AND (SELECT count(*) FROM content_taxonomy_mapping WHERE entity_type='snippet') > 0
+       THEN '✓ ' || (SELECT count(*)::text FROM content_taxonomy_mapping WHERE entity_type='snippet') || ' rows'
        ELSE '✗ RUN IT — snippet tagging missing' END
 UNION ALL
 SELECT 14, '(inline ALTER — see migrations/README)', 'user_tokens token_type CHECK dropped (custom token types)',
