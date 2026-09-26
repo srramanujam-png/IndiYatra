@@ -34,7 +34,11 @@ Three conflicts between the source docs — decide once, in writing, in this fil
    3. `git diff backup-before-undo HEAD --stat` — if the branch's two extra commits (`42945c4`, `17c5f21`) contain nothing missing from HEAD, delete the branch; if they do, reconcile first.
    4. From here on: one commit per finished roadmap item, pushed every time (see `Vibe_coders_Instructions.md` rule 1).
    *Until this is done, ten days of work has no backup — a disk failure loses it all. Nothing else in this roadmap starts first.*
-5. **Legacy product questions** (from `FLAGGED_FUTURE_WORK.md` §4): like-vs-bookmark playback asymmetry; the three For You Two-Views open questions (Relaxed-only on mobile · Surprise weighted vs random · merge likes+bookmarks). Answer them here — 3.x and 4.1 depend on them.
+5. **Legacy product questions** (from `FLAGGED_FUTURE_WORK.md` §4) — **DECIDED 20 Jul 2026 (Gopal):**
+   - **Like-vs-bookmark asymmetry → resolved by cross-mode completion.** Points are awarded irrespective of where a snippet is read. Build per-snippet read tracking (`snippet_reads` table + server-side "all snippets read → lesson completion" derivation) **before 3.3** — scheduled as item **3.2b**. The existing lesson_completions trigger then awards tokens as usual.
+   - **Likes and bookmarks stay separate** (no merged "Saved" concept; rails stay separate).
+   - **Two-Views on mobile: both views available, default Relaxed.**
+   - **Surprise rail: purely random** (not recommendation-weighted).
 
 ---
 
