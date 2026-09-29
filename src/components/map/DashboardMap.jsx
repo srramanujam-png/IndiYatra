@@ -180,6 +180,13 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
     </button>
   );
 
+  // wide screens: all badges on one semicircular arc in the sea, bottom-left of the map (phones keep the strips)
+  const ARC_CX = 19.5, ARC_CY = 90.5, ARC_R = 16;   // in stage-width units (cqw)
+  const arcStyle = (i, n) => {
+    const t = n <= 1 ? 90 : 180 - (180 * i) / (n - 1), a = (t * Math.PI) / 180;
+    return { left: `${ARC_CX + ARC_R * Math.cos(a)}cqw`, top: `${ARC_CY - ARC_R * Math.sin(a)}cqw` };
+  };
+
   if (error) return (
     <div className="ymap"><style>{MAP_CSS}</style>
       <div className="ymap-err" role="alert">We couldn't load your Yatra map right now.
@@ -204,7 +211,7 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
       </div>
 
       <div className="ymap-body">
-        <div className="ymap-badges a" role="group" aria-label="Character badges">{badges.slice(0, half).map(badgeBtn)}</div>
+        <div className="ymap-badges a strip" role="group" aria-label="Character badges">{badges.slice(0, half).map(badgeBtn)}</div>
 
         <div className="ymap-stage" ref={stageRef} style={{ aspectRatio: `${frame.W} / ${frame.H}` }}
           onPointerMove={onMove} onPointerLeave={onLeave} onClick={onClick}>
@@ -224,7 +231,14 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
             );
           })}
 
-          {ready && pct !== null && <div className="ymap-pct" aria-hidden="true">{formatPercent(pct)}% Completed</div>}
+          {ready && badges.length > 0 && (
+            <div className="ymap-arc" role="group" aria-label="Character badges">
+              {badges.map((b, i) => (
+                <span key={b.badgeId} className="ymap-arc-slot" style={arcStyle(i, badges.length)}>{badgeBtn(b)}</span>
+              ))}
+            </div>
+          )}
+          {ready && pct !== null && <div className="ymap-pct" aria-hidden="true">{formatPercent(pct)}% Completed<small>{courseId ? (card?.course?.name || "this course") : "across all courses"}</small></div>}
           {ready && <ProgressCard card={card} state={state} manifest={manifest} variant="overlay" scoped={!!courseId} />}
           {tip && <div className="ymap-tip" role="tooltip" style={{ left: px(tip.x, "x"), top: px(tip.y, "y") }}>{tip.text}</div>}
           {popup && (
@@ -235,7 +249,7 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
           )}
         </div>
 
-        <div className="ymap-badges b" role="group" aria-label="More character badges">{badges.slice(half).map(badgeBtn)}</div>
+        <div className="ymap-badges b strip" role="group" aria-label="More character badges">{badges.slice(half).map(badgeBtn)}</div>
       </div>
 
       {ready && <ProgressCard card={card} state={state} manifest={manifest} variant="below" scoped={!!courseId} />}

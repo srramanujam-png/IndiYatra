@@ -54,6 +54,6 @@ export const loadGeo = () => once("geo", () => getJson("geo.json"));
 /** Everything the QUICK view needs, fetched in parallel. */
 export async function loadQuickMap(state) {
   const manifest = await loadManifest();
-  const [plate, sprites, candidates, india] = await Promise.all([loadPlate(state.milestoneIndex, manifest.configVersion), loadSprites(), loadCandidates(), loadIndia()]);
+  const [plate, sprites, candidates, india] = await Promise.all([loadPlate(state.milestoneIndex, `${manifest.configVersion}.${manifest.plateScale || 1}`), loadSprites(), loadCandidates(), loadIndia()]);
   return { manifest, plate, sprites, candidates, india };
 }

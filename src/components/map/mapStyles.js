@@ -12,7 +12,13 @@ export const MAP_CSS = `
 
   /* layout: badges in two side columns on wide screens, compact strips above/below on phones */
   .ymap-body { display: grid; gap: 12px; align-items: center; justify-content: center;
-    grid-template-columns: var(--ymap-badge) minmax(0, 760px) var(--ymap-badge); grid-template-areas: "a stage b"; }
+    grid-template-columns: minmax(0, 760px); grid-template-areas: "stage"; }
+  .ymap-badges.strip { display: none; }
+  .ymap-arc { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+  .ymap-arc-slot { position: absolute; transform: translate(-50%, -50%); pointer-events: auto; }
+  .ymap-arc .ymap-badge { --ymap-badge: 4.2cqw; border-width: 1.5px; background: rgba(255,255,255,.96); box-shadow: 0 2px 6px rgba(16,24,40,.18); }
+  .ymap-arc .ymap-badge.earned { box-shadow: 0 0 0 2px rgba(255,142,0,.25), 0 2px 6px rgba(16,24,40,.18); }
+  .ymap-arc-slot:nth-child(-n+3) .ymap-badge::after { left: 0; transform: none; }
   .ymap-badges { display: flex; gap: 8px; }
   .ymap-badges.a { grid-area: a; flex-direction: column; align-items: center; justify-content: center; }
   .ymap-badges.b { grid-area: b; flex-direction: column; align-items: center; justify-content: center; }
@@ -68,23 +74,18 @@ export const MAP_CSS = `
   .ymap-pct small { display: block; font-size: .34em; letter-spacing: .16em; text-transform: uppercase; opacity: .8; margin-top: .1em; font-family: var(--font-ui); font-weight: 700; }
 
   /* progress card: in the Bay of Bengal (east of Tamil Nadu / Andhra coast) on wide screens, below the map on phones */
-  .ymap-card2 { display: flex; gap: 12px; align-items: center; background: rgba(255,255,255,.94); border: 1px solid var(--color-border); border-radius: 16px;
+  .ymap-card2 { display: block; background: rgba(255,255,255,.94); border: 1px solid var(--color-border); border-radius: 16px;
     padding: 10px 14px 10px 10px; box-shadow: 0 6px 20px rgba(16,24,40,.16); font-family: var(--font-body); color: var(--color-text-main); }
-  .ymap-card2.overlay { position: absolute; z-index: 2; left: 52.5%; top: 66%; width: 28%; font-size: 12px; font-size: clamp(9px, 1.62cqw, 14px); gap: 1em; padding: .8em 1em .8em .7em; border-radius: 1.3em; }
+  .ymap-card2.overlay { position: absolute; z-index: 2; left: 52.5%; top: 68%; width: 30%; font-size: 12px; font-size: clamp(9px, 1.62cqw, 14px); padding: .8em 1em; border-radius: 1.3em; }
   .ymap-card2.below { display: none; margin: 12px auto 0; max-width: 520px; }
-  .ymap-card2 .ymap-ring { position: relative; width: 54px; height: 54px; flex: none; }
-  .ymap-card2.overlay .ymap-ring { width: 4.3em; height: 4.3em; } .ymap-card2.overlay .ymap-ring svg { width: 100%; height: 100%; }
-  .ymap-card2 .ymap-ring b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; font-family: var(--font-ui); }
   .ymap-card2 .body { flex: 1; min-width: 0; }
   .ymap-card2 .ttl { font-weight: 700; font-size: 13.5px; line-height: 1.25; } .ymap-card2.overlay .ttl { font-size: 1.12em; }
-  .ymap-card2.overlay .sub, .ymap-card2.overlay .next, .ymap-card2.overlay .banyan { font-size: 1em; } .ymap-card2.overlay .ymap-ring b { font-size: .82em; font-weight: 700; letter-spacing: -.02em; }
+  .ymap-card2.overlay .sub, .ymap-card2.overlay .next { font-size: 1em; }
   .ymap-card2 .sub { font-size: 12px; color: var(--color-text-muted); line-height: 1.3; margin-top: 2px; }
-  .ymap-card2 .bar { height: 5px; border-radius: 3px; background: #E6E4DA; margin-top: 6px; overflow: hidden; }
+  .ymap-card2 .bar { height: 6px; border-radius: 3px; background: #E6E4DA; margin-top: 6px; overflow: hidden; }
   .ymap-card2 .bar i { display: block; height: 100%; background: #2F8F46; }
   .ymap-card2 .next { margin-top: 7px; padding-top: 6px; border-top: 1px solid var(--color-border-muted); font-size: 12.5px; line-height: 1.35; }
   .ymap-card2 .next em { font-style: normal; color: var(--color-primary); font-weight: 700; }
-  .ymap-card2 .banyan { margin-top: 5px; font-size: 11.5px; color: #2F6B3A; }
-  .ymap-card2 .banyan.muted { color: var(--color-text-muted); }
 
   .ymap-summary { margin: 14px auto 0; max-width: 820px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--color-text-body); line-height: 1.55; }
   .ymap-actions { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
@@ -104,6 +105,8 @@ export const MAP_CSS = `
     .ymap-card2.overlay { display: none; }
     .ymap-card2.below { display: flex; }
     .ymap-body { grid-template-columns: 1fr; grid-template-areas: "a" "stage" "b"; gap: 8px; }
+    .ymap-arc { display: none; }
+    .ymap-badges.strip { display: flex; }
     .ymap-badges.a, .ymap-badges.b { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 6px; }
     .ymap-card { bottom: 8px; }
     .ymap-badges.a .ymap-badge::after, .ymap-badges.b .ymap-badge::after { left: 50%; right: auto; top: auto; bottom: calc(100% + 8px); transform: translateX(-50%); }

@@ -202,12 +202,12 @@ describe("progress-card text", () => {
     expect(unlockNames(manifest, 1)).toEqual(["Tungabhadra", "Aravalli Range", "Golden Temple"]);
     expect(unlockNames(manifest, 9)).toEqual([]);
   });
-  it("builds the 'stories to go' sentence", () => {
+  it("builds the 'Read x stories more' sentence", () => {
     expect(nextUnlockText({ nextUnlock: { milestoneIndex: 1, thresholdPercent: 5, storiesToGo: 4 } }, manifest))
-      .toEqual({ lead: "4 stories to go, to unveil", names: "Tungabhadra, Aravalli Range and Golden Temple" });
-    expect(nextUnlockText({ nextUnlock: { milestoneIndex: 1, thresholdPercent: 5, storiesToGo: 1 } }, manifest).lead).toBe("1 story to go, to unveil");
+      .toEqual({ lead: "Read 4 stories more to unveil", names: "Tungabhadra, Aravalli Range and Golden Temple" });
+    expect(nextUnlockText({ nextUnlock: { milestoneIndex: 1, thresholdPercent: 5, storiesToGo: 1 } }, manifest).lead).toBe("Read 1 story more to unveil");
     expect(nextUnlockText({ nextUnlock: { milestoneIndex: 9, thresholdPercent: 45, storiesToGo: 2 } }, manifest))
-      .toEqual({ lead: "2 stories to go to your next 45% step", names: "" });
+      .toEqual({ lead: "Read 2 stories more to reach your next 45% step", names: "" });
     expect(nextUnlockText({ nextUnlock: null }, manifest)).toBe(null); expect(nextUnlockText(null, manifest)).toBe(null);
   });
   it("formats percentages", () => { expect(formatPercent(60)).toBe("60"); expect(formatPercent(59.96)).toBe("60.0"); expect(formatPercent(99.999)).toBe("100"); expect(formatPercent(12.5)).toBe("12.5"); expect(formatPercent("x")).toBe("0"); });

@@ -153,7 +153,7 @@ for (const t of cfg.temples) {
 }
 const manifest = {
   configVersion: cfg.version, geoVersion: geo.version, provisionalGeography: !!geo.provisional,
-  geographyNote: geo.outline.source, frame: geo.frame, plateFormat: "webp", plateCount: 21,
+  geographyNote: geo.outline.source, frame: geo.frame, plateFormat: "webp", plateScale: SCALE, plateCount: 21,
   builtAt: new Date().toISOString(),
   milestones: cfg.milestones.map((m, k) => ({ index: m.index, threshold: m.threshold, title: m.title,
     riverIds: m.riverIds, mountainIds: m.mountainIds, templeIds: m.templeIds.filter((id) => placed(id)),

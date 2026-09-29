@@ -205,13 +205,13 @@ export function unlockNames(manifest, index) {
   return [...(m.riverIds || []), ...(m.mountainIds || []), ...(m.templeIds || [])].map((id) => manifest.hotspots?.[id]?.name).filter(Boolean);
 }
 
-/** "4 stories to go, to unveil Krishna and Eastern Ghats" — null when there is nothing left to unlock. */
+/** "Read 4 stories more to unveil Krishna and Eastern Ghats" — null when there is nothing left to unlock. */
 export function nextUnlockText(card, manifest) {
   const nu = card?.nextUnlock; if (!nu) return null;
   const n = Number(nu.storiesToGo); if (!Number.isFinite(n) || n < 1) return null;
   const stories = `${n} ${n === 1 ? "story" : "stories"}`;
   const names = joinNames(unlockNames(manifest, nu.milestoneIndex));
-  return names ? { lead: `${stories} to go, to unveil`, names } : { lead: `${stories} to go to your next ${nu.thresholdPercent}% step`, names: "" };
+  return names ? { lead: `Read ${stories} more to unveil`, names } : { lead: `Read ${stories} more to reach your next ${nu.thresholdPercent}% step`, names: "" };
 }
 
 /** Whole-number-or-one-decimal percent used by the Tibet label and the card ring. */
