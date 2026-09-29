@@ -180,11 +180,14 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
     </button>
   );
 
-  // wide screens: all badges on one semicircular arc in the sea, bottom-left of the map (phones keep the strips)
-  const ARC_CX = 19.5, ARC_CY = 90.5, ARC_R = 16;   // in stage-width units (cqw)
+  // wide screens: all badges on ONE arc in the sea that wraps the peninsula from the Arabian Sea, under Kanyakumari, into the Bay of Bengal
+  // (a garland around the south, matching the mala theme; phones keep the strips). Coordinates are stage-width units (cqw).
+  // The first badge sits at the west end and earned badges fill toward the east, like the mala grows round the coast.
+  const ARC_CX = 42, ARC_CY = 57, ARC_R = 36.5, ARC_FROM = 172, ARC_TO = 8, ARC_MAX_STEP = 15;   // degrees: 90 = straight below the centre
   const arcStyle = (i, n) => {
-    const step = n <= 1 ? 0 : Math.min(180 / 11, 180 / (n - 1)), t = 90 + ((n - 1) / 2 - i) * step, a = (t * Math.PI) / 180;
-    return { left: `${ARC_CX + ARC_R * Math.cos(a)}cqw`, top: `${ARC_CY - ARC_R * Math.sin(a)}cqw` };
+    const step = n <= 1 ? 0 : Math.min(ARC_MAX_STEP, (ARC_FROM - ARC_TO) / (n - 1)), mid = (ARC_FROM + ARC_TO) / 2;
+    const a = ((mid + ((n - 1) / 2 - i) * step) * Math.PI) / 180;
+    return { left: `${ARC_CX + ARC_R * Math.cos(a)}cqw`, top: `${ARC_CY + ARC_R * Math.sin(a)}cqw` };
   };
 
   if (error) return (

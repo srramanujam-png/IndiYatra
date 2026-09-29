@@ -1,4 +1,4 @@
-// src/components/map/ProgressCard.jsx — "where am I / what's next" card that sits in the Bay of Bengal (desktop)
+// src/components/map/ProgressCard.jsx — "where am I / what's next" card that sits on the Tibetan plateau, top-right of the map (desktop)
 // or under the map (phones). Pure presentation: every number comes from get_map_card + the manifest.
 import { formatPercent, nextUnlockText } from "../../lib/map/mapMath";
 

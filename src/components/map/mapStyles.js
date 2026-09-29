@@ -16,9 +16,10 @@ export const MAP_CSS = `
   .ymap-badges.strip { display: none; }
   .ymap-arc { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
   .ymap-arc-slot { position: absolute; transform: translate(-50%, -50%); pointer-events: auto; }
-  .ymap-arc .ymap-badge { --ymap-badge: 4.2cqw; border-width: 1.5px; background: rgba(255,255,255,.96); box-shadow: 0 2px 6px rgba(16,24,40,.18); }
+  .ymap-arc .ymap-badge { --ymap-badge: 3.9cqw; border-width: 1.5px; background: rgba(255,255,255,.96); box-shadow: 0 2px 6px rgba(16,24,40,.18); }
   .ymap-arc .ymap-badge.earned { box-shadow: 0 0 0 2px rgba(255,142,0,.25), 0 2px 6px rgba(16,24,40,.18); }
-  .ymap-arc-slot:nth-child(-n+3) .ymap-badge::after { left: 0; transform: none; }
+  .ymap-arc-slot:nth-child(-n+2) .ymap-badge::after { left: 0; transform: none; }
+  .ymap-arc-slot:nth-last-child(-n+2) .ymap-badge::after { left: auto; right: 0; transform: none; }
   .ymap-badges { display: flex; gap: 8px; }
   .ymap-badges.a { grid-area: a; flex-direction: column; align-items: center; justify-content: center; }
   .ymap-badges.b { grid-area: b; flex-direction: column; align-items: center; justify-content: center; }
@@ -68,15 +69,15 @@ export const MAP_CSS = `
   .ymap-badges.b .ymap-badge::after { left: auto; right: calc(100% + 8px); bottom: auto; top: 50%; transform: translateY(-50%); }
 
   /* big "x% Completed" printed on the Tibetan plateau (empty space north of the Himalaya) */
-  .ymap-pct { position: absolute; left: 64%; top: 17.5%; transform: translate(-50%, -50%); pointer-events: none; white-space: nowrap; text-align: center;
+  .ymap-pct { position: absolute; left: 72%; top: 23.4%; transform: translate(-50%, -50%); pointer-events: none; white-space: nowrap; text-align: center;
     font-family: var(--font-heading); font-weight: 600; letter-spacing: .05em; color: #2F6B3A; opacity: .88;
     font-size: 3.6vw; font-size: clamp(12px, 4.3cqw, 44px); text-shadow: 0 1px 0 rgba(255,255,255,.9), 0 0 10px rgba(255,255,255,.7); }
   .ymap-pct small { display: block; font-size: .34em; letter-spacing: .16em; text-transform: uppercase; opacity: .8; margin-top: .1em; font-family: var(--font-ui); font-weight: 700; }
 
-  /* progress card: in the Bay of Bengal (east of Tamil Nadu / Andhra coast) on wide screens, below the map on phones */
+  /* progress card: top-right, on the empty Tibetan plateau (above the "% Completed" label) on wide screens, below the map on phones */
   .ymap-card2 { display: block; background: rgba(255,255,255,.94); border: 1px solid var(--color-border); border-radius: 16px;
     padding: 10px 14px 10px 10px; box-shadow: 0 6px 20px rgba(16,24,40,.16); font-family: var(--font-body); color: var(--color-text-main); }
-  .ymap-card2.overlay { position: absolute; z-index: 2; left: 52.5%; top: 68%; width: 30%; font-size: 12px; font-size: clamp(9px, 1.62cqw, 14px); padding: .8em 1em; border-radius: 1.3em; }
+  .ymap-card2.overlay { position: absolute; z-index: 2; left: 57.5%; top: 1.8%; width: 40%; font-size: 12px; font-size: clamp(9px, 1.5cqw, 14px); padding: .8em 1em; border-radius: 1.3em; }
   .ymap-card2.below { display: none; margin: 12px auto 0; max-width: 520px; }
   .ymap-card2 .body { flex: 1; min-width: 0; }
   .ymap-card2 .ttl { font-weight: 700; font-size: 13.5px; line-height: 1.25; } .ymap-card2.overlay .ttl { font-size: 1.12em; }
