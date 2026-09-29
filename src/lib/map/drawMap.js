@@ -26,17 +26,19 @@ const easeOutCubic = (x) => 1 - Math.pow(1 - x, 3);
 // One uniform green that spreads south → north with progress. Built ONCE per (progress, size, unlocked features) into an
 // offscreen canvas; the live loop only blits it. It leaves clear gaps around rivers and unlocked mountain ranges.
 export const LAWN_GREEN = "#6BAE45";
-let bladeTile = null;
-function blades() {
-  if (bladeTile) return bladeTile;
-  const t = typeof OffscreenCanvas !== "undefined" ? new OffscreenCanvas(72, 72) : Object.assign(document.createElement("canvas"), { width: 72, height: 72 });
-  const x = t.getContext("2d");
+const bladeTiles = new Map();
+// Blade texture tile drawn at DEVICE resolution (s = canvas px per map unit) so the fine blades stay crisp instead of being up-scaled.
+function blades(s = 1) {
+  const key = Math.max(1, Math.min(4, Math.round(s * 2) / 2)), hit = bladeTiles.get(key); if (hit) return { tile: hit, s: key };
+  const px = Math.round(72 * key);
+  const t = typeof OffscreenCanvas !== "undefined" ? new OffscreenCanvas(px, px) : Object.assign(document.createElement("canvas"), { width: px, height: px });
+  const x = t.getContext("2d"); x.scale(px / 72, px / 72);
   for (let i = 0; i < 520; i++) {                          // fine, single-hue blade flecks: texture without banding or patches
-    x.strokeStyle = hash01(i, 5) > 0.5 ? "rgba(70,140,50,.30)" : "rgba(140,200,100,.30)"; x.lineWidth = 0.7;
-    const px = hash01(i, 11) * 72, py = hash01(i, 12) * 72, h = 2.5 + hash01(i, 13) * 3.5, lean = (hash01(i, 14) - 0.5) * 2;
-    x.beginPath(); x.moveTo(px, py); x.lineTo(px + lean, py - h); x.stroke();
+    x.strokeStyle = hash01(i, 5) > 0.5 ? "rgba(70,140,50,.34)" : "rgba(140,200,100,.34)"; x.lineWidth = 0.6;
+    const bx = hash01(i, 11) * 72, by = hash01(i, 12) * 72, h = 2.5 + hash01(i, 13) * 3.5, lean = (hash01(i, 14) - 0.5) * 2;
+    x.beginPath(); x.moveTo(bx, by); x.lineTo(bx + lean, by - h); x.stroke();
   }
-  bladeTile = t; return t;
+  bladeTiles.set(key, t); return { tile: t, s: key };
 }
 const ringPath = (ctx, f, close) => { ctx.beginPath(); for (let i = 0; i < f.length; i += 2) (i ? ctx.lineTo(f[i], f[i + 1]) : ctx.moveTo(f[i], f[i + 1])); if (close) ctx.closePath(); };
 
@@ -49,10 +51,10 @@ export function buildLawn({ growth, unit = 0.1, progress, indiaD, hotspots, unlo
   for (let i = 0; i < n; i++) {                            // soft blobs: interior saturates to a uniform colour, edge feathers
     const cx = growth[i * 2] * unit, cy = growth[i * 2 + 1] * unit;
     const g = x.createRadialGradient(cx, cy, 0, cx, cy, R);
-    g.addColorStop(0, LAWN_GREEN); g.addColorStop(0.55, LAWN_GREEN); g.addColorStop(1, "rgba(107,174,69,0)");
+    g.addColorStop(0, LAWN_GREEN); g.addColorStop(0.8, LAWN_GREEN); g.addColorStop(1, "rgba(107,174,69,0)");
     x.fillStyle = g; x.beginPath(); x.arc(cx, cy, R, 0, TAU); x.fill();
   }
-  x.globalCompositeOperation = "source-atop"; x.globalAlpha = 0.55; x.fillStyle = x.createPattern(blades(), "repeat"); x.fillRect(0, 0, W, H); x.globalAlpha = 1;
+  x.globalCompositeOperation = "source-atop"; x.globalAlpha = 0.55; const bt = blades(widthPx / W), pat = x.createPattern(bt.tile, "repeat"); pat.setTransform(new DOMMatrix().scale(1 / bt.s)); x.fillStyle = pat; x.fillRect(0, 0, W, H); x.globalAlpha = 1;
   if (indiaD) { x.globalCompositeOperation = "destination-in"; x.fillStyle = "#000"; x.fill(new Path2D(indiaD), "evenodd"); }
   x.globalCompositeOperation = "destination-out"; x.fillStyle = "#000"; x.strokeStyle = "#000"; x.lineCap = x.lineJoin = "round";
   for (const id of unlocked || []) {

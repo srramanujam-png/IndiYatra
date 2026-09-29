@@ -183,7 +183,7 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
   // wide screens: all badges on one semicircular arc in the sea, bottom-left of the map (phones keep the strips)
   const ARC_CX = 19.5, ARC_CY = 90.5, ARC_R = 16;   // in stage-width units (cqw)
   const arcStyle = (i, n) => {
-    const t = n <= 1 ? 90 : 180 - (180 * i) / (n - 1), a = (t * Math.PI) / 180;
+    const step = n <= 1 ? 0 : Math.min(180 / 11, 180 / (n - 1)), t = 90 + ((n - 1) / 2 - i) * step, a = (t * Math.PI) / 180;
     return { left: `${ARC_CX + ARC_R * Math.cos(a)}cqw`, top: `${ARC_CY - ARC_R * Math.sin(a)}cqw` };
   };
 
