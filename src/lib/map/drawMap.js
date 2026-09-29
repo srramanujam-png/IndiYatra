@@ -135,7 +135,7 @@ export function drawPlants(ctx, { atlas, sprites, plants, t = 0, born = {}, stil
   return drawn;
 }
 
-// ─── rudraksha mala on the boundary: small ridged beads, grey → brown, filling to the exact progress % ─
+// ─── rudraksha mala on the boundary: earned (brown) beads only, growing Kashmir → clockwise to the exact progress % ─
 export const MALA_BEAD_UNITS = 6.8;         // bead length in map units
 const beadCache = new Map();
 function beadSprite(earned) {
@@ -157,19 +157,20 @@ function beadSprite(earned) {
 export function drawMala(ctx, { mala, unit = 0.1, progress, k = 1 }) {
   if (!mala?.pos?.length) return 0;
   const n = mala.beads, earned = malaEarned(progress, n), s = 1 / Math.sqrt(k);
+  if (earned <= 0) return 0;
   const sp = mala.string, pts = []; for (let i = 0; i < sp.length; i += 2) pts.push([sp[i] * unit, sp[i + 1] * unit]);
   const cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
   const upto = (earned / n) * (cum[cum.length - 1] || 1);
   ctx.lineCap = ctx.lineJoin = "round"; ctx.lineWidth = 0.7 * s;
-  ctx.strokeStyle = "rgba(160,158,150,.5)"; ctx.beginPath(); pts.forEach((q, i) => (i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]))); ctx.stroke();
   if (upto > 0) { ctx.strokeStyle = "rgba(139,98,62,.75)"; ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length && cum[i] <= upto; i++) ctx.lineTo(pts[i][0], pts[i][1]); ctx.stroke(); }
-  const off = beadSprite(false), on = beadSprite(true), D = MALA_BEAD_UNITS * s * 1.35;   // sprite cell is larger than the bead body
+  const on = beadSprite(true), D = MALA_BEAD_UNITS * s * 1.35;   // sprite cell is larger than the bead body
   for (let b = 0; b < n; b++) {
     const x = mala.pos[b * 4], y = mala.pos[b * 4 + 1], a = Math.atan2(mala.pos[b * 4 + 3], mala.pos[b * 4 + 2]);
     const f = Math.max(0, Math.min(1, earned - b));
+    if (f <= 0) break;                                              // beads are earned in order: nothing beyond this one is drawn
     ctx.save(); ctx.translate(x, y); ctx.rotate(a);
-    ctx.drawImage(f >= 1 ? on : off, -D / 2, -D / 2, D, D);
-    if (f > 0 && f < 1) { ctx.beginPath(); ctx.rect(-D / 2, -D / 2, D * f, D); ctx.clip(); ctx.drawImage(on, -D / 2, -D / 2, D, D); }   // partial bead fills along the thread
+    if (f < 1) { ctx.beginPath(); ctx.rect(-D / 2, -D / 2, D * f, D); ctx.clip(); }   // the bead being earned fills along the thread
+    ctx.drawImage(on, -D / 2, -D / 2, D, D);
     ctx.restore();
   }
   return n;
