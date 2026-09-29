@@ -15,7 +15,7 @@ BEGIN
   -- ── throw-away data: A = 4 lessons x 3 snippets (u1 finished 3), B = 2 x 3 (finished 1), C = 2 x 3 (0), D = 1 x 3 (finished) ──
   INSERT INTO languages (language_id, language_code, language) VALUES ('LANG_03', 'mct', 'MCT lang') ON CONFLICT DO NOTHING;
   INSERT INTO auth.users (id) VALUES (u1), (u2);
-  INSERT INTO profiles (id, display_name) VALUES (u1, 'MCT one'), (u2, 'MCT two');
+  INSERT INTO profiles (id, display_name) VALUES (u1, 'MCT one'), (u2, 'MCT two') ON CONFLICT (id) DO UPDATE SET display_name = EXCLUDED.display_name;
   INSERT INTO levels (level_id, level_number, title) VALUES ('MCTL', 99, 'MCT') ON CONFLICT DO NOTHING;
   INSERT INTO courses (course_id, course_name) VALUES (cA, 'MCT Course A'), (cB, 'MCT Course B'), (cC, 'MCT Course C'), (cD, 'MCT Course D');
   ls := ARRAY[]::uuid[];
