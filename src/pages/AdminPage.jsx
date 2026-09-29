@@ -17,8 +17,9 @@ import {
 } from "../lib/auth";
 import { globalStyles } from "../styles/global";
 import PageHeader from "../components/PageHeader";
+import MapAdminTab from "../components/map/MapAdminTab";
 
-const TABS = ["Overview", "Users", "Team", "Comments", "Tokens", "Content", "Taxonomy", "Badges", "Featured", "Order", "Import"];
+const TABS = ["Overview", "Users", "Team", "Comments", "Tokens", "Content", "Taxonomy", "Badges", "Map", "Featured", "Order", "Import"];
 
 // 2.9 (ED-A): global editorial roles grantable from the Team tab
 const EDITORIAL_ROLE_OPTIONS = [
@@ -1650,7 +1651,7 @@ export default function AdminPage({
                       <select className="crud-select" value={grantType} onChange={e => setGrantType(e.target.value)}>
                         {tokenCatalogue.length > 0
                           ? tokenCatalogue.map(t => <option key={t.token_type} value={t.token_type}>{t.token_icon} {t.token_name}</option>)
-                          : ["tulsi","ashoka","lotus","peepal","banyan","dharma"].map(t => <option key={t} value={t}>{t}</option>)
+                          : ["tulsi","jasmine","lotus","ashoka","banyan","dharma"].map(t => <option key={t} value={t}>{t}</option>)
                         }
                       </select>
                     </div>
@@ -1842,6 +1843,9 @@ export default function AdminPage({
                 )}
               </div>
             )}
+
+            {/* ── MAP (milestones, labels, temples, plant rules) ─────────── */}
+            {activeTab === "Map" && <MapAdminTab />}
 
             {/* ── BADGES ───────────────────────────────────────────────── */}
             {activeTab === "Badges" && (

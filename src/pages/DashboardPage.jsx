@@ -7,6 +7,7 @@ import { supabaseClient } from "../lib/auth";
 import { useAuthContext } from "../contexts/AuthContext";
 import { APP_URL, APP_SHARE_LOGO, PLAYER, DEFAULT_SHARE_MSG, DEFAULT_SHARE_MSG_WITH_SCORE, DEFAULT_SHARE_MSG_NO_SCORE, FOREST_TOKENS as FOREST_TOKEN_DEFS } from "../config/appStrings";
 import RecommendationsRail from "../components/RecommendationsRail";
+import DashboardMap from "../components/map/DashboardMap";
 
 // Off-brand colours removed — using brand constants only
 
@@ -1301,6 +1302,7 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
               <a className="dash-nav-link" href="#sec-streak"><i className="ti ti-flame" style={{color:"var(--color-accent)"}} />Learning Streak</a>
               <a className="dash-nav-link" href="#sec-progress"><i className="ti ti-chart-line" style={{color:"var(--color-primary)"}} />Progress</a>
               <a className="dash-nav-link" href="#sec-activity"><i className="ti ti-activity" style={{color:"var(--color-primary)"}} />Recent Activity</a>
+              <a className="dash-nav-link" href="#sec-map"><i className="ti ti-map-2" style={{color:"var(--color-primary)"}} />Yatra Map</a>
               <a className="dash-nav-link" href="#sec-forest"><i className="ti ti-trees" style={{color:"var(--color-secondary)"}} />Your Forest</a>
               <a className="dash-nav-link" href="#sec-quiz"><i className="ti ti-chart-bar" style={{color:"var(--color-primary)"}} />Quiz Performance</a>
               <a className="dash-nav-link" href="#sec-share"><i className="ti ti-share" style={{color:"var(--color-accent)"}} />Share Your Yatra</a>
@@ -1491,6 +1493,16 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
             );
           })()}
         </div>
+
+        {/* ── Yatra Map (quick view: one plate + compact state; detail loads on demand) ── */}
+        {user && !user.is_anonymous && (
+          <div id="sec-map" className="dash-section">
+            <div className="dash-section-head">
+              <div className="page-section-title"><i className="ti ti-map-2" style={{color: HERITAGE, marginRight: 6}} />Your Yatra Map</div>
+            </div>
+            <DashboardMap refreshKey={`${user.id}:${activePage}`} />
+          </div>
+        )}
 
         {/* ── Your Forest ── */}
         <div id="sec-forest" className="dash-section">

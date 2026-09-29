@@ -9,7 +9,11 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "map:config": "node tools/map/import-config.mjs",
+    "map:sprites": "node tools/map/build-sprites.mjs",
+    "map:plates": "node tools/map/render-plates.mjs",
+    "map:plates:db": "node tools/map/render-plates.mjs --from-db"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.4",
@@ -26,6 +30,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
+    "sharp": "^0.35.5",
     "vite": "^8.0.12",
     "vitest": "^4.1.10"
   }
