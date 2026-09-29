@@ -54,7 +54,7 @@ export default function MapDetail({ state, assets, unlocked, plants, onClose }) 
 
   const progress = state.status === "ok" ? Number(state.progressPercent) : 0;
   // the lawn is built once (fixed 2000 px wide) and scaled by the view transform: it is soft-edged, so zoom stays clean
-  const lawn = useMemo(() => (geo ? buildLawn({ growth: assets.candidates.growth, unit: assets.candidates.unit, progress, indiaD: geo.outline.d, hotspots: manifest.hotspots, unlocked, W: frame.W, H: frame.H, widthPx: 2000 }) : null),
+  const lawn = useMemo(() => (geo ? buildLawn({ growth: assets.candidates.growth, unit: assets.candidates.unit, progress, indiaD: geo.outline.d, hotspots: manifest.hotspots, unlocked, relief: manifest.relief, W: frame.W, H: frame.H, widthPx: 2000 }) : null),
     [geo, assets, progress, manifest, unlocked, frame]);
 
   // ── draw ──

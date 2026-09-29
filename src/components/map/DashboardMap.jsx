@@ -113,7 +113,7 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
     sizeCanvas(canvas, width, (width * frame.H) / frame.W, dpr);
     const lawnKey = `${canvas.width}|${progress.toFixed(3)}|${unlocked.join(",")}`;
     if (lawnRef.current.key !== lawnKey) {
-      lawnRef.current = { key: lawnKey, canvas: buildLawn({ growth: assets.candidates.growth, unit: assets.candidates.unit, progress, indiaD: assets.india?.outline?.d, hotspots: manifest.hotspots, unlocked, W: frame.W, H: frame.H, widthPx: canvas.width }) };
+      lawnRef.current = { key: lawnKey, canvas: buildLawn({ growth: assets.candidates.growth, unit: assets.candidates.unit, progress, indiaD: assets.india?.outline?.d, hotspots: manifest.hotspots, unlocked, relief: manifest.relief, W: frame.W, H: frame.H, widthPx: canvas.width }) };
     }
     sceneRef.current = { lawnReady: true, frame, hotspots: manifest.hotspots, unlocked, sprites: assets.sprites, plants, mala: assets.candidates.mala, unit: assets.candidates.unit, progress };
     paint(performance.now() / 1000, reduced);

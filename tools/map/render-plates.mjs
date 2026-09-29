@@ -10,6 +10,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
+import { reliefTile } from "./relief.mjs";
 
 const args = process.argv.slice(2);
 const flag = (n, d) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : d; };
@@ -95,28 +96,47 @@ function templeGlyph([x, y]) {
   return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><path d="M-6 6 H6 V2 H4 L0 -6 L-4 2 H-6 Z" fill="${PALETTE.temple}" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/><circle cy="-7" r="1.4" fill="${PALETTE.temple}"/></g>`;
 }
 
-export function plateSvg(unlocked, temples) {
-  const mountains = [], rivers = [];
-  for (const id of unlocked) {
-    const f = geo.features[id]; if (!f) continue;
-    if (f.type === "mountain") {
-      const st = PALETTE[f.style] || PALETTE.mixed;
-      mountains.push(`<path d="${f.d}" fill="${st.fill}" stroke="${st.line}" stroke-width="1" stroke-linejoin="round" fill-opacity=".55"/>` + peaksSvg(f));
-    } else if (!noRivers) rivers.push(`<path d="${f.d}" fill="none" stroke="${PALETTE.riverSoft}" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/>` +
+export function plateSvg(unlocked, temples, layer = "base") {
+  const rivers = [];
+  if (!noRivers) for (const id of unlocked) {
+    const f = geo.features[id]; if (!f || f.type !== "river") continue;
+    rivers.push(`<path d="${f.d}" fill="none" stroke="${PALETTE.riverSoft}" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/>` +
       `<path d="${f.d}" fill="none" stroke="${PALETTE.river}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>`);
   }
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${Math.round(W * SCALE)}" height="${Math.round(H * SCALE)}" viewBox="0 0 ${W} ${H}">
-  <defs>${reliefPattern()}<clipPath id="fr"><rect width="${W}" height="${H}"/></clipPath></defs>
+  const head = `<svg xmlns="http://www.w3.org/2000/svg" width="${Math.round(W * SCALE)}" height="${Math.round(H * SCALE)}" viewBox="0 0 ${W} ${H}">`;
+  if (layer === "base") return `${head}
+  <defs>${reliefPattern()}</defs>
   <rect width="${W}" height="${H}" fill="${PALETTE.sea}"/>
   <path d="${geo.land}" fill="${PALETTE.land}" stroke="${PALETTE.coast}" stroke-width=".8" fill-rule="evenodd"/>
   <path d="${geo.relief}" fill="${PALETTE.relief}" opacity=".4" fill-rule="evenodd"/>
   <path d="${geo.relief}" fill="url(#hills)" fill-rule="evenodd"/>
-  ${mountains.join("\n  ")}
   <path d="${geo.outline.d}" fill="${PALETTE.india}" fill-opacity=".6" fill-rule="evenodd"/>
+  </svg>`;
+  return `${head}
   <path d="${geo.outline.d}" fill="none" stroke="${PALETTE.indiaLine}" stroke-width="1" stroke-opacity=".45" stroke-linejoin="round" fill-rule="evenodd"/>
   ${rivers.join("\n  ")}
   ${noRivers ? "" : temples.map(templeGlyph).join("")}
   </svg>`;
+}
+
+// ----- shaded relief tiles (one per range; cached, also written for the detail view) -----
+const reliefDir = path.join(geoDir, "relief");
+const tileCache = new Map();
+async function tileFor(id) {
+  if (tileCache.has(id)) return tileCache.get(id);
+  const f = geo.features[id]; let t = null;
+  if (f && f.type === "mountain") {
+    const r = await reliefTile({ id, d: f.d, style: f.style, scale: SCALE, seed: Number(id.replace(/\D/g, "")) || 1 });
+    if (r) {
+      // clip to the frame so it can be composited on the plate
+      const cx0 = Math.max(0, r.x), cy0 = Math.max(0, r.y), cx1 = Math.min(W, r.x + r.w), cy1 = Math.min(H, r.y + r.h);
+      const ex = { left: Math.round((cx0 - r.x) * SCALE), top: Math.round((cy0 - r.y) * SCALE), width: Math.round((cx1 - cx0) * SCALE), height: Math.round((cy1 - cy0) * SCALE) };
+      const png = await sharp(r.png).extract(ex).png({ compressionLevel: 9 }).toBuffer();
+      t = { png, left: Math.round(cx0 * SCALE), top: Math.round(cy0 * SCALE), x: cx0, y: cy0, w: cx1 - cx0, h: cy1 - cy0, grow: r.grow };
+      if (!only) { fs.mkdirSync(reliefDir, { recursive: true }); fs.writeFileSync(path.join(reliefDir, `${id}.png`), png); }
+    }
+  }
+  tileCache.set(id, t); return t;
 }
 
 // ----- cumulative unlock sets -----
@@ -134,18 +154,39 @@ const sizes = [];
 for (let i = 0; i <= 20; i++) {
   if (wanted && !wanted.has(i)) continue;
   const c = cumulative[i];
-  const svg = plateSvg(c.features, c.temples.map(placed).filter(Boolean));
+  const tiles = [];
+  for (const id of c.features) { const t = await tileFor(id); if (t) tiles.push({ input: t.png, left: t.left, top: t.top }); }
+  const top = await sharp(Buffer.from(plateSvg(c.features, c.temples.map(placed).filter(Boolean), "top"))).png().toBuffer();
   const file = path.join(outDir, `${String(i).padStart(2, "0")}.webp`);
-  await sharp(Buffer.from(svg)).webp({ quality, effort: 6 }).toFile(file);
+  await sharp(Buffer.from(plateSvg(c.features, [], "base"))).composite([...tiles, { input: top, left: 0, top: 0 }]).webp({ quality, effort: 6 }).toFile(file);
   sizes.push(fs.statSync(file).size);
+}
+
+
+// Mountain hotspot parts: EVERY fragment of the range polygon (simplified), not just the big ones, so hit-testing and the lawn clearing
+// match the relief tile exactly (the Ghats / Aravalli polygons are many small pieces).
+function subpaths(d) {
+  const out = []; for (const seg of d.split("M").slice(1)) {
+    const n = seg.match(/-?\d+(?:\.\d+)?/g)?.map(Number) || []; const pts = []; for (let i = 0; i + 1 < n.length; i += 2) pts.push([n[i], n[i + 1]]); if (pts.length >= 3) out.push(pts);
+  } return out;
+}
+function rdp(pts, eps) {
+  if (pts.length < 3) return pts; const [a, b] = [pts[0], pts[pts.length - 1]]; let mi = 0, md = 0; const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1e-9;
+  for (let i = 1; i < pts.length - 1; i++) { const dd = Math.abs(dy * pts[i][0] - dx * pts[i][1] + b[0] * a[1] - b[1] * a[0]) / L; if (dd > md) { md = dd; mi = i; } }
+  return md > eps ? [...rdp(pts.slice(0, mi + 1), eps).slice(0, -1), ...rdp(pts.slice(mi), eps)] : [a, b];
+}
+const ringArea = (p) => { let a = 0; for (let i = 0; i < p.length; i++) { const q = p[(i + 1) % p.length]; a += p[i][0] * q[1] - q[0] * p[i][1]; } return Math.abs(a) / 2; };
+function mountainParts(d) {
+  return subpaths(d).filter((p) => ringArea(p) > 3).map((p) => rdp(p, 0.8)).filter((p) => p.length >= 3).map((p) => p.flatMap(([x, y]) => [+x.toFixed(1), +y.toFixed(1)]));
 }
 
 // ----- manifest: everything the quick dashboard needs to label/hit-test, tied to THESE plates -----
 const hotspots = {};
 for (const [id, f] of Object.entries(cfg.features)) {
   const h = hit[id]; if (!h) continue;
+  const parts = f.type === "mountain" && geo.features[id] ? (mountainParts(geo.features[id].d).length ? mountainParts(geo.features[id].d) : h.parts) : h.parts;
   hotspots[id] = { type: f.type, name: f.name, hover: f.hover || f.name, tap: f.tap || `Explore the ${f.name}.`, style: f.style,
-    kind: h.kind, anchor: h.anchor, parts: h.parts };
+    kind: h.kind, anchor: h.anchor, parts };
 }
 for (const t of cfg.temples) {
   const p = placed(t.id); if (!p) continue;
@@ -159,6 +200,7 @@ const manifest = {
     riverIds: m.riverIds, mountainIds: m.mountainIds, templeIds: m.templeIds.filter((id) => placed(id)),
     unlockedFeatureIds: [...cumulative[k + 1].features, ...cumulative[k + 1].temples.filter((id) => placed(id))] })),
   plantRules: cfg.plantRules, hotspots, attribution: geo.attribution,
+  relief: Object.fromEntries([...tileCache].filter(([, t]) => t).map(([id, t]) => [id, { file: `relief/${id}.png`, x: t.x, y: t.y, w: t.w, h: t.h, grow: t.grow }])),
 };
 if (!wanted) fs.writeFileSync(path.join(outDir, "manifest.json"), JSON.stringify(manifest));
 const total = sizes.reduce((a, b) => a + b, 0);

@@ -55,7 +55,7 @@ function smoothEdge(c, s) {
   const x = c.getContext("2d"); x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.globalCompositeOperation = "copy"; x.drawImage(t, 0, 0); x.restore();
 }
 
-export function buildLawn({ growth, unit = 0.1, progress, indiaD, hotspots, unlocked, W, H, widthPx }) {
+export function buildLawn({ growth, unit = 0.1, progress, indiaD, hotspots, unlocked, relief, W, H, widthPx }) {
   const total = growth.length / 2, n = growthCount(progress, total);
   const c = typeof OffscreenCanvas !== "undefined" ? new OffscreenCanvas(widthPx, Math.round((widthPx * H) / W)) : Object.assign(document.createElement("canvas"), { width: widthPx, height: Math.round((widthPx * H) / W) });
   const x = c.getContext("2d"); x.setTransform(widthPx / W, 0, 0, widthPx / W, 0, 0);
@@ -74,7 +74,11 @@ export function buildLawn({ growth, unit = 0.1, progress, indiaD, hotspots, unlo
   for (const id of unlocked || []) {
     const h = hotspots?.[id]; if (!h?.parts) continue;
     if (h.type === "river") for (const [w, a] of [[17, 0.35], [11, 1]]) { x.lineWidth = w; x.globalAlpha = a; for (const f of h.parts) { ringPath(x, f, false); x.stroke(); } }
-    else if (h.type === "mountain") { x.lineWidth = 7; x.globalAlpha = 0.45; for (const f of h.parts) { ringPath(x, f, true); x.stroke(); } x.globalAlpha = 1; for (const f of h.parts) { ringPath(x, f, true); x.fill(); } }
+    else if (h.type === "mountain") {                       // clear the SAME (grown) footprint the relief tile was drawn on
+      const g = relief?.[id]?.grow || 0;
+      x.lineWidth = 7 + 2 * g; x.globalAlpha = 0.45; for (const f of h.parts) { ringPath(x, f, true); x.stroke(); }
+      x.globalAlpha = 1; x.lineWidth = 1 + 2 * g; for (const f of h.parts) { ringPath(x, f, true); if (g) x.stroke(); x.fill(); }
+    }
   }
   x.globalAlpha = 1; x.globalCompositeOperation = "source-over";
   return c;
