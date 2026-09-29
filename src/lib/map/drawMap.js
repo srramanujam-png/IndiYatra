@@ -42,6 +42,19 @@ function blades(s = 1) {
 }
 const ringPath = (ctx, f, close) => { ctx.beginPath(); for (let i = 0; i < f.length; i += 2) (i ? ctx.lineTo(f[i], f[i + 1]) : ctx.moveTo(f[i], f[i + 1])); if (close) ctx.closePath(); };
 
+/** Metaball-style edge: blur the blob coverage, then re-threshold its alpha so the lawn boundary is one smooth curve
+ *  (no scalloped round lobes) while the interior stays fully opaque. `s` = canvas px per map unit. */
+function smoothEdge(c, s) {
+  const mk = (w, h) => (typeof OffscreenCanvas !== "undefined" ? new OffscreenCanvas(w, h) : Object.assign(document.createElement("canvas"), { width: w, height: h }));
+  const t = mk(c.width, c.height), tx = t.getContext("2d");
+  if (!("filter" in tx)) return;                                  // very old browser: keep the feathered edge
+  tx.filter = `blur(${(5 * s).toFixed(1)}px)`; tx.drawImage(c, 0, 0);
+  const img = tx.getImageData(0, 0, t.width, t.height), d = img.data, lo = 0.42 * 255, hi = 0.58 * 255;
+  for (let i = 3; i < d.length; i += 4) { const a = d[i]; d[i] = a <= lo ? 0 : a >= hi ? 255 : Math.round(((a - lo) / (hi - lo)) * 255); }
+  tx.putImageData(img, 0, 0);
+  const x = c.getContext("2d"); x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.globalCompositeOperation = "copy"; x.drawImage(t, 0, 0); x.restore();
+}
+
 export function buildLawn({ growth, unit = 0.1, progress, indiaD, hotspots, unlocked, W, H, widthPx }) {
   const total = growth.length / 2, n = growthCount(progress, total);
   const c = typeof OffscreenCanvas !== "undefined" ? new OffscreenCanvas(widthPx, Math.round((widthPx * H) / W)) : Object.assign(document.createElement("canvas"), { width: widthPx, height: Math.round((widthPx * H) / W) });
@@ -54,6 +67,7 @@ export function buildLawn({ growth, unit = 0.1, progress, indiaD, hotspots, unlo
     g.addColorStop(0, LAWN_GREEN); g.addColorStop(0.8, LAWN_GREEN); g.addColorStop(1, "rgba(107,174,69,0)");
     x.fillStyle = g; x.beginPath(); x.arc(cx, cy, R, 0, TAU); x.fill();
   }
+  smoothEdge(c, widthPx / W);
   x.globalCompositeOperation = "source-atop"; x.globalAlpha = 0.55; const bt = blades(widthPx / W), pat = x.createPattern(bt.tile, "repeat"); pat.setTransform(new DOMMatrix().scale(1 / bt.s)); x.fillStyle = pat; x.fillRect(0, 0, W, H); x.globalAlpha = 1;
   if (indiaD) { x.globalCompositeOperation = "destination-in"; x.fillStyle = "#000"; x.fill(new Path2D(indiaD), "evenodd"); }
   x.globalCompositeOperation = "destination-out"; x.fillStyle = "#000"; x.strokeStyle = "#000"; x.lineCap = x.lineJoin = "round";

@@ -159,12 +159,10 @@ def poisson(pool_pts, r):
         if ok: grid[(gx, gy)] = (x, y); kept.append((x, y))
     return np.array(kept)
 G = poisson(POOL, 7.4)      # dense Dhruva-grass field (r=7.4 map units ≈ 2.4× the first version)
-ymin, ymax = G[:, 1].min(), G[:, 1].max()
-southness = (G[:, 1] - ymin) / (ymax - ymin)                   # 0 = northern edge, 1 = southern tip (y grows downward)
-# spatially-correlated low-frequency field => the growth front advances in ragged PATCHES, not a flat sweep
-field = (np.sin(G[:, 0] * 0.012 + 1.3) * np.cos(G[:, 1] * 0.010 + 0.4) + 0.6 * np.sin(G[:, 0] * 0.021 + G[:, 1] * 0.017 + 2.1)) / 1.6
-key = southness + 0.20 * field + rng.normal(0, 0.03, len(G))
-G = G[np.argsort(-key)]                                         # south first, north last
+# ONE connected southern front (no islands): see tools/map/growth_order.py
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from growth_order import order_growth
+G = order_growth(G)                                             # south first, north last
 print('growth candidates', len(G))
 
 # ---------- rudraksha mala: 108 beads equally spaced along the mainland boundary, starting at the southern tip ----------
