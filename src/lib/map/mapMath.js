@@ -181,3 +181,9 @@ export function summaryText(state, manifest, unlocked) {
     `${names.length ? `Unlocked: ${names.join(", ")}.` : "No rivers, mountain ranges or temples unlocked yet."} ` +
     `${earned} of ${(state.badges || []).length} badges earned.`;
 }
+
+/** Rudraksha mala: how many of its `n` beads are earned at `progress` (0..100). Fractional = the partly filled bead. */
+export function malaEarned(progress, n = 108) {
+  const p = Number(progress); if (!Number.isFinite(p)) return 0;
+  return (Math.max(0, Math.min(100, p)) / 100) * n;
+}

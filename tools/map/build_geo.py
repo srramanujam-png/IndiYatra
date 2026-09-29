@@ -158,7 +158,7 @@ def poisson(pool_pts, r):
             if not ok: break
         if ok: grid[(gx, gy)] = (x, y); kept.append((x, y))
     return np.array(kept)
-G = poisson(POOL[:160000], 11.5)
+G = poisson(POOL, 7.4)      # dense Dhruva-grass field (r=7.4 map units ≈ 2.4× the first version)
 ymin, ymax = G[:, 1].min(), G[:, 1].max()
 southness = (G[:, 1] - ymin) / (ymax - ymin)                   # 0 = northern edge, 1 = southern tip (y grows downward)
 # spatially-correlated low-frequency field => the growth front advances in ragged PATCHES, not a flat sweep
@@ -167,9 +167,54 @@ key = southness + 0.20 * field + rng.normal(0, 0.03, len(G))
 G = G[np.argsort(-key)]                                         # south first, north last
 print('growth candidates', len(G))
 
+# ---------- rudraksha mala: 108 beads equally spaced along the mainland boundary, starting at the southern tip ----------
+MALA_BEADS = 108
+def chaikin(pts, it=2):
+    for _ in range(it):
+        q = pts[:-1] * 0.75 + pts[1:] * 0.25; r = pts[:-1] * 0.25 + pts[1:] * 0.75
+        out = np.empty((len(q) * 2, 2)); out[0::2] = q; out[1::2] = r; pts = np.vstack([out, out[:1]])
+    return pts
+# the mala follows a SMOOTHED boundary so beads are evenly spaced instead of bunching in fractal coastlines
+ring = chaikin(np.array(mainland.simplify(9).exterior.coords), 2)
+i0 = int(np.argmax(ring[:, 1]))                                  # southernmost vertex (Kanyakumari)
+ring = np.vstack([ring[i0:-1], ring[:i0], ring[i0:i0 + 1]])
+if ring[min(6, len(ring) - 1), 0] > ring[0, 0]: ring = np.vstack([ring[0:1], ring[:0:-1]])   # go up the WEST coast first
+seg = np.hypot(*np.diff(ring, axis=0).T); cum = np.concatenate([[0], np.cumsum(seg)]); LEN = cum[-1]
+def at(dist):
+    j = min(int(np.searchsorted(cum, dist, side='right')) - 1, len(seg) - 1); t = (dist - cum[j]) / max(seg[j], 1e-9)
+    a, b = ring[j], ring[j + 1]; tang = (b - a) / max(np.hypot(*(b - a)), 1e-9)
+    return a + (b - a) * t, tang
+beads = []
+for k in range(MALA_BEADS):
+    pos, tang = at((k + 0.5) / MALA_BEADS * LEN)
+    # smooth the tangent over +-1.5 bead spacings so the partial-bead fill edge is not jagged
+    a, _ = at(max(0, (k + 0.5) / MALA_BEADS * LEN - LEN / MALA_BEADS * 1.5)); b, _ = at(min(LEN, (k + 0.5) / MALA_BEADS * LEN + LEN / MALA_BEADS * 1.5))
+    tg = (b - a) / max(np.hypot(*(b - a)), 1e-9)
+    beads += [pos[0], pos[1], tg[0], tg[1]]
+string = LineString(ring).simplify(0.8)
+print('mala perimeter', round(LEN), 'units; bead spacing', round(LEN / MALA_BEADS, 1), '; string pts', len(string.coords))
+
+# ---------- 3-D mountain peaks: shaded triangular peaks scattered inside every range polygon ----------
+def peaks_for(fid, f):
+    g = project_geom(f['g']); polys = list(g.geoms) if hasattr(g, 'geoms') else [g]
+    style = f['style']; r = 8.0 if style == 'snow' else 6.8
+    out = []
+    for q in polys:
+        if q.area < 40: continue
+        mnx, mny, mxx, mxy = q.bounds
+        pts = np.column_stack([rng.uniform(mnx, mxx, 40000), rng.uniform(mny, mxy, 40000)])
+        pts = pts[contains_xy(q.buffer(-2), pts[:, 0], pts[:, 1])]
+        out += [tuple(p) for p in poisson(pts, r)] if len(pts) else []
+    out.sort(key=lambda p: p[1])                                    # back (north) to front (south)
+    if len(out) > 700: out = [out[i] for i in np.linspace(0, len(out) - 1, 700).astype(int)]
+    return [v for p in out for v in (int(round(p[0] * 10)), int(round(p[1] * 10)), int(round((0.75 + 0.5 * rng.random()) * 100)))]   # x*10, y*10, size%
+peak_data = {fid: peaks_for(fid, f) for fid, f in features.items() if f['type'] == 'mountain'}
+print('peaks', sum(len(v) // 3 for v in peak_data.values()))
+
 def flat(a): return [int(round(v * 10)) for p in a for v in p]
 cand = dict(version='v1', frame=dict(W=W, H=H), unit=0.1,
-            growth=flat(G), plants={k: flat(v) for k, v in plants.items()})
+            growth=flat(G), plants={k: flat(v) for k, v in plants.items()},
+            mala=dict(beads=MALA_BEADS, pos=[round(v, 2) for v in beads], string=flat(np.array(string.coords))))
 json.dump(cand, open(f'{OUT}/candidates.json', 'w'), separators=(',', ':'))
 
 # ---------- feature anchors / hit shapes ----------
@@ -199,7 +244,7 @@ geo = dict(
     outline=dict(d=geom_d(india), source=('PROVISIONAL: DataMeet composite outline prototype — NOT the Survey of India official outline'
                  if PROVISIONAL else 'Survey of India international boundary (1:16M vector)')),
     land=geom_d(land_g), relief=geom_d(relief_g),
-    features={fid: dict(type=f['type'], style=f['style'], src=f['src'], d=f['d']) for fid, f in features.items()},
+    features={fid: dict(type=f['type'], style=f['style'], src=f['src'], d=f['d'], **({'peaks': peak_data[fid]} if fid in peak_data else {})) for fid, f in features.items()},
     attribution=['GMBA Mountain Inventory v2 — Snethlage et al. 2022, CC BY 4.0, doi:10.48601/earthenv-t9k2-1407',
                  'HydroRIVERS v1.0 — Lehner & Grill 2013, doi:10.1002/hyp.9740',
                  'Natural Earth — public domain', 'CWC River Network (national water data portal) for river naming'])

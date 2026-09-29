@@ -7,7 +7,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchMapState, loadQuickMap } from "../../lib/map/mapData";
 import { buildPlantList, hitTest, summaryText, toMapUnits, unlockedIds } from "../../lib/map/mapMath";
-import { drawVegetation, sizeCanvas } from "../../lib/map/drawMap";
+import { drawMala, drawVegetation, sizeCanvas } from "../../lib/map/drawMap";
 import { MAP_CSS } from "./mapStyles";
 
 const MapDetail = lazy(() => import("./MapDetail"));
@@ -85,6 +85,7 @@ export default function DashboardMap({ stateOverride = null, refreshKey = 0 }) {
       atlas: assets.sprites.atlas, sprites: assets.sprites, growth: assets.candidates.growth, unit: assets.candidates.unit,
       progress: state.status === "ok" ? Number(state.progressPercent) : 0, plants,
     });
+    drawMala(ctx, { mala: assets.candidates.mala, unit: assets.candidates.unit, progress: state.status === "ok" ? Number(state.progressPercent) : 0 });
     canvas.dataset.instances = String(n); canvas.dataset.paintMs = (performance.now() - t0).toFixed(1);
   }, [assets, state, plants, width, frame]);
 

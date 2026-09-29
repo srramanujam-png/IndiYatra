@@ -175,3 +175,15 @@ describe("hitTest with multi-part geometry", () => {
     expect(hitTest(hs, ["mountain-x"], 500, 350, 5)).toBe(null);
   });
 });
+
+import { malaEarned } from "./mapMath";
+describe("malaEarned", () => {
+  it("is exact and clamped", () => {
+    expect(malaEarned(0)).toBe(0);
+    expect(malaEarned(100)).toBe(108);
+    expect(malaEarned(50)).toBe(54);
+    expect(malaEarned(25)).toBeCloseTo(27, 9);
+    expect(malaEarned(0.5)).toBeCloseTo(0.54, 9);      // half a percent = just over half a bead
+    expect(malaEarned(-3)).toBe(0); expect(malaEarned(140)).toBe(108); expect(malaEarned(NaN)).toBe(0);
+  });
+});

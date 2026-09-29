@@ -3,7 +3,7 @@
 // drag or arrow keys to pan, wheel / pinch / +− to zoom, hover or tap for labels, Esc to close.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { loadGeo } from "../../lib/map/mapData";
-import { drawGeography, drawLabels, drawVegetation, sizeCanvas } from "../../lib/map/drawMap";
+import { drawGeography, drawLabels, drawMala, drawVegetation, sizeCanvas } from "../../lib/map/drawMap";
 import { hitTest } from "../../lib/map/mapMath";
 import { MAP_CSS } from "./mapStyles";
 
@@ -65,6 +65,7 @@ export default function MapDetail({ state, assets, unlocked, plants, onClose }) 
     drawGeography(ctx, { geo, unlocked, temples, k: view.k });
     drawVegetation(ctx, { atlas: assets.sprites.atlas, sprites: assets.sprites, growth: assets.candidates.growth, unit: assets.candidates.unit,
       progress: state.status === "ok" ? Number(state.progressPercent) : 0, plants });
+    drawMala(ctx, { mala: assets.candidates.mala, unit: assets.candidates.unit, progress: state.status === "ok" ? Number(state.progressPercent) : 0, k: view.k });
     drawLabels(ctx, { hotspots: manifest.hotspots, unlocked, k: view.k, hover });
   }, [geo, size, view, fit, frame, unlocked, plants, assets, state, manifest, hover]);
 
