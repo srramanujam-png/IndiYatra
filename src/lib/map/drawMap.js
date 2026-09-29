@@ -3,9 +3,10 @@
 // (0..frame.W × 0..frame.H, 1000 wide). The same transform serves the pre-rendered plate, the
 // dynamic layer, hit regions and labels, so nothing drifts on resize.
 //
-// quick view : plate <img> (from CDN) + THIS canvas draws only the dynamic vegetation
-// detail    : this canvas also draws the vector geography (lazy-loaded geo.json) with pan/zoom
-import { growthStates, hash01, malaEarned } from "./mapMath";
+// quick view : plate <img> (terrain + 3-D mountains) + THIS canvas draws the live layers, bottom → top:
+//                 turf lawn (cached, spreads south → north) · rivers (animated) · temples · plants (animated) · mala
+// detail    : same live layers on top of the vector geography (lazy-loaded geo.json) with pan/zoom
+import { growthCount, hash01, malaEarned } from "./mapMath";
 
 export const SPRITE_UNITS = { seed: 9, grass: 21, plant: 52 };   // drawn width in map units (× rule scale for plants)
 
@@ -17,86 +18,157 @@ export function sizeCanvas(canvas, cssW, cssH, dpr = 1) {
   return dpr;
 }
 
-function place(ctx, atlas, sprites, key, x, y, size, flip = false) {
-  const cell = sprites.cell, at = sprites.keys[key]; if (!at) return false;
-  const bottom = 0.9;                                   // sprite base sits ~90% down its cell
-  if (flip) { ctx.save(); ctx.translate(x, 0); ctx.scale(-1, 1); ctx.drawImage(atlas, at[0], at[1], cell, cell, -size / 2, y - size * bottom, size, size); ctx.restore(); }
-  else ctx.drawImage(atlas, at[0], at[1], cell, cell, x - size / 2, y - size * bottom, size, size);
-  return true;
+const TAU = Math.PI * 2;
+const easeOutBack = (x) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+const easeOutCubic = (x) => 1 - Math.pow(1 - x, 3);
+
+// ─── turf lawn ─────────────────────────────────────────────────────────────────────────────────────
+// One uniform green that spreads south → north with progress. Built ONCE per (progress, size, unlocked features) into an
+// offscreen canvas; the live loop only blits it. It leaves clear gaps around rivers and unlocked mountain ranges.
+export const LAWN_GREEN = "#6BAE45";
+let bladeTile = null;
+function blades() {
+  if (bladeTile) return bladeTile;
+  const t = typeof OffscreenCanvas !== "undefined" ? new OffscreenCanvas(72, 72) : Object.assign(document.createElement("canvas"), { width: 72, height: 72 });
+  const x = t.getContext("2d");
+  for (let i = 0; i < 520; i++) {                          // fine, single-hue blade flecks: texture without banding or patches
+    x.strokeStyle = hash01(i, 5) > 0.5 ? "rgba(70,140,50,.30)" : "rgba(140,200,100,.30)"; x.lineWidth = 0.7;
+    const px = hash01(i, 11) * 72, py = hash01(i, 12) * 72, h = 2.5 + hash01(i, 13) * 3.5, lean = (hash01(i, 14) - 0.5) * 2;
+    x.beginPath(); x.moveTo(px, py); x.lineTo(px + lean, py - h); x.stroke();
+  }
+  bladeTile = t; return t;
+}
+const ringPath = (ctx, f, close) => { ctx.beginPath(); for (let i = 0; i < f.length; i += 2) (i ? ctx.lineTo(f[i], f[i + 1]) : ctx.moveTo(f[i], f[i + 1])); if (close) ctx.closePath(); };
+
+export function buildLawn({ growth, unit = 0.1, progress, indiaD, hotspots, unlocked, W, H, widthPx }) {
+  const total = growth.length / 2, n = growthCount(progress, total);
+  const c = typeof OffscreenCanvas !== "undefined" ? new OffscreenCanvas(widthPx, Math.round((widthPx * H) / W)) : Object.assign(document.createElement("canvas"), { width: widthPx, height: Math.round((widthPx * H) / W) });
+  const x = c.getContext("2d"); x.setTransform(widthPx / W, 0, 0, widthPx / W, 0, 0);
+  if (n <= 0) return c;
+  const R = 26;
+  for (let i = 0; i < n; i++) {                            // soft blobs: interior saturates to a uniform colour, edge feathers
+    const cx = growth[i * 2] * unit, cy = growth[i * 2 + 1] * unit;
+    const g = x.createRadialGradient(cx, cy, 0, cx, cy, R);
+    g.addColorStop(0, LAWN_GREEN); g.addColorStop(0.55, LAWN_GREEN); g.addColorStop(1, "rgba(107,174,69,0)");
+    x.fillStyle = g; x.beginPath(); x.arc(cx, cy, R, 0, TAU); x.fill();
+  }
+  x.globalCompositeOperation = "source-atop"; x.globalAlpha = 0.55; x.fillStyle = x.createPattern(blades(), "repeat"); x.fillRect(0, 0, W, H); x.globalAlpha = 1;
+  if (indiaD) { x.globalCompositeOperation = "destination-in"; x.fillStyle = "#000"; x.fill(new Path2D(indiaD), "evenodd"); }
+  x.globalCompositeOperation = "destination-out"; x.fillStyle = "#000"; x.strokeStyle = "#000"; x.lineCap = x.lineJoin = "round";
+  for (const id of unlocked || []) {
+    const h = hotspots?.[id]; if (!h?.parts) continue;
+    if (h.type === "river") for (const [w, a] of [[17, 0.35], [11, 1]]) { x.lineWidth = w; x.globalAlpha = a; for (const f of h.parts) { ringPath(x, f, false); x.stroke(); } }
+    else if (h.type === "mountain") { x.lineWidth = 7; x.globalAlpha = 0.45; for (const f of h.parts) { ringPath(x, f, true); x.stroke(); } x.globalAlpha = 1; for (const f of h.parts) { ringPath(x, f, true); x.fill(); } }
+  }
+  x.globalAlpha = 1; x.globalCompositeOperation = "source-over";
+  return c;
 }
 
-/** Dynamic vegetation: dharma seeds → dhruva grass (south→north), then earned plants (exact counts). */
-export function drawVegetation(ctx, { atlas, sprites, growth, unit = 0.1, progress, plants }) {
-  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
-  const total = growth.length / 2;
-  const { seeds, grass } = growthStates(progress, total);
-  let drawn = 0;
-  // grass first, painted north→south so southern tufts overlap northern ones
-  const g = grass.slice().sort((a, b) => growth[a * 2 + 1] - growth[b * 2 + 1]);
-  for (const i of g) {
-    const x = growth[i * 2] * unit, y = growth[i * 2 + 1] * unit;
-    const v = 1 + Math.floor(hash01(i, 3) * 3);
-    const size = SPRITE_UNITS.grass * (0.85 + hash01(i, 5) * 0.4);
-    if (place(ctx, atlas, sprites, `dhruva_grass_${v}`, x, y, size, hash01(i, 9) > 0.5)) drawn++;
+// ─── rivers (bank + water + moving shimmer; optional draw-in from source to mouth) ───────────────────
+const lenCache = new WeakMap();
+function partLen(f) { let L = lenCache.get(f); if (L == null) { L = 0; for (let i = 2; i < f.length; i += 2) L += Math.hypot(f[i] - f[i - 2], f[i + 1] - f[i - 1]); lenCache.set(f, L); } return L; }
+export function drawRivers(ctx, { hotspots, unlocked, t = 0, reveal = {}, k = 1, still = false }) {
+  ctx.lineCap = ctx.lineJoin = "round";
+  const s = 1 / Math.sqrt(k);
+  for (const id of unlocked || []) {
+    const h = hotspots?.[id]; if (!h || h.type !== "river" || !h.parts) continue;
+    const p = reveal[id] == null ? 1 : reveal[id]; if (p <= 0) continue;
+    const stroke = (w, style, dash, off) => {
+      ctx.lineWidth = w * s; ctx.strokeStyle = style;
+      for (const f of h.parts) {
+        const L = partLen(f);
+        ctx.setLineDash(dash ? dash : p < 1 ? [L * p, L + 1] : []); ctx.lineDashOffset = off || 0;
+        ringPath(ctx, f, false); ctx.stroke();
+      }
+    };
+    stroke(6.5, "rgba(255,255,255,.75)"); stroke(2.6, "#2F7DBE");
+    if (p >= 1 && !still) stroke(1.4, "rgba(214,238,252,.95)", [5 * s, 24 * s], -t * 22 * s);   // shimmer travels downstream
+    ctx.setLineDash([]);
   }
-  for (const i of seeds) {
-    if (place(ctx, atlas, sprites, "seed", growth[i * 2] * unit, growth[i * 2 + 1] * unit, SPRITE_UNITS.seed)) drawn++;
+}
+
+// ─── temples ─────────────────────────────────────────────────────────────────────────────────────────
+export function drawTemples(ctx, { hotspots, unlocked, t = 0, k = 1, still = false }) {
+  const s = 1 / Math.sqrt(k);
+  for (const id of unlocked || []) {
+    const h = hotspots?.[id]; if (!h || h.type !== "temple") continue;
+    ctx.save(); ctx.translate(h.anchor[0], h.anchor[1]); ctx.scale(1.5 * s, 1.5 * s);
+    ctx.shadowColor = "rgba(255,142,0,.7)"; ctx.shadowBlur = still ? 8 : 8 + 5 * Math.sin(t * 2 + h.anchor[0]);
+    ctx.beginPath(); ctx.moveTo(-6, 6); ctx.lineTo(6, 6); ctx.lineTo(6, 2); ctx.lineTo(4, 2); ctx.lineTo(0, -6); ctx.lineTo(-4, 2); ctx.lineTo(-6, 2); ctx.closePath();
+    ctx.fillStyle = "#FF8E00"; ctx.fill(); ctx.shadowBlur = 0; ctx.lineWidth = 1.4; ctx.strokeStyle = "#fff"; ctx.stroke(); ctx.restore();
   }
+}
+
+// ─── plants: pale pad so they read on the lawn; pop-in when newly earned; gentle sway ────────────────
+export function drawPlants(ctx, { atlas, sprites, plants, t = 0, born = {}, still = false }) {
+  const cell = sprites.cell; let drawn = 0;
   for (const p of plants || []) {
-    if (place(ctx, atlas, sprites, p.key, p.x, p.y, SPRITE_UNITS.plant * p.scale, hash01(p.n, 21) > 0.5)) drawn++;
+    const at = sprites.keys[p.key]; if (!at) continue;
+    let sc = 1;
+    const b0 = born[`${p.key}:${p.n}`];
+    if (b0 != null) { const a = (t - b0) / 0.7; if (a < 0) continue; sc = a >= 1 ? 1 : Math.max(0.001, easeOutBack(a)); }
+    const size = SPRITE_UNITS.plant * p.scale * sc;
+    ctx.fillStyle = "rgba(255,255,255,.42)"; ctx.beginPath(); ctx.ellipse(p.x, p.y - size * 0.02, size * 0.34, size * 0.13, 0, 0, TAU); ctx.fill();
+    const lotus = p.key === "lotus";
+    const sway = still || lotus ? 0 : Math.sin(t * 1.4 + p.n * 1.7) * 0.035;
+    const bob = still || !lotus ? 0 : Math.sin(t * 1.6 + p.n) * 0.6;
+    ctx.save(); ctx.translate(p.x, p.y + bob); if (sway) ctx.rotate(sway);
+    if (hash01(p.n, 21) > 0.5) ctx.scale(-1, 1);
+    ctx.drawImage(atlas, at[0], at[1], cell, cell, -size / 2, -size * 0.9, size, size); ctx.restore(); drawn++;
   }
-  return drawn;   // instances painted (used by tests/perf logging)
+  return drawn;
 }
 
-// ─── rudraksha mala: 108 beads on the India boundary, grey until earned, filling to the EXACT progress % ───
-export const MALA_BEAD_UNITS = 27;      // bead diameter in map units
+// ─── rudraksha mala on the boundary: small ridged beads, grey → brown, filling to the exact progress % ─
+export const MALA_BEAD_UNITS = 6.8;         // bead length in map units
 const beadCache = new Map();
 function beadSprite(earned) {
   const key = earned ? "on" : "off";
   if (beadCache.has(key)) return beadCache.get(key);
-  const S = 72, c = typeof OffscreenCanvas !== "undefined" ? new OffscreenCanvas(S, S) : Object.assign(document.createElement("canvas"), { width: S, height: S });
-  const x = c.getContext("2d"), r = S / 2 - 3;
-  const tone = earned ? ["#C58A4E", "#7A4522", "#3E2210", "#2B170A"] : ["#EDEDEA", "#C4C4BF", "#9C9C97", "#7F7F7A"];
-  const g = x.createRadialGradient(S * 0.4, S * 0.36, r * 0.1, S / 2, S / 2, r);
-  g.addColorStop(0, tone[0]); g.addColorStop(0.5, tone[1]); g.addColorStop(0.9, tone[2]); g.addColorStop(1, tone[3]);
-  x.beginPath(); x.arc(S / 2, S / 2, r, 0, Math.PI * 2); x.fillStyle = g; x.fill();
-  // the ridged "mukhi" lines that make a rudraksha read as a rudraksha
-  x.save(); x.beginPath(); x.arc(S / 2, S / 2, r - 1, 0, Math.PI * 2); x.clip();
-  x.strokeStyle = earned ? "rgba(35,18,6,.55)" : "rgba(90,90,86,.45)"; x.lineWidth = 2; x.lineCap = "round";
-  for (let i = -2; i <= 2; i++) { x.beginPath(); x.moveTo(S / 2 + i * 1.5, 4); x.quadraticCurveTo(S / 2 + i * 15, S / 2, S / 2 + i * 1.5, S - 4); x.stroke(); }
-  x.restore();
-  x.beginPath(); x.arc(S / 2, 8, 2.6, 0, Math.PI * 2); x.fillStyle = earned ? "#1c0e05" : "#6c6c68"; x.fill();   // string hole
-  x.beginPath(); x.arc(S * 0.36, S * 0.3, r * 0.22, 0, Math.PI * 2); x.fillStyle = "rgba(255,255,255,.28)"; x.fill();   // highlight
-  beadCache.set(key, c); return c;
+  const S = 40, c = typeof OffscreenCanvas !== "undefined" ? new OffscreenCanvas(S, S) : Object.assign(document.createElement("canvas"), { width: S, height: S });
+  const x = c.getContext("2d"), r = 14;
+  const tone = earned ? ["#CDA67E", "#98724E", "#6C4A2F"] : ["#EFEFEC", "#D3D3CE", "#B6B6B1"];
+  const shape = () => { x.beginPath(); for (let i = 0; i <= 30; i++) { const a = (i / 30) * TAU, rr = r * (1 + 0.09 * Math.sin(5 * a + 1.3)); const px = S / 2 + rr * Math.cos(a) * 1.12, py = S / 2 + rr * Math.sin(a) * 0.96; i ? x.lineTo(px, py) : x.moveTo(px, py); } x.closePath(); };
+  const g = x.createRadialGradient(S / 2 - r * 0.3, S / 2 - r * 0.3, r * 0.1, S / 2, S / 2, r * 1.15);
+  g.addColorStop(0, tone[0]); g.addColorStop(0.6, tone[1]); g.addColorStop(1, tone[2]);
+  shape(); x.fillStyle = g; x.fill();
+  x.save(); shape(); x.clip(); x.strokeStyle = earned ? "rgba(70,40,20,.55)" : "rgba(110,110,105,.4)"; x.lineWidth = 1;   // mukhi ridges, bead-end to bead-end
+  for (let j = -1; j <= 1; j++) { x.beginPath(); x.moveTo(S / 2 - r * 1.2, S / 2 + j * r * 0.42); x.quadraticCurveTo(S / 2, S / 2 + j * r * 0.85, S / 2 + r * 1.2, S / 2 + j * r * 0.42); x.stroke(); }
+  x.restore(); beadCache.set(key, c); return c;
 }
 
-/** progress is 0..100. Bead k is fully earned when k+1 <= progress*108/100; the next bead fills partially. */
+/** progress is 0..100. Bead b is earned when b+1 <= progress·n/100; the next bead fills partially. Order = Kashmir → clockwise → Kashmir. */
 export function drawMala(ctx, { mala, unit = 0.1, progress, k = 1 }) {
-  if (!mala?.pos?.length) return;
-  const n = mala.beads, earned = malaEarned(progress, n);
-  // thread: grey for the whole loop, brown for the earned fraction of its length
+  if (!mala?.pos?.length) return 0;
+  const n = mala.beads, earned = malaEarned(progress, n), s = 1 / Math.sqrt(k);
   const sp = mala.string, pts = []; for (let i = 0; i < sp.length; i += 2) pts.push([sp[i] * unit, sp[i + 1] * unit]);
   const cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
-  const total = cum[cum.length - 1] || 1, upto = (earned / n) * total;
-  ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.lineWidth = 2 / Math.sqrt(k);
-  ctx.strokeStyle = "#B9B7AF"; ctx.beginPath(); pts.forEach((q, i) => (i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]))); ctx.stroke();
-  if (upto > 0) {
-    ctx.strokeStyle = "#5A3A1E"; ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
-    for (let i = 1; i < pts.length && cum[i] <= upto; i++) ctx.lineTo(pts[i][0], pts[i][1]);
-    ctx.stroke();
-  }
-  const D = MALA_BEAD_UNITS, off = beadSprite(false), on = beadSprite(true);
+  const upto = (earned / n) * (cum[cum.length - 1] || 1);
+  ctx.lineCap = ctx.lineJoin = "round"; ctx.lineWidth = 0.7 * s;
+  ctx.strokeStyle = "rgba(160,158,150,.5)"; ctx.beginPath(); pts.forEach((q, i) => (i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]))); ctx.stroke();
+  if (upto > 0) { ctx.strokeStyle = "rgba(139,98,62,.75)"; ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length && cum[i] <= upto; i++) ctx.lineTo(pts[i][0], pts[i][1]); ctx.stroke(); }
+  const off = beadSprite(false), on = beadSprite(true), D = MALA_BEAD_UNITS * s * 1.35;   // sprite cell is larger than the bead body
   for (let b = 0; b < n; b++) {
-    const x = mala.pos[b * 4], y = mala.pos[b * 4 + 1], tx = mala.pos[b * 4 + 2], ty = mala.pos[b * 4 + 3];
+    const x = mala.pos[b * 4], y = mala.pos[b * 4 + 1], a = Math.atan2(mala.pos[b * 4 + 3], mala.pos[b * 4 + 2]);
     const f = Math.max(0, Math.min(1, earned - b));
-    ctx.drawImage(f >= 1 ? on : off, x - D / 2, y - D / 2, D, D);
-    if (f > 0 && f < 1) {                                 // partial bead: earned colour fills from the "start" side along the thread
-      ctx.save(); ctx.translate(x, y); ctx.rotate(Math.atan2(ty, tx));
-      ctx.beginPath(); ctx.rect(-D / 2, -D / 2, D * f, D); ctx.clip(); ctx.rotate(-Math.atan2(ty, tx));
-      ctx.drawImage(on, -D / 2, -D / 2, D, D); ctx.restore();
-    }
+    ctx.save(); ctx.translate(x, y); ctx.rotate(a);
+    ctx.drawImage(f >= 1 ? on : off, -D / 2, -D / 2, D, D);
+    if (f > 0 && f < 1) { ctx.beginPath(); ctx.rect(-D / 2, -D / 2, D * f, D); ctx.clip(); ctx.drawImage(on, -D / 2, -D / 2, D, D); }   // partial bead fills along the thread
+    ctx.restore();
   }
+  return n;
 }
+
+/** Whole live layer in the right order. `lawn` is the cached offscreen canvas from buildLawn (or null). */
+export function paintScene(ctx, { lawn, frame, hotspots, unlocked, sprites, plants, mala, unit, progress, t = 0, reveal = {}, born = {}, k = 1, still = false }) {
+  if (lawn) ctx.drawImage(lawn, 0, 0, frame.W, frame.H);
+  drawRivers(ctx, { hotspots, unlocked, t, reveal, k, still });
+  drawTemples(ctx, { hotspots, unlocked, t, k, still });
+  const p = drawPlants(ctx, { atlas: sprites.atlas, sprites, plants, t, born, still });
+  const b = drawMala(ctx, { mala, unit, progress, k });
+  return p + b;
+}
+export { easeOutCubic };
 
 // ─── vector geography (detail view only) ─────────────────────────────────────────────────────────────
 const PALETTE = {
@@ -137,7 +209,7 @@ export function drawPeaks(ctx, f) {
   }
 }
 
-export function drawGeography(ctx, { geo, unlocked, temples = [], k = 1 }) {
+export function drawGeography(ctx, { geo, unlocked, k = 1 }) {
   const P = pathsFor(geo);
   ctx.fillStyle = PALETTE.sea; ctx.fillRect(0, 0, geo.frame.W, geo.frame.H);
   ctx.fillStyle = PALETTE.land; ctx.fill(P.land, "evenodd");
@@ -152,18 +224,7 @@ export function drawGeography(ctx, { geo, unlocked, temples = [], k = 1 }) {
     drawPeaks(ctx, f);
   }
   ctx.globalAlpha = 0.6; ctx.fillStyle = PALETTE.india; ctx.fill(P.outline, "evenodd"); ctx.globalAlpha = 1;
-  ctx.lineWidth = 1.3 / k; ctx.strokeStyle = PALETTE.indiaLine; ctx.globalAlpha = 0.75; ctx.lineJoin = "round"; ctx.stroke(P.outline); ctx.globalAlpha = 1;
-  for (const id of open) {
-    const f = geo.features[id]; if (!f || f.type !== "river") continue;
-    ctx.lineCap = "round"; ctx.lineJoin = "round";
-    ctx.globalAlpha = 0.55; ctx.strokeStyle = PALETTE.riverSoft; ctx.lineWidth = 3.6 / Math.sqrt(k); ctx.stroke(P.features[id]);
-    ctx.globalAlpha = 1; ctx.strokeStyle = PALETTE.river; ctx.lineWidth = 1.7 / Math.sqrt(k); ctx.stroke(P.features[id]);
-  }
-  for (const [x, y] of temples) {
-    ctx.save(); ctx.translate(x, y); const s = 1 / Math.sqrt(k);
-    ctx.scale(s, s); ctx.beginPath(); ctx.moveTo(-6, 6); ctx.lineTo(6, 6); ctx.lineTo(6, 2); ctx.lineTo(4, 2); ctx.lineTo(0, -6); ctx.lineTo(-4, 2); ctx.lineTo(-6, 2); ctx.closePath();
-    ctx.fillStyle = PALETTE.temple; ctx.fill(); ctx.lineWidth = 1.4; ctx.strokeStyle = "#fff"; ctx.stroke(); ctx.restore();
-  }
+  ctx.lineWidth = 1 / k; ctx.strokeStyle = PALETTE.indiaLine; ctx.globalAlpha = 0.45; ctx.lineJoin = "round"; ctx.stroke(P.outline); ctx.globalAlpha = 1;
 }
 
 /** Zoom-dependent labels for revealed features (detail view). */

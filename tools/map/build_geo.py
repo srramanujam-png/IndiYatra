@@ -15,7 +15,7 @@ import json, math, pickle, sys, os
 import numpy as np
 import geopandas as gpd
 from shapely.geometry import shape, box, Point, MultiPolygon, Polygon, LineString, MultiLineString
-from shapely.ops import unary_union
+from shapely.ops import unary_union, linemerge
 from shapely import contains_xy, distance
 from scipy.spatial import cKDTree
 
@@ -168,18 +168,17 @@ G = G[np.argsort(-key)]                                         # south first, n
 print('growth candidates', len(G))
 
 # ---------- rudraksha mala: 108 beads equally spaced along the mainland boundary, starting at the southern tip ----------
-MALA_BEADS = 108
-def chaikin(pts, it=2):
-    for _ in range(it):
-        q = pts[:-1] * 0.75 + pts[1:] * 0.25; r = pts[:-1] * 0.25 + pts[1:] * 0.75
-        out = np.empty((len(q) * 2, 2)); out[0::2] = q; out[1::2] = r; pts = np.vstack([out, out[:1]])
-    return pts
-# the mala follows a SMOOTHED boundary so beads are evenly spaced instead of bunching in fractal coastlines
-ring = chaikin(np.array(mainland.simplify(9).exterior.coords), 2)
-i0 = int(np.argmax(ring[:, 1]))                                  # southernmost vertex (Kanyakumari)
+# TIGHT boundary: starts at the northernmost point (Kashmir), runs CLOCKWISE (east first) and returns to Kashmir.
+# Beads are placed every MALA_SPACING map units along the real boundary, so their number follows its length
+# (a different, more detailed outline simply gets more beads). Do NOT smooth this ring: it must hug the border.
+MALA_SPACING = 7.0
+ring = np.array(mainland.simplify(1.2).exterior.coords)
+i0 = int(np.argmin(ring[:, 1]))
 ring = np.vstack([ring[i0:-1], ring[:i0], ring[i0:i0 + 1]])
-if ring[min(6, len(ring) - 1), 0] > ring[0, 0]: ring = np.vstack([ring[0:1], ring[:0:-1]])   # go up the WEST coast first
+sa = 0.5 * np.sum(ring[:-1, 0] * ring[1:, 1] - ring[1:, 0] * ring[:-1, 1])      # y is DOWN: sa > 0 == clockwise on screen
+if sa < 0: ring = np.vstack([ring[0:1], ring[:0:-1]])
 seg = np.hypot(*np.diff(ring, axis=0).T); cum = np.concatenate([[0], np.cumsum(seg)]); LEN = cum[-1]
+MALA_BEADS = int(round(LEN / MALA_SPACING))
 def at(dist):
     j = min(int(np.searchsorted(cum, dist, side='right')) - 1, len(seg) - 1); t = (dist - cum[j]) / max(seg[j], 1e-9)
     a, b = ring[j], ring[j + 1]; tang = (b - a) / max(np.hypot(*(b - a)), 1e-9)
@@ -191,7 +190,7 @@ for k in range(MALA_BEADS):
     a, _ = at(max(0, (k + 0.5) / MALA_BEADS * LEN - LEN / MALA_BEADS * 1.5)); b, _ = at(min(LEN, (k + 0.5) / MALA_BEADS * LEN + LEN / MALA_BEADS * 1.5))
     tg = (b - a) / max(np.hypot(*(b - a)), 1e-9)
     beads += [pos[0], pos[1], tg[0], tg[1]]
-string = LineString(ring).simplify(0.8)
+string = LineString(ring).simplify(0.5)
 print('mala perimeter', round(LEN), 'units; bead spacing', round(LEN / MALA_BEADS, 1), '; string pts', len(string.coords))
 
 # ---------- 3-D mountain peaks: shaded triangular peaks scattered inside every range polygon ----------
@@ -225,7 +224,8 @@ def hit_shape(fid, f):
     the significant polygons (~1.5 units). Flat [x0,y0,x1,y1,…] arrays keep the manifest small."""
     g = project_geom(f['g'])
     if f['type'] == 'river':
-        parts = [g] if isinstance(g, LineString) else [l for l in g.geoms if isinstance(l, LineString)]
+        m = linemerge(g) if not isinstance(g, LineString) else g          # HydroRIVERS reaches arrive as many tiny pieces: join them
+        parts = [m] if isinstance(m, LineString) else [l for l in m.geoms if isinstance(l, LineString)]
         keep = [l.simplify(1.0) for l in parts if l.length > 4]
         parts = keep or [max(parts, key=lambda l: l.length).simplify(0.5)]
         longest = max(parts, key=lambda l: l.length)
@@ -249,7 +249,9 @@ geo = dict(
                  'HydroRIVERS v1.0 — Lehner & Grill 2013, doi:10.1002/hyp.9740',
                  'Natural Earth — public domain', 'CWC River Network (national water data portal) for river naming'])
 json.dump(geo, open(f'{OUT}/geo.json', 'w'), separators=(',', ':'))
+# tiny file for the quick view (lawn clip): India outline only, so the 470 KB geo.json stays lazy
+json.dump(dict(version='v1', frame=geo['frame'], outline=geo['outline']), open(f'{OUT}/india.json', 'w'), separators=(',', ':'))
 json.dump({fid: dict(type=features[fid]['type'], style=features[fid]['style'], **hit[fid]) for fid in features},
           open(f'{OUT}/hit.json', 'w'), separators=(',', ':'))
-for f in ['geo.json', 'candidates.json', 'hit.json']:
+for f in ['geo.json', 'candidates.json', 'hit.json', 'india.json']:
     print(f, os.path.getsize(f'{OUT}/{f}') // 1024, 'KB')

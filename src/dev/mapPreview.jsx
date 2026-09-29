@@ -21,13 +21,19 @@ const state = {
   plantCounts: { tulsi: Math.round(p * 1.4), jasmine: Math.round(p * 0.35), lotus: Math.round(p / 12), ashoka: Math.round(p / 25), banyan: p >= 100 ? 1 : 0 },
   badges: Array.from({ length: nBadges }, (_, i) => ({ badgeId: `B${i}`, name: NAMES[i % 12], icon: ICONS[i % 12], description: null, earned: i < earned })),
 };
+const card = {
+  scope: "platform", lastViewed: { kind: "lesson", id: "x", title: "Lesson 7 · Chola bronzes" },
+  course: { courseId: "c", name: "Temples of South India", percent: 78, snippetsTotal: 36, snippetsDone: 28 },
+  nextUnlock: p >= 100 ? null : { milestoneIndex: milestoneIndex(p) + 1, thresholdPercent: (milestoneIndex(p) + 1) * 5, storiesToGo: 4 },
+  nextBanyan: { courseId: "c", name: "Temples of South India", percent: 78, storiesToGo: 8 },
+};
 if (q.get("tulsi")) state.plantCounts.tulsi = Number(q.get("tulsi"));
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <style>{globalStyles}</style>
     <div style={{ maxWidth: 1000, margin: "0 auto", padding: "16px" }}>
       <h2 style={{ fontFamily: "Oswald, sans-serif", margin: "0 0 12px" }}>Your Yatra Map</h2>
-      <DashboardMap stateOverride={state} />
+      <DashboardMap stateOverride={state} cardOverride={card} seenKey="preview" />
     </div>
   </StrictMode>
 );

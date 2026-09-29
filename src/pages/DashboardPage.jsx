@@ -1498,9 +1498,9 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
         {user && !user.is_anonymous && (
           <div id="sec-map" className="dash-section">
             <div className="dash-section-head">
-              <div className="page-section-title"><i className="ti ti-map-2" style={{color: HERITAGE, marginRight: 6}} />Your Yatra Map</div>
+              <div className="page-section-title"><i className="ti ti-map-2" style={{color: HERITAGE, marginRight: 6}} />Your Yatra Map{scope !== "all" ? " · this course" : ""}</div>
             </div>
-            <DashboardMap refreshKey={`${user.id}:${activePage}`} />
+            <DashboardMap courseId={scope !== "all" ? scope : null} seenKey={user.id} refreshKey={`${user.id}:${activePage}:${scope}`} />
           </div>
         )}
 

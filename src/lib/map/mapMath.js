@@ -187,3 +187,35 @@ export function malaEarned(progress, n = 108) {
   const p = Number(progress); if (!Number.isFinite(p)) return 0;
   return (Math.max(0, Math.min(100, p)) / 100) * n;
 }
+
+// ─── progress-card text ─────────────────────────────────────────────────────────────────────────────
+/** "A" · "A and B" · "A, B and C" · "A, B and 2 more" */
+export function joinNames(names) {
+  const a = (names || []).filter(Boolean);
+  if (a.length === 0) return "";
+  if (a.length === 1) return a[0];
+  if (a.length === 2) return `${a[0]} and ${a[1]}`;
+  if (a.length === 3) return `${a[0]}, ${a[1]} and ${a[2]}`;
+  return `${a[0]}, ${a[1]} and ${a.length - 2} more`;
+}
+
+/** Names revealed by milestone `index` (1..20): its rivers, ranges and (placed) temples, from the manifest the plates were built with. */
+export function unlockNames(manifest, index) {
+  const m = manifest?.milestones?.[index - 1]; if (!m) return [];
+  return [...(m.riverIds || []), ...(m.mountainIds || []), ...(m.templeIds || [])].map((id) => manifest.hotspots?.[id]?.name).filter(Boolean);
+}
+
+/** "4 stories to go, to unveil Krishna and Eastern Ghats" — null when there is nothing left to unlock. */
+export function nextUnlockText(card, manifest) {
+  const nu = card?.nextUnlock; if (!nu) return null;
+  const n = Number(nu.storiesToGo); if (!Number.isFinite(n) || n < 1) return null;
+  const stories = `${n} ${n === 1 ? "story" : "stories"}`;
+  const names = joinNames(unlockNames(manifest, nu.milestoneIndex));
+  return names ? { lead: `${stories} to go, to unveil`, names } : { lead: `${stories} to go to your next ${nu.thresholdPercent}% step`, names: "" };
+}
+
+/** Whole-number-or-one-decimal percent used by the Tibet label and the card ring. */
+export function formatPercent(p) {
+  const v = Number(p); if (!Number.isFinite(v)) return "0";
+  return v >= 99.995 ? "100" : v.toFixed(v % 1 === 0 ? 0 : 1);
+}

@@ -1,10 +1,10 @@
 // src/components/map/MapDetail.jsx — detailed map (lazy-loaded chunk).
 // Fetches the vector geography ONLY when opened, then renders everything on one Canvas with pan / zoom:
 // drag or arrow keys to pan, wheel / pinch / +− to zoom, hover or tap for labels, Esc to close.
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { loadGeo } from "../../lib/map/mapData";
-import { drawGeography, drawLabels, drawMala, drawVegetation, sizeCanvas } from "../../lib/map/drawMap";
-import { hitTest } from "../../lib/map/mapMath";
+import { buildLawn, drawGeography, drawLabels, paintScene, sizeCanvas } from "../../lib/map/drawMap";
+import { formatPercent, hitTest } from "../../lib/map/mapMath";
 import { MAP_CSS } from "./mapStyles";
 
 const MIN_K = 1, MAX_K = 9;
@@ -52,6 +52,11 @@ export default function MapDetail({ state, assets, unlocked, plants, onClose }) 
     });
   }, [clampView]);
 
+  const progress = state.status === "ok" ? Number(state.progressPercent) : 0;
+  // the lawn is built once (fixed 2000 px wide) and scaled by the view transform: it is soft-edged, so zoom stays clean
+  const lawn = useMemo(() => (geo ? buildLawn({ growth: assets.candidates.growth, unit: assets.candidates.unit, progress, indiaD: geo.outline.d, hotspots: manifest.hotspots, unlocked, W: frame.W, H: frame.H, widthPx: 2000 }) : null),
+    [geo, assets, progress, manifest, unlocked, frame]);
+
   // ── draw ──
   useEffect(() => {
     const c = canvas.current; if (!c || !geo || !size.w) return;
@@ -61,13 +66,11 @@ export default function MapDetail({ state, assets, unlocked, plants, onClose }) 
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = "#E7ECEE"; ctx.fillRect(0, 0, c.width, c.height);
     const offX = (size.w - frame.W * fit) / 2, offY = (size.h - frame.H * fit) / 2, s = fit * view.k * dpr;
     ctx.setTransform(s, 0, 0, s, (offX + view.tx) * dpr, (offY + view.ty) * dpr);
-    const temples = unlocked.map((id) => manifest.hotspots[id]).filter((h) => h?.type === "temple").map((h) => h.anchor);
-    drawGeography(ctx, { geo, unlocked, temples, k: view.k });
-    drawVegetation(ctx, { atlas: assets.sprites.atlas, sprites: assets.sprites, growth: assets.candidates.growth, unit: assets.candidates.unit,
-      progress: state.status === "ok" ? Number(state.progressPercent) : 0, plants });
-    drawMala(ctx, { mala: assets.candidates.mala, unit: assets.candidates.unit, progress: state.status === "ok" ? Number(state.progressPercent) : 0, k: view.k });
+    drawGeography(ctx, { geo, unlocked, k: view.k });
+    paintScene(ctx, { lawn, frame, hotspots: manifest.hotspots, unlocked, sprites: assets.sprites, plants, mala: assets.candidates.mala, unit: assets.candidates.unit,
+      progress, t: 0, k: view.k, still: true });
     drawLabels(ctx, { hotspots: manifest.hotspots, unlocked, k: view.k, hover });
-  }, [geo, size, view, fit, frame, unlocked, plants, assets, state, manifest, hover]);
+  }, [geo, size, view, fit, frame, unlocked, plants, assets, progress, manifest, hover, lawn]);
 
   // screen point → map units under the current view
   const toMap = useCallback((clientX, clientY) => {
@@ -122,7 +125,7 @@ export default function MapDetail({ state, assets, unlocked, plants, onClose }) 
     <div className="ymd" role="dialog" aria-modal="true" aria-label="Detailed India map" onKeyDown={onKey}>
       <style>{MAP_CSS}</style>
       <div className="ymd-bar">
-        <h3>Your Yatra Map — detail</h3>
+        <h3>Your Yatra Map — detail{state.status === "ok" ? ` · ${formatPercent(progress)}% completed` : ""}</h3>
         <button className="ymd-ctl" type="button" aria-label="Zoom in" onClick={() => zoomAt(1.4, size.w / 2, size.h / 2)}>+</button>
         <button className="ymd-ctl" type="button" aria-label="Zoom out" onClick={() => zoomAt(1 / 1.4, size.w / 2, size.h / 2)}>−</button>
         <button className="ymd-ctl" type="button" aria-label="Reset view" onClick={() => setView(clampView({ k: 1, tx: 0, ty: 0 }))}>⤢</button>

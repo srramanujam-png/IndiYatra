@@ -20,6 +20,14 @@ export async function fetchMapState(courseId = null) {
   return data;
 }
 
+/** Progress-card data (last viewed, course %, next unlock in stories, next banyan). Never blocks the map: failures give null. */
+export async function fetchMapCard(courseId = null) {
+  try {
+    const { data, error } = await supabaseClient.rpc("get_map_card", { p_course_id: courseId });
+    return error ? null : data;
+  } catch { return null; }
+}
+
 async function getJson(name, opts = {}) {
   const res = await fetch(mapAssetUrl(name), opts);
   if (!res.ok) throw new Error(`${name}: HTTP ${res.status}`);
@@ -32,6 +40,7 @@ function getImage(url) {
 /** Manifest = which features each plate contains + hover/tap text + hit shapes. Revalidated (ETag/304) so a
  *  plate regeneration is picked up without a hard refresh. */
 export const loadManifest = () => once("manifest", () => getJson("plates/manifest.json", { cache: "no-cache" }));
+export const loadIndia = () => once("india", () => getJson("india.json"));
 export const loadCandidates = () => once("candidates", () => getJson("candidates.json"));
 export const loadSprites = () => once("sprites", async () => {
   const [meta, atlas] = await Promise.all([getJson("sprites.json"), getImage(mapAssetUrl("sprites.webp"))]);
@@ -45,6 +54,6 @@ export const loadGeo = () => once("geo", () => getJson("geo.json"));
 /** Everything the QUICK view needs, fetched in parallel. */
 export async function loadQuickMap(state) {
   const manifest = await loadManifest();
-  const [plate, sprites, candidates] = await Promise.all([loadPlate(state.milestoneIndex, manifest.configVersion), loadSprites(), loadCandidates()]);
-  return { manifest, plate, sprites, candidates };
+  const [plate, sprites, candidates, india] = await Promise.all([loadPlate(state.milestoneIndex, manifest.configVersion), loadSprites(), loadCandidates(), loadIndia()]);
+  return { manifest, plate, sprites, candidates, india };
 }

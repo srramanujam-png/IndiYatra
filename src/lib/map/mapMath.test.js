@@ -187,3 +187,28 @@ describe("malaEarned", () => {
     expect(malaEarned(-3)).toBe(0); expect(malaEarned(140)).toBe(108); expect(malaEarned(NaN)).toBe(0);
   });
 });
+
+import { joinNames, unlockNames, nextUnlockText, formatPercent } from "./mapMath";
+describe("progress-card text", () => {
+  const manifest = {
+    hotspots: { "river-10": { name: "Tungabhadra" }, "mountain-05": { name: "Aravalli Range" }, "temple-02": { name: "Golden Temple" } },
+    milestones: [{ riverIds: ["river-10"], mountainIds: ["mountain-05"], templeIds: ["temple-02", "temple-09"] }],
+  };
+  it("joins names naturally", () => {
+    expect(joinNames([])).toBe(""); expect(joinNames(["A"])).toBe("A"); expect(joinNames(["A", "B"])).toBe("A and B");
+    expect(joinNames(["A", "B", "C"])).toBe("A, B and C"); expect(joinNames(["A", "B", "C", "D", "E"])).toBe("A, B and 3 more");
+  });
+  it("lists rivers, ranges and placed temples for a milestone; skips unplaced temples", () => {
+    expect(unlockNames(manifest, 1)).toEqual(["Tungabhadra", "Aravalli Range", "Golden Temple"]);
+    expect(unlockNames(manifest, 9)).toEqual([]);
+  });
+  it("builds the 'stories to go' sentence", () => {
+    expect(nextUnlockText({ nextUnlock: { milestoneIndex: 1, thresholdPercent: 5, storiesToGo: 4 } }, manifest))
+      .toEqual({ lead: "4 stories to go, to unveil", names: "Tungabhadra, Aravalli Range and Golden Temple" });
+    expect(nextUnlockText({ nextUnlock: { milestoneIndex: 1, thresholdPercent: 5, storiesToGo: 1 } }, manifest).lead).toBe("1 story to go, to unveil");
+    expect(nextUnlockText({ nextUnlock: { milestoneIndex: 9, thresholdPercent: 45, storiesToGo: 2 } }, manifest))
+      .toEqual({ lead: "2 stories to go to your next 45% step", names: "" });
+    expect(nextUnlockText({ nextUnlock: null }, manifest)).toBe(null); expect(nextUnlockText(null, manifest)).toBe(null);
+  });
+  it("formats percentages", () => { expect(formatPercent(60)).toBe("60"); expect(formatPercent(59.96)).toBe("60.0"); expect(formatPercent(99.999)).toBe("100"); expect(formatPercent(12.5)).toBe("12.5"); expect(formatPercent("x")).toBe("0"); });
+});

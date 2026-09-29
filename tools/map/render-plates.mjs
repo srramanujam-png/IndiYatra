@@ -4,8 +4,8 @@
 //   npm run map:plates                       (reads tools/map/config/map-config.json)
 //   node tools/map/render-plates.mjs --config path/to/map-config.json --out public/map/v1/plates
 //
-// A plate = regional land + faint relief + India outline + every river/range/temple unlocked up to that
-// milestone. Growth (seeds, dhruva grass, plants) and badges are NOT in the plates — they are drawn live.
+// A plate = regional land + faint relief + India outline + every mountain range unlocked up to that
+// milestone. Rivers, temples, lawn, plants, mala and badges are NOT in the plates — they are drawn live (animated).
 // Re-run this whenever milestone assignments, labels or temples change (Admin > Map shows a reminder).
 import fs from "node:fs";
 import path from "node:path";
@@ -18,6 +18,7 @@ const outDir = flag("--out", "public/map/v1/plates");
 const geoDir = flag("--geo", "public/map/v1");
 const only = flag("--only", null);           // e.g. --only 0,5,12  (quick previews)
 const quality = Number(flag("--quality", 78));
+const noRivers = !args.includes("--with-rivers");   // rivers + temples are drawn LIVE (animated); plates hold terrain + 3-D mountains only
 
 // Config source: --from-db (published Supabase config = what Admin > Map edits; DEFAULT when .env exists)
 // or a local JSON file made by `npm run map:config` (offline / first run).
@@ -100,7 +101,7 @@ export function plateSvg(unlocked, temples) {
     if (f.type === "mountain") {
       const st = PALETTE[f.style] || PALETTE.mixed;
       mountains.push(`<path d="${f.d}" fill="${st.fill}" stroke="${st.line}" stroke-width="1" stroke-linejoin="round" fill-opacity=".55"/>` + peaksSvg(f));
-    } else rivers.push(`<path d="${f.d}" fill="none" stroke="${PALETTE.riverSoft}" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/>` +
+    } else if (!noRivers) rivers.push(`<path d="${f.d}" fill="none" stroke="${PALETTE.riverSoft}" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/>` +
       `<path d="${f.d}" fill="none" stroke="${PALETTE.river}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>`);
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
@@ -113,7 +114,7 @@ export function plateSvg(unlocked, temples) {
   <path d="${geo.outline.d}" fill="${PALETTE.india}" fill-opacity=".6" fill-rule="evenodd"/>
   <path d="${geo.outline.d}" fill="none" stroke="${PALETTE.indiaLine}" stroke-width="1" stroke-opacity=".45" stroke-linejoin="round" fill-rule="evenodd"/>
   ${rivers.join("\n  ")}
-  ${temples.map(templeGlyph).join("")}
+  ${noRivers ? "" : temples.map(templeGlyph).join("")}
   </svg>`;
 }
 
