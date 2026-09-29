@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { supabase, SAFFRON, HERITAGE, GREEN, logoUrl, DEFAULT_LANG_ID, DIFFICULTY_STARS } from "../lib/supabase";
 import { useAuthContext } from "../contexts/AuthContext";
 import { supabaseClient, loadUserLikes, insertLike, deleteLike, postComment, deleteComment, adminDeleteComment, editComment, reportComment, getSnippetQuestion, saveSnippetQuestion, getPairedContent, insertGenericLike, deleteGenericLike } from "../lib/auth";
 import { containsProfanity, PROFANITY_MESSAGE } from "../lib/profanity";
 import { track } from "../lib/track";
+import SharePopover from "../components/SharePopover";
 import { globalStyles } from "../styles/global";
 import { DEFAULT_SNIPPET_SHARE_MSG, APP_URL, PLAYER, SIGNIN } from "../config/appStrings";
 import { useViewTracking } from "../hooks/useViewTracking";
@@ -19,7 +20,7 @@ const BADGE_META = {
 };
 
 const styles = `
-  .player-wrap { min-height: 100vh; background: #FFFFFF; display: flex; flex-direction: column; }
+  .player-wrap { min-height: 100vh; min-height: 100dvh; background: #FFFFFF; display: flex; flex-direction: column; }
 
   .player-top-bar {
     position: sticky; top: 0; z-index: 100;
@@ -39,11 +40,10 @@ const styles = `
     color: ${HERITAGE}; flex: 1; text-align: center;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .player-count { font-size: 0.8125rem; color: var(--color-text-body); font-weight: 500; flex-shrink: 0; font-family: 'Inter', system-ui, sans-serif; }
   .player-nav-links { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
   .player-nav-link {
     display: flex; align-items: center; justify-content: center;
-    width: 34px; height: 34px; border-radius: 8px;
+    width: 40px; height: 40px; border-radius: 8px;
     background: none; border: none; cursor: pointer;
     font-size: 1.125rem; color: var(--color-text-body); transition: background 0.12s, color 0.15s;
   }
@@ -52,11 +52,14 @@ const styles = `
   .player-progress-fill { height: 100%; background: ${SAFFRON}; transition: width 0.4s ease; }
 
   .player-body {
+    position: relative;
     flex: 1; max-width: 680px; width: 100%; margin: 0 auto;
-    padding: 20px 1rem 120px;
+    padding: 20px 1rem 24px;
     touch-action: pan-y;
     user-select: none;
   }
+  /* Reserve room for the fixed bottom bar only when it is actually rendered */
+  .player-wrap:has(.player-nav) .player-body { padding-bottom: 120px; }
   @media (min-width: 900px) {
     .player-body { max-width: 1120px; }
   }
@@ -70,7 +73,7 @@ const styles = `
   /* ── Two-block two-column layout ── */
   /* TOP BLOCK: hook left (mobile order 1) | image right (mobile order 2) */
   .snip-top-block { display: flex; flex-direction: column; border-bottom: 1px solid var(--color-border); }
-  .snip-top-left  { padding: 20px 20px 16px; order: 1; }
+  .snip-top-left  { padding: 16px 20px 12px; order: 1; }
   .snip-top-right { order: 2; }
 
   /* BOTTOM BLOCK: explanation+citation left (mobile order 3) | key terms right (mobile order 4) */
@@ -78,28 +81,20 @@ const styles = `
   .snip-bottom-left  { padding: 20px 20px 16px; order: 1; border-bottom: 1px solid var(--color-border); }
   .snip-bottom-right { padding: 16px 20px 16px; order: 2; display: flex; flex-direction: column; gap: 12px; }
 
+  /* Desktop: ONE row, two columns — left = hook + picture (stacked),
+     right = explanation + key terms (stacked) — so the explanation sits
+     beside the hook instead of below a 2×2 grid, with no scrolling needed. */
   @media (min-width: 900px) {
-    .snip-top-block { display: grid; grid-template-columns: 1fr 1fr; }
-    .snip-top-left  {
-      padding: 28px 28px 24px; order: 0;
-      border-right: 1px solid var(--color-border);
-      display: flex; flex-direction: column; justify-content: center;
+    .snip-flow { display: flex; align-items: stretch; }
+    .snip-top-block {
+      flex: 1 1 0; min-width: 0;
+      border-bottom: none; border-right: 1px solid var(--color-border);
     }
-    .snip-top-right { order: 0; }
-    .snip-top-right .snip-img {
-      border-radius: 0; max-height: none; height: 100%; min-height: 240px;
-    }
-    .snip-top-right .snip-img img {
-      width: 100%; height: 100%; max-height: 400px; object-fit: contain;
-      -webkit-mask-image: none; mask-image: none;
-    }
-    .snip-top-right .snip-header-band { border-radius: 0; height: 100%; min-height: 240px; }
-    .snip-bottom-block { display: grid; grid-template-columns: 1fr 1fr; }
-    .snip-bottom-left  {
-      padding: 24px 28px; order: 0;
-      border-right: 1px solid var(--color-border); border-bottom: none;
-    }
-    .snip-bottom-right { padding: 24px 28px; order: 0; }
+    .snip-top-left  { padding: 28px 28px 20px; }
+    .snip-top-right { padding: 0 28px 28px; }
+    .snip-bottom-block { flex: 1 1 0; min-width: 0; }
+    .snip-bottom-left  { padding: 28px 28px 16px; border-bottom: none; }
+    .snip-bottom-right { padding: 0 28px 28px; }
   }
   @keyframes snippetFadeIn {
     from { opacity: 0; }
@@ -109,26 +104,29 @@ const styles = `
   .snip-enter-prev { animation: snippetFadeIn 0.2s ease both; }
 
   @keyframes swipeFadeOut {
-    0%   { opacity: 0.4; }
-    75%  { opacity: 0.4; }
+    0%   { opacity: 1; }
+    75%  { opacity: 1; }
     100% { opacity: 0; }
   }
+  /* One-time hint: floats over the page so it takes no layout height */
   .swipe-hint {
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-    margin-top: 12px; font-size: 0.75rem; color: var(--color-text-body);
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 120;
+    padding: 6px 14px; border-radius: 999px; background: rgba(20,20,20,0.75); color: #fff;
+    font-size: 0.75rem; white-space: nowrap;
     pointer-events: none; font-family: 'Inter', system-ui, sans-serif;
     animation: swipeFadeOut 3.5s ease forwards;
   }
+  @media (min-width: 900px) { .swipe-hint { display: none; } }
 
   /* Image */
   .snip-img {
     position: relative; width: 100%;
     background: transparent;
     display: flex; align-items: center; justify-content: center;
-    max-height: 300px; overflow: hidden;
+    max-height: min(300px, 32vh); overflow: hidden;
   }
   .snip-img img {
-    display: block; width: 100%; max-height: 300px; object-fit: contain;
+    display: block; width: 100%; max-height: min(300px, 32vh); object-fit: contain;
   }
   .snip-diff {
     position: absolute; bottom: 10px; right: 10px;
@@ -201,8 +199,8 @@ const styles = `
   /* Body */
   .snip-body { padding: 20px 24px 16px; }
   .snip-hook {
-    font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.625rem; font-weight: 500;
-    color: ${HERITAGE}; line-height: 1.3; margin-bottom: 16px;
+    font-family: 'Literata', serif; font-size: calc(1.625rem + 1pt); font-weight: 500;
+    color: var(--color-text-main); line-height: 1.3; margin-bottom: 8px;
     letter-spacing: 0.01em; text-align: left;
   }
   .snip-divider { height: 1px; background: var(--color-border); margin: 20px 0; }
@@ -223,8 +221,8 @@ const styles = `
     box-shadow: 0 20px 60px rgba(0,0,0,0.15);
     margin: 0 auto;
   }
-  .comp-emoji    { font-size: 3rem; margin-bottom: 12px; }
-  .comp-title    { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.75rem; font-weight: 500; color: ${HERITAGE}; margin-bottom: 6px; }
+  .comp-emoji    { font-size: 2.25rem; margin-bottom: 8px; }
+  .comp-title    { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.5rem; font-weight: 500; color: ${HERITAGE}; margin-bottom: 6px; }
   .comp-subtitle { font-size: 0.9375rem; color: var(--color-text-body); margin-bottom: 16px; line-height: 1.6; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .comp-points {
     display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -232,7 +230,7 @@ const styles = `
     padding: 12px 20px; margin-bottom: 16px;
   }
   .comp-points-icon  { font-size: 1.375rem; }
-  .comp-points-value { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 2rem; font-weight: 700; color: ${SAFFRON}; line-height: 1; }
+  .comp-points-value { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.75rem; font-weight: 600; color: ${SAFFRON}; line-height: 1; }
   .comp-points-label { font-size: 0.875rem; font-weight: 500; color: #b86000; font-family: 'Inter', system-ui, sans-serif; }
   .comp-badges {
     background: var(--color-border-muted); border: 1px solid var(--color-border); border-radius: 12px;
@@ -262,82 +260,41 @@ const styles = `
 
   /* Social strip */
   .snip-social {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 24px 6px; border-top: 1px solid var(--color-border); margin-top: 16px; gap: 8px;
+    display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); align-items: center;
+    padding: 8px 12px 6px; border-top: 1px solid var(--color-border); margin-top: 10px; gap: 6px;
   }
-  .snip-social-left  { display: flex; align-items: center; gap: 10px; }
-  .snip-social-right { display: flex; align-items: center; gap: 14px; }
+  .snip-social-left  { display: flex; align-items: center; gap: 2px; justify-self: start; }
+  .snip-social-right { display: flex; align-items: center; gap: 2px; justify-self: end; }
+  .snip-social-counter {
+    justify-self: center; font-family: 'Inter', system-ui, sans-serif; font-size: 0.8125rem;
+    font-weight: 500; color: var(--color-text-body); background: var(--color-border-muted);
+    padding: 4px 10px; border-radius: 999px; white-space: nowrap;
+  }
   .snip-social-btn {
-    display: flex; align-items: center; gap: 6px;
-    background: none; border: none; padding: 10px 6px;
-    font-size: 0.9375rem; color: var(--color-text-body); transition: color 0.2s;
+    display: flex; align-items: center; gap: 4px;
+    background: none; border: none; padding: 8px; border-radius: 999px; min-height: 40px;
+    font-size: 0.9375rem; color: var(--color-text-body);
+    transition: color 0.2s, background 0.15s, transform 0.12s;
     font-family: 'Inter', system-ui, sans-serif; font-weight: 500;
   }
+  .snip-social-btn:active { transform: scale(0.86); }
   .snip-like-btn          { cursor: pointer; }
   .snip-like-btn:hover    { color: var(--color-accent); }
-  .snip-like-btn.active   { color: var(--color-accent); }
+  .snip-like-btn.active   { color: var(--color-accent); background: #FF8E0018; }
   .snip-like-btn.disabled { cursor: not-allowed; opacity: 0.5; }
   .snip-bm-btn         { cursor: pointer; }
   .snip-bm-btn:hover   { color: var(--color-accent); }
-  .snip-bm-btn.active  { color: var(--color-accent); background: #FF8E0018; border-radius: 8px; }
+  .snip-bm-btn.active  { color: var(--color-accent); background: #FF8E0018; }
   .snip-bm-btn.disabled { cursor: not-allowed; opacity: 0.5; }
   .snip-comment-btn  { cursor: pointer; }
   .snip-comment-btn:hover { color: var(--color-accent); }
   .snip-share-btn    { cursor: pointer; }
   .snip-share-btn:hover { color: var(--color-accent); }
-  .snip-social-icon  { font-size: 1.125rem; line-height: 1; display: flex; align-items: center; }
+  .snip-social-icon  { font-size: 1.25rem; line-height: 1; display: flex; align-items: center; }
+  .snip-social-icon svg { width: 1em; height: 1em; max-width: none; flex: none; display: block; }
   @media (min-width: 900px) {
     .snip-social-icon { font-size: 1.375rem; }
   }
-  .snip-social-sep   { color: var(--color-border); font-size: 1rem; }
-
-  /* Share popover */
-  .share-popover-overlay {
-    position: fixed; inset: 0; z-index: 160;
-    background: rgba(0,0,0,0.35); backdrop-filter: blur(2px);
-    display: flex; align-items: flex-end;
-    animation: fadeIn 0.15s ease;
-  }
-  .share-popover {
-    background: white; border-radius: 16px 16px 0 0; width: 100%;
-    padding: 20px 24px 32px;
-    animation: slideUp 0.25s cubic-bezier(0.25,0.46,0.45,0.94) both;
-    box-shadow: 0 -4px 24px rgba(0,0,0,0.10);
-  }
-  .share-popover-handle {
-    width: 40px; height: 4px; background: var(--color-border); border-radius: 2px;
-    margin: 0 auto 16px;
-  }
-  .share-popover-title {
-    font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.125rem; font-weight: 500;
-    color: var(--color-text-main); margin-bottom: 6px;
-  }
-  .share-popover-hook {
-    font-size: 0.875rem; color: var(--color-text-body); margin-bottom: 18px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    font-family: 'Nunito Sans', system-ui, sans-serif;
-  }
-  .share-popover-btns { display: flex; flex-direction: column; gap: 10px; }
-  .share-pop-btn {
-    display: flex; align-items: center; gap: 12px;
-    padding: 13px 18px; border-radius: 12px; border: 1px solid;
-    background: white; cursor: pointer; font-family: 'Inter', system-ui, sans-serif;
-    font-size: 0.9375rem; font-weight: 500;
-    transition: opacity 0.15s; text-decoration: none;
-    min-height: 48px;
-  }
-  .share-pop-btn:hover { opacity: 0.82; }
-  .share-pop-btn-wa   { border-color: #25D366; color: #25D366; }
-  .share-pop-btn-tw   { border-color: var(--color-text-main); color: var(--color-text-main); }
-  .share-pop-btn-copy { border-color: var(--color-primary); color: var(--color-primary); }
-  .share-pop-btn-copy.copied { border-color: var(--color-secondary); color: var(--color-secondary); }
-  .share-pop-cancel {
-    margin-top: 8px; padding: 12px; border-radius: 12px; border: none;
-    background: var(--color-border-muted); color: var(--color-text-body); cursor: pointer;
-    font-family: 'Inter', system-ui, sans-serif; font-size: 0.9375rem; font-weight: 500;
-    width: 100%; transition: background 0.15s; min-height: 44px;
-  }
-  .share-pop-cancel:hover { background: var(--color-border); }
 
   /* Comments sheet */
   .comments-overlay {
@@ -384,16 +341,16 @@ const styles = `
     flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.875rem;
   }
   .comment-content { flex: 1; }
-  .comment-author { font-size: 0.8125rem; font-weight: 700; color: var(--color-text-main); margin-bottom: 2px; font-family: 'Nunito Sans', system-ui, sans-serif; }
+  .comment-author { font-size: 0.8125rem; font-weight: 600; color: var(--color-text-main); margin-bottom: 2px; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .comment-text { font-size: 0.9375rem; color: var(--color-text-body); line-height: 1.6; font-family: 'Nunito Sans', system-ui, sans-serif; }
   .comment-time { font-size: 0.6875rem; color: var(--color-text-body); margin-top: 3px; font-family: 'Inter', system-ui, sans-serif; }
   .comment-author-row { display: flex; align-items: center; gap: 4px; margin-bottom: 2px; }
-  .comment-actions { display: flex; align-items: center; gap: 2px; margin-left: 4px; }
-  .comment-delete-btn { background: none; border: none; cursor: pointer; color: var(--color-border); font-size: 0.75rem; padding: 0 2px; line-height: 1; }
+  .comment-actions { display: flex; align-items: center; gap: 6px; margin-left: 6px; }
+  .comment-delete-btn { background: none; border: none; cursor: pointer; color: var(--color-text-muted); font-size: 0.9375rem; padding: 6px; line-height: 1; }
   .comment-delete-btn:hover { color: #e55; }
-  .comment-edit-btn { background: none; border: none; cursor: pointer; color: var(--color-border); font-size: 0.75rem; padding: 0 2px; line-height: 1; }
+  .comment-edit-btn { background: none; border: none; cursor: pointer; color: var(--color-text-muted); font-size: 0.9375rem; padding: 6px; line-height: 1; }
   .comment-edit-btn:hover { color: var(--color-accent); }
-  .comment-report-btn { background: none; border: none; cursor: pointer; color: var(--color-border); font-size: 0.75rem; padding: 0 2px; line-height: 1; }
+  .comment-report-btn { background: none; border: none; cursor: pointer; color: var(--color-text-muted); font-size: 0.9375rem; padding: 6px; line-height: 1; }
   .comment-report-btn:hover { color: #e58e00; }
   .comment-report-btn.reported { color: #7BAE7F; cursor: default; }
   .comment-error { margin-top: 6px; font-size: 0.8125rem; color: #c0392b; font-family: 'Nunito Sans', system-ui, sans-serif; }
@@ -500,24 +457,25 @@ const styles = `
     .snip-top-block { cursor: pointer; }
     .snip-tap-hint {
       display: flex; align-items: center; justify-content: center; gap: 6px;
-      margin: 4px 16px 14px; padding: 10px 16px;
-      border: 1.5px solid ${SAFFRON}66; border-radius: 999px; background: #FFF8EE;
-      font-size: 0.8125rem; font-weight: 600; color: #B45309;
-      font-family: 'Inter', system-ui, sans-serif; letter-spacing: 0.02em;
+      margin: 14px 16px; padding: 6px 14px;
+      border: 1px solid ${SAFFRON}66; border-radius: 999px; background: #FFF8EE;
+      font-size: 0.8125rem; font-weight: 500; color: #B45309;
+      font-family: 'Inter', system-ui, sans-serif;
       user-select: none; cursor: pointer;
     }
+    .snip-tap-hint + .snip-social { margin-top: 0; }
   }
 
   /* ── Reveal sheet (mobile tap-to-reveal) ── */
   .reveal-overlay {
-    position: fixed; inset: 0; z-index: 140;
-    background: rgba(0,0,0,0.35);
-    animation: fadeIn 0.2s ease;
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 140;
+    background: transparent; /* full-screen tap-catcher: tapping anywhere outside the sheet closes it */
   }
   .reveal-sheet {
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 145;
-    background: white; border-radius: 20px 20px 0 0;
-    max-height: 78vh;
+    background: var(--color-sheet-tint); border-radius: 20px 20px 0 0;
+    border-top: 2px solid var(--color-browse); box-shadow: 0 -10px 28px rgba(16,24,40,0.22);
+    max-height: 78vh; max-height: 78dvh; min-height: 60vh; min-height: 60dvh;
     display: flex; flex-direction: column;
     animation: slideUp 0.3s cubic-bezier(0.25,0.46,0.45,0.94) both;
     overflow: hidden;
@@ -526,39 +484,51 @@ const styles = `
   @media (min-width: 900px) {
     .reveal-overlay, .reveal-sheet { display: none !important; }
   }
+
+  /* ── Floating action bar shown while the reveal sheet is open ── */
+  .snip-float-social {
+    position: fixed; left: 10px; right: 10px; top: 64px; z-index: 150;
+    background: var(--color-panel-tint); border: 1px solid var(--color-browse);
+    border-radius: 16px; box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+    opacity: 0; pointer-events: none; transform: translateY(-6px);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+  }
+  .snip-float-social .snip-social-btn { color: var(--color-teal-ink); }
+  .snip-float-social .snip-social-btn.active { color: var(--color-accent); }
+  .snip-float-social .snip-social-counter { background: #fff; color: var(--color-teal-ink); }
+  .snip-float-social.open { opacity: 1; pointer-events: auto; transform: translateY(0); }
+  .snip-float-social .snip-social { border-top: none; margin-top: 0; padding: 4px 12px; }
+  @media (min-width: 900px) {
+    .snip-float-social { display: none !important; }
+  }
   .reveal-sheet-grab { position: relative; flex-shrink: 0; touch-action: none; }
   .reveal-sheet-handle {
-    width: 40px; height: 4px; background: var(--color-border); border-radius: 2px;
+    width: 44px; height: 5px; background: var(--color-browse); border-radius: 3px;
     margin: 12px auto 0; flex-shrink: 0;
   }
   .reveal-sheet-close {
     position: absolute; top: 10px; right: 10px; width: 40px; height: 40px;
     display: flex; align-items: center; justify-content: center;
-    background: none; border: none; border-radius: 999px;
-    color: var(--color-text-muted); font-size: 1.25rem; cursor: pointer;
+    background: #fff; border: none; border-radius: 999px;
+    color: var(--color-text-body); font-size: 1.25rem; cursor: pointer;
   }
   .reveal-sheet-close:hover { color: var(--color-text-body); background: var(--color-border-muted); }
-  .reveal-sheet-header {
-    padding: 14px 56px 14px 20px; flex-shrink: 0;
-    border-bottom: 1px solid var(--color-border);
-    font-family: 'Oswald', 'Arial Narrow', sans-serif;
-    font-size: 1.375rem; font-weight: 500;
-    color: ${HERITAGE}; line-height: 1.3;
-  }
   .reveal-sheet-body {
-    flex: 1; overflow-y: auto; padding: 16px 20px 32px;
+    flex: 1; overflow-y: auto; padding: 16px 20px calc(32px + env(safe-area-inset-bottom, 0px));
     overscroll-behavior: contain;
   }
+  .reveal-sheet-body.sheet-body-noHead { padding-top: 22px; }
 
   @media (max-width: 480px) {
-    .player-body { padding: 12px 0.75rem 115px; }
-    .snip-hook { font-size: 1.375rem; }
-    .snip-top-left { padding: 14px 14px 12px; }
+    .player-body { padding: 12px 0.75rem 16px; }
+    .player-wrap:has(.player-nav) .player-body { padding-bottom: 84px; }
+    .snip-hook { font-size: calc(1.25rem + 1pt); }
+    .snip-top-left { padding: 10px 14px 8px; }
     .snip-bottom-left { padding: 14px 14px 12px; }
     .snip-bottom-right { padding: 12px 14px 14px; }
     .player-nav-links { display: none !important; }
-    .snip-img { max-height: 300px; }
-    .snip-img img { max-height: 300px; }
+    .snip-img { max-height: min(300px, 30vh); }
+    .snip-img img { max-height: min(300px, 30vh); }
   }
 `;
 
@@ -599,7 +569,6 @@ export default function SnippetPlayer({
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentsSnipId,  setCommentsSnipId]  = useState(null);
   const [sharePopoverId,  setSharePopoverId]  = useState(null); // snippet_id or null
-  const [shareCopied,     setShareCopied]     = useState(false);
   const [showLangPicker,  setShowLangPicker]  = useState(false);
   const [commentDraft,    setCommentDraft]    = useState("");
   const [commentPosting,  setCommentPosting]  = useState(false);
@@ -614,6 +583,12 @@ export default function SnippetPlayer({
   const [sheetDragY,         setSheetDragY]         = useState(0);
   const [sheetDragged,       setSheetDragged]       = useState(false);
   const sheetGrabY = useRef(null);
+  // Floating action bar (shown while the reveal sheet is open) — keeps the
+  // hook visible above the dimmed area and the sheet resized to start right below it.
+  const [sheetTopPx, setSheetTopPx] = useState(null);
+  const hookBlockRef = useRef(null);
+  const hookTextRef = useRef(null);
+  const floatBarRef = useRef(null);
   const firstViewedRef = useRef(initialSnippetIndex); // swipe hint shows once, on the first snippet opened
   const [signinToast, setSigninToast] = useState("");
   const toastTimerRef = useRef(null);
@@ -1116,6 +1091,7 @@ export default function SnippetPlayer({
     const dx = e.changedTouches[0].clientX - (touchStartX.current ?? e.changedTouches[0].clientX);
     sheetGrabY.current = null;
     if (sheetStartScroll.current <= 0 && dy > 90 && dy > Math.abs(dx) * 1.5) setSheetOpen(false);
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) setSheetOpen(false); // horizontal swipe closes
     setSheetDragY(0);
     onTouchEnd(e);
   }
@@ -1126,44 +1102,75 @@ export default function SnippetPlayer({
     toastTimerRef.current = setTimeout(() => setSigninToast(""), 2200);
   }
 
+  // When the reveal sheet opens on mobile: push the hook block down just
+  // enough to clear the floating action bar, then size the sheet + its dim
+  // overlay to start right below the (now fully visible) hook — so the hook
+  // is never covered or dimmed. Margin is set imperatively (no transition)
+  // so the measurement right after it is exact, with no animation race.
+  useLayoutEffect(() => {
+    function layout() {
+      if (!hookBlockRef.current) return;
+      const isMobile = window.matchMedia("(max-width: 899px)").matches;
+      if (sheetOpen && isMobile && floatBarRef.current) {
+        const floatH = floatBarRef.current.getBoundingClientRect().height;
+        const shift = Math.round(floatH) + 12;
+        hookBlockRef.current.style.marginTop = shift + "px";
+        // Sheet slides up to the bottom of the hook text, but is never shorter than 60% of the screen
+        const hookEl = hookTextRef.current || hookBlockRef.current;
+        const hookBottom = hookEl.getBoundingClientRect().bottom;
+        const minTop = floatBarRef.current.getBoundingClientRect().bottom + 8;
+        setSheetTopPx(Math.max(minTop, Math.min(hookBottom + 14, window.innerHeight * 0.40)));
+      } else {
+        hookBlockRef.current.style.marginTop = "";
+        setSheetTopPx(null);
+      }
+    }
+    layout();
+    if (sheetOpen) {
+      window.addEventListener("resize", layout);
+      return () => window.removeEventListener("resize", layout);
+    }
+  }, [sheetOpen, current]);
+
   // Social strip — rendered on the card and at the bottom of the reveal sheet
   function renderSocialStrip() {
+    const tap = () => { if (navigator.vibrate) navigator.vibrate(8); };
     return (
                 <div className="snip-social">
                     <div className="snip-social-left">
                       <button
                         className={"snip-social-btn snip-like-btn" + (liked.has(snip.snippet_id) ? " active" : "") + (!user || user.is_anonymous ? " disabled" : "")}
-                        onClick={e => { e.stopPropagation(); if (!user || user.is_anonymous) { showSigninToast(SIGNIN.likeTooltip); return; } toggleLike(snip.snippet_id); }}
+                        onClick={e => { e.stopPropagation(); tap(); if (!user || user.is_anonymous) { showSigninToast(SIGNIN.likeTooltip); return; } toggleLike(snip.snippet_id); }}
                         title={!user || user.is_anonymous ? SIGNIN.likeTooltip : liked.has(snip.snippet_id) ? PLAYER.unlikeTooltip : "Like"}
                       >
-                        <span className="snip-social-icon">{liked.has(snip.snippet_id) ? "♥" : "♡"}</span>
+                        <span className="snip-social-icon"><svg viewBox="0 0 24 24" fill={liked.has(snip.snippet_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span>
                         <span>{likeCounts[snip.snippet_id] || 0}</span>
                       </button>
-                      <span className="snip-social-sep">&#183;</span>
-                      <button
-                        className="snip-social-btn snip-comment-btn"
-                        onClick={e => { e.stopPropagation(); openComments(snip.snippet_id); }}
-                        title="Comments"
-                      >
-                        <span className="snip-social-icon">&#128172;</span>
-                        <span>{commentCounts[snip.snippet_id] || 0}</span>
-                      </button>
-                    </div>
-                    <div className="snip-social-right">
                       <button
                         className={"snip-social-btn snip-bm-btn" + (bookmarks.has("snippet:" + snip.snippet_id) ? " active" : "") + (!user || user.is_anonymous ? " disabled" : "")}
                         title={!user || user.is_anonymous ? SIGNIN.bookmarkTooltip : bookmarks.has("snippet:" + snip.snippet_id) ? PLAYER.removeBookmark : PLAYER.addBookmark}
-                        onClick={() => { if (!user || user.is_anonymous) { showSigninToast(SIGNIN.bookmarkTooltip); return; } if (onToggleBookmark) onToggleBookmark("snippet", String(snip.snippet_id), snip.hook || "Snippet"); }}
+                        onClick={e => { e.stopPropagation(); tap(); if (!user || user.is_anonymous) { showSigninToast(SIGNIN.bookmarkTooltip); return; } if (onToggleBookmark) onToggleBookmark("snippet", String(snip.snippet_id), snip.hook || "Snippet"); }}
                       >
-                        <span className="snip-social-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill={bookmarks.has("snippet:" + snip.snippet_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span>
+                        <span className="snip-social-icon"><svg viewBox="0 0 24 24" fill={bookmarks.has("snippet:" + snip.snippet_id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span>
+                      </button>
+                    </div>
+                    {total > 1 && <div className="snip-social-counter">{current + 1}/{total}</div>}
+                    <div className="snip-social-right">
+                      <button
+                        className="snip-social-btn snip-comment-btn"
+                        onClick={e => { e.stopPropagation(); tap(); openComments(snip.snippet_id); }}
+                        title="Comments"
+                      >
+                        <span className="snip-social-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
+                        <span>{commentCounts[snip.snippet_id] || 0}</span>
                       </button>
                       <button
                         className="snip-social-btn snip-share-btn"
-                        title="Share this snippet"
-                        onClick={e => { e.stopPropagation(); setShareCopied(false); setSharePopoverId(snip.snippet_id); }}
+                        title="Share this snippet" aria-label="Share this snippet"
+                        onClick={e => { e.stopPropagation(); tap(); setSharePopoverId(snip.snippet_id); }}
                       >
                         <span className="snip-social-icon">
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <circle cx="18" cy="5" r="3"/>
                             <circle cx="6" cy="12" r="3"/>
                             <circle cx="18" cy="19" r="3"/>
@@ -1171,16 +1178,14 @@ export default function SnippetPlayer({
                             <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
                           </svg>
                         </span>
-                        <span>Share</span>
                       </button>
                       {canEdit && (
                         <button
                           className="snip-social-btn snip-edit-btn"
-                          title="Edit snippet"
+                          title="Edit snippet" aria-label="Edit snippet"
                           onClick={e => { e.stopPropagation(); openEditPanel(); }}
                         >
                           <span className="snip-social-icon"><i className="ti ti-pencil" /></span>
-                          <span>Edit</span>
                         </button>
                       )}
                     </div>
@@ -1223,6 +1228,11 @@ export default function SnippetPlayer({
             <div className="snip-card"><div className="snip-empty">No snippets available for this lesson yet.</div></div>
           ) : (
             <>
+              {/* Floating action bar — shown while the reveal sheet is open (outside the card so
+                  transforms/overflow on the card can never clip or misplace it) */}
+              <div className={"snip-float-social" + (sheetOpen ? " open" : "")} ref={floatBarRef} onClick={e => e.stopPropagation()}>
+                {renderSocialStrip()}
+              </div>
               <div
                 className={`snip-card snip-enter-${snippetDir}`}
                 key={`${snip.snippet_id}-${snippetDir}`}
@@ -1231,9 +1241,11 @@ export default function SnippetPlayer({
                   transition: isDragging ? "none" : "transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94)",
                 }}
               >
+                {/* Desktop: one row, two columns (left = hook+picture, right = explanation+key terms) */}
+                <div className="snip-flow">
                 {/* TOP BLOCK: hook + image cover — tap opens reveal sheet on mobile */}
-                <div className="snip-top-block" onClick={() => setSheetOpen(true)}>
-                  <div className="snip-top-left">
+                <div className="snip-top-block" ref={hookBlockRef} onClick={() => setSheetOpen(true)}>
+                  <div className="snip-top-left" ref={hookTextRef}>
                     {trans.hook ? (
                       <div className="snip-hook fs-heading">{trans.hook}</div>
                     ) : !trans.explanation ? (
@@ -1251,7 +1263,7 @@ export default function SnippetPlayer({
                           onError={e => { e.target.style.display = "none"; }}
                         />
                         {trans.language && (
-                          <button className="snip-lang-badge" onClick={() => setShowLangPicker(true)} title="Change language"><i className="ti ti-language" aria-hidden="true" />{langName}</button>
+                          <button className="snip-lang-badge" onClick={e => { e.stopPropagation(); setShowLangPicker(true); }} title="Change language"><i className="ti ti-language" aria-hidden="true" />{langName}</button>
                         )}
                         {snip.difficulty_level && (
                           <div className="snip-diff">{DIFFICULTY_STARS[snip.difficulty_level]}</div>
@@ -1261,7 +1273,7 @@ export default function SnippetPlayer({
                       <div className="snip-header-band">
                         <div className="snip-header-ornament">&#127963;</div>
                         {trans.language && (
-                          <button className="snip-lang-badge" onClick={() => setShowLangPicker(true)} title="Change language"><i className="ti ti-language" aria-hidden="true" />{langName}</button>
+                          <button className="snip-lang-badge" onClick={e => { e.stopPropagation(); setShowLangPicker(true); }} title="Change language"><i className="ti ti-language" aria-hidden="true" />{langName}</button>
                         )}
                         {snip.difficulty_level && (
                           <div className="snip-diff">{DIFFICULTY_STARS[snip.difficulty_level]}</div>
@@ -1269,11 +1281,6 @@ export default function SnippetPlayer({
                       </div>
                     )}
                   </div>
-                </div>
-
-                {/* Tap-to-read hint — mobile only, CSS hidden on desktop */}
-                <div className="snip-tap-hint" onClick={() => setSheetOpen(true)}>
-                  <i className="ti ti-chevrons-up" style={{fontSize:'0.9rem'}} /> Tap to read
                 </div>
 
                 {/* BOTTOM BLOCK: explanation + citation left | key term, life, refresher right */}
@@ -1288,7 +1295,7 @@ export default function SnippetPlayer({
                         {trans.key_term && (
                           <div className="snip-key-term">
                             <div className="snip-kt-label">Key Term</div>
-                            <div className="snip-kt-word">{trans.key_term}</div>
+                            <div className="snip-kt-word fs-body">{trans.key_term}</div>
                             {trans.key_term_meaning && <div className="snip-kt-meaning fs-body">{trans.key_term_meaning}</div>}
                           </div>
                         )}
@@ -1308,6 +1315,12 @@ export default function SnippetPlayer({
                     )}
                   </div>
                 )}
+                </div>
+
+                {/* Tap-to-read hint — mobile only, CSS hidden on desktop */}
+                <div className="snip-tap-hint" onClick={() => setSheetOpen(true)}>
+                  <i className="ti ti-chevrons-up" style={{fontSize:'0.9rem'}} /> Tap to read
+                </div>
 
                 {/* Social strip — full width, outside the grid */}
                 {renderSocialStrip()}
@@ -1331,12 +1344,14 @@ export default function SnippetPlayer({
                     className="reveal-sheet"
                     style={{
                       ...(sheetDragged ? { animation: "none" } : {}),
+                      ...(sheetTopPx != null ? { top: sheetTopPx, maxHeight: "none", minHeight: 0 } : {}),
                       transform: `translateY(${sheetDragY}px)`,
                       transition: sheetDragY ? "none" : "transform 0.25s ease",
                     }}
                     onTouchStart={e => { e.stopPropagation(); onSheetTouchStart(e); }}
                     onTouchMove={e => { e.stopPropagation(); onSheetTouchMove(e); }}
                     onTouchEnd={e => { e.stopPropagation(); onSheetTouchEnd(e); }}
+                    onClick={e => { if (e.target.closest("button, a, input, textarea")) return; setSheetOpen(false); }}
                   >
                     <div
                       className="reveal-sheet-grab"
@@ -1346,9 +1361,8 @@ export default function SnippetPlayer({
                     >
                       <div className="reveal-sheet-handle" />
                       <button className="reveal-sheet-close" aria-label="Close" onClick={() => setSheetOpen(false)}><i className="ti ti-x" /></button>
-                      <div className="reveal-sheet-header fs-heading">{trans.hook}</div>
                     </div>
-                    <div className="reveal-sheet-body" ref={sheetBodyRef}>
+                    <div className="reveal-sheet-body sheet-body-noHead" ref={sheetBodyRef}>
                       {trans.explanation && <div className="snip-explanation fs-body">{trans.explanation}</div>}
                       {trans.source_citation && <div className="snip-citation">{trans.source_citation}</div>}
                       {(trans.key_term || trans.life_connection || trans.quiz_recap) && (
@@ -1356,7 +1370,7 @@ export default function SnippetPlayer({
                           {trans.key_term && (
                             <div className="snip-key-term">
                               <div className="snip-kt-label">Key Term</div>
-                              <div className="snip-kt-word">{trans.key_term}</div>
+                              <div className="snip-kt-word fs-body">{trans.key_term}</div>
                               {trans.key_term_meaning && <div className="snip-kt-meaning fs-body">{trans.key_term_meaning}</div>}
                             </div>
                           )}
@@ -1374,7 +1388,6 @@ export default function SnippetPlayer({
                           )}
                         </div>
                       )}
-                      {renderSocialStrip()}
                     </div>
                   </div>
                 </>
@@ -1386,24 +1399,8 @@ export default function SnippetPlayer({
 
         {/* Bottom nav */}
         {!loading && total > 0 && (
-          <div className="player-nav">
+          <div className={"player-nav" + (sheetOpen ? " nav-under-sheet" : "")}>
             <button className="pnav-btn pnav-prev" onClick={goPrev} disabled={current === 0}>← Prev</button>
-            <div className="pnav-dots">
-              {snippets.slice(0, Math.min(total, 10)).map((_, i) => (
-                <div
-                  key={i}
-                  className={"pnav-dot" + (i === current ? " active" : i < current ? " done" : "")}
-                  onClick={() => {
-                    if (i === current) return;
-                    setSnippetDir(i > current ? "next" : "prev");
-                    setCurrent(i);
-                    window.scrollTo(0, 0);
-                  }}
-                  title={"Snippet " + (i + 1)}
-                />
-              ))}
-              {total > 10 && <span style={{ fontSize: 11, color: "#aaa" }}>+{total - 10}</span>}
-            </div>
             <button className={"pnav-btn " + (isLast ? "pnav-finish" : "pnav-next")} onClick={goNext}>
               {isLast ? "Finish ✓" : "Next →"}
             </button>
@@ -1449,54 +1446,23 @@ export default function SnippetPlayer({
           const shareSnip = snippets.find(s => s.snippet_id === sharePopoverId);
           const trans = shareSnip ? (translations[shareSnip.snippet_id] || {}) : {};
           const hook = trans.hook || shareSnip?.hook || "";
-          const shareText = (hook ? hook + "\n\n" : "") + snippetShareMsg;
-          const shareUrl  = APP_URL;
-          const waHref  = "https://wa.me/?text=" + encodeURIComponent(shareText + "\n" + shareUrl);
-          const twHref  = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(shareText) + "&url=" + encodeURIComponent(shareUrl);
+          // Deep link to the lesson this snippet belongs to (opens it from the start);
+          // falls back to the site root when the lesson is unknown.
+          const shareLessonId = lesson?.lesson_id ?? shareSnip?.lesson_id;
+          const shareUrl = shareLessonId ? `${APP_URL}/#/lesson/${encodeURIComponent(shareLessonId)}` : APP_URL;
+          // The saved message usually contains the site URL — point it at the deep link instead of repeating it.
+          const msg = snippetShareMsg.split(APP_URL).join(shareUrl);
           return (
-            <div className="share-popover-overlay" onClick={() => setSharePopoverId(null)}>
-              <div className="share-popover" onClick={e => e.stopPropagation()}>
-                <div className="share-popover-handle" />
-                <div className="share-popover-title">Share Snippet</div>
-                {hook && <div className="share-popover-hook">{hook}</div>}
-                <div className="share-popover-btns">
-                  <a
-                    className="share-pop-btn share-pop-btn-wa"
-                    href={waHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => { track("share", { contentType: "snippet", contentId: sharePopoverId, meta: { channel: "whatsapp" } }); setSharePopoverId(null); }}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.122 1.532 5.854L.057 23.75a.5.5 0 0 0 .614.612l5.96-1.46A11.942 11.942 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 0 1-5.028-1.385l-.36-.214-3.732.914.944-3.635-.234-.374A9.817 9.817 0 0 1 2.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
-                    WhatsApp
-                  </a>
-                  <a
-                    className="share-pop-btn share-pop-btn-tw"
-                    href={twHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => { track("share", { contentType: "snippet", contentId: sharePopoverId, meta: { channel: "twitter" } }); setSharePopoverId(null); }}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                    Post on X
-                  </a>
-                  <button
-                    className={"share-pop-btn share-pop-btn-copy" + (shareCopied ? " copied" : "")}
-                    onClick={() => {
-                      track("share", { contentType: "snippet", contentId: sharePopoverId, meta: { channel: "copy" } });
-                      navigator.clipboard.writeText(shareText + "\n" + shareUrl).then(() => {
-                        setShareCopied(true);
-                        setTimeout(() => { setShareCopied(false); setSharePopoverId(null); }, 1800);
-                      });
-                    }}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                    {shareCopied ? "Copied!" : "Copy Link"}
-                  </button>
-                </div>
-                <button className="share-pop-cancel" onClick={() => setSharePopoverId(null)}>Cancel</button>
-              </div>
-            </div>
+            <SharePopover
+              open
+              onClose={() => setSharePopoverId(null)}
+              title="Share Snippet"
+              subtitle={hook}
+              text={(hook ? hook + "\n\n" : "") + msg}
+              url={shareUrl}
+              contentType="snippet"
+              contentId={sharePopoverId}
+            />
           );
         })()}
 

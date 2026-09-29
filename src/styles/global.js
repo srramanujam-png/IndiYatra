@@ -1,7 +1,7 @@
 // Fully tokenised (roadmap 2.1): colours come from the CSS variables defined
 // in src/index.css — the single source of truth. Do not add raw hex here.
 export const globalStyles = `
-  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500&family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600;7..72,700&display=swap');
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Nunito Sans', system-ui, sans-serif; background: #FFFFFF; color: var(--color-text-body); min-height: 100vh; }
 
@@ -160,30 +160,30 @@ export const globalStyles = `
 
   /* ── Shared snippet-style content blocks (SnippetPlayer + QuizPlayer) ── */
   .snip-explanation {
-    font-size: 1.125rem; color: var(--color-text-body); line-height: 1.85; margin-bottom: 20px;
-    text-align: justify; font-family: 'Nunito Sans', system-ui, sans-serif;
+    font-size: calc(1rem + 1pt); color: var(--color-text-body); line-height: 1.6; margin-bottom: 14px;
+    text-align: left; font-family: 'Literata', serif;
   }
   .snip-key-term {
     background: #FFF8EE; border-left: 4px solid var(--color-accent);
-    border-radius: 0 12px 12px 0; padding: 14px 18px; margin-bottom: 14px;
+    border-radius: 0 12px 12px 0; padding: 10px 14px; margin-bottom: 10px;
   }
   .snip-kt-label { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--color-accent); margin-bottom: 6px; font-family: 'Inter', system-ui, sans-serif; }
-  .snip-kt-word  { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--color-accent); margin-bottom: 4px; }
-  .snip-kt-meaning { font-size: 1.125rem; color: var(--color-text-body); line-height: 1.6; font-family: 'Nunito Sans', system-ui, sans-serif; }
+  .snip-kt-word  { font-family: 'Literata', serif; font-size: calc(1rem + 1pt); line-height: 1.6; font-weight: 600; color: var(--color-accent); margin-bottom: 4px; }
+  .snip-kt-meaning { font-size: calc(1rem + 1pt); color: var(--color-text-body); line-height: 1.6; font-family: 'Literata', serif; }
 
   .snip-life {
     background: #F0FAF4; border-left: 4px solid var(--color-secondary);
-    border-radius: 0 12px 12px 0; padding: 14px 18px; margin-bottom: 14px;
+    border-radius: 0 12px 12px 0; padding: 10px 14px; margin-bottom: 10px;
   }
   .snip-life-label { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--color-secondary); margin-bottom: 6px; font-family: 'Inter', system-ui, sans-serif; }
-  .snip-life-text  { font-size: 1.125rem; color: #2a4a2a; line-height: 1.7; font-family: 'Nunito Sans', system-ui, sans-serif; }
+  .snip-life-text  { font-size: calc(1rem + 1pt); color: #2a4a2a; line-height: 1.6; font-family: 'Literata', serif; }
 
   .snip-quiz {
     background: #EEF5FF; border-left: 4px solid var(--color-primary);
-    border-radius: 0 12px 12px 0; padding: 14px 18px; margin-bottom: 14px;
+    border-radius: 0 12px 12px 0; padding: 10px 14px; margin-bottom: 10px;
   }
   .snip-quiz-label { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--color-primary); margin-bottom: 6px; font-family: 'Inter', system-ui, sans-serif; }
-  .snip-quiz-text  { font-size: 1.125rem; color: #1a2a4a; line-height: 1.7; font-family: 'Nunito Sans', system-ui, sans-serif; }
+  .snip-quiz-text  { font-size: calc(1rem + 1pt); color: #1a2a4a; line-height: 1.6; font-family: 'Literata', serif; }
 
   .snip-citation { font-size: 0.75rem; color: var(--color-text-body); font-style: italic; text-align: left; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--color-border); font-family: 'Nunito Sans', system-ui, sans-serif; }
 
@@ -207,11 +207,6 @@ export const globalStyles = `
   .pnav-finish { background: var(--color-secondary); color: white; border-color: var(--color-secondary); }
   .pnav-finish:hover { opacity: 0.9; transform: translateY(-1px); }
 
-  .pnav-dots { display: flex; gap: 6px; align-items: center; }
-  .pnav-dot  { width: 18px; height: 18px; border: 5px solid transparent; background-clip: padding-box; border-radius: 50%; background-color: var(--color-border); transition: all 0.25s; cursor: pointer; }
-  .pnav-dot:hover { background: rgba(255,142,0,0.53); }
-  .pnav-dot.active { background: var(--color-accent); transform: scale(1.35); }
-  .pnav-dot.done   { background: var(--color-secondary); }
   .pnav-center-finish { background: white; color: var(--color-secondary); border-color: var(--color-border); }
   .pnav-center-finish:hover { border-color: var(--color-secondary); color: var(--color-secondary); }
 
@@ -228,12 +223,28 @@ export const globalStyles = `
     .player-nav { padding: 10px 1rem; bottom: 0; }
   }
 
+  /* ── Mobile: rely on swipe, not Prev/Next buttons — Finish stays reachable ── */
+  @media (max-width: 899px) {
+    .pnav-prev, .pnav-next { display: none !important; }
+    .player-nav { justify-content: center; }
+    .player-nav:not(:has(.pnav-finish, .pnav-center-finish)) { display: none !important; }
+    /* Quiz: Finish lives in the top bar + last-question button on phones */
+    .player-nav.desktop-only { display: none !important; }
+    /* Never sit on top of an open slide-up sheet */
+    .player-nav.nav-under-sheet { display: none !important; }
+  }
+
   /* ── Font size setting (Settings → Font Size sets body[data-fs]) ──
      Base (medium) sizes live on the elements; small/large override via .fs-body/.fs-heading */
-  body[data-fs="small"] .fs-body    { font-size: 1rem !important; }
-  body[data-fs="large"] .fs-body    { font-size: 1.3125rem !important; }
-  body[data-fs="small"] .fs-heading { font-size: 1.375rem !important; }
-  body[data-fs="large"] .fs-heading { font-size: 1.875rem !important; }
+  /* Every setting is +1pt over the previous scale (small 15px, medium 16px, large 20px + 1pt) */
+  body[data-fs="small"] .fs-body    { font-size: calc(0.9375rem + 1pt) !important; }
+  body[data-fs="large"] .fs-body    { font-size: calc(1.25rem + 1pt) !important; }
+  body[data-fs="small"] .fs-heading { font-size: calc(1.25rem + 1pt) !important; }
+  body[data-fs="large"] .fs-heading { font-size: calc(1.75rem + 1pt) !important; }
+  @media (max-width: 480px) {
+    body[data-fs="small"] .fs-heading { font-size: calc(1.125rem + 1pt) !important; }
+    body[data-fs="large"] .fs-heading { font-size: calc(1.5rem + 1pt) !important; }
+  }
 
   /* ═════════════════════════════════════════════════════════════════════════
    UNIFIED BLOCK STYLE — Module / Lesson / Snippet cards.

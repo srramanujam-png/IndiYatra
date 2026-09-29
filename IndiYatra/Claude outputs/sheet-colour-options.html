@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Floating panel and explanation sheet: colour options</title>
+<style>
+:root{--pri:#00509E;--grn:#00924A;--acc:#FF8E00;--text:#101828;--body:#4A5565;--bd:#E5E7EB;--mut:#F3F4F6;--surf:#FEF7FF}
+*{box-sizing:border-box}
+body{margin:0;padding:18px 14px 40px;font-family:Inter,system-ui,sans-serif;background:#e9e9e4;color:var(--text)}
+h1{font-size:1.1rem;margin:0 0 4px}.sub{margin:0 0 12px;color:var(--body);font-size:.85rem;max-width:760px;line-height:1.45}
+.ctl{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--bd);border-radius:999px;padding:7px 14px;font-size:.85rem;margin-bottom:16px;cursor:pointer}
+.row{display:flex;gap:18px;overflow-x:auto;padding-bottom:10px;align-items:flex-start}
+.opt{flex:0 0 290px}
+.opt h2{font-size:.92rem;margin:0 0 2px}.opt small{display:block;color:var(--body);font-size:.74rem;line-height:1.4;margin-bottom:8px;min-height:2.9em}
+.sw{display:flex;flex-direction:column;gap:3px;margin-bottom:10px;font-size:.68rem;color:var(--body);min-height:3.2em}
+.sw span{display:flex;align-items:center;gap:4px}.sw i{width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,.2);display:inline-block}
+/* phone */
+.phone{position:relative;height:560px;background:#fff;border:1px solid #c9c9c2;border-radius:22px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.1)}
+.top{height:54px;border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 14px;font-size:.85rem;color:var(--body);gap:10px}
+.top b{flex:1;text-align:center;font-family:Oswald,'Arial Narrow',sans-serif;font-weight:500;color:var(--pri)}
+.page{padding:60px 12px 0}
+.hook{font-family:Literata,Georgia,serif;font-size:1.15rem;font-weight:500;color:var(--pri);line-height:1.3;padding:8px 6px}
+.img{height:120px;margin:6px 0;border-radius:10px;background:linear-gradient(135deg,#f4e7d2,#e4c9a0);display:flex;align-items:center;justify-content:center;font-size:2.4rem;opacity:.7}
+/* scrim */
+.scrim{position:absolute;inset:0;background:rgba(16,24,40,.28);opacity:0;transition:opacity .15s;pointer-events:none}
+body.dim .scrim{opacity:1}
+/* float panel */
+.float{position:absolute;left:10px;right:10px;top:58px;z-index:5;border-radius:16px;box-shadow:0 6px 20px rgba(0,0,0,.18);padding:3px 10px;display:flex;justify-content:space-between;align-items:center;background:var(--fbg);border:1px solid var(--fbd)}
+.float .g{display:flex;gap:2px}
+.ic{display:flex;align-items:center;gap:3px;padding:8px;font-size:.78rem;color:var(--ficon)}
+.ic svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.cnt{font-size:.75rem;background:var(--fcnt);color:var(--ficon);border-radius:999px;padding:3px 10px}
+/* sheet */
+.sheet{position:absolute;left:0;right:0;bottom:0;top:190px;z-index:4;background:var(--sbg);border-radius:20px 20px 0 0;border-top:var(--stop);box-shadow:0 -10px 28px rgba(16,24,40,.22);overflow:hidden}
+.grab{height:34px;position:relative}
+.grab i{position:absolute;left:50%;top:10px;transform:translateX(-50%);width:44px;height:5px;border-radius:3px;background:var(--handle)}
+.x{position:absolute;right:8px;top:2px;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--body);background:var(--xbg)}
+.x svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round}
+.sb{padding:4px 16px 16px}
+.exp{font-family:Literata,Georgia,serif;font-size:.92rem;line-height:1.6;color:var(--body);margin:0 0 10px}
+.kt{background:#FFF8EE;border-left:4px solid var(--acc);border-radius:0 12px 12px 0;padding:9px 12px;margin-bottom:8px}
+.lf{background:#F0FAF4;border-left:4px solid var(--grn);border-radius:0 12px 12px 0;padding:9px 12px;margin-bottom:8px}
+.kt b,.lf b{display:block;font-size:.62rem;letter-spacing:.09em;text-transform:uppercase;font-weight:600;margin-bottom:3px}
+.kt b{color:var(--acc)}.lf b{color:var(--grn)}
+.kt span,.lf span{font-family:Literata,Georgia,serif;font-size:.88rem;color:var(--body);line-height:1.5}
+.note{font-size:.72rem;color:var(--body);margin-top:8px;line-height:1.4}
+</style></head>
+<body>
+<h1>Floating action panel and explanation sheet: colour options</h1>
+<p class="sub">Every colour comes from the IndiYatra palette or from tints already used in the app (saffron, heritage blue, cultural green, teal browse colour, surface tint). All four options share the same separation cues so the sheet reads as its own layer: a rounded top with a visible edge, an upward shadow, a darker drag handle and a circled close button. Use the switch to see them with the page dimmed behind the sheet.</p>
+<label class="ctl"><input type="checkbox" id="dim" checked> Dim the page behind the sheet (recommended)</label>
+
+<div class="row">
+
+<div class="opt" style="--fbg:#fff;--fbd:#00509E;--ficon:#4A5565;--fcnt:#F3F4F6;--sbg:#F3F4F6;--stop:1px solid #D1D5DB;--handle:#9CA3AF;--xbg:#fff">
+<h2>1. Neutral grey</h2><small>Calm and safe. Sheet uses the site's sub-divider grey; the panel is white with a heritage-blue outline.</small>
+<div class="sw"><span><i style="background:#F3F4F6"></i>Sheet #F3F4F6 (border-muted)</span><span><i style="background:#fff"></i>Panel #FFFFFF + #00509E</span></div>
+<div class="phone"><div class="top"><span>← Back</span><b>Indus Valley</b></div>
+<div class="page"><div class="hook">Why did the Harappans build a giant public bath?</div><div class="img">🏛️</div></div>
+<div class="scrim"></div>
+<div class="float"><div class="g"><span class="ic"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>12</span><span class="ic"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span></div><span class="cnt">3/10</span><div class="g"><span class="ic"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.5 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/></svg>4</span><span class="ic"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></span></div></div>
+<div class="sheet"><div class="grab"><i></i><div class="x"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></div></div><div class="sb"><p class="exp">The Great Bath at Mohenjo-daro is one of the earliest public water tanks in the world, lined with bitumen to keep it watertight.</p><div class="kt"><b>Key term</b><span>Bitumen: natural tar used for waterproofing.</span></div><div class="lf"><b>Life connection</b><span>Think of a temple pond used for festival dips today.</span></div></div></div></div></div>
+
+<div class="opt" style="--fbg:#FFF8EE;--fbd:#FF8E00;--ficon:#4A5565;--fcnt:#fff;--sbg:#F5F1EB;--stop:1px solid #E3D9C8;--handle:#B8A98F;--xbg:#fff">
+<h2>2. Warm parchment (heritage feel)</h2><small>Sheet uses the warm tone already on the desktop quiz explanation; panel uses the saffron tint with a saffron outline. Feels most "IndiYatra".</small>
+<div class="sw"><span><i style="background:#F5F1EB"></i>Sheet #F5F1EB</span><span><i style="background:#FFF8EE"></i>Panel #FFF8EE + #FF8E00</span></div>
+<div class="phone"><div class="top"><span>← Back</span><b>Indus Valley</b></div>
+<div class="page"><div class="hook">Why did the Harappans build a giant public bath?</div><div class="img">🏛️</div></div>
+<div class="scrim"></div>
+<div class="float"><div class="g"><span class="ic"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>12</span><span class="ic"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span></div><span class="cnt">3/10</span><div class="g"><span class="ic"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.5 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/></svg>4</span><span class="ic"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></span></div></div>
+<div class="sheet"><div class="grab"><i></i><div class="x"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></div></div><div class="sb"><p class="exp">The Great Bath at Mohenjo-daro is one of the earliest public water tanks in the world, lined with bitumen to keep it watertight.</p><div class="kt"><b>Key term</b><span>Bitumen: natural tar used for waterproofing.</span></div><div class="lf"><b>Life connection</b><span>Think of a temple pond used for festival dips today.</span></div></div></div></div></div>
+
+<div class="opt" style="--fbg:#EEF5FF;--fbd:#00509E;--ficon:#00509E;--fcnt:#fff;--sbg:#F5F9FF;--stop:2px solid #00509E;--handle:#00509E;--xbg:#EEF5FF">
+<h2>3. Heritage blue tint</h2><small>Ties to the brand blue. Sheet has a blue top edge and blue handle, so it is unmistakably a separate layer. Panel is a stronger blue tint with blue icons.</small>
+<div class="sw"><span><i style="background:#F5F9FF"></i>Sheet #F5F9FF + 2px #00509E</span><span><i style="background:#EEF5FF"></i>Panel #EEF5FF</span></div>
+<div class="phone"><div class="top"><span>← Back</span><b>Indus Valley</b></div>
+<div class="page"><div class="hook">Why did the Harappans build a giant public bath?</div><div class="img">🏛️</div></div>
+<div class="scrim"></div>
+<div class="float"><div class="g"><span class="ic"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>12</span><span class="ic"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span></div><span class="cnt">3/10</span><div class="g"><span class="ic"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.5 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/></svg>4</span><span class="ic"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></span></div></div>
+<div class="sheet"><div class="grab"><i></i><div class="x"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></div></div><div class="sb"><p class="exp">The Great Bath at Mohenjo-daro is one of the earliest public water tanks in the world, lined with bitumen to keep it watertight.</p><div class="kt"><b>Key term</b><span>Bitumen: natural tar used for waterproofing.</span></div><div class="lf"><b>Life connection</b><span>Think of a temple pond used for festival dips today.</span></div></div></div></div></div>
+
+<div class="opt" style="--fbg:#E3F1F0;--fbd:#4AADA8;--ficon:#1F5F5B;--fcnt:#fff;--sbg:#EDF5F5;--stop:2px solid #4AADA8;--handle:#4AADA8;--xbg:#fff">
+<h2>4. Teal (browse colour)</h2><small>Uses the site's teal and its feature-section tint (#B5D7D5 lightened). Distinct from the saffron/blue/green boxes inside, so nothing clashes.</small>
+<div class="sw"><span><i style="background:#EDF5F5"></i>Sheet #EDF5F5 + 2px #4AADA8</span><span><i style="background:#E3F1F0"></i>Panel #E3F1F0</span></div>
+<div class="phone"><div class="top"><span>← Back</span><b>Indus Valley</b></div>
+<div class="page"><div class="hook">Why did the Harappans build a giant public bath?</div><div class="img">🏛️</div></div>
+<div class="scrim"></div>
+<div class="float"><div class="g"><span class="ic"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>12</span><span class="ic"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span></div><span class="cnt">3/10</span><div class="g"><span class="ic"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.5 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/></svg>4</span><span class="ic"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></span></div></div>
+<div class="sheet"><div class="grab"><i></i><div class="x"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></div></div><div class="sb"><p class="exp">The Great Bath at Mohenjo-daro is one of the earliest public water tanks in the world, lined with bitumen to keep it watertight.</p><div class="kt"><b>Key term</b><span>Bitumen: natural tar used for waterproofing.</span></div><div class="lf"><b>Life connection</b><span>Think of a temple pond used for festival dips today.</span></div></div></div></div></div>
+
+</div>
+<p class="note">Body text (#4A5565) stays readable on every option (roughly 6:1 or better). Mock-up only: real sheet height, text and images come from the app.</p>
+<script>document.getElementById('dim').addEventListener('change',e=>document.body.classList.toggle('dim',e.target.checked));document.body.classList.add('dim');</script>
+</body></html>

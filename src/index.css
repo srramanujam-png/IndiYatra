@@ -18,6 +18,9 @@
 
   /* ── Semantic ── */
   --color-danger:       #c62828;   /* Errors, destructive actions */
+  --color-sheet-tint:   #EDF5F5;   /* Slide-up sheet background (teal tint of --color-bg-alt) */
+  --color-panel-tint:   #E3F1F0;   /* Floating action panel background */
+  --color-teal-ink:     #1F5F5B;   /* Icons/text on the teal tints */
   --color-browse:       #4AADA8;   /* Course-browsing chrome ONLY (legalised teal — Phase 0 decision 2) */
 
   /* ── Type scale (5 roles — DESIGN_SYSTEM.MD §3) ── */

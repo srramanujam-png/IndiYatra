@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quiz top bar: finish icon options</title>
+<style>
+:root{--pri:#00509E;--acc:#FF8E00;--grn:#00924A;--text:#101828;--body:#4A5565;--bd:#E5E7EB;--mut:#F3F4F6}
+*{box-sizing:border-box}
+body{margin:0;padding:20px 16px 40px;font-family:Inter,system-ui,sans-serif;background:#f4f4f1;color:var(--text)}
+h1{font-size:1.1rem;margin:0 0 4px}p.sub{margin:0 0 20px;color:var(--body);font-size:.85rem}
+.grid{display:flex;flex-wrap:wrap;gap:20px}
+.opt{width:300px}
+.opt h2{font-size:.9rem;margin:0 0 2px}.opt small{display:block;color:var(--body);font-size:.75rem;margin-bottom:8px;line-height:1.4}
+.phone{background:#FAFAF7;border:1px solid #cfcfc8;border-radius:22px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.bar{height:54px;background:#fff;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 14px;gap:8px}
+.back{display:flex;align-items:center;gap:4px;font-size:.85rem;font-weight:500;color:var(--body)}
+.title{flex:1;text-align:center;font-family:Oswald,'Arial Narrow',sans-serif;font-size:1rem;color:var(--pri);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ib{width:40px;height:40px;border-radius:999px;border:none;background:none;display:flex;align-items:center;justify-content:center;color:var(--body)}
+.ib svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ib.pill{width:auto;padding:0 12px;gap:5px;font-size:.8rem;font-weight:600;color:#fff;background:var(--grn);height:32px}
+.ib.pill svg{width:16px;height:16px}
+.ib.ring{border:1.5px solid var(--bd)}
+.segs{display:flex;gap:4px;padding:8px 14px;background:#fff;border-bottom:1px solid var(--mut)}
+.segs i{flex:1;height:4px;border-radius:9px;background:var(--bd)}.segs i.d{background:var(--acc)}.segs i.c{background:var(--acc);opacity:.45}
+.body{padding:14px}
+.q{font-family:Literata,Georgia,serif;font-size:1.05rem;font-weight:600;line-height:1.35;margin:0 0 10px}
+.o{border:2px solid var(--bd);border-radius:10px;background:#fff;padding:9px 12px;margin-bottom:7px;font-family:Georgia,serif;font-size:.9rem;display:flex;gap:9px;align-items:center}
+.o b{width:22px;height:22px;border-radius:50%;background:var(--mut);font:700 .7rem Inter,sans-serif;display:flex;align-items:center;justify-content:center;color:#6B6B6B}
+.cta{margin-top:10px;width:100%;border:none;border-radius:999px;background:var(--grn);color:#fff;font:700 .9rem Inter,sans-serif;padding:11px}
+.note{font-size:.72rem;color:var(--body);margin-top:6px}
+</style></head><body>
+<h1>Finish control in the mobile Quiz top bar</h1>
+<p class="sub">Right side of the top bar, where the empty 60px spacer is today. Mock-up only, not the live app.</p>
+
+<div class="grid">
+
+<div class="opt"><h2>A. Cross (X)</h2><small>Familiar, but reads as "close / lose progress". Needs an "Exit quiz" confirm.</small>
+<div class="phone"><div class="bar"><span class="back">← Back</span><span class="title">Indus Valley Quiz (3/10)</span>
+<button class="ib" aria-label="Exit quiz"><svg viewBox="0 0 24 24"><path d="M18 6l-12 12M6 6l12 12"/></svg></button></div>
+<div class="segs"><i class="d"></i><i class="d"></i><i class="c"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<div class="body"><p class="q">Which city was known for its Great Bath?</p><div class="o"><b>A</b>Harappa</div><div class="o"><b>B</b>Mohenjo-daro</div></div></div></div>
+
+<div class="opt"><h2>B. Flag</h2><small>Means "finish line". Best signal for "end and score", low risk of being read as "quit".</small>
+<div class="phone"><div class="bar"><span class="back">← Back</span><span class="title">Indus Valley Quiz (3/10)</span>
+<button class="ib" aria-label="Finish quiz"><svg viewBox="0 0 24 24"><path d="M5 5a5 5 0 0 1 7 0a5 5 0 0 0 7 0v9a5 5 0 0 1 -7 0a5 5 0 0 0 -7 0v-9z"/><path d="M5 21v-7"/></svg></button></div>
+<div class="segs"><i class="d"></i><i class="d"></i><i class="c"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<div class="body"><p class="q">Which city was known for its Great Bath?</p><div class="o"><b>A</b>Harappa</div><div class="o"><b>B</b>Mohenjo-daro</div></div></div></div>
+
+<div class="opt"><h2>C. Checkmark</h2><small>Reads as "done / submit". Can be mistaken for "confirm this answer".</small>
+<div class="phone"><div class="bar"><span class="back">← Back</span><span class="title">Indus Valley Quiz (3/10)</span>
+<button class="ib" aria-label="Finish quiz"><svg viewBox="0 0 24 24"><path d="M7 12l5 5l10 -10"/><path d="M2 12l5 5m5 -5l5 -5"/></svg></button></div>
+<div class="segs"><i class="d"></i><i class="d"></i><i class="c"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<div class="body"><p class="q">Which city was known for its Great Bath?</p><div class="o"><b>A</b>Harappa</div><div class="o"><b>B</b>Mohenjo-daro</div></div></div></div>
+
+<div class="opt"><h2>D. Flag + word (recommended)</h2><small>Small green pill: icon plus "Finish". Clearest, about 32px tall, costs no extra screen height.</small>
+<div class="phone"><div class="bar"><span class="back">← Back</span><span class="title">Indus Valley Quiz</span>
+<button class="ib pill"><svg viewBox="0 0 24 24"><path d="M5 5a5 5 0 0 1 7 0a5 5 0 0 0 7 0v9a5 5 0 0 1 -7 0a5 5 0 0 0 -7 0v-9z"/><path d="M5 21v-7"/></svg>Finish</button></div>
+<div class="segs"><i class="d"></i><i class="d"></i><i class="c"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<div class="body"><p class="q">Which city was known for its Great Bath?</p><div class="o"><b>A</b>Harappa</div><div class="o"><b>B</b>Mohenjo-daro</div></div></div>
+<div class="note">The "(3/10)" moves out of the title, since the segmented bar already shows progress.</div></div>
+
+<div class="opt"><h2>E. Last question</h2><small>Icon stays in the top bar, plus a clear inline button under the options.</small>
+<div class="phone"><div class="bar"><span class="back">← Back</span><span class="title">Indus Valley Quiz</span>
+<button class="ib ring" aria-label="Finish quiz" style="color:var(--grn)"><svg viewBox="0 0 24 24"><path d="M5 5a5 5 0 0 1 7 0a5 5 0 0 0 7 0v9a5 5 0 0 1 -7 0a5 5 0 0 0 -7 0v-9z"/><path d="M5 21v-7"/></svg></button></div>
+<div class="segs"><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="c"></i></div>
+<div class="body"><p class="q">Which metal was NOT used in Harappan tools?</p><div class="o"><b>A</b>Copper</div><div class="o"><b>B</b>Iron</div><button class="cta">Finish quiz ✓</button></div></div></div>
+
+</div></body></html>
