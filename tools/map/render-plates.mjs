@@ -18,6 +18,7 @@ const outDir = flag("--out", "public/map/v1/plates");
 const geoDir = flag("--geo", "public/map/v1");
 const only = flag("--only", null);           // e.g. --only 0,5,12  (quick previews)
 const quality = Number(flag("--quality", 78));
+const SCALE = Number(flag("--scale", 2));           // output pixels per map unit (2 = crisp on retina / wide screens)
 const noRivers = !args.includes("--with-rivers");   // rivers + temples are drawn LIVE (animated); plates hold terrain + 3-D mountains only
 
 // Config source: --from-db (published Supabase config = what Admin > Map edits; DEFAULT when .env exists)
@@ -104,7 +105,7 @@ export function plateSvg(unlocked, temples) {
     } else if (!noRivers) rivers.push(`<path d="${f.d}" fill="none" stroke="${PALETTE.riverSoft}" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/>` +
       `<path d="${f.d}" fill="none" stroke="${PALETTE.river}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>`);
   }
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${Math.round(W * SCALE)}" height="${Math.round(H * SCALE)}" viewBox="0 0 ${W} ${H}">
   <defs>${reliefPattern()}<clipPath id="fr"><rect width="${W}" height="${H}"/></clipPath></defs>
   <rect width="${W}" height="${H}" fill="${PALETTE.sea}"/>
   <path d="${geo.land}" fill="${PALETTE.land}" stroke="${PALETTE.coast}" stroke-width=".8" fill-rule="evenodd"/>

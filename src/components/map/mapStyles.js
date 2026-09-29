@@ -74,10 +74,10 @@ export const MAP_CSS = `
   .ymap-card2.below { display: none; margin: 12px auto 0; max-width: 520px; }
   .ymap-card2 .ymap-ring { position: relative; width: 54px; height: 54px; flex: none; }
   .ymap-card2.overlay .ymap-ring { width: 4.3em; height: 4.3em; } .ymap-card2.overlay .ymap-ring svg { width: 100%; height: 100%; }
-  .ymap-card2 .ymap-ring b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 14px; font-family: var(--font-ui); }
+  .ymap-card2 .ymap-ring b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; font-family: var(--font-ui); }
   .ymap-card2 .body { flex: 1; min-width: 0; }
   .ymap-card2 .ttl { font-weight: 700; font-size: 13.5px; line-height: 1.25; } .ymap-card2.overlay .ttl { font-size: 1.12em; }
-  .ymap-card2.overlay .sub, .ymap-card2.overlay .next, .ymap-card2.overlay .banyan { font-size: 1em; } .ymap-card2.overlay .ymap-ring b { font-size: 1.1em; }
+  .ymap-card2.overlay .sub, .ymap-card2.overlay .next, .ymap-card2.overlay .banyan { font-size: 1em; } .ymap-card2.overlay .ymap-ring b { font-size: .82em; font-weight: 700; letter-spacing: -.02em; }
   .ymap-card2 .sub { font-size: 12px; color: var(--color-text-muted); line-height: 1.3; margin-top: 2px; }
   .ymap-card2 .bar { height: 5px; border-radius: 3px; background: #E6E4DA; margin-top: 6px; overflow: hidden; }
   .ymap-card2 .bar i { display: block; height: 100%; background: #2F8F46; }
