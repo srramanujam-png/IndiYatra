@@ -10,19 +10,16 @@ export const MAP_CSS = `
     color: #8a4b00; background: rgba(255,142,0,0.12); border: 1px solid rgba(255,142,0,0.35); border-radius: var(--radius-pill); padding: 3px 10px;
   }
 
-  /* layout: badges in two side columns on wide screens, compact strips above/below on phones */
+  /* layout: one stage; the badge garland (arc) sits inside it on every screen size */
   .ymap-body { display: grid; gap: 12px; align-items: center; justify-content: center;
     grid-template-columns: minmax(0, 760px); grid-template-areas: "stage"; }
-  .ymap-badges.strip { display: none; }
   .ymap-arc { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
   .ymap-arc-slot { position: absolute; transform: translate(-50%, -50%); pointer-events: auto; }
   .ymap-arc .ymap-badge { --ymap-badge: 3.9cqw; border-width: 1.5px; background: rgba(255,255,255,.96); box-shadow: 0 2px 6px rgba(16,24,40,.18); }
   .ymap-arc .ymap-badge.earned { box-shadow: 0 0 0 2px rgba(255,142,0,.25), 0 2px 6px rgba(16,24,40,.18); }
   .ymap-arc-slot:nth-child(-n+2) .ymap-badge::after { left: 0; transform: none; }
   .ymap-arc-slot:nth-last-child(-n+2) .ymap-badge::after { left: auto; right: 0; transform: none; }
-  .ymap-badges { display: flex; gap: 8px; }
-  .ymap-badges.a { grid-area: a; flex-direction: column; align-items: center; justify-content: center; }
-  .ymap-badges.b { grid-area: b; flex-direction: column; align-items: center; justify-content: center; }
+  .ymap-world { position: absolute; }   /* the whole frame; the stage shows all of it (wide) or a crop round India (phones) */
   .ymap-stage { container-type: inline-size; grid-area: stage; position: relative; width: 100%; border-radius: var(--radius); overflow: hidden; background: #E7ECEE;
     border: 1px solid var(--color-border); touch-action: manipulation; }
   .ymap-plate, .ymap-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
@@ -65,8 +62,6 @@ export const MAP_CSS = `
     background: var(--color-text-main); color: #fff; font-family: var(--font-ui); font-size: var(--text-xs); font-weight: 600; padding: 5px 9px; border-radius: 8px; opacity: 0; transition: opacity .12s;
   }
   .ymap-badge:hover::after, .ymap-badge:focus-visible::after { opacity: 1; }
-  .ymap-badges.a .ymap-badge::after { left: calc(100% + 8px); bottom: auto; top: 50%; transform: translateY(-50%); }
-  .ymap-badges.b .ymap-badge::after { left: auto; right: calc(100% + 8px); bottom: auto; top: 50%; transform: translateY(-50%); }
 
   /* big "x% Completed" printed on the Tibetan plateau (empty space north of the Himalaya) */
   .ymap-pct { position: absolute; left: 72%; top: 23.4%; transform: translate(-50%, -50%); pointer-events: none; white-space: nowrap; text-align: center;
@@ -102,17 +97,13 @@ export const MAP_CSS = `
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
   @media (max-width: 699px) {
-    .ymap { --ymap-badge: 40px; }
     .ymap-card2.overlay { display: none; }
     .ymap-card2.below { display: flex; }
-    .ymap-body { grid-template-columns: 1fr; grid-template-areas: "a" "stage" "b"; gap: 8px; }
-    .ymap-arc { display: none; }
-    .ymap-badges.strip { display: flex; }
-    .ymap-badges.a, .ymap-badges.b { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 6px; }
+    .ymap-body { grid-template-columns: 1fr; }
+    .ymap-arc .ymap-badge { --ymap-badge: clamp(28px, 8.4cqw, 42px); }
+    .ymap-pct { font-size: clamp(13px, 5.6cqw, 30px); }
     .ymap-card { bottom: 8px; }
-    .ymap-badges.a .ymap-badge::after, .ymap-badges.b .ymap-badge::after { left: 50%; right: auto; top: auto; bottom: calc(100% + 8px); transform: translateX(-50%); }
   }
-  @media (max-width: 379px) { .ymap { --ymap-badge: 34px; } }
 
   /* intro animation (first sight of the map / new 5% milestone): stages set on .ymap as data-intro="0..4" */
   .ymap-plate.top { transition: opacity .8s ease; }

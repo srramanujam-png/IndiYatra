@@ -14,6 +14,13 @@ import { MAP_CSS } from "./mapStyles";
 const MapDetail = lazy(() => import("./MapDetail"));
 
 const DEFAULT_FRAME = { W: 1000, H: 961 };
+// Phones: crop the frame to India (the full frame is mostly Pakistan / Tibet / Myanmar sea) so the country fills the width.
+// View = the part of the 1000-unit frame that is shown; the badge garland is an ellipse in the same units, tucked round the peninsula.
+const NARROW_QUERY = "(max-width: 699px)";
+const VIEW_FULL = null;
+const VIEW_NARROW = { x0: 125, y0: 45, w: 800, h: 916 };
+const ARC_WIDE = { cx: 420, cy: 570, rx: 365, ry: 365, from: 172, to: 8, maxStep: 15 };     // degrees: 90 = straight below the centre
+const ARC_NARROW = { cx: 485, cy: 575, rx: 315, ry: 345, from: 168, to: 12, maxStep: 15 };
 const KIND_LABEL = { river: "River", mountain: "Mountain range", temple: "Temple" };
 
 function SpriteIcon({ sprites, name }) {
@@ -52,7 +59,14 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
   const [plate0, setPlate0] = useState(null);
   const [pctFrac, setPctFrac] = useState(1);
 
-  const stageRef = useRef(null), canvasRef = useRef(null), lawnRef = useRef({ key: "", canvas: null }), animRef = useRef({ reveal: {}, born: {} }), sceneRef = useRef(null), lastStageRef = useRef(null), celebRef = useRef(null), seenSigRef = useRef("");
+  const [narrow, setNarrow] = useState(() => typeof window !== "undefined" && !!window.matchMedia?.(NARROW_QUERY).matches);
+  useEffect(() => {
+    const mq = window.matchMedia?.(NARROW_QUERY); if (!mq) return undefined;
+    const on = () => setNarrow(mq.matches); on();
+    mq.addEventListener?.("change", on); return () => mq.removeEventListener?.("change", on);
+  }, []);
+
+  const stageRef = useRef(null), worldRef = useRef(null), canvasRef = useRef(null), lawnRef = useRef({ key: "", canvas: null }), animRef = useRef({ reveal: {}, born: {} }), sceneRef = useRef(null), lastStageRef = useRef(null), celebRef = useRef(null), seenSigRef = useRef("");
 
   // ── load state + shared art ──
   useEffect(() => {
@@ -71,6 +85,7 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
 
   const manifest = assets?.manifest;
   const frame = useMemo(() => manifest?.frame || DEFAULT_FRAME, [manifest]);
+  const view = useMemo(() => (narrow ? VIEW_NARROW : VIEW_FULL) || { x0: 0, y0: 0, w: frame.W, h: frame.H }, [narrow, frame]);
   const unlocked = useMemo(() => (manifest && state ? unlockedIds(manifest, state.milestoneIndex) : []), [manifest, state]);
   const plants = useMemo(() => (assets && state ? buildPlantList(state.plantCounts, assets.candidates, manifest.plantRules, assets.candidates.unit) : []), [assets, state, manifest]);
 
@@ -166,7 +181,8 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
   useEffect(() => {
     const canvas = canvasRef.current; if (!canvas || !assets || !state || !width) return;
     const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
-    sizeCanvas(canvas, width, (width * frame.H) / frame.W, dpr);
+    const worldW = (width * frame.W) / view.w;                       // the canvas covers the whole frame; the stage shows the `view` window of it
+    sizeCanvas(canvas, worldW, (worldW * frame.H) / frame.W, dpr);
     const lawnKey = `${canvas.width}|${progress.toFixed(3)}|${unlocked.join(",")}`;
     if (lawnRef.current.key !== lawnKey) {
       const lawn = buildLawn({ growth: assets.candidates.growth, unit: assets.candidates.unit, progress, indiaD: assets.india?.outline?.d, hotspots: manifest.hotspots, unlocked, relief: manifest.relief, W: frame.W, H: frame.H, widthPx: canvas.width });
@@ -174,7 +190,7 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
     }
     sceneRef.current = { lawnReady: true, growth: assets.candidates.growth, frame, hotspots: manifest.hotspots, unlocked, sprites: assets.sprites, plants, mala: assets.candidates.mala, unit: assets.candidates.unit, progress };
     paint(performance.now() / 1000, reduced);
-  }, [assets, state, plants, width, frame, unlocked, manifest, progress, paint, reduced]);
+  }, [assets, state, plants, width, frame, view, unlocked, manifest, progress, paint, reduced]);
 
   // animation loop: only while the map is on screen and the tab is visible; ~30 fps; off entirely for "reduce motion"
   useEffect(() => {
@@ -195,7 +211,7 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
   // ── hover / tap ──
   const tolUnits = useCallback((rect) => (14 * frame.W) / rect.width, [frame]);
   const featureAt = useCallback((e) => {
-    const rect = stageRef.current.getBoundingClientRect();
+    const rect = worldRef.current.getBoundingClientRect();
     const [x, y] = toMapUnits(e.clientX, e.clientY, rect, frame);
     return hitTest(manifest.hotspots, unlocked, x, y, tolUnits(rect));
   }, [manifest, unlocked, frame, tolUnits]);
@@ -226,9 +242,10 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
     window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // ── badges (max 12): first half / second half feed the two strips/columns ──
+  // ── badges (max 12): ONE garland on an arc in the sea that wraps the peninsula from the Arabian Sea, under Kanyakumari, into the Bay of Bengal
+  // (matches the mala theme). Phones use a tighter, flatter ellipse inside the cropped view. The first badge sits at the west end and earned
+  // badges fill toward the east, like the mala grows round the coast. Positions are % of the whole frame (the arc lives inside the world layer).
   const badges = state?.badges || [];
-  const half = Math.ceil(badges.length / 2);
   const badgeBtn = (b) => (
     <button key={b.badgeId} type="button" className={`ymap-badge${b.earned ? " earned" : ""}`} style={{ "--d": `${badges.indexOf(b) * 0.07}s` }}
       data-tip={`${b.name} · ${b.earned ? "Earned" : "Locked"}`}
@@ -237,15 +254,11 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
       <span className="ico" aria-hidden="true">{b.icon}</span>
     </button>
   );
-
-  // wide screens: all badges on ONE arc in the sea that wraps the peninsula from the Arabian Sea, under Kanyakumari, into the Bay of Bengal
-  // (a garland around the south, matching the mala theme; phones keep the strips). Coordinates are stage-width units (cqw).
-  // The first badge sits at the west end and earned badges fill toward the east, like the mala grows round the coast.
-  const ARC_CX = 42, ARC_CY = 57, ARC_R = 36.5, ARC_FROM = 172, ARC_TO = 8, ARC_MAX_STEP = 15;   // degrees: 90 = straight below the centre
+  const arc = narrow ? ARC_NARROW : ARC_WIDE;
   const arcStyle = (i, n) => {
-    const step = n <= 1 ? 0 : Math.min(ARC_MAX_STEP, (ARC_FROM - ARC_TO) / (n - 1)), mid = (ARC_FROM + ARC_TO) / 2;
+    const step = n <= 1 ? 0 : Math.min(arc.maxStep, (arc.from - arc.to) / (n - 1)), mid = (arc.from + arc.to) / 2;
     const a = ((mid + ((n - 1) / 2 - i) * step) * Math.PI) / 180;
-    return { left: `${ARC_CX + ARC_R * Math.cos(a)}cqw`, top: `${ARC_CY + ARC_R * Math.sin(a)}cqw` };
+    return { left: `${((arc.cx + arc.rx * Math.cos(a)) / frame.W) * 100}%`, top: `${((arc.cy + arc.ry * Math.sin(a)) / frame.H) * 100}%` };
   };
 
   if (error) return (
@@ -272,11 +285,10 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
       </div>}
 
       <div className="ymap-body">
-        <div className="ymap-badges a strip" role="group" aria-label="Character badges">{badges.slice(0, half).map(badgeBtn)}</div>
-
-        <div className="ymap-stage" ref={stageRef} style={{ aspectRatio: `${frame.W} / ${frame.H}` }}
+        <div className="ymap-stage" ref={stageRef} style={{ aspectRatio: `${view.w} / ${view.h}` }}
           onPointerMove={onMove} onPointerLeave={onLeave} onClick={onClick}>
           {!ready && <span className="skel ymap-skel" aria-hidden="true" />}
+          <div className="ymap-world" ref={worldRef} style={{ width: `${(frame.W / view.w) * 100}%`, height: `${(frame.H / view.h) * 100}%`, left: `${(-view.x0 / view.w) * 100}%`, top: `${(-view.y0 / view.h) * 100}%` }}>
           {ready && stage !== null && plate0 && <img className="ymap-plate base0" src={plate0.src} alt="" draggable="false" decoding="async" />}
           {ready && <img className="ymap-plate top" src={assets.plate.src} alt="" draggable="false" decoding="async" />}
           <canvas ref={canvasRef} className="ymap-canvas" aria-hidden="true" />
@@ -301,8 +313,9 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
             </div>
           )}
           {ready && pct !== null && <div className="ymap-pct" aria-hidden="true">{formatPercent(stage === 4 ? Math.round(pct * pctFrac) : pct)}% Completed<small>{courseId ? (card?.course?.name || "this course") : "across all courses"}</small></div>}
-          {ready && <ProgressCard card={card} state={state} manifest={manifest} variant="overlay" scoped={!!courseId} />}
           {tip && <div className="ymap-tip" role="tooltip" style={{ left: px(tip.x, "x"), top: px(tip.y, "y") }}>{tip.text}</div>}
+          </div>{/* end .ymap-world */}
+          {ready && <ProgressCard card={card} state={state} manifest={manifest} variant="overlay" scoped={!!courseId} />}
           {popup && (
             <div className={`ymap-card${popup.celebrate ? " celebrate" : ""}`} role="dialog" aria-label={popup.title}>
               <button className="x" type="button" aria-label="Close" onClick={() => setCard(null)}>×</button>
@@ -310,8 +323,6 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
             </div>
           )}
         </div>
-
-        <div className="ymap-badges b strip" role="group" aria-label="More character badges">{badges.slice(half).map(badgeBtn)}</div>
       </div>
 
       {ready && <ProgressCard card={card} state={state} manifest={manifest} variant="below" scoped={!!courseId} />}

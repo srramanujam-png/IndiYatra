@@ -132,6 +132,9 @@ const styles = `
   .stat-link { font-size: 0.6875rem; color: ${HERITAGE}; cursor: pointer; font-family: 'Inter', system-ui, sans-serif; }
   .stat-link:hover { text-decoration: underline; }
 
+  /* ── Map-first section (top of the Dashboard) ── */
+  .dash-map-first { padding: 14px; }
+
   /* ── Section card ── */
   .dash-section {
     background: white; border-radius: 12px; border: 1px solid var(--color-border);
@@ -539,7 +542,12 @@ const styles = `
     .badge-cards  { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
   }
   @media (max-width: 600px) {
-    .dash-hero { padding: 18px 16px; border-radius: 12px; }
+    /* phones: compact welcome + course selector so the map starts on the first screen */
+    .dash-hero { padding: 12px 14px; border-radius: 12px; margin-bottom: 10px; }
+    .dash-hero .dash-title { font-size: 1.25rem; margin-bottom: 6px; }
+    .dash-hero .dash-subtitle, .dash-hero .dash-scope-hint { display: none; }
+    .dash-map-first { padding: 6px; margin-bottom: 14px; }
+    .dash-hero .dash-scope-wrap { margin-top: 0; }
     .prog-table-wrap { display: none; }
     .prog-stack      { display: block; }
     .act-table-wrap  { display: none; }
@@ -1126,7 +1134,8 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
   const overallLesTotal = progressRows.reduce((s, r) => s + r.lesTotal, 0);
   const overallPct      = pct(overallLesDone, overallLesTotal);
 
-  const dharmaTokens = forestTokens["dharma"] || 0;
+  // Dharma follows the course selector: summed from the (scoped) lesson completions, not the all-courses token ledger.
+  const dharmaTokens = totalDharma;
   const STATS = [
     {
       key: "dharma",  icon: <i className="ti ti-diamond" />,  label: PLAYER.dharmaPoints,
@@ -1309,6 +1318,13 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
             </div>
           </div>
         </div>{/* end .dash-hero */}
+
+        {/* ── Yatra Map: first thing on the Dashboard, right under the welcome line + course selector; everything else scrolls below ── */}
+        {user && !user.is_anonymous && (
+          <div id="sec-map" className="dash-section dash-map-first">
+            <DashboardMap courseId={scope !== "all" ? scope : null} seenKey={user.id} refreshKey={`${user.id}:${activePage}:${scope}`} />
+          </div>
+        )}
 
         {/* ── Stat cards ── */}
         <div className="dash-stats">
@@ -1493,16 +1509,6 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
             );
           })()}
         </div>
-
-        {/* ── Yatra Map (quick view: one plate + compact state; detail loads on demand) ── */}
-        {user && !user.is_anonymous && (
-          <div id="sec-map" className="dash-section">
-            <div className="dash-section-head">
-              <div className="page-section-title"><i className="ti ti-map-2" style={{color: HERITAGE, marginRight: 6}} />Your Yatra Map{scope !== "all" ? " · this course" : ""}</div>
-            </div>
-            <DashboardMap courseId={scope !== "all" ? scope : null} seenKey={user.id} refreshKey={`${user.id}:${activePage}:${scope}`} />
-          </div>
-        )}
 
         {/* ── Your Forest ── */}
         <div id="sec-forest" className="dash-section">
