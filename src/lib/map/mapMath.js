@@ -219,3 +219,56 @@ export function formatPercent(p) {
   const v = Number(p); if (!Number.isFinite(v)) return "0";
   return v >= 99.995 ? "100" : v.toFixed(v % 1 === 0 ? 0 : 1);
 }
+
+// ─── intro animation + celebration (dashboard) ───────────────────────────────────────────────────────
+/** Seconds at which each intro stage BEGINS, then the end: 0 base map · 1 lawn · 2 rivers/ranges/temples/plants · 3 badges · 4 progress pill + mala. */
+export const INTRO_STAGE_STARTS = [0, 0.6, 1.9, 3.1, 4.0];
+export const INTRO_SECONDS = 5;
+
+/** Which stage (0..4) a time `t` seconds after the intro started is in; 5 = finished. */
+export function introStage(t) {
+  if (!(t >= 0)) return 0;
+  if (t >= INTRO_SECONDS) return 5;
+  let s = 0;
+  for (let i = 0; i < INTRO_STAGE_STARTS.length; i++) if (t >= INTRO_STAGE_STARTS[i]) s = i;
+  return s;
+}
+
+/** Play the full intro the first time a learner sees the map with any progress, and again whenever a new 5% milestone was reached
+ *  since they last looked. `prev` = the remembered { m, plants } record (or null). Never for 0% (nothing to show). */
+export function shouldPlayIntro(prev, milestone) {
+  const m = Number(milestone) | 0;
+  return m > 0 && (!prev || m > ((prev.m | 0)));
+}
+
+const EVENT_TEXT = {
+  course: { title: "Course complete!", one: (n) => `A mighty Banyan has taken root on your map${n > 1 ? ` (${n} new)` : ""}.` },
+  level: { title: "Level complete!", one: (n) => `${n > 1 ? `${n} Ashoka trees stand` : "An Ashoka tree stands"} tall on your map.` },
+  theme: { title: "Theme complete!", one: (n) => `${n > 1 ? `${n} lotuses have` : "A lotus has"} bloomed on your waters.` },
+  module: { title: "Module complete!", one: (n) => `${n > 1 ? `${n} jasmines have` : "A jasmine has"} blossomed on your map.` },
+};
+const EVENT_ORDER = ["course", "level", "theme", "module"];
+
+/** What to celebrate on return to the dashboard: a newly reached 5% milestone and/or newly completed module / theme / level / course
+ *  (the map's plant tokens: jasmine = module, lotus = theme, ashoka = level, banyan = course). null when nothing new or no history. */
+export function celebrationFor(prev, state, manifest) {
+  if (!prev || !state || state.status !== "ok") return null;
+  const lines = [];
+  let title = null, kind = "Congratulations";
+  const fromM = prev.m | 0, toM = state.milestoneIndex | 0;
+  const rules = Object.fromEntries((manifest?.plantRules || []).map((r) => [r.event, r.tokenType]));
+  const gained = {};
+  for (const ev of EVENT_ORDER) { const tok = rules[ev]; if (tok) gained[ev] = Math.max(0, (state.plantCounts?.[tok] | 0) - ((prev.plants?.[tok]) | 0)); }
+  const top = EVENT_ORDER.find((ev) => gained[ev] > 0);
+  if (top) { title = EVENT_TEXT[top].title; kind = "Completed"; }
+  for (const ev of EVENT_ORDER) if (gained[ev] > 0) lines.push(EVENT_TEXT[ev].one(gained[ev]));
+  if (toM > fromM) {
+    const pct = manifest?.milestones?.[toM - 1]?.threshold ?? toM * STEP;
+    const names = [];
+    for (let m = fromM + 1; m <= toM; m++) names.push(...unlockNames(manifest, m));
+    if (!title) { title = `${pct}% of your journey!`; kind = "Milestone reached"; }
+    else lines.push(`You also reached ${pct}% of your journey.`);
+    lines.push(names.length ? `Newly unveiled: ${joinNames(names)}.` : "Keep going — more of the map awaits.");
+  }
+  return title ? { kind, title, text: lines.join(" ") } : null;
+}

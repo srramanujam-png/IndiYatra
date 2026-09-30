@@ -84,6 +84,32 @@ export function buildLawn({ growth, unit = 0.1, progress, indiaD, hotspots, unlo
   return c;
 }
 
+/** Intro animation: reveal the finished lawn with a growing mask so the green sweeps in from the south. The mask is the same growth
+ *  points (south first) drawn incrementally, so the sweep front is exactly the front the lawn grows along. Cheap: no re-blur per frame. */
+export function createLawnReveal({ lawn, growth, unit = 0.1, progress, W }) {
+  const total = growth.length / 2, count = growthCount(progress, total);
+  const mk = () => (typeof OffscreenCanvas !== "undefined" ? new OffscreenCanvas(lawn.width, lawn.height) : Object.assign(document.createElement("canvas"), { width: lawn.width, height: lawn.height }));
+  const mask = mk(), scratch = mk(), mx = mask.getContext("2d"), sx = scratch.getContext("2d"), sc = lawn.width / W;
+  mx.setTransform(sc, 0, 0, sc, 0, 0);
+  let drawn = 0;
+  return {
+    draw(ctx, frac, frame) {
+      const f = Math.max(0, Math.min(1, frac));
+      if (f >= 1) { ctx.drawImage(lawn, 0, 0, frame.W, frame.H); return; }
+      const upto = Math.floor(count * f), R = 34;
+      for (; drawn < upto; drawn++) {
+        const cx = growth[drawn * 2] * unit, cy = growth[drawn * 2 + 1] * unit;
+        const g = mx.createRadialGradient(cx, cy, 0, cx, cy, R);
+        g.addColorStop(0, "#000"); g.addColorStop(0.6, "#000"); g.addColorStop(1, "rgba(0,0,0,0)");
+        mx.fillStyle = g; mx.beginPath(); mx.arc(cx, cy, R, 0, TAU); mx.fill();
+      }
+      sx.globalCompositeOperation = "source-over"; sx.clearRect(0, 0, scratch.width, scratch.height); sx.drawImage(lawn, 0, 0);
+      sx.globalCompositeOperation = "destination-in"; sx.drawImage(mask, 0, 0);
+      ctx.drawImage(scratch, 0, 0, frame.W, frame.H);
+    },
+  };
+}
+
 // ─── rivers (bank + water + moving shimmer; optional draw-in from source to mouth) ───────────────────
 const lenCache = new WeakMap();
 function partLen(f) { let L = lenCache.get(f); if (L == null) { L = 0; for (let i = 2; i < f.length; i += 2) L += Math.hypot(f[i] - f[i - 2], f[i + 1] - f[i - 1]); lenCache.set(f, L); } return L; }
@@ -108,11 +134,11 @@ export function drawRivers(ctx, { hotspots, unlocked, t = 0, reveal = {}, k = 1,
 }
 
 // ─── temples ─────────────────────────────────────────────────────────────────────────────────────────
-export function drawTemples(ctx, { hotspots, unlocked, t = 0, k = 1, still = false }) {
-  const s = 1 / Math.sqrt(k);
+export function drawTemples(ctx, { hotspots, unlocked, t = 0, k = 1, still = false, grow = 1 }) {
+  const s = 1 / Math.sqrt(k); if (grow <= 0) return;
   for (const id of unlocked || []) {
     const h = hotspots?.[id]; if (!h || h.type !== "temple") continue;
-    ctx.save(); ctx.translate(h.anchor[0], h.anchor[1]); ctx.scale(1.5 * s, 1.5 * s);
+    ctx.save(); ctx.translate(h.anchor[0], h.anchor[1]); const gs = grow >= 1 ? 1 : Math.max(0.001, easeOutBack(grow)); ctx.scale(1.5 * s * gs, 1.5 * s * gs);
     ctx.shadowColor = "rgba(255,142,0,.7)"; ctx.shadowBlur = still ? 8 : 8 + 5 * Math.sin(t * 2 + h.anchor[0]);
     ctx.beginPath(); ctx.moveTo(-6, 6); ctx.lineTo(6, 6); ctx.lineTo(6, 2); ctx.lineTo(4, 2); ctx.lineTo(0, -6); ctx.lineTo(-4, 2); ctx.lineTo(-6, 2); ctx.closePath();
     ctx.fillStyle = "#FF8E00"; ctx.fill(); ctx.shadowBlur = 0; ctx.lineWidth = 1.4; ctx.strokeStyle = "#fff"; ctx.stroke(); ctx.restore();
@@ -181,12 +207,13 @@ export function drawMala(ctx, { mala, unit = 0.1, progress, k = 1 }) {
 }
 
 /** Whole live layer in the right order. `lawn` is the cached offscreen canvas from buildLawn (or null). */
-export function paintScene(ctx, { lawn, frame, hotspots, unlocked, sprites, plants, mala, unit, progress, t = 0, reveal = {}, born = {}, k = 1, still = false }) {
-  if (lawn) ctx.drawImage(lawn, 0, 0, frame.W, frame.H);
+export function paintScene(ctx, { lawn, lawnReveal, frame, hotspots, unlocked, sprites, plants, mala, unit, progress, t = 0, reveal = {}, born = {}, k = 1, still = false, intro = null }) {
+  // `intro` (first sight / new milestone): { lawn: 0..1, temples: 0..1, mala: 0..1 } — each layer's own progress through its stage
+  if (lawn) { if (intro && lawnReveal) lawnReveal.draw(ctx, intro.lawn, frame); else ctx.drawImage(lawn, 0, 0, frame.W, frame.H); }
   drawRivers(ctx, { hotspots, unlocked, t, reveal, k, still });
-  drawTemples(ctx, { hotspots, unlocked, t, k, still });
+  drawTemples(ctx, { hotspots, unlocked, t, k, still, grow: intro ? intro.temples : 1 });
   const p = drawPlants(ctx, { atlas: sprites.atlas, sprites, plants, t, born, still });
-  const b = drawMala(ctx, { mala, unit, progress, k });
+  const b = drawMala(ctx, { mala, unit, progress: intro ? progress * intro.mala : progress, k });
   return p + b;
 }
 export { easeOutCubic };

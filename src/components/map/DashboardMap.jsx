@@ -4,10 +4,10 @@
 // Loads ONLY: the compact state RPC, the tiny manifest, the ONE plate for the learner's current
 // milestone, the sprite atlas and the placement slots. Vector geography (geo.json) is fetched only if
 // the learner opens the detailed map. Seeds / dhruva grass / plants are painted in one Canvas layer.
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { fetchMapCard, fetchMapState, loadQuickMap } from "../../lib/map/mapData";
-import { buildPlantList, formatPercent, hitTest, summaryText, toMapUnits, unlockedIds } from "../../lib/map/mapMath";
-import { buildLawn, easeOutCubic, paintScene, sizeCanvas } from "../../lib/map/drawMap";
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { fetchMapCard, fetchMapState, loadPlate, loadQuickMap } from "../../lib/map/mapData";
+import { buildPlantList, celebrationFor, formatPercent, hitTest, introStage, shouldPlayIntro, summaryText, toMapUnits, unlockedIds } from "../../lib/map/mapMath";
+import { buildLawn, createLawnReveal, easeOutCubic, paintScene, sizeCanvas } from "../../lib/map/drawMap";
 import ProgressCard from "./ProgressCard";
 import { MAP_CSS } from "./mapStyles";
 
@@ -44,8 +44,12 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
   const [popup, setCard] = useState(null);      // { id? , kind, title, text }
   const [detail, setDetail] = useState(false);
   const [width, setWidth] = useState(0);
+  // intro animation: null = not playing, else the stage 0..4 (0 base map · 1 lawn · 2 rivers/ranges/temples/plants · 3 badges · 4 progress pill)
+  const [stage, setStage] = useState(null);
+  const [plate0, setPlate0] = useState(null);
+  const [pctFrac, setPctFrac] = useState(1);
 
-  const stageRef = useRef(null), canvasRef = useRef(null), lawnRef = useRef({ key: "", canvas: null }), animRef = useRef({ reveal: {}, born: {} }), sceneRef = useRef(null);
+  const stageRef = useRef(null), canvasRef = useRef(null), lawnRef = useRef({ key: "", canvas: null }), animRef = useRef({ reveal: {}, born: {} }), sceneRef = useRef(null), lastStageRef = useRef(null), celebRef = useRef(null), seenSigRef = useRef("");
 
   // ── load state + shared art ──
   useEffect(() => {
@@ -79,29 +83,77 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
   const progress = state?.status === "ok" ? Number(state.progressPercent) : 0;
   const reduced = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
-  // remember what the learner has already seen, so only NEWLY unveiled rivers / newly earned plants animate in
-  useEffect(() => {
+  // celebration card: dismissible, and closes itself after 10 s
+  const showCelebration = useCallback((c) => {
+    setCard({ id: "celebrate", celebrate: true, ...c });
+    setTimeout(() => setCard((cur) => (cur?.id === "celebrate" ? null : cur)), 10000);
+  }, []);
+
+  // remember what the learner has already seen, so only NEWLY unveiled rivers / newly earned plants animate in.
+  // First sight of the map (with progress) or a newly reached 5% milestone also plays the ~5 s intro; new module / theme / level / course
+  // completions and milestones trigger a small celebration card once the intro (if any) has finished.
+  useLayoutEffect(() => {
     if (!assets || !state || state.status !== "ok") return;
     const key = `ymap:seen:${seenKey}:${courseId || "all"}`, now = performance.now() / 1000;
+    const sig = `${key}|${state.milestoneIndex}|${JSON.stringify(state.plantCounts || {})}`;
+    if (seenSigRef.current === sig) return;                     // already handled this exact state (StrictMode re-run, harmless refetch)
+    seenSigRef.current = sig;
     let prev = null; try { prev = JSON.parse(localStorage.getItem(key)); } catch { /* storage unavailable: no animation history */ }
     const reveal = {}, born = {};
-    if (prev && !reduced) {
-      for (let m = (prev.m | 0) + 1; m <= state.milestoneIndex; m++) for (const id of assets.manifest.milestones?.[m - 1]?.riverIds || []) reveal[id] = now + 0.3 + Math.min(m - prev.m - 1, 5) * 0.4;      // a big jump reveals everything within ~2.5 s
+    const play = !reduced && shouldPlayIntro(prev, state.milestoneIndex);
+    if (prev && !reduced && !play) {
       const rules = Object.fromEntries((assets.manifest.plantRules || []).map((r) => [r.tokenType, r.assetKey]));
       let i = 0;
       for (const [tok, cnt] of Object.entries(state.plantCounts || {})) for (let n = prev.plants?.[tok] | 0; n < (cnt | 0); n++) if (rules[tok]) born[`${rules[tok]}:${n}`] = now + 0.2 + Math.min(i++, 30) * 0.05;
     }
-    animRef.current = { reveal, born };
+    animRef.current = { reveal, born, intro: play ? { t0: null, done: false } : null };
+    lastStageRef.current = null;
+    if (play) {
+      setStage(0); setPctFrac(0);
+      if (state.milestoneIndex > 0) loadPlate(0, `${assets.manifest.configVersion}.${assets.manifest.plateScale || 1}`).then(setPlate0).catch(() => {});
+    } else { setStage(null); setPctFrac(1); }
+    celebRef.current = prev && !reduced ? celebrationFor(prev, state, assets.manifest) : null;
+    if (!play && celebRef.current) { const c = celebRef.current; celebRef.current = null; setTimeout(() => showCelebration(c), 700); }
     try { localStorage.setItem(key, JSON.stringify({ m: state.milestoneIndex, plants: state.plantCounts || {} })); } catch { /* ignore */ }
-  }, [assets, state, seenKey, courseId, reduced]);
+  }, [assets, state, seenKey, courseId, reduced, showCelebration]);
+
+  // ── intro timeline (driven from the animation loop) ──
+  const finishIntro = useCallback(() => {
+    const I = animRef.current.intro; if (!I || I.done) return;
+    I.done = true; animRef.current.reveal = {}; animRef.current.born = {};
+    lastStageRef.current = null; setStage(null); setPctFrac(1);
+    const c = celebRef.current; celebRef.current = null;
+    if (c) setTimeout(() => showCelebration(c), 500);
+  }, [showCelebration]);
+  const advanceIntro = useCallback((nowSec, onScreen) => {
+    const I = animRef.current.intro, sc = sceneRef.current; if (!I || I.done || !sc?.lawnReady) return;
+    if (I.t0 == null) {                                          // wait until the map is actually on screen, then start the clock
+      if (!onScreen) return;
+      I.t0 = nowSec; const reveal = {}, born = {};
+      let r = 0; for (const id of sc.unlocked) if (sc.hotspots[id]?.type === "river") reveal[id] = nowSec + 1.9 + (r++) * 0.09;
+      const list = sc.plants || []; list.forEach((p, i) => { born[`${p.key}:${p.n}`] = nowSec + 2.2 + (i / Math.max(1, list.length)) * 0.9; });
+      animRef.current.reveal = reveal; animRef.current.born = born;
+    }
+    const e = nowSec - I.t0, st = introStage(e);
+    if (st >= 5) { finishIntro(); return; }
+    if (lastStageRef.current !== st) { lastStageRef.current = st; setStage(st); }
+    if (st === 4) setPctFrac(easeOutCubic(Math.min(1, (e - 4.0) / 0.9)));
+  }, [finishIntro]);
 
   const paint = useCallback((t, still) => {
     const canvas = canvasRef.current, sc = sceneRef.current; if (!canvas || !sc || !sc.lawnReady) return 0;
     const ctx = canvas.getContext("2d"), s = canvas.width / sc.frame.W;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.setTransform(s, 0, 0, s, 0, 0);
     const reveal = {}; for (const [id, st] of Object.entries(animRef.current.reveal)) reveal[id] = Math.max(0, Math.min(1, easeOutCubic(Math.min(1, (t - st) / 1.8))));
+    const I = animRef.current.intro; let intro = null;
+    if (I && !I.done) {
+      if (I.t0 == null) return 0;                                 // intro pending (map not on screen yet): the live layer stays empty
+      if (!lawnRef.current.reveal && lawnRef.current.canvas) lawnRef.current.reveal = createLawnReveal({ lawn: lawnRef.current.canvas, growth: sc.growth, unit: sc.unit, progress: sc.progress, W: sc.frame.W });
+      const e = t - I.t0, c01 = (v) => Math.max(0, Math.min(1, v));
+      intro = { lawn: c01((e - 0.6) / 1.3), temples: c01((e - 2.3) / 0.7), mala: easeOutCubic(c01((e - 4.0) / 0.9)) };
+    }
     const started = performance.now();
-    const n = paintScene(ctx, { lawn: lawnRef.current.canvas, frame: sc.frame, hotspots: sc.hotspots, unlocked: sc.unlocked, sprites: sc.sprites, plants: sc.plants,
+    const n = paintScene(ctx, { lawn: lawnRef.current.canvas, lawnReveal: lawnRef.current.reveal, intro, frame: sc.frame, hotspots: sc.hotspots, unlocked: sc.unlocked, sprites: sc.sprites, plants: sc.plants,
       mala: sc.mala, unit: sc.unit, progress: sc.progress, t, reveal, born: animRef.current.born, still });
     canvas.dataset.instances = String(n); canvas.dataset.paintMs = (performance.now() - started).toFixed(1);
     return n;
@@ -113,9 +165,10 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
     sizeCanvas(canvas, width, (width * frame.H) / frame.W, dpr);
     const lawnKey = `${canvas.width}|${progress.toFixed(3)}|${unlocked.join(",")}`;
     if (lawnRef.current.key !== lawnKey) {
-      lawnRef.current = { key: lawnKey, canvas: buildLawn({ growth: assets.candidates.growth, unit: assets.candidates.unit, progress, indiaD: assets.india?.outline?.d, hotspots: manifest.hotspots, unlocked, relief: manifest.relief, W: frame.W, H: frame.H, widthPx: canvas.width }) };
+      const lawn = buildLawn({ growth: assets.candidates.growth, unit: assets.candidates.unit, progress, indiaD: assets.india?.outline?.d, hotspots: manifest.hotspots, unlocked, relief: manifest.relief, W: frame.W, H: frame.H, widthPx: canvas.width });
+      lawnRef.current = { key: lawnKey, canvas: lawn, reveal: animRef.current.intro && !animRef.current.intro.done ? createLawnReveal({ lawn, growth: assets.candidates.growth, unit: assets.candidates.unit, progress, W: frame.W }) : null };
     }
-    sceneRef.current = { lawnReady: true, frame, hotspots: manifest.hotspots, unlocked, sprites: assets.sprites, plants, mala: assets.candidates.mala, unit: assets.candidates.unit, progress };
+    sceneRef.current = { lawnReady: true, growth: assets.candidates.growth, frame, hotspots: manifest.hotspots, unlocked, sprites: assets.sprites, plants, mala: assets.candidates.mala, unit: assets.candidates.unit, progress };
     paint(performance.now() / 1000, reduced);
   }, [assets, state, plants, width, frame, unlocked, manifest, progress, paint, reduced]);
 
@@ -128,12 +181,12 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
     const tick = (ms) => {
       raf = requestAnimationFrame(tick);
       if (!onScreen || document.hidden || ms - last < 33) return;
-      last = ms; paint(ms / 1000, false);
+      last = ms; advanceIntro(ms / 1000, onScreen); paint(ms / 1000, false);
       const c = canvasRef.current; if (c) c.dataset.frames = String((Number(c.dataset.frames) || 0) + 1);
     };
     raf = requestAnimationFrame(tick);
     return () => { cancelAnimationFrame(raf); io?.disconnect(); };
-  }, [assets, reduced, paint]);
+  }, [assets, reduced, paint, advanceIntro]);
 
   // ── hover / tap ──
   const tolUnits = useCallback((rect) => (14 * frame.W) / rect.width, [frame]);
@@ -160,6 +213,7 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
   const onClick = (e) => {
     if (!manifest) return;
     if (e.target.closest?.(".ymap-card,.ymap-hot")) return;
+    if (animRef.current.intro && !animRef.current.intro.done) { finishIntro(); return; }   // tap / click skips the intro
     const id = featureAt(e);
     if (id) showCard(id); else setCard(null);
   };
@@ -172,7 +226,7 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
   const badges = state?.badges || [];
   const half = Math.ceil(badges.length / 2);
   const badgeBtn = (b) => (
-    <button key={b.badgeId} type="button" className={`ymap-badge${b.earned ? " earned" : ""}`}
+    <button key={b.badgeId} type="button" className={`ymap-badge${b.earned ? " earned" : ""}`} style={{ "--d": `${badges.indexOf(b) * 0.07}s` }}
       data-tip={`${b.name} · ${b.earned ? "Earned" : "Locked"}`}
       aria-label={`${b.name} badge — ${b.earned ? "earned" : "locked"}`}
       onClick={() => setCard((c) => (c?.id === b.badgeId ? null : { id: b.badgeId, kind: b.earned ? "Badge · earned" : "Badge · locked", title: b.name, text: b.description || (b.earned ? "You have earned this badge." : "Keep learning to earn this badge.") }))}>
@@ -202,7 +256,7 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
   const px = (v, axis) => `${(v / (axis === "x" ? frame.W : frame.H)) * 100}%`;
 
   return (
-    <div className="ymap">
+    <div className="ymap" data-intro={stage ?? undefined}>
       <style>{MAP_CSS}</style>
       <div className="ymap-head">
         <div className="ymap-meta">
@@ -219,7 +273,8 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
         <div className="ymap-stage" ref={stageRef} style={{ aspectRatio: `${frame.W} / ${frame.H}` }}
           onPointerMove={onMove} onPointerLeave={onLeave} onClick={onClick}>
           {!ready && <span className="skel ymap-skel" aria-hidden="true" />}
-          {ready && <img className="ymap-plate" src={assets.plate.src} alt="" draggable="false" decoding="async" />}
+          {ready && stage !== null && plate0 && <img className="ymap-plate base0" src={plate0.src} alt="" draggable="false" decoding="async" />}
+          {ready && <img className="ymap-plate top" src={assets.plate.src} alt="" draggable="false" decoding="async" />}
           <canvas ref={canvasRef} className="ymap-canvas" aria-hidden="true" />
 
           {/* keyboard / screen-reader targets: one per REVEALED feature (hidden ones have none) */}
@@ -241,11 +296,11 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
               ))}
             </div>
           )}
-          {ready && pct !== null && <div className="ymap-pct" aria-hidden="true">{formatPercent(pct)}% Completed<small>{courseId ? (card?.course?.name || "this course") : "across all courses"}</small></div>}
+          {ready && pct !== null && <div className="ymap-pct" aria-hidden="true">{formatPercent(stage === 4 ? Math.round(pct * pctFrac) : pct)}% Completed<small>{courseId ? (card?.course?.name || "this course") : "across all courses"}</small></div>}
           {ready && <ProgressCard card={card} state={state} manifest={manifest} variant="overlay" scoped={!!courseId} />}
           {tip && <div className="ymap-tip" role="tooltip" style={{ left: px(tip.x, "x"), top: px(tip.y, "y") }}>{tip.text}</div>}
           {popup && (
-            <div className="ymap-card" role="dialog" aria-label={popup.title}>
+            <div className={`ymap-card${popup.celebrate ? " celebrate" : ""}`} role="dialog" aria-label={popup.title}>
               <button className="x" type="button" aria-label="Close" onClick={() => setCard(null)}>×</button>
               <div className="kind">{popup.kind}</div><h4>{popup.title}</h4><p>{popup.text}</p>
             </div>

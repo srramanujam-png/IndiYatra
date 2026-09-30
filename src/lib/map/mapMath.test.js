@@ -212,3 +212,36 @@ describe("progress-card text", () => {
   });
   it("formats percentages", () => { expect(formatPercent(60)).toBe("60"); expect(formatPercent(59.96)).toBe("60.0"); expect(formatPercent(99.999)).toBe("100"); expect(formatPercent(12.5)).toBe("12.5"); expect(formatPercent("x")).toBe("0"); });
 });
+
+import { introStage, shouldPlayIntro, celebrationFor, INTRO_SECONDS } from "./mapMath";
+describe("intro animation + celebration", () => {
+  it("maps elapsed time to stages", () => {
+    expect([-1, 0, 0.59, 0.6, 1.89, 1.9, 3.09, 3.1, 3.99, 4.0, 4.99, 5, 9].map(introStage)).toEqual([0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]);
+    expect(INTRO_SECONDS).toBe(5);
+  });
+  it("plays on first sight and on a new 5% milestone, never at 0% or unchanged", () => {
+    expect(shouldPlayIntro(null, 3)).toBe(true);
+    expect(shouldPlayIntro({ m: 3 }, 4)).toBe(true);
+    expect(shouldPlayIntro({ m: 4 }, 4)).toBe(false);
+    expect(shouldPlayIntro(null, 0)).toBe(false);
+    expect(shouldPlayIntro({ m: 5 }, 4)).toBe(false);
+  });
+  const man = { plantRules: [{ event: "module", tokenType: "jasmine" }, { event: "theme", tokenType: "lotus" }, { event: "level", tokenType: "ashoka" }, { event: "course", tokenType: "banyan" }],
+    milestones: [{ threshold: 5, riverIds: ["r1"] }, { threshold: 10, riverIds: ["r2"], mountainIds: ["m1"] }], hotspots: { r1: { name: "Ganga" }, r2: { name: "Yamuna" }, m1: { name: "Himalayas" } } };
+  const st = (m, plants = {}) => ({ status: "ok", milestoneIndex: m, plantCounts: plants });
+  it("has nothing to celebrate without history or change", () => {
+    expect(celebrationFor(null, st(2), man)).toBe(null);
+    expect(celebrationFor({ m: 2, plants: {} }, st(2), man)).toBe(null);
+    expect(celebrationFor({ m: 2, plants: {} }, st(2, { tulsi: 9 }), man)).toBe(null);          // lessons alone are not celebrated
+  });
+  it("celebrates a new milestone with the names unveiled", () => {
+    const c = celebrationFor({ m: 0, plants: {} }, st(2), man);
+    expect(c.title).toBe("10% of your journey!"); expect(c.text).toContain("Ganga, Yamuna and Himalayas");
+  });
+  it("celebrates module / theme / level / course completion, biggest first", () => {
+    expect(celebrationFor({ m: 1, plants: {} }, st(1, { jasmine: 1 }), man).title).toBe("Module complete!");
+    expect(celebrationFor({ m: 1, plants: { lotus: 1 } }, st(1, { lotus: 2 }), man).title).toBe("Theme complete!");
+    const c = celebrationFor({ m: 1, plants: {} }, st(2, { jasmine: 1, banyan: 1 }), man);
+    expect(c.title).toBe("Course complete!"); expect(c.text).toContain("jasmine"); expect(c.text).toContain("also reached 10%");
+  });
+});

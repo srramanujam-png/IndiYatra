@@ -114,6 +114,23 @@ export const MAP_CSS = `
   }
   @media (max-width: 379px) { .ymap { --ymap-badge: 34px; } }
 
+  /* intro animation (first sight of the map / new 5% milestone): stages set on .ymap as data-intro="0..4" */
+  .ymap-plate.top { transition: opacity .8s ease; }
+  .ymap[data-intro="0"] .ymap-plate.top, .ymap[data-intro="1"] .ymap-plate.top { opacity: 0; }
+  .ymap[data-intro="0"] .ymap-badge, .ymap[data-intro="1"] .ymap-badge, .ymap[data-intro="2"] .ymap-badge { opacity: 0; }
+  .ymap[data-intro="3"] .ymap-badge, .ymap[data-intro="4"] .ymap-badge { animation: ymap-pop .55s cubic-bezier(.2,1.5,.4,1) var(--d, 0s) backwards; }
+  .ymap[data-intro="0"] .ymap-pct, .ymap[data-intro="1"] .ymap-pct, .ymap[data-intro="2"] .ymap-pct, .ymap[data-intro="3"] .ymap-pct { opacity: 0; }
+  .ymap[data-intro="4"] .ymap-pct { animation: ymap-fade .8s ease backwards; }
+  .ymap[data-intro="0"] .ymap-card2, .ymap[data-intro="1"] .ymap-card2, .ymap[data-intro="2"] .ymap-card2, .ymap[data-intro="3"] .ymap-card2 { opacity: 0; }
+  .ymap[data-intro="4"] .ymap-card2 { animation: ymap-rise .8s ease backwards; }
+  @keyframes ymap-pop { from { opacity: 0; transform: scale(.3); } }
+  @keyframes ymap-pop-c { from { opacity: 0; transform: translateX(-50%) scale(.6); } }
+  @keyframes ymap-fade { from { opacity: 0; } }
+  @keyframes ymap-rise { from { opacity: 0; transform: translateY(-10px); } }
+  .ymap-card.celebrate { bottom: auto; top: 34%; border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(255,142,0,.22), 0 14px 36px rgba(16,24,40,.28); animation: ymap-pop-c .5s cubic-bezier(.2,1.4,.4,1) backwards; }
+  .ymap-card.celebrate .kind { color: var(--color-accent); font-weight: 700; }
+  @media (prefers-reduced-motion: reduce) { .ymap-plate.top { transition: none; } .ymap-badge, .ymap-pct, .ymap-card2, .ymap-card.celebrate { animation: none !important; } }
+
   /* detailed view */
   .ymd { position: fixed; inset: 0; z-index: 1200; background: rgba(16,24,40,.72); display: flex; flex-direction: column; }
   .ymd-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #fff; border-bottom: 1px solid var(--color-border); flex-wrap: wrap; }

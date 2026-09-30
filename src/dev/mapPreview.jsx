@@ -1,6 +1,8 @@
 // Dev-only harness (open /map-preview.html?p=25 while `npm run dev` is running). Not part of the production build.
 // Renders the real <DashboardMap> with a synthetic learner state so every progress level can be reviewed
 // without a database. ?p=0..100  ?badges=n
+//   ?fresh=1  forget what the learner has seen  -> plays the full intro (first sight)
+//   ?prev=P   pretend the learner last looked at P%  -> intro + celebration if p has crossed a new 5% step (&prevPlants=jasmine:1,lotus:1 sets earlier plant counts)
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import DashboardMap from "../components/map/DashboardMap";
@@ -28,6 +30,14 @@ const card = {
   nextBanyan: { courseId: "c", name: "Temples of South India", percent: 78, storiesToGo: 8 },
 };
 if (q.get("tulsi")) state.plantCounts.tulsi = Number(q.get("tulsi"));
+try {
+  const key = "ymap:seen:preview:all";
+  if (q.get("fresh")) localStorage.removeItem(key);
+  else if (q.get("prev") != null) {
+    const plants = Object.fromEntries((q.get("prevPlants") || "").split(",").filter(Boolean).map((kv) => { const [k, v] = kv.split(":"); return [k, Number(v)]; }));
+    localStorage.setItem(key, JSON.stringify({ m: milestoneIndex(Number(q.get("prev"))), plants }));
+  } else if (q.get("keep") == null) localStorage.setItem(key, JSON.stringify({ m: state.milestoneIndex, plants: state.plantCounts }));   // default: "already seen" -> no intro
+} catch { /* storage unavailable */ }
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <style>{globalStyles}</style>
