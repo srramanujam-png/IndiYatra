@@ -21,6 +21,7 @@ const VIEW_FULL = null;
 const VIEW_NARROW = { x0: 125, y0: 45, w: 800, h: 916 };
 const ARC_WIDE = { cx: 420, cy: 570, rx: 365, ry: 365, from: 172, to: 8, maxStep: 15 };     // degrees: 90 = straight below the centre
 const ARC_NARROW = { cx: 485, cy: 575, rx: 315, ry: 345, from: 168, to: 12, maxStep: 15 };
+const MAP_STORY = "Every story you read, each milestone you reach, grows your India map. The land gets greener, rivers and mountains pop up, temples and monuments are built and the sacred Rudraksha weaves around the border. Keep reading stories and watch your Bharat glitter.";
 const KIND_LABEL = { river: "River", mountain: "Mountain range", temple: "Temple" };
 
 function SpriteIcon({ sprites, name }) {
@@ -40,11 +41,12 @@ function SpriteIcon({ sprites, name }) {
  *  stateOverride / cardOverride – skip the RPCs and use these (preview harness, tests)
  *  refreshKey     – change it to refetch (e.g. when the learner returns to the dashboard)
  *  seenKey        – per-learner key used to remember what they have already seen unveiled (so only NEW things animate in)
+ *  slots          – { hero, jump, stats } React nodes: renders the dashboard 3-column layout (map centre) instead of the stand-alone block
  *  compact        – map only (no header, legend, summary or buttons): used inside the lesson-time milestone popup
  *  prevOverride   – { m, plants } to compare against instead of the remembered record (the popup passes the state from BEFORE the lesson;
  *                   null = "no history"). The remembered record is still updated so the dashboard does not replay it.
  */
-export default function DashboardMap({ stateOverride = null, cardOverride = undefined, courseId = null, refreshKey = 0, seenKey = "anon", compact = false, prevOverride = undefined }) {
+export default function DashboardMap({ slots = null, stateOverride = null, cardOverride = undefined, courseId = null, refreshKey = 0, seenKey = "anon", compact = false, prevOverride = undefined }) {
   const [state, setState] = useState(stateOverride);
   const [card, setCardData] = useState(cardOverride ?? null);
   const [assets, setAssets] = useState(null);
@@ -273,18 +275,25 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
   const pctText = pct === null ? "—" : `${pct >= 99.995 ? 100 : pct.toFixed(pct % 1 === 0 ? 0 : 1)}%`;
   const px = (v, axis) => `${(v / (axis === "x" ? frame.W : frame.H)) * 100}%`;
 
-  return (
-    <div className="ymap" data-intro={stage ?? undefined}>
-      <style>{MAP_CSS}</style>
-      {!compact && <div className="ymap-head">
-        <div className="ymap-meta">
-          {ready ? (<><strong>{pctText}</strong> of your journey · milestone <strong>{state.milestoneIndex}</strong> of 20</>) : "Loading your map…"}
-        </div>
-        {manifest?.provisionalGeography && (
-          <span className="ymap-prov" title={manifest.geographyNote}><i className="ti ti-alert-triangle" aria-hidden="true" /> Provisional geography — official outline pending</span>
-        )}
-      </div>}
-
+  const legendEl = ready && (
+    <div className="ymap-legend" aria-hidden="true">
+      {manifest.plantRules.slice().sort((a, b) => a.order - b.order).map((r) => (
+        <span className="ymap-chip" key={r.assetKey}><SpriteIcon sprites={assets.sprites} name={r.assetKey} /><b>{state.plantCounts?.[r.tokenType] ?? 0}</b> {r.species}</span>
+      ))}
+    </div>
+  );
+  const summaryEl = ready && <p className="ymap-summary" aria-live="polite">{summaryText(state, manifest, unlocked)}</p>;
+  const actionsEl = ready && (
+    <div className="ymap-actions">
+      <button type="button" className="ymap-btn" onClick={() => setDetail(true)}><i className="ti ti-zoom-in" aria-hidden="true" /> Open detailed map</button>
+    </div>
+  );
+  const detailEl = detail && ready && (
+    <Suspense fallback={null}>
+      <MapDetail state={state} assets={assets} unlocked={unlocked} plants={plants} onClose={() => setDetail(false)} />
+    </Suspense>
+  );
+  const bodyEl = (
       <div className="ymap-body">
         <div className="ymap-stage" ref={stageRef} style={{ aspectRatio: `${view.w} / ${view.h}` }}
           onPointerMove={onMove} onPointerLeave={onLeave} onClick={onClick}>
@@ -316,7 +325,7 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
           {ready && pct !== null && <div className="ymap-pct" aria-hidden="true">{formatPercent(stage === 4 ? Math.round(pct * pctFrac) : pct)}% Completed<small>{courseId ? (card?.course?.name || "this course") : "across all courses"}</small></div>}
           {tip && <div className="ymap-tip" role="tooltip" style={{ left: px(tip.x, "x"), top: px(tip.y, "y") }}>{tip.text}</div>}
           </div>{/* end .ymap-world */}
-          {ready && <ProgressCard card={card} state={state} manifest={manifest} variant="overlay" scoped={!!courseId} />}
+          {ready && !slots && <ProgressCard card={card} state={state} manifest={manifest} variant="overlay" scoped={!!courseId} />}
           {popup && (
             <div className={`ymap-card${popup.celebrate ? " celebrate" : ""}`} role="dialog" aria-label={popup.title}>
               <button className="x" type="button" aria-label="Close" onClick={() => setCard(null)}>×</button>
@@ -325,27 +334,53 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
           )}
         </div>
       </div>
+  );
+
+  // dashboard layout: three columns (left: welcome / progress / jump, centre: the map + story, right: stats / legend); stacks on phones
+  if (slots) return (
+    <div className="ymap ymap-split" data-intro={stage ?? undefined}>
+      <style>{MAP_CSS}</style>
+      <div className="ymap-col L">
+        <div className="ymap-o1">{slots.hero}</div>
+        {ready && <div className="ymap-o3"><ProgressCard card={card} state={state} manifest={manifest} variant="rail" scoped={!!courseId} /></div>}
+        <div className="ymap-o6">{slots.jump}</div>
+      </div>
+      <div className="ymap-col M">
+        <div className="ymap-o2">{bodyEl}</div>
+        <p className="ymap-story ymap-o5">{MAP_STORY}</p>
+      </div>
+      <div className="ymap-col R">
+        <div className="ymap-o4">{slots.stats}</div>
+        <div className="ymap-o7">{legendEl}{summaryEl}{actionsEl}</div>
+      </div>
+      {detailEl}
+    </div>
+  );
+
+  return (
+    <div className="ymap" data-intro={stage ?? undefined}>
+      <style>{MAP_CSS}</style>
+      {!compact && <div className="ymap-head">
+        <div className="ymap-meta">
+          {ready ? (<><strong>{pctText}</strong> of your journey · milestone <strong>{state.milestoneIndex}</strong> of 20</>) : "Loading your map…"}
+        </div>
+        {manifest?.provisionalGeography && (
+          <span className="ymap-prov" title={manifest.geographyNote}><i className="ti ti-alert-triangle" aria-hidden="true" /> Provisional geography — official outline pending</span>
+        )}
+      </div>}
+
+      {bodyEl}
 
       {ready && <ProgressCard card={card} state={state} manifest={manifest} variant="below" scoped={!!courseId} />}
       {ready && !compact && (
         <>
-          <div className="ymap-legend" aria-hidden="true">
-            {manifest.plantRules.slice().sort((a, b) => a.order - b.order).map((r) => (
-              <span className="ymap-chip" key={r.assetKey}><SpriteIcon sprites={assets.sprites} name={r.assetKey} /><b>{state.plantCounts?.[r.tokenType] ?? 0}</b> {r.species}</span>
-            ))}
-          </div>
-          <p className="ymap-summary" aria-live="polite">{summaryText(state, manifest, unlocked)}</p>
-          <div className="ymap-actions">
-            <button type="button" className="ymap-btn" onClick={() => setDetail(true)}><i className="ti ti-zoom-in" aria-hidden="true" /> Open detailed map</button>
-          </div>
+          {legendEl}
+          {summaryEl}
+          {actionsEl}
         </>
       )}
 
-      {detail && ready && (
-        <Suspense fallback={null}>
-          <MapDetail state={state} assets={assets} unlocked={unlocked} plants={plants} onClose={() => setDetail(false)} />
-        </Suspense>
-      )}
+      {detailEl}
     </div>
   );
 }

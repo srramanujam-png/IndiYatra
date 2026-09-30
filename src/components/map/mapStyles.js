@@ -105,6 +105,37 @@ export const MAP_CSS = `
     .ymap-card { bottom: 8px; }
   }
 
+  /* dashboard layout (slots): welcome / progress / jump | map + story | stats / legend. Stacks on phones and tablets. */
+  .ymap-split { display: flex; flex-direction: column; gap: 10px; }
+  .ymap-col { display: contents; }
+  .ymap-o1 { order: 1; } .ymap-o2 { order: 2; } .ymap-o3 { order: 3; } .ymap-o4 { order: 4; } .ymap-o5 { order: 5; } .ymap-o7 { order: 6; } .ymap-o6 { order: 8; display: none; }
+  .ymap-split .ymap-body { grid-template-columns: minmax(0, 1fr); }
+  .ymap-split .dash-hero { margin-bottom: 0; }
+  .ymap-split .dash-jump-card { flex-direction: column; align-items: stretch; }
+  .ymap-split .dash-stats { margin-bottom: 0; }
+  .ymap-card2.rail { position: static; }
+  .ymap-story { margin: 0 4px; font-family: var(--font-body); font-size: var(--text-sm); line-height: 1.6; color: var(--color-text-body); text-align: center; }
+  .ymap-o7 { background: #fff; border: 1px solid var(--color-border); border-radius: 12px; padding: 12px 14px; }
+  .ymap-o7 .ymap-legend { justify-content: flex-start; margin-top: 0; }
+  .ymap-o7 .ymap-summary { margin: 10px 0 0; max-width: none; font-size: 12.5px; line-height: 1.5; }
+  .ymap-o7 .ymap-actions { justify-content: flex-start; }
+  @media (min-width: 900px) { .ymap-o6 { display: block; } }
+  @media (min-width: 1000px) {
+    .ymap-split { display: grid; grid-template-columns: 24fr 52fr 24fr; gap: 14px; align-items: start; }
+    .ymap-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+    .ymap-split .dash-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .ymap-split .stat-card { padding: 12px 6px; }
+    .ymap-split .stat-ghost { display: none; }
+    .ymap-split .stat-card:nth-last-child(2) { grid-column: span 2; }
+    .ymap-split .stat-value { font-size: 1.4rem; }
+    .ymap-split .dash-hero { padding: 16px; }
+    .ymap-split .dash-title { font-size: 1.5rem; margin-bottom: 4px; }
+    .ymap-split .dash-scope-wrap { margin-top: 10px; }
+    .ymap-split .dash-nav-grid { grid-template-columns: 1fr 1fr; gap: 0 10px; }
+    .ymap-split .dash-nav-link { font-size: .8125rem; }
+    .ymap-split .ymap-stage { max-width: calc((100vh - 130px) * 1.04); margin: 0 auto; }
+  }
+
   /* intro animation (first sight of the map / new 5% milestone): stages set on .ymap as data-intro="0..4" */
   .ymap-plate.top { transition: opacity .8s ease; }
   .ymap[data-intro="0"] .ymap-plate.top, .ymap[data-intro="1"] .ymap-plate.top { opacity: 0; }
