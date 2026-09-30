@@ -245,3 +245,24 @@ describe("intro animation + celebration", () => {
     expect(c.title).toBe("Course complete!"); expect(c.text).toContain("jasmine"); expect(c.text).toContain("also reached 10%");
   });
 });
+
+import { shouldShowMapPopup, seenRecordFrom } from "./mapMath";
+describe("lesson-time map popup", () => {
+  const S = (m, plants = {}, status = "ok") => ({ status, milestoneIndex: m, plantCounts: plants });
+  it("interrupts only for a new milestone or a module/theme/level/course token", () => {
+    expect(shouldShowMapPopup(S(3), S(4))).toBe(true);
+    expect(shouldShowMapPopup(S(3, { jasmine: 1 }), S(3, { jasmine: 2 }))).toBe(true);
+    expect(shouldShowMapPopup(S(3, { lotus: 0 }), S(3, { lotus: 1 }))).toBe(true);
+    expect(shouldShowMapPopup(S(3, { tulsi: 4 }), S(3, { tulsi: 5 }))).toBe(false);
+    expect(shouldShowMapPopup(S(3), S(3))).toBe(false);
+  });
+  it("is quiet when either snapshot is missing or not ok", () => {
+    expect(shouldShowMapPopup(null, S(4))).toBe(false);
+    expect(shouldShowMapPopup(S(3), null)).toBe(false);
+    expect(shouldShowMapPopup(S(3, {}, "no_content"), S(4))).toBe(false);
+  });
+  it("builds the seen record", () => {
+    expect(seenRecordFrom(S(7, { tulsi: 2 }))).toEqual({ m: 7, plants: { tulsi: 2 } });
+    expect(seenRecordFrom(null)).toBe(null);
+  });
+});

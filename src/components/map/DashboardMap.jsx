@@ -33,8 +33,11 @@ function SpriteIcon({ sprites, name }) {
  *  stateOverride / cardOverride – skip the RPCs and use these (preview harness, tests)
  *  refreshKey     – change it to refetch (e.g. when the learner returns to the dashboard)
  *  seenKey        – per-learner key used to remember what they have already seen unveiled (so only NEW things animate in)
+ *  compact        – map only (no header, legend, summary or buttons): used inside the lesson-time milestone popup
+ *  prevOverride   – { m, plants } to compare against instead of the remembered record (the popup passes the state from BEFORE the lesson;
+ *                   null = "no history"). The remembered record is still updated so the dashboard does not replay it.
  */
-export default function DashboardMap({ stateOverride = null, cardOverride = undefined, courseId = null, refreshKey = 0, seenKey = "anon" }) {
+export default function DashboardMap({ stateOverride = null, cardOverride = undefined, courseId = null, refreshKey = 0, seenKey = "anon", compact = false, prevOverride = undefined }) {
   const [state, setState] = useState(stateOverride);
   const [card, setCardData] = useState(cardOverride ?? null);
   const [assets, setAssets] = useState(null);
@@ -99,6 +102,7 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
     if (seenSigRef.current === sig) return;                     // already handled this exact state (StrictMode re-run, harmless refetch)
     seenSigRef.current = sig;
     let prev = null; try { prev = JSON.parse(localStorage.getItem(key)); } catch { /* storage unavailable: no animation history */ }
+    if (prevOverride !== undefined) prev = prevOverride;
     const reveal = {}, born = {};
     const play = !reduced && shouldPlayIntro(prev, state.milestoneIndex);
     if (prev && !reduced && !play) {
@@ -115,7 +119,7 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
     celebRef.current = prev && !reduced ? celebrationFor(prev, state, assets.manifest) : null;
     if (!play && celebRef.current) { const c = celebRef.current; celebRef.current = null; setTimeout(() => showCelebration(c), 700); }
     try { localStorage.setItem(key, JSON.stringify({ m: state.milestoneIndex, plants: state.plantCounts || {} })); } catch { /* ignore */ }
-  }, [assets, state, seenKey, courseId, reduced, showCelebration]);
+  }, [assets, state, seenKey, courseId, reduced, showCelebration, prevOverride]);
 
   // ── intro timeline (driven from the animation loop) ──
   const finishIntro = useCallback(() => {
@@ -258,14 +262,14 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
   return (
     <div className="ymap" data-intro={stage ?? undefined}>
       <style>{MAP_CSS}</style>
-      <div className="ymap-head">
+      {!compact && <div className="ymap-head">
         <div className="ymap-meta">
           {ready ? (<><strong>{pctText}</strong> of your journey · milestone <strong>{state.milestoneIndex}</strong> of 20</>) : "Loading your map…"}
         </div>
         {manifest?.provisionalGeography && (
           <span className="ymap-prov" title={manifest.geographyNote}><i className="ti ti-alert-triangle" aria-hidden="true" /> Provisional geography — official outline pending</span>
         )}
-      </div>
+      </div>}
 
       <div className="ymap-body">
         <div className="ymap-badges a strip" role="group" aria-label="Character badges">{badges.slice(0, half).map(badgeBtn)}</div>
@@ -311,7 +315,7 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
       </div>
 
       {ready && <ProgressCard card={card} state={state} manifest={manifest} variant="below" scoped={!!courseId} />}
-      {ready && (
+      {ready && !compact && (
         <>
           <div className="ymap-legend" aria-hidden="true">
             {manifest.plantRules.slice().sort((a, b) => a.order - b.order).map((r) => (

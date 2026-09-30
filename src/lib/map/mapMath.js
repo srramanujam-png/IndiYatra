@@ -272,3 +272,14 @@ export function celebrationFor(prev, state, manifest) {
   }
   return title ? { kind, title, text: lines.join(" ") } : null;
 }
+
+/** During/after a lesson: is there something new on the map worth interrupting for? True when the 5% milestone went up or a
+ *  module (jasmine) / theme (lotus) / level (ashoka) / course (banyan) token was added. Lessons alone (tulsi) never interrupt. */
+export function shouldShowMapPopup(before, after) {
+  if (!before || !after || before.status !== "ok" || after.status !== "ok") return false;
+  if ((after.milestoneIndex | 0) > (before.milestoneIndex | 0)) return true;
+  return ["jasmine", "lotus", "ashoka", "banyan"].some((t) => ((after.plantCounts?.[t]) | 0) > ((before.plantCounts?.[t]) | 0));
+}
+
+/** The "already seen" record DashboardMap uses, built from a state (so the popup can replay from the state BEFORE the lesson). */
+export const seenRecordFrom = (state) => (state && state.status === "ok" ? { m: state.milestoneIndex | 0, plants: { ...(state.plantCounts || {}) } } : null);
