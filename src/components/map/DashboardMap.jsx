@@ -6,7 +6,7 @@
 // the learner opens the detailed map. Seeds / dhruva grass / plants are painted in one Canvas layer.
 import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { fetchMapCard, fetchMapState, loadPlate, loadQuickMap } from "../../lib/map/mapData";
-import { buildPlantList, celebrationFor, formatPercent, hitTest, introStage, shouldPlayIntro, summaryText, toMapUnits, unlockedIds } from "../../lib/map/mapMath";
+import { buildPlantList, celebrationFor, formatPercent, hitTest, introSeconds, introStage, summaryText, toMapUnits, unlockedIds } from "../../lib/map/mapMath";
 import { buildLawn, createLawnReveal, easeOutCubic, paintScene, sizeCanvas } from "../../lib/map/drawMap";
 import ProgressCard from "./ProgressCard";
 import { MAP_CSS } from "./mapStyles";
@@ -119,13 +119,13 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
     let prev = null; try { prev = JSON.parse(localStorage.getItem(key)); } catch { /* storage unavailable: no animation history */ }
     if (prevOverride !== undefined) prev = prevOverride;
     const reveal = {}, born = {};
-    const play = !reduced && shouldPlayIntro(prev, state.milestoneIndex);
+    const secs = reduced ? 0 : introSeconds(prev, state.milestoneIndex), play = secs > 0;     // every visit animates: 5 s new milestone / first sight, 3 s otherwise
     if (prev && !reduced && !play) {
       const rules = Object.fromEntries((assets.manifest.plantRules || []).map((r) => [r.tokenType, r.assetKey]));
       let i = 0;
       for (const [tok, cnt] of Object.entries(state.plantCounts || {})) for (let n = prev.plants?.[tok] | 0; n < (cnt | 0); n++) if (rules[tok]) born[`${rules[tok]}:${n}`] = now + 0.2 + Math.min(i++, 30) * 0.05;
     }
-    animRef.current = { reveal, born, intro: play ? { t0: null, done: false } : null };
+    animRef.current = { reveal, born, intro: play ? { t0: null, done: false, k: secs / 5 } : null };
     lastStageRef.current = null;
     if (play) {
       setStage(0); setPctFrac(0);
@@ -149,11 +149,11 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
     if (I.t0 == null) {                                          // wait until the map is actually on screen, then start the clock
       if (!onScreen) return;
       I.t0 = nowSec; const reveal = {}, born = {};
-      let r = 0; for (const id of sc.unlocked) if (sc.hotspots[id]?.type === "river") reveal[id] = nowSec + 1.9 + (r++) * 0.09;
-      const list = sc.plants || []; list.forEach((p, i) => { born[`${p.key}:${p.n}`] = nowSec + 2.2 + (i / Math.max(1, list.length)) * 0.9; });
+      let r = 0; for (const id of sc.unlocked) if (sc.hotspots[id]?.type === "river") reveal[id] = nowSec + (1.9 + (r++) * 0.09) * I.k;
+      const list = sc.plants || []; list.forEach((p, i) => { born[`${p.key}:${p.n}`] = nowSec + (2.2 + (i / Math.max(1, list.length)) * 0.9) * I.k; });
       animRef.current.reveal = reveal; animRef.current.born = born;
     }
-    const e = nowSec - I.t0, st = introStage(e);
+    const e = (nowSec - I.t0) / I.k, st = introStage(e);          // e = time on the 5 s timeline, whatever the real duration
     if (st >= 5) { finishIntro(); return; }
     if (lastStageRef.current !== st) { lastStageRef.current = st; setStage(st); }
     if (st === 4) setPctFrac(easeOutCubic(Math.min(1, (e - 4.0) / 0.9)));
@@ -163,12 +163,13 @@ export default function DashboardMap({ stateOverride = null, cardOverride = unde
     const canvas = canvasRef.current, sc = sceneRef.current; if (!canvas || !sc || !sc.lawnReady) return 0;
     const ctx = canvas.getContext("2d"), s = canvas.width / sc.frame.W;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.setTransform(s, 0, 0, s, 0, 0);
-    const reveal = {}; for (const [id, st] of Object.entries(animRef.current.reveal)) reveal[id] = Math.max(0, Math.min(1, easeOutCubic(Math.min(1, (t - st) / 1.8))));
-    const I = animRef.current.intro; let intro = null;
+    const I = animRef.current.intro, kk = I && !I.done ? I.k : 1;
+    const reveal = {}; for (const [id, st] of Object.entries(animRef.current.reveal)) reveal[id] = Math.max(0, Math.min(1, easeOutCubic(Math.min(1, (t - st) / (1.8 * kk)))));
+    let intro = null;
     if (I && !I.done) {
       if (I.t0 == null) return 0;                                 // intro pending (map not on screen yet): the live layer stays empty
       if (!lawnRef.current.reveal && lawnRef.current.canvas) lawnRef.current.reveal = createLawnReveal({ lawn: lawnRef.current.canvas, growth: sc.growth, unit: sc.unit, progress: sc.progress, W: sc.frame.W });
-      const e = t - I.t0, c01 = (v) => Math.max(0, Math.min(1, v));
+      const e = (t - I.t0) / I.k, c01 = (v) => Math.max(0, Math.min(1, v));
       intro = { lawn: c01((e - 0.6) / 1.3), temples: c01((e - 2.3) / 0.7), mala: easeOutCubic(c01((e - 4.0) / 0.9)) };
     }
     const started = performance.now();

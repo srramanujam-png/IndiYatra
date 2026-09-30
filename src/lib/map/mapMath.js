@@ -223,11 +223,13 @@ export function formatPercent(p) {
 // ─── intro animation + celebration (dashboard) ───────────────────────────────────────────────────────
 /** Seconds at which each intro stage BEGINS, then the end: 0 base map · 1 lawn · 2 rivers/ranges/temples/plants · 3 badges · 4 progress pill + mala. */
 export const INTRO_STAGE_STARTS = [0, 0.6, 1.9, 3.1, 4.0];
-export const INTRO_SECONDS = 5;
+export const INTRO_SECONDS = 5;          // long version: first sight / a new 5% milestone
+export const INTRO_SECONDS_SHORT = 3;    // every other visit: same sequence, just faster
 
 /** Which stage (0..4) a time `t` seconds after the intro started is in; 5 = finished. */
-export function introStage(t) {
+export function introStage(t, total = INTRO_SECONDS) {
   if (!(t >= 0)) return 0;
+  if (total !== INTRO_SECONDS) t = (t * INTRO_SECONDS) / total;     // shorter run = the same timeline, compressed
   if (t >= INTRO_SECONDS) return 5;
   let s = 0;
   for (let i = 0; i < INTRO_STAGE_STARTS.length; i++) if (t >= INTRO_STAGE_STARTS[i]) s = i;
@@ -239,6 +241,13 @@ export function introStage(t) {
 export function shouldPlayIntro(prev, milestone) {
   const m = Number(milestone) | 0;
   return m > 0 && (!prev || m > ((prev.m | 0)));
+}
+
+/** How long the intro plays on this visit, in seconds: 0 = none (nothing to show at 0%),
+ *  5 s on first sight or when a new 5% milestone was reached since the last look, otherwise 3 s. */
+export function introSeconds(prev, milestone) {
+  if (!((Number(milestone) | 0) > 0)) return 0;
+  return shouldPlayIntro(prev, milestone) ? INTRO_SECONDS : INTRO_SECONDS_SHORT;
 }
 
 const EVENT_TEXT = {

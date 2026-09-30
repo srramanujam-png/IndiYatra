@@ -213,10 +213,10 @@ describe("progress-card text", () => {
   it("formats percentages", () => { expect(formatPercent(60)).toBe("60"); expect(formatPercent(59.96)).toBe("60.0"); expect(formatPercent(99.999)).toBe("100"); expect(formatPercent(12.5)).toBe("12.5"); expect(formatPercent("x")).toBe("0"); });
 });
 
-import { introStage, shouldPlayIntro, celebrationFor, INTRO_SECONDS } from "./mapMath";
+import { introStage, shouldPlayIntro, introSeconds, celebrationFor, INTRO_SECONDS } from "./mapMath";
 describe("intro animation + celebration", () => {
   it("maps elapsed time to stages", () => {
-    expect([-1, 0, 0.59, 0.6, 1.89, 1.9, 3.09, 3.1, 3.99, 4.0, 4.99, 5, 9].map(introStage)).toEqual([0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]);
+    expect([-1, 0, 0.59, 0.6, 1.89, 1.9, 3.09, 3.1, 3.99, 4.0, 4.99, 5, 9].map((t) => introStage(t))).toEqual([0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]);
     expect(INTRO_SECONDS).toBe(5);
   });
   it("plays on first sight and on a new 5% milestone, never at 0% or unchanged", () => {
@@ -225,6 +225,14 @@ describe("intro animation + celebration", () => {
     expect(shouldPlayIntro({ m: 4 }, 4)).toBe(false);
     expect(shouldPlayIntro(null, 0)).toBe(false);
     expect(shouldPlayIntro({ m: 5 }, 4)).toBe(false);
+  });
+  it("every visit plays: 5 s for first sight / new milestone, 3 s otherwise, none at 0%", () => {
+    expect(introSeconds(null, 3)).toBe(5);
+    expect(introSeconds({ m: 3 }, 4)).toBe(5);
+    expect(introSeconds({ m: 4 }, 4)).toBe(3);
+    expect(introSeconds({ m: 5 }, 4)).toBe(3);
+    expect(introSeconds(null, 0)).toBe(0);
+    expect([0, 0.35, 0.37, 1.15, 1.87, 2.41, 3].map((t) => introStage(t, 3))).toEqual([0, 0, 1, 2, 3, 4, 5]);
   });
   const man = { plantRules: [{ event: "module", tokenType: "jasmine" }, { event: "theme", tokenType: "lotus" }, { event: "level", tokenType: "ashoka" }, { event: "course", tokenType: "banyan" }],
     milestones: [{ threshold: 5, riverIds: ["r1"] }, { threshold: 10, riverIds: ["r2"], mountainIds: ["m1"] }], hotspots: { r1: { name: "Ganga" }, r2: { name: "Yamuna" }, m1: { name: "Himalayas" } } };
