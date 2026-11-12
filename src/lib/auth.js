@@ -81,7 +81,22 @@ export async function loadCompletions(userId) {
   return { data, error };
 }
 
+// Audit fix H1: the SERVER records the completion and decides points, snippet
+// count and course (complete_lesson RPC — see
+// supabase/migrations/20261112000100_secure_lesson_completion.sql). The
+// pointsEarned / snippetCount / courseId arguments are only used by the
+// legacy fallback below, which runs solely while that migration has not been
+// applied yet (after it, direct writes to lesson_completions are refused).
 export async function saveCompletion(userId, lessonId, courseId, pointsEarned = 0, snippetCount = null) {
+  const rpc = await supabaseClient.rpc("complete_lesson", { p_lesson_id: lessonId });
+  if (!rpc.error) return { data: rpc.data, error: null };
+
+  // PGRST202 / 42883 = function not deployed yet → legacy direct upsert.
+  const missing = rpc.error.code === "PGRST202" || rpc.error.code === "42883";
+  if (!missing) {
+    console.error("[saveCompletion] complete_lesson failed:", JSON.stringify(rpc.error), { lessonId });
+    return { data: null, error: rpc.error };
+  }
   const { data, error } = await supabaseClient
     .from("lesson_completions")
     .upsert({
