@@ -1748,14 +1748,29 @@ export async function saveQuizAttempt(userId, quizId, answersPayload) {
   return { data, error };
 }
 
-// 2.4 (A3): per-question grading — returns { is_correct, correct_option }.
-// chosen = null reveals the answer for a skipped/timed-out question.
-export async function gradeQuizAnswer(questionType, questionId, chosen) {
-  const { data, error } = await supabaseClient.rpc("grade_quiz_answer", {
+// Audit fix H4: per-question checking that LOCKS the first answer on the server
+// (answer_quiz_question — supabase/migrations/20261112000200_quiz_answer_lock.sql).
+// Returns { is_correct, correct_option, chosen_option, already_answered }.
+// chosen = null records a skip / time-out and reveals the answer.
+// Signed-in, non-guest users only. chosen_option is what the server has on
+// record: if the question was answered earlier in this run it can differ from
+// `chosen`, and it is the one that counts.
+// Falls back to the legacy grade_quiz_answer only while the migration has not
+// been applied yet (after it, that function is closed to clients).
+export async function gradeQuizAnswer(quizId, questionType, questionId, chosen) {
+  let { data, error } = await supabaseClient.rpc("answer_quiz_question", {
+    p_quiz_id:       quizId,
     p_question_type: questionType,
     p_question_id:   questionId,
     p_chosen:        chosen ?? null,
   });
+  if (error && (error.code === "PGRST202" || error.code === "42883")) {
+    ({ data, error } = await supabaseClient.rpc("grade_quiz_answer", {
+      p_question_type: questionType,
+      p_question_id:   questionId,
+      p_chosen:        chosen ?? null,
+    }));
+  }
   if (error) { console.error("[gradeQuizAnswer]", JSON.stringify(error)); return { data: null, error }; }
   return { data: Array.isArray(data) ? data[0] : data, error: null };
 }

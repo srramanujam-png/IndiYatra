@@ -664,7 +664,7 @@ export default function QuizPlayer({
   function revealCorrect(idx) {
     const qq = questions[idx];
     if (!qq || qq.correct_option != null || !qq.question_id) return;
-    gradeQuizAnswer(qq.question_type, qq.question_id, null)
+    gradeQuizAnswer(quiz?.quiz_id, qq.question_type, qq.question_id, null)
       .then(({ data }) => {
         if (data?.correct_option != null) {
           qq.correct_option = data.correct_option;
@@ -676,30 +676,45 @@ export default function QuizPlayer({
 
   async function selectOption(optionLabel) {
     if (isAnswered || gradingRef.current) return;
+    // Audit fix H4: answers are checked and locked on the server, per account.
+    if (q.correct_option == null && (!user || user.is_anonymous)) {
+      showSigninToast("Sign in to play quizzes");
+      onSignIn?.();
+      return;
+    }
     clearQTimer();
 
     let isCorrect;
+    let lockedChoice = optionLabel;
     if (q.correct_option != null) {
       // Answer already revealed locally (staff/legacy fallback path)
       isCorrect = optionLabel === q.correct_option;
     } else {
       gradingRef.current = true;
-      const { data, error } = await gradeQuizAnswer(q.question_type, q.question_id, optionLabel);
+      const { data, error } = await gradeQuizAnswer(quiz?.quiz_id, q.question_type, q.question_id, optionLabel);
       gradingRef.current = false;
       if (error || !data) {
-        showSigninToast("Couldn't check your answer — please tap again");
+        showSigninToast(/max attempts/i.test(error?.message || "")
+          ? "You have used all your attempts for this quiz"
+          : "Couldn't check your answer — please tap again");
         startQTimer();
         return;
       }
       isCorrect = data.is_correct === true;
       q.correct_option = data.correct_option; // reveal for styling + explanation
+      // The server keeps the FIRST answer given to a question in this run
+      // (e.g. the quiz was left half-way and reopened). Show what counts.
+      if (data.already_answered) {
+        lockedChoice = data.chosen_option ?? null;
+        showSigninToast("You answered this earlier — your first answer counts");
+      }
     }
 
     if (navigator.vibrate) navigator.vibrate(isCorrect ? [15] : [15, 60, 15]);
 
     setAnswers(m => {
       const next = new Map(m);
-      next.set(current, { chosen: optionLabel, isCorrect, revealed: true });
+      next.set(current, { chosen: lockedChoice, isCorrect: lockedChoice === null ? null : isCorrect, revealed: true });
       return next;
     });
     // Mobile: brief lag so the user sees their choice + the correct answer, then slide up the explanation
@@ -825,7 +840,7 @@ export default function QuizPlayer({
     const unrevealed = questions.filter(qq => qq.correct_option == null && qq.question_id);
     if (unrevealed.length > 0) {
       await Promise.all(unrevealed.map(qq =>
-        gradeQuizAnswer(qq.question_type, qq.question_id, null)
+        gradeQuizAnswer(quiz?.quiz_id, qq.question_type, qq.question_id, null)
           .then(({ data }) => { if (data?.correct_option != null) qq.correct_option = data.correct_option; })
           .catch(() => {})
       ));
