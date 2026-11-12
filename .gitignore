@@ -44,3 +44,9 @@ sync_test.txt
 ~$*
 *.tmp
 ays-quiz-cloner.zip
+
+# Audit clean-up (Nov 2026): hand-over files and compiled Python stay out of git
+*.bundle
+*.patch
+__pycache__/
+*.pyc

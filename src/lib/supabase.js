@@ -14,7 +14,14 @@ import { reportFetchError } from "./fetchStatus";
 // working), but on failure the array is TAGGED with `.error` and the failure
 // is broadcast on the fetchStatus bus, which App.jsx surfaces as a banner.
 // Callers that want per-surface error UI can check `rows.error`.
-export async function supabase(table, query = "") {
+// Audit fix M4: the API returns at most PAGE_SIZE rows per request and gives no
+// error when more exist, so long lists used to be cut short silently. When a
+// request comes back exactly full (and the caller did not ask for its own
+// limit/offset), the following pages are fetched and appended.
+const PAGE_SIZE = 1000;   // Supabase default "Max rows"
+const MAX_PAGES = 20;     // safety stop: 20,000 rows
+
+async function fetchRows(table, query) {
   let res;
   try {
     res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query}`, {
@@ -37,6 +44,26 @@ export async function supabase(table, query = "") {
     return Object.assign([], { error: { status: res.status, table, message: err?.message || "" } });
   }
   return res.json();
+}
+
+export async function supabase(table, query = "") {
+  const first = await fetchRows(table, query);
+  const pageable = Array.isArray(first) && !first.error && first.length === PAGE_SIZE
+    && !table.startsWith("rpc/") && !/[?&](limit|offset)=/.test(query);
+  if (!pageable) return first;
+
+  const rows = first.slice();
+  const sep = query.includes("?") ? "&" : "?";
+  for (let page = 1; page < MAX_PAGES; page++) {
+    const next = await fetchRows(table, `${query}${sep}limit=${PAGE_SIZE}&offset=${rows.length}`);
+    if (!Array.isArray(next) || next.error) {
+      // Keep what we have, but tag the result so callers can tell it is incomplete.
+      return Object.assign(rows, { error: next?.error || { status: 0, table, message: "paging failed" } });
+    }
+    rows.push(...next);
+    if (next.length < PAGE_SIZE) break;
+  }
+  return rows;
 }
 
 // ─── Content thumbnails (module/lesson cover_image_url, story via snippet's

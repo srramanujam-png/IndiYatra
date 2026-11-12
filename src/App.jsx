@@ -367,8 +367,10 @@ export default function App() {
           badges.push({ type: "theme", name: selectedTheme.title, id: selectedTheme?.theme_id });
 
           // Level badge — all modules in this level done?
+          // Audit fix L3: same scope as the server award rule — this level within this course
+          const courseScope = selectedCourse?.course_id ? `&course_id=eq.${selectedCourse.course_id}` : "";
           const levelMods = await supabase("modules",
-            `?select=module_id&level_id=eq.${selectedLevelId}`);
+            `?select=module_id&level_id=eq.${selectedLevelId}${courseScope}`);
           const levelModIds = (levelMods || []).map(m => m.module_id);
           if (levelModIds.length > 0) {
             const levelLessons = await supabase("lessons",
@@ -381,7 +383,7 @@ export default function App() {
               badges.push({ type: "level", name: levelLabel, id: selectedLevelId });
 
               // Course badge — all modules in course done?
-              const allMods = await supabase("modules", "?select=module_id");
+              const allMods = await supabase("modules", `?select=module_id${courseScope}`);
               const allModIds = (allMods || []).map(m => m.module_id);
               if (allModIds.length > 0) {
                 const allLessons = await supabase("lessons",
