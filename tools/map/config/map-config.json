@@ -1,0 +1,686 @@
+{
+  "features": {
+    "river-01": {
+      "type": "river",
+      "name": "Ganga",
+      "hover": "Ganga",
+      "tap": "Explore the Ganga.",
+      "style": "river"
+    },
+    "river-02": {
+      "type": "river",
+      "name": "Brahmaputra",
+      "hover": "Brahmaputra",
+      "tap": "Explore the Brahmaputra.",
+      "style": "river"
+    },
+    "river-03": {
+      "type": "river",
+      "name": "Bharathapuzha",
+      "hover": "Bharathapuzha",
+      "tap": "Explore the Bharathapuzha.",
+      "style": "river"
+    },
+    "river-04": {
+      "type": "river",
+      "name": "Godavari",
+      "hover": "Godavari",
+      "tap": "Explore the Godavari.",
+      "style": "river"
+    },
+    "river-05": {
+      "type": "river",
+      "name": "Krishna",
+      "hover": "Krishna",
+      "tap": "Explore the Krishna.",
+      "style": "river"
+    },
+    "river-06": {
+      "type": "river",
+      "name": "Narmada",
+      "hover": "Narmada",
+      "tap": "Explore the Narmada.",
+      "style": "river"
+    },
+    "river-07": {
+      "type": "river",
+      "name": "Yamuna",
+      "hover": "Yamuna",
+      "tap": "Explore the Yamuna.",
+      "style": "river"
+    },
+    "river-08": {
+      "type": "river",
+      "name": "Cauvery (Kaveri)",
+      "hover": "Cauvery (Kaveri)",
+      "tap": "Explore the Cauvery (Kaveri).",
+      "style": "river"
+    },
+    "river-09": {
+      "type": "river",
+      "name": "Mahanadi",
+      "hover": "Mahanadi",
+      "tap": "Explore the Mahanadi.",
+      "style": "river"
+    },
+    "river-10": {
+      "type": "river",
+      "name": "Tungabhadra",
+      "hover": "Tungabhadra",
+      "tap": "Explore the Tungabhadra.",
+      "style": "river"
+    },
+    "river-11": {
+      "type": "river",
+      "name": "Sutlej (Satluj)",
+      "hover": "Sutlej (Satluj)",
+      "tap": "Explore the Sutlej (Satluj).",
+      "style": "river"
+    },
+    "river-12": {
+      "type": "river",
+      "name": "Chenab",
+      "hover": "Chenab",
+      "tap": "Explore the Chenab.",
+      "style": "river"
+    },
+    "river-13": {
+      "type": "river",
+      "name": "Ghaghara",
+      "hover": "Ghaghara",
+      "tap": "Explore the Ghaghara.",
+      "style": "river"
+    },
+    "river-14": {
+      "type": "river",
+      "name": "Beas",
+      "hover": "Beas",
+      "tap": "Explore the Beas.",
+      "style": "river"
+    },
+    "river-15": {
+      "type": "river",
+      "name": "Ravi",
+      "hover": "Ravi",
+      "tap": "Explore the Ravi.",
+      "style": "river"
+    },
+    "mountain-01": {
+      "type": "mountain",
+      "name": "Himalayas",
+      "hover": "Himalayas",
+      "tap": "Explore the Himalayas.",
+      "style": "snow"
+    },
+    "mountain-02": {
+      "type": "mountain",
+      "name": "Karakoram",
+      "hover": "Karakoram",
+      "tap": "Explore the Karakoram.",
+      "style": "snow"
+    },
+    "mountain-03": {
+      "type": "mountain",
+      "name": "Western Ghats",
+      "hover": "Western Ghats",
+      "tap": "Explore the Western Ghats.",
+      "style": "grassy"
+    },
+    "mountain-04": {
+      "type": "mountain",
+      "name": "Eastern Ghats",
+      "hover": "Eastern Ghats",
+      "tap": "Explore the Eastern Ghats.",
+      "style": "grassy"
+    },
+    "mountain-05": {
+      "type": "mountain",
+      "name": "Aravalli Range",
+      "hover": "Aravalli Range",
+      "tap": "Explore the Aravalli Range.",
+      "style": "dry"
+    },
+    "mountain-06": {
+      "type": "mountain",
+      "name": "Vindhya Range",
+      "hover": "Vindhya Range",
+      "tap": "Explore the Vindhya Range.",
+      "style": "dry"
+    },
+    "mountain-07": {
+      "type": "mountain",
+      "name": "Satpura Range",
+      "hover": "Satpura Range",
+      "tap": "Explore the Satpura Range.",
+      "style": "mixed"
+    },
+    "mountain-08": {
+      "type": "mountain",
+      "name": "Ladakh Range",
+      "hover": "Ladakh Range",
+      "tap": "Explore the Ladakh Range.",
+      "style": "dry"
+    },
+    "mountain-09": {
+      "type": "mountain",
+      "name": "Nilgiri Mountains",
+      "hover": "Nilgiri Mountains",
+      "tap": "Explore the Nilgiri Mountains.",
+      "style": "grassy"
+    },
+    "mountain-10": {
+      "type": "mountain",
+      "name": "Purvanchal Range",
+      "hover": "Purvanchal Range",
+      "tap": "Explore the Purvanchal Range.",
+      "style": "grassy"
+    },
+    "mountain-11": {
+      "type": "mountain",
+      "name": "Khasi Hills",
+      "hover": "Khasi Hills",
+      "tap": "Explore the Khasi Hills.",
+      "style": "grassy"
+    },
+    "mountain-12": {
+      "type": "mountain",
+      "name": "Garo Hills",
+      "hover": "Garo Hills",
+      "tap": "Explore the Garo Hills.",
+      "style": "grassy"
+    },
+    "mountain-13": {
+      "type": "mountain",
+      "name": "Naga Hills",
+      "hover": "Naga Hills",
+      "tap": "Explore the Naga Hills.",
+      "style": "grassy"
+    },
+    "mountain-14": {
+      "type": "mountain",
+      "name": "Anaimalai Hills",
+      "hover": "Anaimalai Hills",
+      "tap": "Explore the Anaimalai Hills.",
+      "style": "grassy"
+    },
+    "mountain-15": {
+      "type": "mountain",
+      "name": "Rajmahal Hills",
+      "hover": "Rajmahal Hills",
+      "tap": "Explore the Rajmahal Hills.",
+      "style": "grassy"
+    }
+  },
+  "temples": [
+    {
+      "id": "temple-01",
+      "name": null,
+      "lat": null,
+      "lon": null,
+      "hover": null,
+      "tap": null,
+      "enabled": false
+    },
+    {
+      "id": "temple-02",
+      "name": null,
+      "lat": null,
+      "lon": null,
+      "hover": null,
+      "tap": null,
+      "enabled": false
+    },
+    {
+      "id": "temple-03",
+      "name": null,
+      "lat": null,
+      "lon": null,
+      "hover": null,
+      "tap": null,
+      "enabled": false
+    },
+    {
+      "id": "temple-04",
+      "name": null,
+      "lat": null,
+      "lon": null,
+      "hover": null,
+      "tap": null,
+      "enabled": false
+    },
+    {
+      "id": "temple-05",
+      "name": null,
+      "lat": null,
+      "lon": null,
+      "hover": null,
+      "tap": null,
+      "enabled": false
+    },
+    {
+      "id": "temple-06",
+      "name": null,
+      "lat": null,
+      "lon": null,
+      "hover": null,
+      "tap": null,
+      "enabled": false
+    },
+    {
+      "id": "temple-07",
+      "name": null,
+      "lat": null,
+      "lon": null,
+      "hover": null,
+      "tap": null,
+      "enabled": false
+    },
+    {
+      "id": "temple-08",
+      "name": null,
+      "lat": null,
+      "lon": null,
+      "hover": null,
+      "tap": null,
+      "enabled": false
+    },
+    {
+      "id": "temple-09",
+      "name": null,
+      "lat": null,
+      "lon": null,
+      "hover": null,
+      "tap": null,
+      "enabled": false
+    },
+    {
+      "id": "temple-10",
+      "name": null,
+      "lat": null,
+      "lon": null,
+      "hover": null,
+      "tap": null,
+      "enabled": false
+    },
+    {
+      "id": "temple-11",
+      "name": null,
+      "lat": null,
+      "lon": null,
+      "hover": null,
+      "tap": null,
+      "enabled": false
+    },
+    {
+      "id": "temple-12",
+      "name": null,
+      "lat": null,
+      "lon": null,
+      "hover": null,
+      "tap": null,
+      "enabled": false
+    },
+    {
+      "id": "temple-13",
+      "name": null,
+      "lat": null,
+      "lon": null,
+      "hover": null,
+      "tap": null,
+      "enabled": false
+    },
+    {
+      "id": "temple-14",
+      "name": null,
+      "lat": null,
+      "lon": null,
+      "hover": null,
+      "tap": null,
+      "enabled": false
+    },
+    {
+      "id": "temple-15",
+      "name": null,
+      "lat": null,
+      "lon": null,
+      "hover": null,
+      "tap": null,
+      "enabled": false
+    },
+    {
+      "id": "temple-16",
+      "name": null,
+      "lat": null,
+      "lon": null,
+      "hover": null,
+      "tap": null,
+      "enabled": false
+    },
+    {
+      "id": "temple-17",
+      "name": null,
+      "lat": null,
+      "lon": null,
+      "hover": null,
+      "tap": null,
+      "enabled": false
+    },
+    {
+      "id": "temple-18",
+      "name": null,
+      "lat": null,
+      "lon": null,
+      "hover": null,
+      "tap": null,
+      "enabled": false
+    },
+    {
+      "id": "temple-19",
+      "name": null,
+      "lat": null,
+      "lon": null,
+      "hover": null,
+      "tap": null,
+      "enabled": false
+    },
+    {
+      "id": "temple-20",
+      "name": null,
+      "lat": null,
+      "lon": null,
+      "hover": null,
+      "tap": null,
+      "enabled": false
+    }
+  ],
+  "milestones": [
+    {
+      "index": 1,
+      "threshold": 5,
+      "title": "Milestone 1",
+      "riverIds": [
+        "river-01"
+      ],
+      "mountainIds": [],
+      "templeIds": [],
+      "note": "Example sequence; edit to match course"
+    },
+    {
+      "index": 2,
+      "threshold": 10,
+      "title": "Milestone 2",
+      "riverIds": [
+        "river-02"
+      ],
+      "mountainIds": [
+        "mountain-01"
+      ],
+      "templeIds": [],
+      "note": "Example sequence; edit to match course"
+    },
+    {
+      "index": 3,
+      "threshold": 15,
+      "title": "Milestone 3",
+      "riverIds": [
+        "river-03"
+      ],
+      "mountainIds": [
+        "mountain-02"
+      ],
+      "templeIds": [],
+      "note": "Example sequence; edit to match course"
+    },
+    {
+      "index": 4,
+      "threshold": 20,
+      "title": "Milestone 4",
+      "riverIds": [],
+      "mountainIds": [
+        "mountain-03"
+      ],
+      "templeIds": [],
+      "note": "Example sequence; edit to match course"
+    },
+    {
+      "index": 5,
+      "threshold": 25,
+      "title": "Milestone 5",
+      "riverIds": [
+        "river-04"
+      ],
+      "mountainIds": [],
+      "templeIds": [],
+      "note": "Example sequence; edit to match course"
+    },
+    {
+      "index": 6,
+      "threshold": 30,
+      "title": "Milestone 6",
+      "riverIds": [
+        "river-05"
+      ],
+      "mountainIds": [
+        "mountain-04"
+      ],
+      "templeIds": [],
+      "note": "Example sequence; edit to match course"
+    },
+    {
+      "index": 7,
+      "threshold": 35,
+      "title": "Milestone 7",
+      "riverIds": [
+        "river-06"
+      ],
+      "mountainIds": [
+        "mountain-05"
+      ],
+      "templeIds": [],
+      "note": "Example sequence; edit to match course"
+    },
+    {
+      "index": 8,
+      "threshold": 40,
+      "title": "Milestone 8",
+      "riverIds": [],
+      "mountainIds": [
+        "mountain-06"
+      ],
+      "templeIds": [],
+      "note": "Example sequence; edit to match course"
+    },
+    {
+      "index": 9,
+      "threshold": 45,
+      "title": "Milestone 9",
+      "riverIds": [
+        "river-07"
+      ],
+      "mountainIds": [],
+      "templeIds": [],
+      "note": "Example sequence; edit to match course"
+    },
+    {
+      "index": 10,
+      "threshold": 50,
+      "title": "Milestone 10",
+      "riverIds": [
+        "river-08"
+      ],
+      "mountainIds": [
+        "mountain-07"
+      ],
+      "templeIds": [],
+      "note": "Example sequence; edit to match course"
+    },
+    {
+      "index": 11,
+      "threshold": 55,
+      "title": "Milestone 11",
+      "riverIds": [
+        "river-09"
+      ],
+      "mountainIds": [
+        "mountain-08"
+      ],
+      "templeIds": [],
+      "note": "Example sequence; edit to match course"
+    },
+    {
+      "index": 12,
+      "threshold": 60,
+      "title": "Milestone 12",
+      "riverIds": [],
+      "mountainIds": [
+        "mountain-09"
+      ],
+      "templeIds": [],
+      "note": "Example sequence; edit to match course"
+    },
+    {
+      "index": 13,
+      "threshold": 65,
+      "title": "Milestone 13",
+      "riverIds": [
+        "river-10"
+      ],
+      "mountainIds": [],
+      "templeIds": [],
+      "note": "Example sequence; edit to match course"
+    },
+    {
+      "index": 14,
+      "threshold": 70,
+      "title": "Milestone 14",
+      "riverIds": [
+        "river-11"
+      ],
+      "mountainIds": [
+        "mountain-10"
+      ],
+      "templeIds": [],
+      "note": "Example sequence; edit to match course"
+    },
+    {
+      "index": 15,
+      "threshold": 75,
+      "title": "Milestone 15",
+      "riverIds": [
+        "river-12"
+      ],
+      "mountainIds": [
+        "mountain-11"
+      ],
+      "templeIds": [],
+      "note": "Example sequence; edit to match course"
+    },
+    {
+      "index": 16,
+      "threshold": 80,
+      "title": "Milestone 16",
+      "riverIds": [],
+      "mountainIds": [
+        "mountain-12"
+      ],
+      "templeIds": [],
+      "note": "Example sequence; edit to match course"
+    },
+    {
+      "index": 17,
+      "threshold": 85,
+      "title": "Milestone 17",
+      "riverIds": [
+        "river-13"
+      ],
+      "mountainIds": [],
+      "templeIds": [],
+      "note": "Example sequence; edit to match course"
+    },
+    {
+      "index": 18,
+      "threshold": 90,
+      "title": "Milestone 18",
+      "riverIds": [
+        "river-14"
+      ],
+      "mountainIds": [
+        "mountain-13"
+      ],
+      "templeIds": [],
+      "note": "Example sequence; edit to match course"
+    },
+    {
+      "index": 19,
+      "threshold": 95,
+      "title": "Milestone 19",
+      "riverIds": [
+        "river-15"
+      ],
+      "mountainIds": [
+        "mountain-14"
+      ],
+      "templeIds": [],
+      "note": "Example sequence; edit to match course"
+    },
+    {
+      "index": 20,
+      "threshold": 100,
+      "title": "Milestone 20",
+      "riverIds": [],
+      "mountainIds": [
+        "mountain-15"
+      ],
+      "templeIds": [],
+      "note": "Example sequence; edit to match course"
+    }
+  ],
+  "plantRules": [
+    {
+      "event": "lesson",
+      "species": "Tulsi",
+      "assetKey": "tulsi",
+      "order": 1,
+      "scale": 0.65,
+      "zone": "ground cover",
+      "tokenType": "tulsi"
+    },
+    {
+      "event": "module",
+      "species": "Jasmine",
+      "assetKey": "jasmine",
+      "order": 2,
+      "scale": 0.8,
+      "zone": "flowers",
+      "tokenType": "jasmine"
+    },
+    {
+      "event": "theme",
+      "species": "Lotus",
+      "assetKey": "lotus",
+      "order": 3,
+      "scale": 1,
+      "zone": "water or small pools",
+      "tokenType": "lotus"
+    },
+    {
+      "event": "level",
+      "species": "Ashoka",
+      "assetKey": "ashoka",
+      "order": 4,
+      "scale": 1.3,
+      "zone": "tree canopy",
+      "tokenType": "ashoka"
+    },
+    {
+      "event": "course",
+      "species": "Banyan",
+      "assetKey": "banyan",
+      "order": 5,
+      "scale": 1.8,
+      "zone": "large tree canopy",
+      "tokenType": "banyan"
+    }
+  ],
+  "version": "cfg-6534cab787"
+}

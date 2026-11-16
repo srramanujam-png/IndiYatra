@@ -7,6 +7,7 @@ import { supabaseClient } from "../lib/auth";
 import { useAuthContext } from "../contexts/AuthContext";
 import { APP_URL, APP_SHARE_LOGO, PLAYER, DEFAULT_SHARE_MSG, DEFAULT_SHARE_MSG_WITH_SCORE, DEFAULT_SHARE_MSG_NO_SCORE, FOREST_TOKENS as FOREST_TOKEN_DEFS } from "../config/appStrings";
 import RecommendationsRail from "../components/RecommendationsRail";
+import DashboardMap from "../components/map/DashboardMap";
 
 // Off-brand colours removed — using brand constants only
 
@@ -130,6 +131,12 @@ const styles = `
   .stat-sub  { font-size: 0.6875rem; color: var(--color-text-body); line-height: 1.3; }
   .stat-link { font-size: 0.6875rem; color: ${HERITAGE}; cursor: pointer; font-family: 'Inter', system-ui, sans-serif; }
   .stat-link:hover { text-decoration: underline; }
+
+  /* ── Dashboard top: 3-column map layout may be wider than the 1100px page column (margin, not transform, so the detail map's fixed overlay still works) ── */
+  .dash-top { margin-bottom: 24px; }
+  @media (min-width: 1000px) {
+    .dash-top { width: min(1280px, calc(100vw - 2.5rem)); margin-left: calc(50% - min(640px, 50vw - 1.25rem)); }
+  }
 
   /* ── Section card ── */
   .dash-section {
@@ -538,7 +545,11 @@ const styles = `
     .badge-cards  { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
   }
   @media (max-width: 600px) {
-    .dash-hero { padding: 18px 16px; border-radius: 12px; }
+    /* phones: compact welcome + course selector so the map starts on the first screen */
+    .dash-hero { padding: 12px 14px; border-radius: 12px; margin-bottom: 10px; }
+    .dash-hero .dash-title { font-size: 1.25rem; margin-bottom: 6px; }
+    .dash-hero .dash-subtitle, .dash-hero .dash-scope-hint { display: none; }
+    .dash-hero .dash-scope-wrap { margin-top: 0; }
     .prog-table-wrap { display: none; }
     .prog-stack      { display: block; }
     .act-table-wrap  { display: none; }
@@ -1125,7 +1136,8 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
   const overallLesTotal = progressRows.reduce((s, r) => s + r.lesTotal, 0);
   const overallPct      = pct(overallLesDone, overallLesTotal);
 
-  const dharmaTokens = forestTokens["dharma"] || 0;
+  // Dharma follows the course selector: summed from the (scoped) lesson completions, not the all-courses token ledger.
+  const dharmaTokens = totalDharma;
   const STATS = [
     {
       key: "dharma",  icon: <i className="ti ti-diamond" />,  label: PLAYER.dharmaPoints,
@@ -1229,6 +1241,79 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
   const shareText = renderShareText(shareMessage);
   const canShare  = !!(user && !user.is_anonymous);
 
+  const welcomeEl = (
+    <>
+          <div className="dash-title">Welcome back, {displayName}</div>
+          <div className="dash-subtitle">{subtitleText}</div>
+          {activeDropdown && <div className="dash-dropdown-backdrop" onClick={() => setActiveDropdown(null)} />}
+          <div className="dash-scope-wrap">
+            <div className={`dash-scope-pill${activeDropdown === 'scope' ? ' open' : ''}`}
+              onClick={() => setActiveDropdown(activeDropdown === 'scope' ? null : 'scope')}>
+              <i className="ti ti-books dash-scope-pill-icon" />
+              {scope === "all"
+                ? "Courses"
+                : (rawCourses.find(c => c.course_id === scope)?.course_name || "Courses")}
+              <span className="dash-scope-pill-chevron">▾</span>
+            </div>
+            {activeDropdown === 'scope' && (
+              <div className="dash-dropdown">
+                <div
+                  className={`dash-dropdown-item${scope === "all" ? " active" : ""}`}
+                  onClick={() => { setScope("all"); setActiveDropdown(null); }}>
+                  {scope === "all" ? "✓ " : ""}All Courses
+                </div>
+                {rawCourses.map(c => (
+                  <div key={c.course_id}
+                    className={`dash-dropdown-item${scope === c.course_id ? " active" : ""}`}
+                    onClick={() => { setScope(c.course_id); setActiveDropdown(null); }}>
+                    {scope === c.course_id ? "✓ " : ""}{c.course_name}
+                  </div>
+                ))}
+              </div>
+            )}
+          <div className="dash-scope-hint">Filter your dashboard by a specific course</div>
+          </div>
+    </>
+  );
+  const jumpEl = (
+    <>
+            <div className="dash-nav-label">Jump to</div>
+            <div className="dash-nav-grid">
+              <a className="dash-nav-link" href="#sec-streak"><i className="ti ti-flame" style={{color:"var(--color-accent)"}} />Learning Streak</a>
+              <a className="dash-nav-link" href="#sec-progress"><i className="ti ti-chart-line" style={{color:"var(--color-primary)"}} />Progress</a>
+              <a className="dash-nav-link" href="#sec-activity"><i className="ti ti-activity" style={{color:"var(--color-primary)"}} />Recent Activity</a>
+              <a className="dash-nav-link" href="#sec-map"><i className="ti ti-map-2" style={{color:"var(--color-primary)"}} />Yatra Map</a>
+              <a className="dash-nav-link" href="#sec-forest"><i className="ti ti-trees" style={{color:"var(--color-secondary)"}} />Your Forest</a>
+              <a className="dash-nav-link" href="#sec-quiz"><i className="ti ti-chart-bar" style={{color:"var(--color-primary)"}} />Quiz Performance</a>
+              <a className="dash-nav-link" href="#sec-share"><i className="ti ti-share" style={{color:"var(--color-accent)"}} />Share Your Yatra</a>
+            </div>
+    </>
+  );
+  const statsEl = (
+        <div className="dash-stats">
+          {STATS.map(s => (
+            <div
+              className="stat-card"
+              key={s.key}
+              onClick={s.onClick}
+              style={s.onClick ? { cursor: "pointer" } : undefined}
+            >
+              <div className="stat-icon">{s.icon}</div>
+              <div className="stat-label">
+                {s.label.split(" ").map(word => (
+                  <span key={word} className="stat-label-word">{word}</span>
+                ))}
+              </div>
+              <div className="stat-value">{s.value}</div>
+              {s.sub && <div className="stat-sub">{s.sub}</div>}
+              {s.onClick && <div className="stat-link">View all →</div>}
+            </div>
+          ))}
+          {/* Ghost card — balances the 3-column grid on mobile (2 rows of 3) */}
+          <div className="stat-card stat-ghost" aria-hidden="true" />
+        </div>
+  );
+
   return (
     <>
       <style>{globalStyles + styles}</style>
@@ -1261,76 +1346,26 @@ export default function DashboardPage({ course, settings, onBack, onOpenSettings
 
       <div className="page-wrap">
 
-        {/* ── Welcome Hero ── */}
-        <div className="dash-hero">
-          <div className="dash-hero-left">
-          <div className="dash-title">Welcome back, {displayName}</div>
-          <div className="dash-subtitle">{subtitleText}</div>
-          {activeDropdown && <div className="dash-dropdown-backdrop" onClick={() => setActiveDropdown(null)} />}
-          <div className="dash-scope-wrap">
-            <div className={`dash-scope-pill${activeDropdown === 'scope' ? ' open' : ''}`}
-              onClick={() => setActiveDropdown(activeDropdown === 'scope' ? null : 'scope')}>
-              <i className="ti ti-books dash-scope-pill-icon" />
-              {scope === "all"
-                ? "Courses"
-                : (rawCourses.find(c => c.course_id === scope)?.course_name || "Courses")}
-              <span className="dash-scope-pill-chevron">▾</span>
-            </div>
-            {activeDropdown === 'scope' && (
-              <div className="dash-dropdown">
-                <div
-                  className={`dash-dropdown-item${scope === "all" ? " active" : ""}`}
-                  onClick={() => { setScope("all"); setActiveDropdown(null); }}>
-                  {scope === "all" ? "✓ " : ""}All Courses
-                </div>
-                {rawCourses.map(c => (
-                  <div key={c.course_id}
-                    className={`dash-dropdown-item${scope === c.course_id ? " active" : ""}`}
-                    onClick={() => { setScope(c.course_id); setActiveDropdown(null); }}>
-                    {scope === c.course_id ? "✓ " : ""}{c.course_name}
-                  </div>
-                ))}
-              </div>
-            )}
-          <div className="dash-scope-hint">Filter your dashboard by a specific course</div>
+        {user && !user.is_anonymous ? (
+          /* ── Yatra Map dashboard top: welcome + progress + jump on the left, the map in the centre, stats + legend on the right (stacks on phones) ── */
+          <div id="sec-map" className="dash-top">
+            <DashboardMap courseId={scope !== "all" ? scope : null} seenKey={user.id} refreshKey={`${user.id}:${activePage}:${scope}`}
+              slots={{
+                hero: <div className="dash-hero dash-hero-split"><div className="dash-hero-left">{welcomeEl}</div></div>,
+                jump: <div className="dash-hero dash-hero-split dash-jump-card">{jumpEl}</div>,
+                stats: statsEl,
+              }} />
           </div>
-          </div>{/* end .dash-hero-left */}
-          <div className="dash-hero-right">
-            <div className="dash-nav-label">Jump to</div>
-            <div className="dash-nav-grid">
-              <a className="dash-nav-link" href="#sec-streak"><i className="ti ti-flame" style={{color:"var(--color-accent)"}} />Learning Streak</a>
-              <a className="dash-nav-link" href="#sec-progress"><i className="ti ti-chart-line" style={{color:"var(--color-primary)"}} />Progress</a>
-              <a className="dash-nav-link" href="#sec-activity"><i className="ti ti-activity" style={{color:"var(--color-primary)"}} />Recent Activity</a>
-              <a className="dash-nav-link" href="#sec-forest"><i className="ti ti-trees" style={{color:"var(--color-secondary)"}} />Your Forest</a>
-              <a className="dash-nav-link" href="#sec-quiz"><i className="ti ti-chart-bar" style={{color:"var(--color-primary)"}} />Quiz Performance</a>
-              <a className="dash-nav-link" href="#sec-share"><i className="ti ti-share" style={{color:"var(--color-accent)"}} />Share Your Yatra</a>
+        ) : (
+          <>
+            {/* ── Welcome Hero ── */}
+            <div className="dash-hero">
+              <div className="dash-hero-left">{welcomeEl}</div>
+              <div className="dash-hero-right">{jumpEl}</div>
             </div>
-          </div>
-        </div>{/* end .dash-hero */}
-
-        {/* ── Stat cards ── */}
-        <div className="dash-stats">
-          {STATS.map(s => (
-            <div
-              className="stat-card"
-              key={s.key}
-              onClick={s.onClick}
-              style={s.onClick ? { cursor: "pointer" } : undefined}
-            >
-              <div className="stat-icon">{s.icon}</div>
-              <div className="stat-label">
-                {s.label.split(" ").map(word => (
-                  <span key={word} className="stat-label-word">{word}</span>
-                ))}
-              </div>
-              <div className="stat-value">{s.value}</div>
-              {s.sub && <div className="stat-sub">{s.sub}</div>}
-              {s.onClick && <div className="stat-link">View all →</div>}
-            </div>
-          ))}
-          {/* Ghost card — balances the 3-column grid on mobile (2 rows of 3) */}
-          <div className="stat-card stat-ghost" aria-hidden="true" />
-        </div>
+            {statsEl}
+          </>
+        )}
 
         {/* ── Recommendations Rail ── */}
         <RecommendationsRail

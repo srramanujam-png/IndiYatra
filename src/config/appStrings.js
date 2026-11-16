@@ -110,12 +110,12 @@ export const PLAYLIST = {
 };
 
 // -- Forest tokens -----------------------------------------------------------
-// Ordered by sort_order; matches the `tokens` DB table seed
+// Ordered by sort_order; matches the `tokens` DB table (map release: module=jasmine, level=ashoka — migration 20260929000100)
 export const FOREST_TOKENS = [
   { type: "tulsi",  icon: "🌿", label: "Tulsi",  sub: "per lesson"  },
-  { type: "ashoka", icon: "🌸", label: "Ashoka", sub: "per module"  },
+  { type: "jasmine", icon: "🌼", label: "Jasmine", sub: "per module" },
   { type: "lotus",  icon: "🪷", label: "Lotus",  sub: "per theme"   },
-  { type: "peepal", icon: "🌳", label: "Peepal", sub: "per level"   },
+  { type: "ashoka", icon: "🌳", label: "Ashoka", sub: "per level"   },
   { type: "banyan", icon: "🌲", label: "Banyan", sub: "per course"  },
   { type: "dharma", icon: "✦",     label: "Dharma", sub: "per point"   },
 ];
@@ -123,9 +123,9 @@ export const FOREST_TOKENS = [
 // Admin token-catalogue display list
 export const FOREST_TOKEN_TYPES = [
   { key: "tulsi",  label: "Tulsi",  icon: "🌿" },
-  { key: "ashoka", label: "Ashoka", icon: "🌸" },
+  { key: "jasmine", label: "Jasmine", icon: "🌼" },
   { key: "lotus",  label: "Lotus",  icon: "🪷" },
-  { key: "peepal", label: "Peepal", icon: "🌳" },
+  { key: "ashoka", label: "Ashoka", icon: "🌳" },
   { key: "banyan", label: "Banyan", icon: "🌲" },
   { key: "dharma", label: "Dharma", icon: "✦"     },
 ];

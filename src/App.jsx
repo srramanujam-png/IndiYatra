@@ -10,6 +10,12 @@ import { loadSettings, saveSettings, DEFAULT_SETTINGS } from "./hooks/useSetting
 import { onFetchError } from "./lib/fetchStatus";
 import { APP_NAME, DEFAULT_SNIPPET_SHARE_MSG, PLAYLIST } from "./config/appStrings";
 import { track } from "./lib/track";
+import { fetchMapState } from "./lib/map/mapData";
+import { shouldShowMapPopup } from "./lib/map/mapMath";
+const MilestoneModal = lazy(() => import("./components/map/MilestoneModal"));
+// Yatra map: pop the map up when a just-finished lesson reaches a new 5% milestone or completes a module / theme / level / course.
+// Progress is credited by the DB trigger when the completion is saved, so this can only happen at lesson completion. Set false to disable.
+const MAP_LESSON_POPUP = true;
 import SettingsPage from "./pages/SettingsPage";
 import HomePage      from "./pages/HomePage";
 import CoursePage    from "./pages/CoursePage";
@@ -54,6 +60,7 @@ export default function App() {
   const [lessonProgress,   setLessonProgress]   = useState(new Map());
   const [moduleLessons, setModuleLessons]       = useState([]);
   const [earnedBadges, setEarnedBadges]         = useState([]);
+  const [mapPopup, setMapPopup]                 = useState(null);   // { before, after } map states around the lesson just completed
   const [navDirection, setNavDirection]         = useState("none");
   const snippetAdvanceTimer = useRef(null);
   const toastTimer = useRef(null);
@@ -315,13 +322,22 @@ export default function App() {
 
     // Persist to Supabase for authenticated (non-anonymous) users — fire-and-forget
     if (user && !user.is_anonymous) {
-      saveCompletion(
-        user.id,
-        lessonId,
-        selectedCourse?.course_id || null,
-        points || 0,
-        snippetCount || null
-      ).catch(e => console.warn("saveCompletion:", e));
+      // Snapshot the map BEFORE saving (the DB trigger credits dharma on this upsert), save, then re-read and compare.
+      // Every map step is best-effort: a slow or failing map call must never delay or break saving the completion.
+      (async () => {
+        const timeout = (ms) => new Promise(r => setTimeout(() => r(null), ms));
+        const before = MAP_LESSON_POPUP ? await Promise.race([fetchMapState(null).catch(() => null), timeout(1500)]) : null;
+        const { error } = await saveCompletion(
+          user.id,
+          lessonId,
+          selectedCourse?.course_id || null,
+          points || 0,
+          snippetCount || null
+        );
+        if (error || !before) return;
+        const after = await Promise.race([fetchMapState(null).catch(() => null), timeout(3000)]);
+        if (shouldShowMapPopup(before, after)) setMapPopup({ before, after });
+      })().catch(e => console.warn("saveCompletion:", e));
       // Lesson complete — remove in-progress resume record
       deleteLessonProgress(user.id, lessonId)
         .catch(e => console.warn("deleteLessonProgress:", e));
@@ -351,8 +367,10 @@ export default function App() {
           badges.push({ type: "theme", name: selectedTheme.title, id: selectedTheme?.theme_id });
 
           // Level badge — all modules in this level done?
+          // Audit fix L3: same scope as the server award rule — this level within this course
+          const courseScope = selectedCourse?.course_id ? `&course_id=eq.${selectedCourse.course_id}` : "";
           const levelMods = await supabase("modules",
-            `?select=module_id&level_id=eq.${selectedLevelId}`);
+            `?select=module_id&level_id=eq.${selectedLevelId}${courseScope}`);
           const levelModIds = (levelMods || []).map(m => m.module_id);
           if (levelModIds.length > 0) {
             const levelLessons = await supabase("lessons",
@@ -365,7 +383,7 @@ export default function App() {
               badges.push({ type: "level", name: levelLabel, id: selectedLevelId });
 
               // Course badge — all modules in course done?
-              const allMods = await supabase("modules", "?select=module_id");
+              const allMods = await supabase("modules", `?select=module_id${courseScope}`);
               const allModIds = (allMods || []).map(m => m.module_id);
               if (allModIds.length > 0) {
                 const allLessons = await supabase("lessons",
@@ -1326,6 +1344,13 @@ export default function App() {
           {renderPage()}
           {!["player", "quiz", "gateway"].includes(page) && <AppFooter />}
         </div>
+
+        {mapPopup && (
+          <Suspense fallback={null}>
+            <MilestoneModal open before={mapPopup.before} after={mapPopup.after} seenKey={user?.id || "anon"}
+              onClose={() => setMapPopup(null)} onOpenDashboard={() => { setMapPopup(null); goForward("dashboard"); }} />
+          </Suspense>
+        )}
 
         {showAuthModal && (
           <AuthModal onClose={() => setShowAuthModal(false)} />

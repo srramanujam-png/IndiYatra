@@ -81,7 +81,22 @@ export async function loadCompletions(userId) {
   return { data, error };
 }
 
+// Audit fix H1: the SERVER records the completion and decides points, snippet
+// count and course (complete_lesson RPC — see
+// supabase/migrations/20261112000100_secure_lesson_completion.sql). The
+// pointsEarned / snippetCount / courseId arguments are only used by the
+// legacy fallback below, which runs solely while that migration has not been
+// applied yet (after it, direct writes to lesson_completions are refused).
 export async function saveCompletion(userId, lessonId, courseId, pointsEarned = 0, snippetCount = null) {
+  const rpc = await supabaseClient.rpc("complete_lesson", { p_lesson_id: lessonId });
+  if (!rpc.error) return { data: rpc.data, error: null };
+
+  // PGRST202 / 42883 = function not deployed yet → legacy direct upsert.
+  const missing = rpc.error.code === "PGRST202" || rpc.error.code === "42883";
+  if (!missing) {
+    console.error("[saveCompletion] complete_lesson failed:", JSON.stringify(rpc.error), { lessonId });
+    return { data: null, error: rpc.error };
+  }
   const { data, error } = await supabaseClient
     .from("lesson_completions")
     .upsert({
@@ -1733,14 +1748,29 @@ export async function saveQuizAttempt(userId, quizId, answersPayload) {
   return { data, error };
 }
 
-// 2.4 (A3): per-question grading — returns { is_correct, correct_option }.
-// chosen = null reveals the answer for a skipped/timed-out question.
-export async function gradeQuizAnswer(questionType, questionId, chosen) {
-  const { data, error } = await supabaseClient.rpc("grade_quiz_answer", {
+// Audit fix H4: per-question checking that LOCKS the first answer on the server
+// (answer_quiz_question — supabase/migrations/20261112000200_quiz_answer_lock.sql).
+// Returns { is_correct, correct_option, chosen_option, already_answered }.
+// chosen = null records a skip / time-out and reveals the answer.
+// Signed-in, non-guest users only. chosen_option is what the server has on
+// record: if the question was answered earlier in this run it can differ from
+// `chosen`, and it is the one that counts.
+// Falls back to the legacy grade_quiz_answer only while the migration has not
+// been applied yet (after it, that function is closed to clients).
+export async function gradeQuizAnswer(quizId, questionType, questionId, chosen) {
+  let { data, error } = await supabaseClient.rpc("answer_quiz_question", {
+    p_quiz_id:       quizId,
     p_question_type: questionType,
     p_question_id:   questionId,
     p_chosen:        chosen ?? null,
   });
+  if (error && (error.code === "PGRST202" || error.code === "42883")) {
+    ({ data, error } = await supabaseClient.rpc("grade_quiz_answer", {
+      p_question_type: questionType,
+      p_question_id:   questionId,
+      p_chosen:        chosen ?? null,
+    }));
+  }
   if (error) { console.error("[gradeQuizAnswer]", JSON.stringify(error)); return { data: null, error }; }
   return { data: Array.isArray(data) ? data[0] : data, error: null };
 }

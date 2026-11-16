@@ -4,8 +4,7 @@
 name: CI
 
 on:
-  push:
-    branches: [feature/quiz, main]
+  push:            # Audit fix M8: every branch is checked, not only main
   pull_request:
 
 jobs:

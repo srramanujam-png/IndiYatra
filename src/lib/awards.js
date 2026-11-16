@@ -6,8 +6,9 @@
 // supabase/phase2_server_awarding.sql §1 (fn_award_on_lesson_completion).
 // Client INSERT policies on user_tokens / user_badges are revoked; the old
 // awardForLessonComplete() is gone. The trigger mirrors its logic exactly:
-//   dharma (qty = points, cap 1000) + tulsi per lesson · ashoka per module ·
-//   lotus per theme(level-scoped) · peepal per level · banyan per course ·
+//   dharma (qty = points, cap 1000) + tulsi per lesson · jasmine per module ·
+//   lotus per theme(level-scoped) · ashoka per level · banyan per course ·
+//   (map release renamed module=ashoka→jasmine and level=peepal→ashoka; see supabase/migrations/20260929000100)
 //   BADGE_P02 first module · BADGE_P05 first course · BADGE_S02 7-day streak.
 // Token types resolve from tokens.earn_trigger with the same defaults.
 
@@ -15,7 +16,7 @@ import { supabaseClient } from "./auth";
 
 /**
  * Fetches the user's current forest token counts.
- * Returns { tulsi, ashoka, lotus, peepal, banyan, dharma }
+ * Returns { tulsi, jasmine, lotus, ashoka, banyan, dharma }
  */
 export async function loadForestTokens(userId) {
   if (!userId) return {};
